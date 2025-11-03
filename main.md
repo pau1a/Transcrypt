@@ -417,301 +417,59 @@ In summary, UK SMEs have an increasing array of options to help meet cyber GRC o
 
 ##### Citations
 
-Drata Launches Support for Cyber Essentials
+[Drata Launches Support for Cyber Essentials](https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html)
 
-https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html
+[NIS Compliance: What UK Businesses Need to Know | LegalVision UK](https://legalvision.co.uk/data-privacy-it/nis-compliance/)
 
-NIS Compliance: What UK Businesses Need to Know | LegalVision UK
+[Cyber Essentials management information - GOV.UK](https://www.gov.uk/government/statistical-data-sets/cyber-essentials-management-information)
 
-https://legalvision.co.uk/data-privacy-it/nis-compliance/
+[Top Cybersecurity Risk Management Tools and Solutions for UK SMEs | Finch Technical Solutions](https://finch-ts.co.uk/top-cybersecurity-risk-management-tools-uk-smes/)
 
-Cyber Essentials, Explained, Cyber Security Basics & Certification
+[CyberSmart Pricing](https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-13/documents/707477/951169144457475-pricing-document-2022-05-17-1347.pdf)
 
-https://www.isms.online/cyber-essentials/
+[CyberSmart Pricing, Cost & Reviews - Capterra UK 2025](https://www.capterra.co.uk/software/203257/cybersmart)
 
-Cyber Essentials, Explained, Cyber Security Basics & Certification
+[Frequently Asked Questions - Cyber Essentials - IASME](https://iasme.co.uk/cyber-essentials/frequently-asked-questions/)
 
-https://www.isms.online/cyber-essentials/
+[CyberSmart raises $15m for an all-in-one cybersecurity and insurance solution targeting SMBs — IQ Capital](https://www.iqcapital.vc/news/cybersmart-raises-15m-for-an-all-in-one-cybersecurity-and-insurance-solution-targeting-smbs-2)
 
-Cyber Essentials management information - GOV.UK
+[Cyber Essentials management information - GOV.UK](https://www.gov.uk/government/statistical-data-sets/cyber-essentials-management-information)
 
-https://www.gov.uk/government/statistical-data-sets/cyber-essentials-management-information
+[Drata Launches Support for Cyber Essentials](https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html)
 
-Cyber Essentials, Explained, Cyber Security Basics & Certification
+[Cyber Essentials compliance automation software | Vanta](https://www.vanta.com/products/cyber-essentials)
 
-https://www.isms.online/cyber-essentials/
+[Customer Success Stories - Vanta](https://www.vanta.com/customers)
 
-Top Cybersecurity Risk Management Tools and Solutions for UK SMEs | Finch Technical Solutions
+[Vanta Named to the 2025 Forbes Cloud 100 for Third Consecutive ...](https://www.businesswire.com/news/home/20250903830360/en/Vanta-Named-to-the-2025-Forbes-Cloud-100-for-Third-Consecutive-Year)
 
-https://finch-ts.co.uk/top-cybersecurity-risk-management-tools-uk-smes/
+[DataGuard Pricing 2025](https://www.g2.com/products/dataguard/pricing)
 
-CyberSmart Pricing, Cost & Reviews - Capterra UK 2025
+[Compliance-as-a-Service | DataGuard](https://www.dataguard.com/compliance-as-a-service)
 
-https://www.capterra.co.uk/software/203257/cybersmart
-CyberSmart Pricing
+[DataGuard Pricing, Alternatives & More 2025 | Capterra](https://www.capterra.com/p/219584/DataGuard/)
 
-https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-13/documents/707477/951169144457475-pricing-document-2022-05-17-1347.pdf
-CyberSmart Pricing
+[SureCloud Foundations – GRC Platform for Small Teams](https://www.surecloud.com/foundations)
 
-https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-13/documents/707477/951169144457475-pricing-document-2022-05-17-1347.pdf
+[How Much Does ISO 27001 Certification Cost? | ISMS.online](https://www.isms.online/iso-27001/certification-costs/)
 
-CyberSmart Pricing, Cost & Reviews - Capterra UK 2025
+[Cyber Essentials, Explained, Cyber Security Basics & Certification](https://www.isms.online/cyber-essentials/)
 
-https://www.capterra.co.uk/software/203257/cybersmart
+[NIS 2 Controls Explained: Evidence-Driven Compliance and Risk ...](https://www.isms.online/nis-2/controls/)
 
-CyberSmart Pricing, Cost & Reviews - Capterra UK 2025
+[Tech Risk and Compliance | Solutions - OneTrust](https://www.onetrust.com/solutions/tech-risk-and-compliance/)
 
-https://www.capterra.co.uk/software/203257/cybersmart
-CyberSmart Pricing
+[Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk](https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance)
 
-https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-13/documents/707477/951169144457475-pricing-document-2022-05-17-1347.pdf
-CyberSmart Pricing
+[GRC Software | IT Compliance Management Software | RapidFire Tools](https://www.rapidfiretools.com/products/grc-software/)
 
-https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-13/documents/707477/951169144457475-pricing-document-2022-05-17-1347.pdf
+[Cyber Essentials compliance automation software | Vanta](https://www.vanta.com/products/cyber-essentials)
 
-Frequently Asked Questions - Cyber Essentials - IASME
+[SureCloud Foundations – GRC Platform for Small Teams](https://www.surecloud.com/foundations)
 
-https://iasme.co.uk/cyber-essentials/frequently-asked-questions/
+[IO Plans | ISMS.online](https://www.isms.online/plans/)
 
-CyberSmart raises $15m for an all-in-one cybersecurity and insurance solution targeting SMBs — IQ Capital
-
-https://www.iqcapital.vc/news/cybersmart-raises-15m-for-an-all-in-one-cybersecurity-and-insurance-solution-targeting-smbs-2
-
-CyberSmart raises $15m for an all-in-one cybersecurity and insurance solution targeting SMBs — IQ Capital
-
-https://www.iqcapital.vc/news/cybersmart-raises-15m-for-an-all-in-one-cybersecurity-and-insurance-solution-targeting-smbs-2
-
-CyberSmart raises $15m for an all-in-one cybersecurity and insurance solution targeting SMBs — IQ Capital
-
-https://www.iqcapital.vc/news/cybersmart-raises-15m-for-an-all-in-one-cybersecurity-and-insurance-solution-targeting-smbs-2
-
-Cyber Essentials management information - GOV.UK
-
-https://www.gov.uk/government/statistical-data-sets/cyber-essentials-management-information
-
-Drata Launches Support for Cyber Essentials
-
-https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html
-
-Drata Launches Support for Cyber Essentials
-
-https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html
-
-Drata Launches Support for Cyber Essentials
-
-https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html
-
-Cyber Essentials compliance automation software | Vanta
-
-https://www.vanta.com/products/cyber-essentials
-
-Drata Launches Support for Cyber Essentials
-
-https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html
-
-Cyber Essentials compliance automation software | Vanta
-
-https://www.vanta.com/products/cyber-essentials
-
-Cyber Essentials compliance automation software | Vanta
-
-https://www.vanta.com/products/cyber-essentials
-
-Cyber Essentials compliance automation software | Vanta
-
-https://www.vanta.com/products/cyber-essentials
-
-Cyber Essentials compliance automation software | Vanta
-
-https://www.vanta.com/products/cyber-essentials
-
-Cyber Essentials compliance automation software | Vanta
-
-https://www.vanta.com/products/cyber-essentials
-
-Cyber Essentials compliance automation software | Vanta
-
-https://www.vanta.com/products/cyber-essentials
-
-Customer Success Stories - Vanta
-
-https://www.vanta.com/customers
-
-Vanta Named to the 2025 Forbes Cloud 100 for Third Consecutive ...
-
-https://www.businesswire.com/news/home/20250903830360/en/Vanta-Named-to-the-2025-Forbes-Cloud-100-for-Third-Consecutive-Year
-
-DataGuard Pricing, Alternatives & More 2025 | Capterra
-
-https://www.capterra.com/p/219584/DataGuard/
-
-DataGuard Pricing, Alternatives & More 2025 | Capterra
-
-https://www.capterra.com/p/219584/DataGuard/
-
-DataGuard Pricing 2025
-
-https://www.g2.com/products/dataguard/pricing
-
-Compliance-as-a-Service | DataGuard
-
-https://www.dataguard.com/compliance-as-a-service
-
-Compliance-as-a-Service | DataGuard
-
-https://www.dataguard.com/compliance-as-a-service
-
-DataGuard Pricing, Alternatives & More 2025 | Capterra
-
-https://www.capterra.com/p/219584/DataGuard/
-
-SureCloud Foundations – GRC Platform for Small Teams
-
-https://www.surecloud.com/foundations
-
-SureCloud Foundations – GRC Platform for Small Teams
-
-https://www.surecloud.com/foundations
-
-SureCloud Foundations – GRC Platform for Small Teams
-
-https://www.surecloud.com/foundations
-
-SureCloud Foundations – GRC Platform for Small Teams
-
-https://www.surecloud.com/foundations
-
-SureCloud Foundations – GRC Platform for Small Teams
-
-https://www.surecloud.com/foundations
-
-SureCloud Foundations – GRC Platform for Small Teams
-
-https://www.surecloud.com/foundations
-
-SureCloud Foundations – GRC Platform for Small Teams
-
-https://www.surecloud.com/foundations
-
-SureCloud Foundations – GRC Platform for Small Teams
-
-https://www.surecloud.com/foundations
-
-IO Plans | ISMS.online
-
-https://www.isms.online/plans/
-
-IO Plans | ISMS.online
-
-https://www.isms.online/plans/
-
-IO Plans | ISMS.online
-
-https://www.isms.online/plans/
-
-IO Plans | ISMS.online
-
-https://www.isms.online/plans/
-
-How Much Does ISO 27001 Certification Cost? | ISMS.online
-
-https://www.isms.online/iso-27001/certification-costs/
-
-IO Plans | ISMS.online
-
-https://www.isms.online/plans/
-
-Cyber Essentials, Explained, Cyber Security Basics & Certification
-
-https://www.isms.online/cyber-essentials/
-
-Cyber Essentials, Explained, Cyber Security Basics & Certification
-
-https://www.isms.online/cyber-essentials/
-
-NIS 2 Controls Explained: Evidence-Driven Compliance and Risk ...
-
-https://www.isms.online/nis-2/controls/
-
-NIS 2 Controls Explained: Evidence-Driven Compliance and Risk ...
-
-https://www.isms.online/nis-2/controls/
-
-Tech Risk and Compliance | Solutions - OneTrust
-
-https://www.onetrust.com/solutions/tech-risk-and-compliance/
-
-Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
-
-https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
-
-Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
-
-https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
-
-GRC Software | IT Compliance Management Software | RapidFire Tools
-
-https://www.rapidfiretools.com/products/grc-software/
-
-GRC Software | IT Compliance Management Software | RapidFire Tools
-
-https://www.rapidfiretools.com/products/grc-software/
-
-GRC Software | IT Compliance Management Software | RapidFire Tools
-
-https://www.rapidfiretools.com/products/grc-software/
-
-GRC Software | IT Compliance Management Software | RapidFire Tools
-
-https://www.rapidfiretools.com/products/grc-software/
-
-GRC Software | IT Compliance Management Software | RapidFire Tools
-
-https://www.rapidfiretools.com/products/grc-software/
-
-GRC Software | IT Compliance Management Software | RapidFire Tools
-
-https://www.rapidfiretools.com/products/grc-software/
-
-Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
-
-https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
-
-Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
-
-https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
-
-Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
-
-https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
-
-Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
-
-https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
-
-Cyber Essentials compliance automation software | Vanta
-
-https://www.vanta.com/products/cyber-essentials
-
-SureCloud Foundations – GRC Platform for Small Teams
-
-https://www.surecloud.com/foundations
-
-IO Plans | ISMS.online
-
-https://www.isms.online/plans/
-
-IO Plans | ISMS.online
-
-https://www.isms.online/plans/
-
-Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
-
-https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
-
-GRC Software | IT Compliance Management Software | RapidFire Tools
-
-https://www.rapidfiretools.com/products/grc-software/
+[GRC Software | IT Compliance Management Software | RapidFire Tools](https://www.rapidfiretools.com/products/grc-software/)
 
 
 
