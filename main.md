@@ -71,6 +71,14 @@
         - [Vanta (US) – Expanding into UK Standards (Cyber Essentials, NIS2)](#vanta-us--expanding-into-uk-standards-cyber-essentials-nis2)
         - [DataGuard (Germany/UK) – “Compliance-as-a-Service” with Human Expertise](#dataguard-germanyuk--compliance-as-a-service-with-human-expertise)
         - [SureCloud (UK) – Integrated GRC Platform with SME Packages](#surecloud-uk--integrated-grc-platform-with-sme-packages)
+        - [ISMS.online (UK) – Cloud Platform for ISO 27001 and More](#ismsonline-uk--cloud-platform-for-iso-27001-and-more)
+        - [OneTrust (US/UK) – Broad Compliance Platform (Privacy-Focused)](#onetrust-usuk--broad-compliance-platform-privacy-focused)
+        - [6clicks (Australia) – Agile GRC with Extensive Framework Library](#6clicks-australia--agile-grc-with-extensive-framework-library)
+        - [Kaseya Compliance Manager GRC (RapidFire Tools) – MSP-oriented Compliance Automation](#kaseya-compliance-manager-grc-rapidfire-tools--msp-oriented-compliance-automation)
+        - [Enterprise GRC Solutions (RSA Archer, ServiceNow, etc.) – High-End Options (Rarely Used by SMEs)](#enterprise-grc-solutions-rsa-archer-servicenow-etc--high-end-options-rarely-used-by-smes)
+        - [Comparison of Key Compliance Solutions for UK SMEs](#comparison-of-key-compliance-solutions-for-uk-smes)
+        - [Conclusion](#conclusion)
+        - [Citations](#citations)
     - [D. Change Log](#d-change-log)
     - [E. Markdown Codes](#e-markdown-codes)
 - [Markdown Syntax Cheatsheet](#markdown-syntax-cheatsheet)
@@ -290,16 +298,420 @@ capterra.com
 
 ##### SureCloud (UK) – Integrated GRC Platform with SME Packages
 
+**SureCloud** [is a UK-based Governance](https://www.surecloud.com/foundations#:~:text=Perfect%20for%20organizations%20starting%20their,and%20SOC%202%20with%20ease), Risk & Compliance software provider that has been in the market for about 15+ years. Traditionally, SureCloud’s platform has been used by larger organizations for risk management, compliance tracking, and penetration testing services. Recently, however, SureCloud introduced a **“Foundations” GRC package aimed at small teams and growing businesses**, to make their solution more accessible. SureCloud’s platform is a **no-code, modular GRC system** – it provides applications for Compliance Management, Risk Management, Third-Party Risk, Internal Audit, Incident Management, etc., [all unified](https://www.surecloud.com/foundations#:~:text=19%20years%20of%20expertise%20powers,compliant%20and%20ready%20to%20grow) in one [cloud interface](https://www.surecloud.com/foundations#:~:text=,ecosystem). For compliance, it includes pre-mapped content for various frameworks; out-of-the-box it supports common standards such as **ISO 27001, SOC 2, GDPR**, and even newer ones like **DORA (Digital Operational Resilience Act)** [and NIS2](https://www.surecloud.com/foundations#:~:text=Frameworks). SureCloud emphasizes automation of tasks like evidence collection, control monitoring, and reporting ([they advertise up to 75% reduction in manual effort, similar to peers](https://www.surecloud.com/foundations#:~:text=)). 
 
+**Pricing model**: Unlike some competitors that charge per user, SureCloud’s SME-focused offering is sold as a package with a flat price for a certain scope. It’s reportedly **starting around £15k per year** for the “Foundations” edition (supporting a small compliance team with unlimited users) – significantly cheaper than their enterprise deployments, but still a sizable investment for a smaller SME. The company provides [custom quotes](https://www.surecloud.com/foundations#:~:text=A%20flexible%20package%20no%20matter,your%20size) and even a [downloadable pricing brochure](https://www.surecloud.com/foundations#:~:text=Download%20Pricing%20Brochure) for transparency. Essentially, SureCloud is positioning this as a **mid-tier solution**: more robust than lightweight tools, but with a cost and complexity still within reach of midsize businesses. For very small companies, £15k+ may be too high, but for, say, a 200-employee firm that needs a solid GRC system, it’s an attractive proposition. 
 
+**Market presence**: SureCloud is a recognized name in the UK GRC space (featured in Gartner’s Magic Quadrant for IT Risk Management, etc.). Their clients have included enterprises in financial services, retail, and so on. By launching the Foundations product, they are trying to capture the upper-SME and mid-market segment. They highlight case studies like Specsavers and AutoTrader using SureCloud for [risk and compliance management](https://www.surecloud.com/foundations#:~:text=Specsavers%20choose%20SureCloud%20to%20Streamline,their%20Risk%20and%20Compliance). While those are large companies, the same platform now being scaled down means SMEs can trust that it’s a mature solution. In terms of market share, SureCloud isn’t as ubiquitous among SMEs as the smaller specialist tools (it’s more commonly seen in organizations with dedicated compliance teams). But it provides a path for SMEs that want to invest in a long-term GRC infrastructure that can grow with them. 
 
+**Notable features**: SureCloud offers a unified platform approach – an SME can start with compliance management (e.g. manage their ISO 27001 or Cyber Essentials controls in the tool), and later expand to use it for vendor risk assessments, business continuity planning, etc., all within the same system. It also boasts strong **customizability without coding**, meaning as the business evolves, the tool can be configured to new requirements without expensive development. This flexibility and the **“single source of truth”** concept [(all risk and compliance data in one place) are major selling points](https://www.surecloud.com/foundations#:~:text=,ecosystem).
 
+##### ISMS.online (UK) – Cloud Platform for ISO 27001 and More
 
+**ISMS.online** (often stylized as ISMS.online or simply “IO”) is a UK-based SaaS platform that focuses on helping organizations implement and run an **Information Security Management System (ISMS)**. It started primarily as an ISO 27001 support tool but has expanded to cover multiple frameworks. For SMEs, ISMS.online provides a structured environment to **“kickstart your journey to compliance”** with [pre-built content](https://www.isms.online/plans/#:~:text=Compliance%20Essentials) and [guidance](https://www.isms.online/plans/#:~:text=Onboarding%20%26%20ongoing%20support). Out of the box, it includes what they call **Headstart content** – essentially template policies, controls, and an ISO 27001/other standard mapping that gives you an [“81% head start” on documentation](https://www.isms.online/plans/#:~:text=Our%20market%20leading%20ISMS%20platform%2C,complete%20with). There’s also an **Assured Results methodology** (step-by-step project plan to achieve certification) and a **Virtual Coach** feature to [guide users through tasks](https://www.isms.online/plans/#:~:text=An%2081,configured%20policies%20and%20controls). The platform supports multiple standards; you can choose one or multiple from a list that includes **ISO 27001, ISO 27701 (privacy), ISO 22301 (business continuity), ISO 9001 (quality), GDPR, NIS2, DORA**, etc. [This makes it quite comprehensive for an SME-oriented product](https://www.isms.online/plans/#:~:text=Onboarding%20%26%20ongoing%20support).
 
+**Pricing model**: ISMS.online uses a **subscription model with tiered plans**, but all pricing is bespoke via quotes. They explicitly state that the pricing is flexible based on the customer’s objectives, [scope, and number of users](https://www.isms.online/iso-27001/certification-costs/#:~:text=How%20Much%20Does%20ISO%2027001,15k) – so you only pay for [what you need](https://www.isms.online/plans/#:~:text=Explore%20IO%20pricing%20plans%20designed,and%20maintain%20your%20compliance%20needs). In practice, an SME might purchase a single-framework package (e.g. ISO 27001 compliance package) at a certain annual cost, and later upgrade if they add more frameworks or users. There is no public price list, but anecdotal reports suggest it’s more affordable than enterprise GRC systems, though not as cheap as one-domain tools. It likely falls in the **few thousand pounds per year** range for a small company using it for one standard, going up with additional modules or larger user counts. 
 
+**Market presence**: ISMS.online has a strong presence in the UK among tech SMEs, consultancies, and any organizations pursuing ISO certifications. They also partner with many security consultants and MSPs who use the platform for their clients (the [company has a partner directory](https://www.isms.online/cyber-essentials/#:~:text=Partners) for [advisors who can assist on the platform](https://www.isms.online/cyber-essentials/#:~:text=Back)). While exact user numbers aren’t published, ISMS.online has been around for several years and claims global users. It’s not unusual for companies that want to get ISO 27001 certified quickly to adopt ISMS.online rather than starting from scratch – the selling point is accelerating the process with ready-made tools and keeping the ISMS maintained easily afterward. It may not have the buzz of the VC-funded startups, but it occupies a solid niche for compliance-focused software in the UK. 
 
+**Strengths**: ISMS.online is praised for being **very user-friendly for non-experts** and for its rich library of templates. Essentially it provides a “fill-in-the-blanks” ISMS where an SME can log risks, map controls to requirements, manage improvement actions, and generate audit-ready reports. It’s less about technical integration and automation (compared to Drata/Vanta which auto-check settings); it’s more about documentation management, workflow, and guidance. This makes it ideal for meeting governance requirements and passing audits. It also now [markets support for](https://www.isms.online/nis-2/controls/#:~:text=NIS%202%20Controls%20Explained%3A%20Evidence,ready%20with%20ISMS.online) **NIS2 controls**, [indicating it’s keeping up with new compliance needs](https://www.isms.online/nis-2/controls/#:~:text=,ready%20with%20ISMS.online).
 
+##### OneTrust (US/UK) – Broad Compliance Platform (Privacy-Focused)
 
+**OneTrust** is a big name in compliance software, historically known for privacy and data protection compliance (cookie consents, GDPR management, etc.), but it also offers modules for security, GRC, and ethics. OneTrust is headquartered in the US but has a large London presence and many UK customers. In the context of cybersecurity GRC for SMEs, OneTrust’s relevant offering is its **“Tech Risk & Compliance”** [module](https://www.onetrust.com/solutions/tech-risk-and-compliance/#:~:text=Tech%20Risk%20and%20Compliance%20,and%20mitigate%20risk%20while) – this includes capabilities like policy management, risk registers, control libraries, assessment automation, and vendor risk management. A company can use OneTrust to map their controls to frameworks such as ISO 27001 or NIST CSF and track compliance status. However, **OneTrust’s platform is very comprehensive and can be complex**, as it’s aimed at larger enterprises typically. In fact, OneTrust excels in areas like privacy compliance (e.g. managing subject access requests or cookie tracking) and may not have out-of-the-box depth for some cybersecurity frameworks. A 2025 industry review noted that “OneTrust is highly effective in privacy compliance but lacks the depth required for generic third-party security [management and compliance tracking under NIS-2”](https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance#:~:text=OneTrust). In other words, OneTrust can be part of a security compliance program, but it’s not specialized for things like Cyber Essentials and might require more customization for those needs. 
+
+**Pricing model**: OneTrust is modular – clients can license the pieces they need. It is generally **one of the more expensive solutions**, as it often targets enterprise budgets. Pricing is typically by annual subscription, with cost depending on number of modules, size of data (for privacy modules), and number of users or records. For an SME, OneTrust might be overkill unless they have substantial privacy management needs or already use it for GDPR and want to extend it to security GRC. There have been efforts by OneTrust to offer streamlined packages for smaller businesses (and they do have many mid-market clients too), but it’s safe to say it’s not a low-cost option. There’s no public price; everything is custom quoted. 
+
+**Market presence**: OneTrust has a huge global presence – over 12,000 organizations use some part of its trust platform (privacy, GRC, ethics, etc.). In the UK, many companies adopted OneTrust for GDPR compliance around 2018. As for cybersecurity compliance specifically, OneTrust is often seen in larger firms that want an integrated risk management solution. SMEs might encounter OneTrust through its free tools (they offered free compliance assessments, etc., during earlier days) and then possibly grow into a paid customer. However, given the competition from more focused SME tools, OneTrust is not commonly the first choice for a UK SME trying to get, say, Cyber Essentials – it’s more likely used by a **mid-size or large enterprise that needs a unified platform for privacy and security compliance** together. 
+
+**Competitive notes**: In the competitive landscape, OneTrust competes more with enterprise GRC solutions (RSA Archer, ServiceNow, etc.) and with privacy-focused platforms. Its advantage is a one-stop-shop for all “trust” related compliance (security, third-party risk, ethics, privacy, ESG). But for a small business with narrow needs, lighter options typically suffice.
+
+##### 6clicks (Australia) – Agile GRC with Extensive Framework Library
+
+**6clicks** is an Australian-born GRC software platform that has expanded into the UK and other markets. It offers a full suite of compliance and risk management features, and is notable for its **extensive built-in library of standards and controls** – everything from ISO 27001 to NIST, HIPAA, PCI, and yes, **NIS2 and others** are pre-loaded. The platform positions itself as very flexible and quick to deploy (“out-of-the-box” compliance automation). Users can use 6clicks to do risk assessments, track compliance gaps, manage audits, and even handle policy attestations and incident tracking. It also has an AI engine (“Hailey AI”) to assist with compliance mappings and gap analysis. This makes it somewhat similar to traditional GRC tools but with a modern twist. 
+
+For SMEs, 6clicks can be appealing if they need to handle multiple frameworks or if they are serviced by consultants – 6clicks actively promotes use by MSPs and advisors (somewhat like ISMS.online does). In terms of **European/UK focus**, 6clicks supports UK regulations but as one review pointed out, being an Australian company, **its understanding of European legislation might not be as deep** or localized in the [product UI compared to EU-based competitors](https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance#:~:text=6clicks%20offers%20an%20extensive%20GRC,European%20legislation%20is%20less%20developed). Still, it covers the core requirements just fine via its content. 
+
+**Pricing model**: 6clicks is SaaS with subscription pricing. They often tout a no user limit approach in some packages (similar to SureCloud’s angle, focusing on value rather than per-seat cost). There is a free trial and even a free plan with limited features, which can attract small teams to try it out. For full functionality, pricing is custom – likely based on the number of frameworks in use and whether you are an end-company or a partner provider. They have a partner-centric pricing for consultants managing multiple client environments. 
+
+**Market presence**: Globally, 6clicks is a smaller player compared to the likes of OneTrust or Vanta, but it has been growing and making its way into Gartner mentions for IRM (Integrated Risk Management). In the UK, its footprint is still emerging. It does have some UK partners and case studies, but it’s not yet a household name. Given the crowded field, 6clicks often competes on flexibility and cost. A 3rd-party assessment ranked 6clicks highly for a comprehensive feature set and quick setup, but noted it was less intuitive and had fewer ready integrations than [some top competitors](https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance#:~:text=6clicks%20offers%20an%20extensive%20GRC,European%20legislation%20is%20less%20developed). This suggests it might require a bit more training to use effectively. 
+
+In summary, 6clicks offers UK SMEs another option in the GRC platform category – especially if they want a modern tool that they (or their consultant) can tailor extensively. It’s part of the new wave of GRC tools trying to be easier than legacy solutions, but it faces strong competition from both local and US players.
+
+##### Kaseya Compliance Manager GRC (RapidFire Tools) – MSP-oriented Compliance Automation
+
+An important player especially in the MSP (Managed Service Provider) channel is **Compliance Manager GRC** by RapidFire Tools (now part of Kaseya). This product is a bit different in that it’s **often used by IT service providers to manage compliance for their SME clients**, but some larger SMEs use it internally as well. Compliance Manager GRC provides a centralized system to **manage multiple compliance standards and IT security requirements** – it supports a wide array of frameworks such as PCI DSS, HIPAA, GDPR, CMMC, NIST, and notably the **UK Cyber Essentials**. In fact, it quickly updated to include **Cyber Essentials v3.2 requirements (as of April 2025)**, with content to simplify [compliance for IT teams and MSPs](https://www.rapidfiretools.com/products/grc-software/#:~:text=UK%20Cyber%20Essentials%20v3). 
+
+This tool combines automated network and endpoint scanning (especially focused on Windows environments via integrated **CIS benchmark scans** for hardening checks) with compliance documentation workflows. It can automatically generate documents like policies, risk assessment reports, and [evidence of compliance](https://www.rapidfiretools.com/products/grc-software/#:~:text=Deliver%20dynamic%20reports%20and%20documentation), which is [handy for audits](https://www.rapidfiretools.com/products/grc-software/#:~:text=Deliver%20dynamic%20reports%20and%20documentation). The continuous monitoring feature will regularly assess endpoint configurations [against the chosen](https://www.rapidfiretools.com/products/grc-software/#:~:text=Deliver%20dynamic%20reports%20and%20documentation) standard’s [requirements](https://www.rapidfiretools.com/products/grc-software/#:~:text=Deliver%20dynamic%20reports%20and%20documentation) – for example, checking if devices stay configured in line with Cyber Essentials technical controls. The system then produces gap analyses and remediation plans. Essentially, Compliance Manager GRC is like an auditor-in-a-box that maps IT scan data to compliance checklists. 
+ 
+ **Pricing model**: Kaseya sells this mostly to MSPs via annual licenses (the MSP then might offer “compliance as a service” to end clients). The pricing for an MSP might be based on the number of client organizations or endpoints under management. For an individual SME using it directly, one would license the software similarly to other IT software – typically a yearly subscription scaled by company size. The cost isn’t publicly listed, but given its MSP orientation, it is priced to allow MSPs to margin it in their service bundles (so likely not exorbitant per end-client). Kaseya often bundles it in their broader IT Complete suite for MSPs. 
+ 
+ **Market presence**: Compliance Manager (originally by RapidFire) has been around for several years and gained a strong following among MSPs in the US and UK. A lot of SMEs might be benefiting from it without knowing – if their IT provider uses it in the background to run security compliance reports for them. Its inclusion of UK-specific standards like Cyber Essentials shows Kaseya’s commitment to keeping it [relevant for UK regulations](https://www.rapidfiretools.com/products/grc-software/#:~:text=UK%20Cyber%20Essentials%20v3). While it may not be directly advertised to SMEs, it’s a significant competitor in the sense that it enables hundreds of IT providers to offer a competing compliance solution (often under their own branding). For an SME that already has an IT support provider, that provider might say “we’ll take care of your Cyber Essentials using our tool” – that tool very possibly could be Compliance Manager GRC. So, it indirectly grabs a chunk of the SME market via intermediaries. 
+
+**Key points**: The strength of Compliance Manager GRC is in **automated technical assessments and documentation generation**. It may be less user-friendly for a business user (it’s geared toward IT professionals), but it ensures nothing is missed in compliance checks. It also consolidates multiple frameworks, which is good for MSPs who must deal with varied client needs. Its introduction of a proprietary standard [“SMB Security Standard (SMB1001)”](https://www.rapidfiretools.com/products/grc-software/#:~:text=SMB1001%20Cybersecurity%20standard%20for%20SMBs) also shows they are trying to set a baseline specifically for SMB cybersecurity – indicating thought leadership in this niche.
+
+##### Enterprise GRC Solutions (RSA Archer, ServiceNow, etc.) – High-End Options (Rarely Used by SMEs)
+
+No survey of the competitive landscape would be complete without mentioning the traditional **enterprise GRC platforms**. These include **RSA Archer (now Archer IRM), ServiceNow Governance, Risk & Compliance, MetricStream, IBM OpenPages**, and similar heavyweights. These systems are very powerful and configurable, capable of managing compliance across any framework or regulation. In theory, an SME could use Archer or ServiceNow to manage Cyber Essentials, NIS, or any custom control set. However, in practice [these tools](https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance#:~:text=Image) are **expensive, complex, and aimed at large enterprises**, [making](https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance#:~:text=ServiceNow) them **impractical for SMEs**. 
+
+For instance, ServiceNow GRC is typically an add-on for big companies already using ServiceNow IT systems – it requires significant implementation effort (often with third-party consultants) and doesn’t come with out-of-the-box UK compliance content. Archer likewise is [known for](https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance#:~:text=Archer) its **cumbersome interface and heavy customization needs**
+3rdrisk.com
+. Reviews in the context of NIS2 compliance noted issues such as outdated UI, lack of pre-built templates, reliance on [external consultants](https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance#:~:text=ServiceNow), and [high cost](https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance#:~:text=%2A%20%E2%80%8DPros%3A%20Enterprise,on%20external%20consultants%20for%20implementation). These factors put them out of reach for most SMEs that need quick, cost-effective solutions. 
+
+**Pricing model**: Enterprise GRC platforms usually involve **high annual licensing costs (often six figures in GBP)** plus significant one-time setup costs. They may charge by number of modules and user seats. This is magnitudes above what typical SME budgets allow for compliance tooling. Thus, unless an SME is unusually large or in a very heavily regulated space (and perhaps already has these tools for other reasons), they won’t be using Archer/MetricStream/ServiceNow for Cyber Essentials – it’d be like swatting a fly with a cannon. 
+
+**Market presence**: These platforms dominate in large corporations, financial institutions, and governments. They hold a lot of the market share in GRC overall revenue. But in the SME sector in the UK, their presence is **minimal to none**. Instead, SMEs opt for the lighter platforms and services described earlier. The only scenario an SME might indirectly interface with these is if a **parent company or group uses them** (in which case the SME might have to input some compliance data into a larger Archer system, for example). Or if they hire a consultancy that uses a licensed instance to manage multiple clients. But those are edge cases. 
+
+**Summary of limitations**: In short, while **“you can do anything with Archer/ServiceNow”**, the effort and cost make it a non-starter for SME needs. This is precisely why the newer wave of SME-focused compliance solutions (like CyberSmart, Drata, etc.) has thrived – they filled the gap that these enterprise tools left in the small-business market.
+
+---
+
+Having reviewed the major competitors, we can see the landscape spans from specialized UK-focused solutions to global SaaS platforms and service-driven offerings. The table below summarizes key details for comparison:
+
+##### Comparison of Key Compliance Solutions for UK SMEs
+
+| **Company / Solution**                                                | **Offering & Focus**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | **Pricing Model**                                                                                                                                                                                                                                                                                                                                               | **Market Presence / Notable Info**                                                                                                                                                                                                                                                                                                                                                                                                              |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CyberSmart** (UK)                                                   | Platform **designed for SMEs**; focuses on **Cyber Essentials** (and IASME Governance) compliance with built-in endpoint scanning and one-click certification. Offers continuous monitoring of devices and security settings, plus cyber insurance inclusion. Very easy-to-use for basic cyber hygiene.                                                                                                                                                                                                                                                                                            | **Subscription SaaS**, starting around **£49/month** for small companies (scales by number of users/devices). Low cost entry, includes certification fee in bundles.                                                                                                                                                                                            | ~**4,000 UK SME customers** as of 2023; backed by UK government initiatives. Often delivered via MSPs and channels. Dominant in Cyber Essentials space for micro and small biz.                                                                                                                                                                                                                                                                 |
+| **Drata** (US)                                                        | **Automation-driven GRC** platform supporting **17+ frameworks** (SOC 2, ISO 27001, GDPR, etc.) and now **UK Cyber Essentials**. Provides continuous control monitoring, auto-collection of evidence, auditor collaboration, and cross-mapping of controls to avoid duplicate work. Great for tech-oriented firms needing multi-compliance.                                                                                                                                                                                                                                                        | **Annual SaaS subscription** (custom quoted). Pricing based on company size and frameworks. Typically **four- to five-figure £ per year** for SME range. Emphasizes ROI by reducing audit prep time.                                                                                                                                                            | **Thousands of customers** globally (50+ countries); expanding in UK since 2023 with local sales & support. Strong traction among startups and mid-market companies adopting SOC2/ISO and now CE. Well-funded and rapidly growing.                                                                                                                                                                                                              |
+| **Vanta** (US)                                                        | Similar to Drata – a leading **compliance automation** platform. Now explicitly supports **UK Cyber Essentials and CE Plus**, automating ~70% of required checks. Integrates with cloud/IT tools to continuously enforce security controls. Also covers broad frameworks (ISO, **NIS2**, HIPAA, etc.). Focus on usability and fast deployment.                                                                                                                                                                                                                                                     | **Annual SaaS**, pricing typically by number of employees and modules. No public prices; known to be competitive with Drata (in $$ thousands/year for small firms). Offers **free trials** and startup deals often.                                                                                                                                             | **Widely used (4,000+ customers)** – top choice in startup community for SOC2/ISO, now making inroads in UK compliance (CE). Recognized in Cloud 100 list. Some UK companies switching to Vanta for an integrated approach to multiple compliance needs.                                                                                                                                                                                        |
+| **DataGuard** (DE/UK)                                                 | **All-in-one “Compliance-as-a-Service”** – combines a comprehensive compliance platform with **expert consultants**. Covers **ISO 27001, GDPR, SOC 2, TISAX, NIS2** and more in one solution. Features risk management dashboards, control tracking, and automated evidence collection. Clients get ongoing support from DataGuard’s team to achieve and maintain certifications (effectively outsourcing compliance).                                                                                                                                                                             | **Fixed-price packages** (annual subscription) tailored to each business’s scope. Pricing is **transparent but custom** – typically includes platform access + allocated expert hours. Often in the **£10k–£50k/yr** range depending on company size/needs.                                                                                                     | **4,000+ companies** use it, largely in UK/EU SME segment. Especially popular for combined **privacy + security** compliance. High customer satisfaction due to hybrid service model. Seen as a one-stop solution for companies with limited in-house expertise.                                                                                                                                                                                |
+| **SureCloud** (UK)                                                    | **Integrated GRC platform** with both Enterprise and new **“Foundations”** edition for smaller teams. Provides modules for compliance, risk, vendor management, etc. Out-of-the-box support for key standards (**ISO 27001, SOC 2, GDPR, NIS2, DORA**, etc.). Emphasizes no-code configurability and eliminating spreadsheets through automation (claims 75% reduction in manual effort). Suitable for organizations looking to scale their GRC program.                                                                                                                                           | **Annual subscription**. The SME Foundations package is a **fixed annual fee (approx. five figures)**, e.g. around **£15K/year** for a baseline package (unlimited users) as hinted by marketing. No per-user charges. Custom quotes for expanded needs.                                                                                                        | **Established vendor (since 2004)** with strong UK client base (enterprise and mid-market). Now targeting SMEs; used by notable UK companies (e.g. parts of Specsavers, AutoTrader) for compliance. Offers credibility and robustness, but higher cost than lightweight tools – tends to attract upper-end SMEs or those with dedicated compliance teams.                                                                                       |
+| **ISMS.online** (UK)                                                  | **Cloud ISMS platform** tailored for achieving standards like **ISO 27001** (with guided implementation) and managing ongoing compliance. Comes with pre-written policies, control mappings, and a Virtual Coach for step-by-step progress. Supports multiple frameworks (ISO series, GDPR, NIS2, etc.) in one system. Focuses on documentation, risk assessment, and action tracking to satisfy auditors. Great for formal certification preparation and maintenance.                                                                                                                             | **Subscription-based**, but **pricing is bespoke** (no public tiers). Cost depends on number of frameworks and users. Generally affordable for small organizations compared to big GRC suites, but requires a quotation – e.g. a single-framework package for a small business might be in low **** thousands/year.                                             | **Hundreds of SMEs and tech firms** in the UK use it, especially for **ISO 27001**. It’s also popular among consultants who implement ISMS for clients (IO offers partner programs). Known for its ease-of-use and fast deployment. Not as visible as venture-backed rivals, but a steady player with a solid reputation in compliance circles.                                                                                                 |
+| **OneTrust** (US/UK)                                                  | **Comprehensive trust platform** spanning privacy, security, data governance, and more. The **Tech Risk & Compliance** module covers infosec GRC: policy management, control assessments, risk registers, compliance automation to an extent. OneTrust excels in **privacy (UK GDPR, cookie compliance)** and integrates that with security incident and vendor risk management. However, its breadth can make it complex; it’s **geared toward larger orgs**, and some specific cybersecurity frameworks may need custom configuration (e.g. not a turnkey Cyber Essentials solution out-of-box). | **Modular licensing** – enterprise pricing. Clients might purchase a bundle of modules. Prices can run **tens of thousands £/year** for a full suite. They do offer scaled-down packages, but for most SMEs this is a significant investment. Often justified if the company has serious privacy compliance obligations (and then adds security module on top). | **Global leader** with 12k+ customers (many in Fortune 500). In UK, widely used for GDPR and vendor compliance. Less common for SME cyber compliance specifically, but some mid-sized UK firms leverage OneTrust for integrated risk management. Has a strong brand and resources (2700+ employees). **Not typically the first choice for basic CE needs**, but a powerful option for those needing a unified privacy-security-ethics solution. |
+| **6clicks** (Australia)                                               | **Modern GRC platform** with a wide library of standards and **rapid deployment** focus. Includes AI features to streamline compliance mapping. Supports **UK frameworks (NIS2, ISO, etc.)** and international ones by default. Offers risk management, audits, incident tracking in one platform. UI is web-based and geared for consultants and internal teams alike. Some limitations in user experience and fewer native integrations, but very comprehensive feature set for the price.                                                                                                       | **SaaS subscription**. Offers flexible options (including a free tier and partner licensing). Likely priced by the number of accounts and modules. Aimed to be cost-effective – e.g. could be a mid-£ thousands/year for an SME deployment, but exact pricing varies.                                                                                           | **Emerging player** – used by a growing number of consulting firms and SMEs globally. Still building UK presence; not as well-known as others yet. Those who use it appreciate the all-in-one approach. Seen as a challenger to older GRC tools, with successful deployments in finance, government, etc., in APAC and expanding in Europe.                                                                                                     |
+| **Kaseya Compliance Manager GRC** (RapidFire Tools)                   | **Compliance automation software** often leveraged by MSPs. Covers **UK Cyber Essentials** (latest version) and other standards, with built-in scanning of IT systems to check compliance. Auto-generates policies, reports, and evidence artifacts, and tracks remediation tasks. Designed to allow even non-security-experts (like IT technicians) to deliver compliance assessments. Provides continuous compliance monitoring especially for Windows environments. Ideal for multi-tenant use (managing several businesses’ compliance in one console).                                        | **Annual license** (usually MSP-oriented). MSPs pay per client or per asset; they in turn offer it as a service to SMEs (often bundled, e.g. a monthly fee for “compliance service”). Direct use by SMEs is possible but less common; would be a software subscription likely in the **low thousands £/yr** if sized for one organization.                      | **Widely deployed via MSPs** in the UK/US. Many SMEs indirectly use it through their IT providers. Strong in the niche of IT audit automation. Backed by Kaseya (large MSP software company). Its inclusion of Cyber Essentials content and SMB-specific standards shows commitment to the SME market. Not as visible in direct marketing to end-users, but a significant player through channel.                                               |
+| **Enterprise GRC Suites** (e.g. RSA Archer, ServiceNow, MetricStream) | **High-end GRC/IRM systems** with exhaustive capabilities to manage risk and compliance at scale. Can be configured for any standard or regulation (NIS, ISO, internal policies, etc.) and integrated deeply into business processes. Offer advanced analytics, workflows, and enterprise system integrations. However, **not productized for specific SME needs** – require heavy customization and expertise. Reviews note they are **cumbersome and expensive**, with outdated interfaces in some cases.                                                                                        | **Enterprise pricing (very high)**. Typically involve large setup fees and ongoing costs per module/user. Often on-prem or private cloud deployments for security. Not feasible for SME budgets – usually only justified in organizations with dedicated risk departments.                                                                                      | **Dominant in large enterprise** segment (Fortune 500, governments). Virtually **0% market share in SMEs** due to cost/complexity. In context of UK SME compliance, these are mentioned only as theoretical options – in practice SMEs opt for more accessible solutions. Even mid-tier firms find these overly complex for needs like Cyber Essentials.                                                                                        |
+
+Table Source: Compiled from product documentation and industry analyses, including: 
+CyberSmart features/pricing
+[Link](https://www.capterra.co.uk/software/203257/cybersmart#:~:text=Born%20in%202017%20from%20a,our%20mobile%20and%20desktop%20apps)
+[Link](https://www.capterra.co.uk/software/203257/cybersmart#:~:text=Local%20product)
+Drata and Vanta announcements
+[Link](https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html#:~:text=LONDON%2C%20Sept,Plus%2C%20which%20requires%20independent%20verification)
+[Link](https://www.vanta.com/products/cyber-essentials#:~:text=Time)
+DataGuard description
+[Link](https://www.capterra.com/p/219584/DataGuard/#:~:text=Achieve%20your%20security%20and%20compliance,security%20and%20compliance%20objectives%20with)
+SureCloud frameworks
+[Link](https://www.surecloud.com/foundations#:~:text=Frameworks)
+OneTrust and 3rdRisk blog feedback
+[Link](https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance#:~:text=OneTrust)
+[Link](https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance#:~:text=ServiceNow)
+6clicks evaluation
+[Link](https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance#:~:text=6clicks%20offers%20an%20extensive%20GRC,European%20legislation%20is%20less%20developed)
+Kaseya Compliance Manager release notes
+[Link](https://www.rapidfiretools.com/products/grc-software/#:~:text=Compliance%20Manager%20GRC%20now%20supports,manage%20ongoing%20IT%20security%20needs)
+TechCrunch/press data on customer counts
+[Link](https://www.iqcapital.vc/news/cybersmart-raises-15m-for-an-all-in-one-cybersecurity-and-insurance-solution-targeting-smbs-2#:~:text=regardless%20%E2%80%94%20has%20closed%20a,4%20million)
+[Link](https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html#:~:text=real)
+
+##### Conclusion
+
+The UK SME cybersecurity compliance market is quite dynamic. On one end, homegrown solutions like CyberSmart have leveraged local knowledge (e.g. of Cyber Essentials requirements) to capture a large chunk of small businesses with affordable, easy tools. On the other end, global SaaS platforms (Drata, Vanta) are bringing Silicon Valley-style automation to UK regulations – a sign of the UK market’s maturity that even US vendors are integrating schemes like CE and NIS2 into their products. 
+
+For SMEs, the choices often boil down to cost vs. breadth vs. support: Smaller companies with limited budgets may start with an inexpensive focused tool (or via an MSP service), while those with slightly more resources or complex needs might invest in a more comprehensive platform or a hybrid service like DataGuard to cover multiple obligations at once. Pricing models vary from per-device monthly fees in the tens of pounds to enterprise subscriptions in the tens of thousands, so SMEs must evaluate what fits their risk appetite and compliance scope. 
+
+It’s also worth noting the legislative trend: as government and regulatory requirements tighten (e.g. potential NIS2-derived laws, supply chain security mandates, etc.), more SMEs will be obliged to formally comply with cybersecurity standards. This will likely expand the market for these compliance solutions further. We can expect competition to increase, possibly driving prices down or spurring innovation (like more AI assistance in compliance, more integration with insurance as CyberSmart and others have done, etc.). 
+
+In summary, UK SMEs have an increasing array of options to help meet cyber GRC obligations. Whether it’s a DIY software platform or a managed compliance service, the competitive landscape outlined above provides solutions for all sizes and budgets. The optimal choice depends on each SME’s specific regulatory requirements, in-house expertise, and financial constraints. But with providers focusing on everything from basic certification to continuous enterprise-grade risk management, even the smallest business can find a path to stay on the right side of UK cybersecurity law and best practice.
+
+##### Citations
+
+Drata Launches Support for Cyber Essentials
+
+https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html
+
+NIS Compliance: What UK Businesses Need to Know | LegalVision UK
+
+https://legalvision.co.uk/data-privacy-it/nis-compliance/
+
+Cyber Essentials, Explained, Cyber Security Basics & Certification
+
+https://www.isms.online/cyber-essentials/
+
+Cyber Essentials, Explained, Cyber Security Basics & Certification
+
+https://www.isms.online/cyber-essentials/
+
+Cyber Essentials management information - GOV.UK
+
+https://www.gov.uk/government/statistical-data-sets/cyber-essentials-management-information
+
+Cyber Essentials, Explained, Cyber Security Basics & Certification
+
+https://www.isms.online/cyber-essentials/
+
+Top Cybersecurity Risk Management Tools and Solutions for UK SMEs | Finch Technical Solutions
+
+https://finch-ts.co.uk/top-cybersecurity-risk-management-tools-uk-smes/
+
+CyberSmart Pricing, Cost & Reviews - Capterra UK 2025
+
+https://www.capterra.co.uk/software/203257/cybersmart
+CyberSmart Pricing
+
+https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-13/documents/707477/951169144457475-pricing-document-2022-05-17-1347.pdf
+CyberSmart Pricing
+
+https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-13/documents/707477/951169144457475-pricing-document-2022-05-17-1347.pdf
+
+CyberSmart Pricing, Cost & Reviews - Capterra UK 2025
+
+https://www.capterra.co.uk/software/203257/cybersmart
+
+CyberSmart Pricing, Cost & Reviews - Capterra UK 2025
+
+https://www.capterra.co.uk/software/203257/cybersmart
+CyberSmart Pricing
+
+https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-13/documents/707477/951169144457475-pricing-document-2022-05-17-1347.pdf
+CyberSmart Pricing
+
+https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-13/documents/707477/951169144457475-pricing-document-2022-05-17-1347.pdf
+
+Frequently Asked Questions - Cyber Essentials - IASME
+
+https://iasme.co.uk/cyber-essentials/frequently-asked-questions/
+
+CyberSmart raises $15m for an all-in-one cybersecurity and insurance solution targeting SMBs — IQ Capital
+
+https://www.iqcapital.vc/news/cybersmart-raises-15m-for-an-all-in-one-cybersecurity-and-insurance-solution-targeting-smbs-2
+
+CyberSmart raises $15m for an all-in-one cybersecurity and insurance solution targeting SMBs — IQ Capital
+
+https://www.iqcapital.vc/news/cybersmart-raises-15m-for-an-all-in-one-cybersecurity-and-insurance-solution-targeting-smbs-2
+
+CyberSmart raises $15m for an all-in-one cybersecurity and insurance solution targeting SMBs — IQ Capital
+
+https://www.iqcapital.vc/news/cybersmart-raises-15m-for-an-all-in-one-cybersecurity-and-insurance-solution-targeting-smbs-2
+
+Cyber Essentials management information - GOV.UK
+
+https://www.gov.uk/government/statistical-data-sets/cyber-essentials-management-information
+
+Drata Launches Support for Cyber Essentials
+
+https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html
+
+Drata Launches Support for Cyber Essentials
+
+https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html
+
+Drata Launches Support for Cyber Essentials
+
+https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html
+
+Cyber Essentials compliance automation software | Vanta
+
+https://www.vanta.com/products/cyber-essentials
+
+Drata Launches Support for Cyber Essentials
+
+https://www.prnewswire.com/news-releases/drata-launches-support-for-cyber-essentials-301918630.html
+
+Cyber Essentials compliance automation software | Vanta
+
+https://www.vanta.com/products/cyber-essentials
+
+Cyber Essentials compliance automation software | Vanta
+
+https://www.vanta.com/products/cyber-essentials
+
+Cyber Essentials compliance automation software | Vanta
+
+https://www.vanta.com/products/cyber-essentials
+
+Cyber Essentials compliance automation software | Vanta
+
+https://www.vanta.com/products/cyber-essentials
+
+Cyber Essentials compliance automation software | Vanta
+
+https://www.vanta.com/products/cyber-essentials
+
+Cyber Essentials compliance automation software | Vanta
+
+https://www.vanta.com/products/cyber-essentials
+
+Customer Success Stories - Vanta
+
+https://www.vanta.com/customers
+
+Vanta Named to the 2025 Forbes Cloud 100 for Third Consecutive ...
+
+https://www.businesswire.com/news/home/20250903830360/en/Vanta-Named-to-the-2025-Forbes-Cloud-100-for-Third-Consecutive-Year
+
+DataGuard Pricing, Alternatives & More 2025 | Capterra
+
+https://www.capterra.com/p/219584/DataGuard/
+
+DataGuard Pricing, Alternatives & More 2025 | Capterra
+
+https://www.capterra.com/p/219584/DataGuard/
+
+DataGuard Pricing 2025
+
+https://www.g2.com/products/dataguard/pricing
+
+Compliance-as-a-Service | DataGuard
+
+https://www.dataguard.com/compliance-as-a-service
+
+Compliance-as-a-Service | DataGuard
+
+https://www.dataguard.com/compliance-as-a-service
+
+DataGuard Pricing, Alternatives & More 2025 | Capterra
+
+https://www.capterra.com/p/219584/DataGuard/
+
+SureCloud Foundations – GRC Platform for Small Teams
+
+https://www.surecloud.com/foundations
+
+SureCloud Foundations – GRC Platform for Small Teams
+
+https://www.surecloud.com/foundations
+
+SureCloud Foundations – GRC Platform for Small Teams
+
+https://www.surecloud.com/foundations
+
+SureCloud Foundations – GRC Platform for Small Teams
+
+https://www.surecloud.com/foundations
+
+SureCloud Foundations – GRC Platform for Small Teams
+
+https://www.surecloud.com/foundations
+
+SureCloud Foundations – GRC Platform for Small Teams
+
+https://www.surecloud.com/foundations
+
+SureCloud Foundations – GRC Platform for Small Teams
+
+https://www.surecloud.com/foundations
+
+SureCloud Foundations – GRC Platform for Small Teams
+
+https://www.surecloud.com/foundations
+
+IO Plans | ISMS.online
+
+https://www.isms.online/plans/
+
+IO Plans | ISMS.online
+
+https://www.isms.online/plans/
+
+IO Plans | ISMS.online
+
+https://www.isms.online/plans/
+
+IO Plans | ISMS.online
+
+https://www.isms.online/plans/
+
+How Much Does ISO 27001 Certification Cost? | ISMS.online
+
+https://www.isms.online/iso-27001/certification-costs/
+
+IO Plans | ISMS.online
+
+https://www.isms.online/plans/
+
+Cyber Essentials, Explained, Cyber Security Basics & Certification
+
+https://www.isms.online/cyber-essentials/
+
+Cyber Essentials, Explained, Cyber Security Basics & Certification
+
+https://www.isms.online/cyber-essentials/
+
+NIS 2 Controls Explained: Evidence-Driven Compliance and Risk ...
+
+https://www.isms.online/nis-2/controls/
+
+NIS 2 Controls Explained: Evidence-Driven Compliance and Risk ...
+
+https://www.isms.online/nis-2/controls/
+
+Tech Risk and Compliance | Solutions - OneTrust
+
+https://www.onetrust.com/solutions/tech-risk-and-compliance/
+
+Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
+
+https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
+
+Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
+
+https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
+
+GRC Software | IT Compliance Management Software | RapidFire Tools
+
+https://www.rapidfiretools.com/products/grc-software/
+
+GRC Software | IT Compliance Management Software | RapidFire Tools
+
+https://www.rapidfiretools.com/products/grc-software/
+
+GRC Software | IT Compliance Management Software | RapidFire Tools
+
+https://www.rapidfiretools.com/products/grc-software/
+
+GRC Software | IT Compliance Management Software | RapidFire Tools
+
+https://www.rapidfiretools.com/products/grc-software/
+
+GRC Software | IT Compliance Management Software | RapidFire Tools
+
+https://www.rapidfiretools.com/products/grc-software/
+
+GRC Software | IT Compliance Management Software | RapidFire Tools
+
+https://www.rapidfiretools.com/products/grc-software/
+
+Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
+
+https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
+
+Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
+
+https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
+
+Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
+
+https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
+
+Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
+
+https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
+
+Cyber Essentials compliance automation software | Vanta
+
+https://www.vanta.com/products/cyber-essentials
+
+SureCloud Foundations – GRC Platform for Small Teams
+
+https://www.surecloud.com/foundations
+
+IO Plans | ISMS.online
+
+https://www.isms.online/plans/
+
+IO Plans | ISMS.online
+
+https://www.isms.online/plans/
+
+Top 10 Tools for NIS-2 Compliance: Best Solutions for 2025 | 3rdRisk
+
+https://www.3rdrisk.com/blog/top-10-tools-for-achieving-nis2-compliance
+
+GRC Software | IT Compliance Management Software | RapidFire Tools
+
+https://www.rapidfiretools.com/products/grc-software/
 
 
 
