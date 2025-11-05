@@ -11,7 +11,16 @@
     - [2.4 Future Extensibility to Other Nations](#24-future-extensibility-to-other-nations)
     - [2.5 Legislative Environment and Compliance Ecosystem](#25-legislative-environment-and-compliance-ecosystem)
   - [3. Product Architecture and Core Platform Design](#3-product-architecture-and-core-platform-design)
-    - [3.1 System Overview](#31-system-overview)
+    - [3.1.1 System Overview](#311-system-overview)
+    - [3.1.2 Core Components and Interfaces](#312-core-components-and-interfaces)
+    - [3.1.3 Data Model (Canonical Contracts)](#313-data-model-canonical-contracts)
+    - [3.1.4 Storage and Artifacts](#314-storage-and-artifacts)
+    - [3.1.5 Security, Privacy, and Trust Model](#315-security-privacy-and-trust-model)
+    - [3.1.6 Extensibility \& Integration Framework](#316-extensibility--integration-framework)
+    - [3.1.7 DevEx, QA, and Delivery](#317-devex-qa-and-delivery)
+    - [3.1.8 Minimal Viable Slice (MVP cut)](#318-minimal-viable-slice-mvp-cut)
+    - [3.1.9 Technology Choices (initial)](#319-technology-choices-initial)
+    - [3.1.10 Operational Runbooks (high level)](#3110-operational-runbooks-high-level)
     - [3.2 Core Components and Interfaces](#32-core-components-and-interfaces)
     - [3.3 Security, Privacy, and Trust Model](#33-security-privacy-and-trust-model)
     - [3.4 Extensibility and Integration Framework](#34-extensibility-and-integration-framework)
@@ -251,9 +260,206 @@ The opportunity for Transcrypt emerges directly from this disorder. The directio
 
 ## 3. Product Architecture and Core Platform Design
 
+Transcrypt’s architecture is deliberately simple at the edges and highly structured in the core. At the edge, a clean, low-friction web interface orchestrates an intake pipeline that gathers business context and technical signals; in the core, a rules/ML evaluation layer translates those signals into assured guidance and audit-grade outputs. The platform is organised into clearly bounded subsystems—front-end UI, API gateway, rule/LLM evaluation, evidence collectors, report/export services—each with its own trust boundary and identity, so compromise cannot cascade. This mirrors the philosophy already set elsewhere in the PRD: regulation is treated as structured data, not prose, allowing the engine to map obligations to evidence artifacts and keep those mappings current as frameworks evolve. The same foundation that powers cross-framework equivalence also powers product simplicity: rule logic and evidence relationships live as first-class objects the system can version, test, and explain.
 
+Security and trust are baked into the architecture rather than bolted on. Every human and machine actor is authenticated and authorised before any capability is exposed, with policy-as-code enforcing least privilege across roles, resources, and runtime context; identities (including services and connectors) are unique and cryptographic, enabling short-lived, revocable trust that’s observable end-to-end. Network paths are segmented and verified—no implicit trust, east-west flows are constrained, and all movement is mutually authenticated and encrypted—so the topology itself becomes a living security control. This design aligns the product’s internals with the assurance it sells: evidenceable controls, immutable audit events, and a security posture that can be demonstrated in real time.
 
-### 3.1 System Overview
+Extensibility is a primary property, not a roadmap footnote. Because frameworks are abstracted into portable rule/evidence objects, expansion to new jurisdictions is a data operation—swap in new mappings, keep the engine—and cross-jurisdiction dashboards become feasible without re-architecting. The same decomposition (intake → rule/LLM evaluation → evidence binding → narrative/report) lets us add new collectors, alternative LLMs, and partner connectors without touching the core. Practically, this yields a platform that can start focused on UK SMEs and then scale horizontally into the EU (NIS2/DORA) and Commonwealth markets by adding definitions and localisations while preserving the assurance model and user experience. In short: a composable graph of obligations, controls, and evidence, secured by identity-centric boundaries, and designed to grow by data, not code.
+
+### 3.1.1 System Overview
+
+**3.1.1.1 Runtime topology (high level)**
+
+* **Edge/UI** → **API Gateway** → **Core Services** (Evaluation, Reporting, Evidence) → **Data Stores** (Rules, Tenants, Artifacts).
+* Identity-aware proxy in front of every service; no east–west traffic without mutual auth.
+
+**3.1.1.2 Trust boundaries**
+
+* **Public zone:** Web app + gateway.
+* **App zone:** Stateless services (evaluation, reporting, connectors).
+* **Data zone:** DB, object storage, KMS; isolated network, access via service identities only.
+
+---
+
+### 3.1.2 Core Components and Interfaces
+
+**3.1.2.1 Web App (Intake & Console)**
+
+* Responsibilities: Guided intake, uploads, status, downloads, billing.
+* Interfaces: HTTPS → API Gateway (REST/JSON), OIDC for login.
+
+**3.1.2.2 API Gateway & Policy Enforcement**
+
+* Responsibilities: AuthN (OIDC), AuthZ (OPA/Rego), request signing, rate limiting, audit headers.
+* Interfaces: `/auth/*`, `/tenants/*`, `/reports/*`, `/evidence/*`.
+
+**3.1.2.3 Rule Engine (Deterministic)**
+
+* Responsibilities: Load compiled rule artifacts; evaluate applicability/tests; produce findings with provenance.
+* Interfaces: `POST /evaluate` (OrgProfile, EvidenceInventory, RulePackID) → Findings JSON; `GET /explain/:rule_id`.
+
+**3.1.2.4 LLM Assist Pipeline (Build-time only)**
+
+* Responsibilities: Draft rules from clauses; suggest equivalences; summarise diffs; generate plain-English copy.
+* Interfaces: Offline CLI / worker queue; outputs JSON conforming to Rule Schema; never used at runtime.
+
+**3.1.2.5 Evidence Services**
+
+* Responsibilities: File ingest, hashing, metadata, connector pulls (IdP exports, backups, EDR).
+* Interfaces: `POST /evidence/files`, `POST /evidence/assertions`, connector webhooks; stores to object storage with signed URLs.
+
+**3.1.2.6 Report Service**
+
+* Responsibilities: Assemble findings → prioritisation → PDF/HTML; embed citations and evidence links.
+* Interfaces: `POST /reports/generate` → report blob; `GET /reports/:id`.
+
+**3.1.2.7 Partner/Integrator API**
+
+* Responsibilities: Multi-tenant management (MSPs/insurers), read-only posture, webhooks.
+* Interfaces: `GET /partners/tenants`, `GET /partners/findings`, `POST /webhooks`.
+
+---
+
+### 3.1.3 Data Model (Canonical Contracts)
+
+**3.1.3.1 OrgProfile**
+
+```json
+{ "company": {"name":"", "employees":0, "sector":""},
+  "it": {"idp":"EntraID|Okta|Google","email":"M365|Google","endpoints":{"count":0,"edr":""}},
+  "remote_access":{"vpn":true}, "backups":{"server":"daily","immutable":false},
+  "policies":{"password":"exists","incident":"missing"}, "notes":[] }
+```
+
+**3.1.3.2 EvidenceInventory**
+
+```json
+{ "files":[{"name":"idp_policy.json","type":"config","hash":"..."}],
+  "assertions":[{"key":"MFA.enforced.admins","value":true,"source":"idp_policy.json"}] }
+```
+
+**3.1.3.3 Rule (compiled)**
+
+```json
+{ "id":"CE-AC-001","title":"MFA for admin accounts",
+  "applicability":{"if":["ORG.it.idp != null"]},
+  "test":{"all":[{"equals":["ASSERT.MFA.enforced.admins", true]}]},
+  "evidence":["idp_policy.json"], "citations":[{"doc":"CE-2025","section":"AC.1.1"}] }
+```
+
+**3.1.3.4 Finding**
+
+```json
+{ "rule_id":"CE-AC-001","status":"pass|fail|partial",
+  "reason":"Exact test result…","evidence":["idp_policy.json"],
+  "citations":[{"doc":"CE-2025","section":"AC.1.1"}], "priority":1 }
+```
+
+**3.1.3.5 Report (envelope)**
+
+```json
+{ "tenant":"...", "generated_at":"ISO8601", "summary":"…",
+  "top_actions":[ "...", "..." ], "findings":[ ... ], "artifact_hash":"..." }
+```
+
+---
+
+### 3.1.4 Storage and Artifacts
+
+**3.1.4.1 Tenant DB (Postgres)**
+
+* Tables: `tenants`, `users`, `org_profiles`, `findings`, `reports`, `audit_events`.
+* JSONB for profiles/findings; row-level security per tenant.
+
+**3.1.4.2 Object Storage (Artifacts & Evidence)**
+
+* Buckets: `rule-artifacts/` (immutable, hash-addressed), `evidence/tenant-id/`.
+* Server-side encryption + per-object metadata (hash, uploader, rule links).
+
+**3.1.4.3 Artifact Registry**
+
+* Compiled RulePacks indexed by SHA-256; manifest lists versions, diffs, effective dates.
+
+---
+
+### 3.1.5 Security, Privacy, and Trust Model
+
+**3.1.5.1 Identity & Access**
+
+* OIDC login (MFA enforced), short-lived JWTs; service identities via mTLS; policy-as-code (OPA) for AuthZ.
+
+**3.1.5.2 Crypto & Secrets**
+
+* TLS 1.3 everywhere, mTLS service-to-service; AES-256-GCM at rest; KMS-managed KEKs; Vault for secrets; automated rotation.
+
+**3.1.5.3 Network & Isolation**
+
+* Segmented VPC/VNet: public (edge), app (services), data (DB/KMS). Only proxy reaches app; only app reaches data.
+
+**3.1.5.4 Privacy**
+
+* Data minimisation, per-tenant isolation, GDPR DSR endpoints (export/delete), redaction pipeline for AI prompts (build-time only).
+
+**3.1.5.5 Audit & Observability**
+
+* Structured logs with tenant/request IDs; immutable audit trail (write-once store); traces/metrics with SLO alerts.
+
+---
+
+### 3.1.6 Extensibility & Integration Framework
+
+**3.1.6.1 Framework Packs**
+
+* Portable rule/evidence packs for CE, NIS2, ISO 27001; locale text separated; hot-swappable by `RulePackID`.
+
+**3.1.6.2 Connectors**
+
+* Pullers for IdP (Entra/Okta), cloud config (AWS/Azure/GCP), EDR/backup. Sandbox SDK for partners.
+
+**3.1.6.3 Export/Interchange**
+
+* JSON/JSON-LD exports; webhooks; optional verifiable credentials for “proof of control” attestations.
+
+---
+
+### 3.1.7 DevEx, QA, and Delivery
+
+**3.1.7.1 CI/CD**
+
+* Signed commits; SCA/linters/tests as gates; image signing; SLSA-style provenance attestations.
+
+**3.1.7.2 Testing**
+
+* Unit: rule evaluation; Integration: auth/report flows; E2E: “intake→report” happy path; Golden files for LLM copy.
+
+**3.1.7.3 Environments**
+
+* `dev` (ephemeral PR envs), `staging` (prod-like), `prod` (IaC controlled). No direct human access to prod DB.
+
+---
+
+### 3.1.8 Minimal Viable Slice (MVP cut)
+
+* **Includes:** Core Plan only; 15 CE controls; OrgProfile/Evidence schemas; `/evaluate` + `/reports/generate`; Stripe billing; evidence uploads.
+* **Excludes (stubbed):** NIS2 pack, partner APIs, advanced connectors, VC attestations.
+
+---
+
+### 3.1.9 Technology Choices (initial)
+
+* **Frontend:** Next.js + Tailwind; OIDC client.
+* **Backend:** Python (FastAPI) for API/Evaluation; Celery/Redis for async; Jinja2 + WeasyPrint for PDF.
+* **Data:** Postgres (JSONB); S3-compatible object store; Vault; OPA sidecar; OpenTelemetry.
+* **IaC:** Terraform; container runtime; identity-aware proxy (e.g., oauth2-proxy/Envoy).
+
+---
+
+### 3.1.10 Operational Runbooks (high level)
+
+* **Onboard tenant:** create tenant → OIDC bind → rule pack select → intake link.
+* **Rotate keys:** trigger KMS rotation → restart sidecars → verify mTLS → attest.
+* **Incident:** declare → capture state → contain → RCA → publish improvement.
+
 ### 3.2 Core Components and Interfaces
 ### 3.3 Security, Privacy, and Trust Model
 ### 3.4 Extensibility and Integration Framework
