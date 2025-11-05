@@ -679,6 +679,20 @@ Extensibility is governed by **versioned contracts** and forward-compat rules. E
 * Keep LLMs **strictly build-time** for determinism and auditability.
 * Scale vertically first (bigger VM, read replica), then horizontally (split app/data zones, orchestrator) as usage proves the need.
 
+**AI Integration (build-time only)**
+
+* **Purpose:** Draft rule objects from legislation, propose cross-framework equivalences, and generate human-readable report copy. **Never** used for runtime scoring or access decisions.
+* **Abstraction:** Provider-agnostic via an OpenAI-compatible client (e.g., SDK or lightweight gateway). Pluggable backends: hosted APIs or local models.
+* **Redaction & privacy:** Structured redaction pass strips PII/secrets from prompts; opt-in only. Redaction logs keep hashed placeholders for traceability.
+* **Determinism & audit:** Fixed prompts with versioned templates; low-variance settings; prompt + response + model/version **persisted as an artifact** tied to the resulting RulePack or text block.
+* **Validation:** JSON outputs schema-validated; missing citations or invalid structure = build fail; human review required before publish.
+* **Evaluation harness:** Golden-file tests for copy; regression checks to detect drift across model upgrades.
+* **Caching:** Content-addressed cache of prompt→response during builds to reduce cost/latency; cache is invalidated on template/model changes.
+* **Model registry & provenance:** Track model name, version/commit, licence/usage terms; surface in `/licenses` and internal release notes.
+* **Storage:** All AI artifacts stored in the **artifact registry** alongside RulePacks; reproducible by hash.
+* **Safety rails:** Blocklist/allowlist filters on inputs; refusal to process unredacted evidence; explicit user consent flags control any external processing.
+* **(Optional later)** Embedding/indexing: `pgvector` in Postgres for search over internal docs/policies (still build-time), with the same redaction and audit rules.
+
 
 
 ## 4. User Experience and Functional Requirements
