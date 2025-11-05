@@ -22,6 +22,19 @@
     - [3.1.9 Technology Choices (initial)](#319-technology-choices-initial)
     - [3.1.10 Operational Runbooks (high level)](#3110-operational-runbooks-high-level)
     - [3.2 Core Components and Interfaces](#32-core-components-and-interfaces)
+      - [3.2.1 Web App (Next.js @ `https://transcrypt.xyz`)](#321-web-app-nextjs--httpstranscryptxyz)
+      - [3.2.2 API Gateway \& Policy Enforcement](#322-api-gateway--policy-enforcement)
+      - [3.2.3 Rule Evaluation Service (Deterministic)](#323-rule-evaluation-service-deterministic)
+      - [3.2.4 LLM Assist Pipeline (Build-Time Only)](#324-llm-assist-pipeline-build-time-only)
+      - [3.2.5 Evidence Services](#325-evidence-services)
+      - [3.2.6 Report Service](#326-report-service)
+      - [3.2.7 Partner / Integrator API](#327-partner--integrator-api)
+      - [3.2.8 Admin Console (Internal)](#328-admin-console-internal)
+      - [3.2.9 Data Stores \& Artifacts (Interface Contracts)](#329-data-stores--artifacts-interface-contracts)
+      - [3.2.10 Observability \& Audit](#3210-observability--audit)
+      - [3.2.11 Public Site \& Content (Marketing, Legal, Support)](#3211-public-site--content-marketing-legal-support)
+      - [3.2.12 External Integrations (First-Party)](#3212-external-integrations-first-party)
+      - [3.2.13 Non-Functional Interface Contracts](#3213-non-functional-interface-contracts)
     - [3.3 Security, Privacy, and Trust Model](#33-security-privacy-and-trust-model)
     - [3.4 Extensibility and Integration Framework](#34-extensibility-and-integration-framework)
     - [3.5 Technical Stack and Dependencies](#35-technical-stack-and-dependencies)
@@ -461,9 +474,212 @@ Extensibility is a primary property, not a roadmap footnote. Because frameworks 
 * **Incident:** declare → capture state → contain → RCA → publish improvement.
 
 ### 3.2 Core Components and Interfaces
+
+#### 3.2.1 Web App (Next.js @ `https://transcrypt.xyz`)
+
+* **Purpose:** Guided intake, evidence uploads, posture dashboard, report generation/download, billing.
+* **Key routes:**
+
+  * **Marketing:** `/`, `/product`, `/pricing`, `/about`, `/contact`, `/blog/*`, `/changelog`, `/status`, `/roadmap` (optional).
+  * **Legal & trust:** `/privacy` → alias to `/legal/privacy`, `/terms` → `/legal/terms`, `/cookies` → `/legal/cookies`, `/dpa`, `/subprocessors`, `/acceptable-use`, `/accessibility`, `/licenses`, `/security`.
+  * **App (auth-gated):** `/app/*` – intake `/app/intake/*`, evidence `/app/evidence`, reports `/app/reports/*`, settings `/app/settings`.
+  * **Developer (future):** `/developers`, `/docs/api`, `/webhooks` (catalogue).
+* **Auth/session:** OIDC (Entra/Okta/Google) via next-auth; short-lived JWT session (`SameSite=Lax`, `Secure`, `HttpOnly`); step-up MFA for admin actions.
+* **Interfaces:** HTTPS → `/api/*` (REST/JSON with zod validation). Tenant context from session claim; optional deep links `/t/:tenant/*`.
+
+#### 3.2.2 API Gateway & Policy Enforcement
+
+* **Purpose:** Single ingress for all APIs; central AuthN/AuthZ, rate limiting, audit headers.
+* **Responsibilities:** Verify OIDC tokens; attach `X-Tenant-Id`, `X-Request-Id`, `X-Audit-Actor`; enforce **policy-as-code** (OPA/Rego); terminate TLS; mTLS to internal services.
+* **Interfaces:**
+
+  * Auth: `POST /api/auth/callback`, `POST /api/auth/logout`.
+  * Tenant: `GET /api/tenants/me`, `POST /api/tenants/switch`.
+  * Health: `GET /api/healthz` (unauthenticated ping), `GET /api/readyz` (auth, deeper checks).
+
+#### 3.2.3 Rule Evaluation Service (Deterministic)
+
+* **Purpose:** Evaluate controls for a tenant/profile against an **immutable, signed RulePack**.
+* **Interfaces:**
+
+  * `POST /api/evaluate`
+
+    * **Request:** `{ "rule_pack": "CE-2025.3#sha256:...", "org_profile": {...}, "evidence": {...} }`
+    * **Response:** `{ "findings":[{ "rule_id":"...", "status":"pass|fail|partial", "reason":"...", "evidence":[...], "citations":[...] }], "artifact_hash":"..." }`
+  * `GET /api/evaluate/explain/:rule_id` → returns provenance (tests run, inputs, citations).
+* **Notes:** Stateless; loads RulePacks by hash; **no LLM** in runtime path.
+
+#### 3.2.4 LLM Assist Pipeline (Build-Time Only)
+
+* **Purpose:** Draft rule objects from clauses; suggest cross-framework equivalences; produce human-readable summaries/diffs.
+* **Interfaces (CLI/worker):**
+
+  * `rules draft <source.pdf>` → `rules/*.json` (schema-conformant, citations required).
+  * `rules diff <old> <new>` → `diff.json` + `CHANGELOG.md`.
+* **Guardrails:** JSON Schema validation; missing citations = build fail; human review before publish.
+
+#### 3.2.5 Evidence Services
+
+* **Purpose:** Ingest and index evidence (files + assertions) with integrity metadata, never orphaned from rules.
+* **Interfaces:**
+
+  * `POST /api/evidence/files` (multipart) → `{ id, sha256, url }`.
+  * `POST /api/evidence/assertions` → `{ key:"MFA.enforced.admins", value:true, source:"idp_policy.json" }`.
+  * Connectors (optional webhooks): `/api/connectors/idp`, `/api/connectors/backup`, `/api/connectors/edr`.
+* **Storage contract:** S3-compatible object store `evidence/{tenant}/{uuid}` (server-side encryption, signed URLs) + Postgres metadata.
+
+#### 3.2.6 Report Service
+
+* **Purpose:** Convert findings → prioritised actions → **HTML/PDF** with embedded citations and artifact hash.
+* **Interfaces:**
+
+  * `POST /api/reports/generate` → `{ report_id, download_url, summary }`.
+  * `GET /api/reports/:id` → full envelope (exec summary, top actions, findings, citations).
+* **Rendering:** Jinja2 → HTML → WeasyPrint PDF; SHA-256 of inputs stamped in footer.
+
+#### 3.2.7 Partner / Integrator API
+
+* **Purpose:** MSPs/insurers manage many tenants, receive posture and events.
+* **Interfaces (token-scoped, read-majority):**
+
+  * `GET /api/partners/tenants` (list/paginate)
+  * `GET /api/partners/tenants/:id/posture` (roll-up posture)
+  * `POST /api/partners/webhooks` (subscribe to `report.generated`, `finding.changed`)
+* **Notes:** Strict RBAC; no cross-tenant writes; throttled exports.
+
+#### 3.2.8 Admin Console (Internal)
+
+* **Purpose:** RulePack lifecycle, sandbox what-if evaluations, release approvals.
+* **Interfaces:**
+
+  * `POST /api/admin/rulepacks/publish`, `GET /api/admin/rulepacks/:hash`.
+  * `POST /api/admin/evaluate/simulate` with synthetic OrgProfile/Evidence.
+
+#### 3.2.9 Data Stores & Artifacts (Interface Contracts)
+
+* **Postgres (RLS per tenant):** `tenants`, `users`, `org_profiles(jsonb)`, `evidence_index`, `findings(jsonb)`, `reports`, `audit_events`.
+* **Artifact Registry (immutable):** `rulepacks/{hash}.json`, `manifest.json`, `diffs/{from}-{to}.json`.
+* **Schemas:** All payloads carry `"schema": "OrgProfileV1" | "EvidenceV1" | "FindingsV1"` for fwd/back compat.
+
+#### 3.2.10 Observability & Audit
+
+* **Purpose:** End-to-end traceability for support and assurance.
+* **Interfaces:** OpenTelemetry export (`/otel/v1/*`); structured logs include `tenant_id`, `rule_pack_hash`, `trace_id`; append-only `audit_events` via write-only API from gateway/services.
+* **User-visible:** `/app/settings/audit` — filterable per-tenant audit viewer.
+
+#### 3.2.11 Public Site & Content (Marketing, Legal, Support)
+
+* **Primary public routes:**
+
+  * Marketing: `/`, `/product`, `/pricing`, `/about`, `/contact`, `/blog/*`, `/changelog`, `/status`, `/roadmap` (optional).
+  * Legal & trust: `/legal/*` with **aliases** `/privacy`, `/terms`, `/cookies`; plus `/dpa`, `/subprocessors`, `/acceptable-use`, `/accessibility`, `/licenses`, `/security`.
+  * Support: `/support` (FAQ hub), `/dsr` (Data Subject Requests portal/form).
+* **Contact endpoint:** `POST /api/contact` → `{ name, email, subject, message, consent, meta }` (hCaptcha/Turnstile, rate-limited, ack with `ticket_id`).
+* **SEO/Discoverability:** `sitemap.xml`, `robots.txt`, JSON-LD, OG/Twitter cards, RSS for blog.
+
+#### 3.2.12 External Integrations (First-Party)
+
+* **Identity Providers:** OIDC flows at `/api/auth/*`.
+* **Billing:** Stripe Checkout; webhook `POST /api/billing/webhook` (subscription create/update/cancel).
+* **Email (later):** transactional mail; SPF/DKIM/DMARC configured for `transcrypt.xyz`.
+* **Well-known:** `/.well-known/security.txt`, `/.well-known/change-password`.
+
+#### 3.2.13 Non-Functional Interface Contracts
+
+* **Security headers:** CSP (nonce’d), HSTS (preload), Referrer-Policy `strict-origin-when-cross-origin`, X-Frame-Options `DENY`, X-Content-Type-Options `nosniff`.
+* **Auth requirements:** All `/api/*` require valid JWT with `sub`, `tenant_id`, `scopes`; machine calls use mTLS + token.
+* **Rate limits:** Per-IP + per-tenant; stricter on `/api/auth/*`, `/api/evidence/files`, `/api/contact`.
+* **Error model:** Problem+JSON → `{ "type": "https://transcrypt.xyz/errors/<code>", "title": "...", "status": 400, "detail": "...", "trace_id": "..." }`.
+
 ### 3.3 Security, Privacy, and Trust Model
+
+Transcrypt treats **identity as the perimeter** and **evidence as the arbiter of trust**. Every human and machine action is authenticated (OIDC for users, mTLS for services), authorised by **policy-as-code** (OPA/Rego), and logged with immutable metadata (tenant, actor, rule pack, trace ID). Network paths are **zero-trust by default**: no implicit east–west access, service meshes enforce mutual TLS, and privileges are created just-in-time and discarded immediately after use. Data is encrypted **in transit (TLS 1.3/PFS)** and **at rest (AES-256-GCM)** with keys managed and rotated by a KMS; secrets are injected at runtime via a vault and never committed to source. Runtime environments are ephemeral and reproducible; builds are signed and accompanied by SBOMs and SLSA-style provenance so that what runs can be traced back to who approved it and which inputs it contained. The result is a system where security isn’t a bolted-on checklist but a property of the topology, the pipeline, and the artifacts.
+
+Privacy is engineered as **data minimisation, isolation, and control**. Tenants are logically isolated (row-level security on Postgres plus per-tenant object-store prefixes), and the app collects only what’s needed to evaluate controls and generate reports. Evidence is never “loose”: every file or assertion is bound to a control, version, and citation, with hashes and timestamps for provenance. Users own their data; Transcrypt is a processor under UK GDPR. The platform exposes **self-service Data Subject Rights** (export/delete) and publishes clear retention schedules; AI prompts are **redacted** to avoid sending sensitive content to models, and LLMs are used **only** at build-time for drafting and summarisation—never for runtime scoring. Legal pages (Privacy, DPA, Sub-processors) are versioned in the repo; changes are diffable and linked from the site. Cookie/telemetry loading respects explicit consent, and analytics run in a privacy-preserving mode with PII excluded by design.
+
+Trust is made observable through **transparent operations and verifiable assurances**. A public status page, changelog, and governance notes show uptime, incidents, and remediation; `/.well-known/security.txt` advertises a responsible disclosure path and optional PGP key. Incident response follows a time-boxed playbook (detect → contain → eradicate → recover → RCA), and every RCA is a signed artifact linked to the code/config changes it triggered. Continuous testing covers security (dependency and container scans), functionality (unit/integration/E2E), and drift (policy and posture checks); failed gates block release. Where standards matter, the system maps directly to **Cyber Essentials** hygiene, **ISO 27001** governance, **NIS/NIS2** resilience, and **IEC 62443** zone/conduit separation—so controls aren’t just present, they are **explainable** in the language auditors use. In short: authenticate everything, authorise least, encrypt always, minimise data, and prove it—with artifacts anyone qualified can inspect.
+
 ### 3.4 Extensibility and Integration Framework
+
+Transcrypt is designed to grow **by data, not by rewrite**. The core engine treats frameworks, controls, and evidence definitions as portable **RulePacks**—signed JSON artifacts that the runtime loads by hash. Adding NIS2, DORA, or ISO 27001 doesn’t change code paths: you publish a new RulePack with mapped controls, equivalence links, and test clauses; the evaluation service remains deterministic. Textual outputs (headings, rationales, actions) live as locale bundles, so jurisdictional expansion is translation work, not refactoring. Report rendering is a themeable template layer (HTML → PDF) that reads the same Findings schema, allowing new formats or styles without touching evaluation logic.
+
+Integration follows a **connector + event** model. Connectors are small, sandboxed pullers/posters that transform external proofs (IdP exports, backup configs, EDR posture, cloud config snapshots) into **EvidenceInventory** assertions or file artifacts. They run out-of-band via jobs/queues, publish to the evidence API, and never gain direct DB write access. Events from the core—`report.generated`, `finding.changed`, `evidence.added`—are emitted to webhooks with signed payloads, enabling MSP dashboards, insurer ingestion, or customer SIEM correlation. A public **Partner API** exposes read-scoped endpoints (tenant roll-ups, findings, reports) with strict RBAC and pagination, while exports use open, durable formats (JSON/JSON-LD) so downstream systems can store or rehydrate results without vendor lock-in.
+
+Extensibility is governed by **versioned contracts** and forward-compat rules. Every payload carries a `schema` tag (e.g., `OrgProfileV1`, `EvidenceV1`, `FindingsV1`); minor releases add optional fields, major releases ship with a migration manifest and deprecation window. RulePacks and templates are immutable by content hash; new revisions publish as new artifacts with a machine-readable `diff.json` so partners can pre-compute the impact of framework updates. SDKs (lightweight) provide typed models, request builders, webhook verifiers, and a connector scaffold (auth, polling, backoff, signing). LLM use remains a **build-time extension point** only—providers are pluggable, prompts redacted, outputs schema-validated—so runtime determinism and auditability never depend on a model vendor. In combination, RulePacks, connectors, events, and stable schemas make the platform easy to extend, safe to integrate, and boring to operate—the exact temperament you want in compliance infrastructure.
+
 ### 3.5 Technical Stack and Dependencies
+
+**Frontend**
+
+* **Framework:** Next.js (App Router) + React. **Styling:** TailwindCSS for app UI, **SCSS tokens** for brand theming/marketing (Dart Sass). Tokens exposed as CSS variables and consumed by Tailwind (single source of truth).
+* **Typography & Icons:** System UI stack for the app; one **self-hosted variable font** (marketing) via `next/font` with tight subsetting. **lucide-react** SVG icons. **No Bootstrap. No icon webfonts.** If Font Awesome is ever required, use tree-shaken SVG packages behind a feature flag.
+* **Forms/validation:** Zod + React Hook Form. **State:** server actions + URL state; no global store unless needed.
+* **Rendering & content:** MDX/Markdown for marketing/legal/blog; ISR for `/blog` and docs; `next/image` + CDN for assets.
+* **Testing:** Playwright (E2E), Vitest/RTL (unit).
+* **Telemetry:** OpenTelemetry web SDK → OTEL collector; privacy-first analytics loaded **after consent**.
+* **Security headers:** CSP (nonces), HSTS (preload), Referrer-Policy `strict-origin-when-cross-origin`, XFO `DENY`, XCTO `nosniff`.
+
+**Backend & Services**
+
+* **API:** Python **FastAPI** (typed, async) behind an identity-aware proxy (Envoy or oauth2-proxy).
+* **Background jobs:** Celery + Redis for report generation, evidence processing, PDF renders.
+* **Report rendering:** Jinja2 → HTML → **WeasyPrint** (wkhtmltopdf fallback).
+* **Policy/authorisation:** **Open Policy Agent (OPA)** sidecar; Rego policies versioned with code.
+* **Rule engine:** Deterministic evaluator reading **RulePacks** (signed JSON loaded by content hash).
+* **LLM assist (build-time only):** Provider-pluggable (OpenAI-compatible or local) via offline workers; outputs schema-validated; **never** in the runtime path.
+* **Observability:** OpenTelemetry (traces/metrics/logs) → OTEL Collector → Tempo/Loki/Prometheus (or vendor).
+* **Notifications:** SMTP provider (later) with SPF/DKIM/DMARC on `transcrypt.xyz`.
+
+**Data & Storage**
+
+* **Primary DB:** **Postgres 15+ (local instance on the app server)** with RLS per tenant; JSONB for OrgProfile/Findings; migrations via Alembic. Listen on `127.0.0.1`; pool with **pgBouncer**; PITR enabled.
+* **Object storage:** S3-compatible bucket(s) for evidence/artifacts; server-side encryption; signed URLs.
+* **Artifact registry:** Immutable RulePacks (`rulepacks/{sha256}.json`), manifests, diffs; addressed by content hash.
+* **Secrets & keys:** **Vault** (or cloud KMS + Secrets Manager) for app secrets; KMS-managed KEKs; automated rotation.
+* **Caching:** Redis (ephemeral) for queue/session where necessary; avoid caching sensitive payloads.
+* **Backups & DR:** Daily encrypted DB snapshots + WAL archiving; object-store versioning; **quarterly restore drills** into staging with checksum verification.
+
+**Security & Supply Chain**
+
+* **Crypto:** TLS 1.3 everywhere; mTLS service-to-service; AES-256-GCM at rest; FIPS-aligned libraries.
+* **Identity:** OIDC for users; mTLS (SPIFFE/SPIRE later if needed) for service identity.
+* **Build & provenance:** Containerised builds; **SLSA-style** attestations; image signing with **cosign/sigstore**; SBOMs (**CycloneDX/SPDX**) per release.
+* **Scanning:** SCA (Dependabot + **Trivy**/**Snyk**), container scans in CI, IaC scans (tfsec/Checkov).
+* **Policies as gates:** CI enforces tests, lint, type checks, SCA, licence policy, OPA packs; rejects unsigned commits/images.
+
+**Infrastructure & Delivery**
+
+* **Runtime:** Start simple—single VM (reverse proxy + API + workers + local Postgres) with systemd; graduate to orchestrator/managed K8s only when partner/API scale demands it.
+* **IaC:** **Terraform** for network, compute, storage, DNS, certificates, WAF; per-env workspaces.
+* **Environments:** `dev` (ephemeral PR previews), `staging` (prod-like), `prod` (locked); **no direct prod DB access**.
+* **CDN/WAF:** Edge caching for static assets; WAF/bot filtering on `/api/*` and auth routes.
+* **Domain & topology:** Single origin `https://transcrypt.xyz` (marketing + app at `/app`), easy migration path to `app.transcrypt.xyz` later (cookie domain `.transcrypt.xyz`, shared codebase).
+
+**Payments & Commerce**
+
+* **Billing:** **Stripe Checkout/Customer Portal**; webhook `/api/billing/webhook`; idempotency keys; tax configured in Stripe; minimal PII stored app-side.
+
+**Language, Versions & Tooling (initial pins)**
+
+* **Python** 3.12; **Node** 20 LTS; **Postgres** 15+.
+* Formatters/lints: Ruff + Black (Py), ESLint + Prettier (TS/JS).
+* Type-check: mypy (Py), TypeScript strict mode.
+* Tasking: `just`/Makefile; pre-commit hooks (format, secrets check).
+
+**Dependency Governance**
+
+* **Licences:** OSS allowlist; automatic licence scanning in CI; `THIRD_PARTY_NOTICES.md` published at `/licenses`.
+* **Versioning:** SemVer for APIs and schemas (`OrgProfileV1`, `EvidenceV1`, `FindingsV1`); migration manifests on majors.
+* **Updates:** Weekly dep refresh PRs; monthly base-image rebuilds; emergency CVE patch lane with post-mortem.
+* **Vendor de-risking:** Standards-based abstractions (S3 API, OIDC, SMTP); no hard lock-in; self-hosted fonts/assets; no third-party CDN fonts.
+
+**Rationale & Upgrade Path**
+
+* Bias to **boring, explainable** tech that maps cleanly to compliance claims (Cyber Essentials hygiene, ISO 27001 change control, NIS2 resilience, IEC 62443 zoning).
+* Keep LLMs **strictly build-time** for determinism and auditability.
+* Scale vertically first (bigger VM, read replica), then horizontally (split app/data zones, orchestrator) as usage proves the need.
+
+
 
 ## 4. User Experience and Functional Requirements
 ### 4.1 User Journeys and Onboarding
