@@ -27,11 +27,22 @@
 
 ## 2025-11-08 – Decision: SME Audience vs Enterprise-Grade Architecture
 
-- **Problem:** PRD implied enterprise-level complexity for an SME audience, risking feature overreach.  
-- **Decision:** Maintain enterprise security and automation internally while presenting an SME-focused, plain-language experience.  
-- **Consequences:**  
-  - Vision and System Overview updated with "Invisible Infrastructure Principle".  
-  - Section 5 clarified to show advanced components as background automation.  
-  - Design Tenets added to codify simplicity.  
-  - Roadmap entry added for UX refinement phase.  
+- **Problem:** PRD implied enterprise-level complexity for an SME audience, risking feature overreach.
+- **Decision:** Maintain enterprise security and automation internally while presenting an SME-focused, plain-language experience.
+- **Consequences:**
+  - Vision and System Overview updated with "Invisible Infrastructure Principle".
+  - Section 5 clarified to show advanced components as background automation.
+  - Design Tenets added to codify simplicity.
+  - Roadmap entry added for UX refinement phase.
 - **Outcome:** Product narrative aligns technical depth with SME usability—complexity hidden, results simple.
+
+## 2025-11-09 – Decision: Automation vs Human Expertise Clarification
+
+- **Problem:** PRD blurred self-serve automation and human-assisted models.  
+- **Decision:** v1 (Transcrypt Core) is 100% automated. Human expertise enters only in future Assisted Tier and Marketplace phases.  
+- **Consequences:**  
+  - Vision updated with Human Role Definition.  
+  - System Overview expanded with Automation-First Operating Model.  
+  - §5.2 clarified for self-serve loop.  
+  - Roadmap now includes Assisted Tier and Marketplace stages.  
+- **Outcome:** Removes confusion between automation and manual review while preserving a scalable future for expert involvement.

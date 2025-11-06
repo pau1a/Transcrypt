@@ -246,6 +246,13 @@ It provides **guided assessments**, a secure **evidence vault**, **auto-generate
 
 Transcrypt exists to turn regulatory obligation into operational confidence for small and mid-sized businesses. The vision is simple to state and hard to execute well: take messy frameworks, translate them into clear actions, and back every claim with evidence. The product is a practical interpreter between law and day-to-day operations. It gives an owner a single session route from intake to a tailored report, then keeps them aligned as rules change. Success is measured in steady outcomes rather than theatre: fewer hours lost to forms, faster audits, cleaner hand-offs to insurers and primes, and a live sense of “what is left to do and why”. Transcrypt builds trust through **verifiable transparency** rather than open code. Audit confidence is achieved by deterministic, cryptographically signed outputs that anyone can verify, even though the software itself remains proprietary.
 
+### Human Role Definition
+
+For v1 (**Transcrypt Core**) all compliance flows are **self-serve**.
+AI-driven automation replaces most manual review steps and guides the user end-to-end without external assistance.
+Human experts re-enter the loop only in later versions (see §9 Roadmap – Assisted Tier) to deliver optional audit reviews and trust attestations.
+This ensures automation is the revenue engine while human expertise remains an opt-in premium service, not a bottleneck.
+
 ### Audience and Philosophy
 
 Transcrypt Core is built **for SMEs**, not large enterprises.  
@@ -372,6 +379,13 @@ All mappings are stored in a normalised meta-model so reporting and dashboards s
 
 Transcrypt Core’s architecture adopts mature enterprise patterns—segmented networks, signed artifacts, containerised services—but packages them as a managed backbone that the SME user never has to configure. Every component is orchestrated for resilience and assurance while presenting only a guided workflow at the surface.
 
+### Automation-First Operating Model
+
+Transcrypt operates on the principle of **Automation First**:
+every task that can be safely automated is automated before humans are involved.
+Where expert review adds assurance (e.g. external certification, policy vetting), the system supports a future “Assisted Tier” via secure review portals.
+v1 contains no human-review workflow.
+
 ### Invisible Infrastructure Principle
 
 Complexity in Transcrypt exists only to remove effort for the user.  
@@ -389,6 +403,14 @@ The platform never exposes its internal mechanics; it turns them into plain-Engl
 * **Public zone:** Web app + gateway.
 * **App zone:** Stateless services (evaluation, reporting, connectors).
 * **Data zone:** DB, object storage, KMS; isolated network, access via service identities only.
+
+### User Tiers and Human Interaction Model
+
+| Tier | Name | Description | Human Involvement |
+|:----:|:-----|:-------------|:-----------------|
+| v1.0 | Transcrypt Core | Full self-serve AI automation for SMEs | None |
+| v1.5 | Assisted Tier (β) | Optional human review of AI-generated reports via auditor portal | Limited |
+| v2.0 | Platform Tier | Integrated marketplace for auditors, consultants and partners | Extensive |
 
 ---
 
@@ -1200,11 +1222,15 @@ Although Transcrypt employs modern orchestration and automation patterns, these 
 > This allows new jurisdictions or standards to be loaded as configuration rather than forked code.
 
 ### 5.2 Machine Learning and AI Components (v1)
+All compliance logic in v1 is executed autonomously by the rules engine and AI assistants.
+Human oversight is not part of the MVP loop; instead the system creates traceable outputs that can later be reviewed by auditors in the Assisted Tier.
 AI assists the user rather than overwhelms them—its purpose is to *simplify judgement calls*, not introduce new interfaces or tuning.
 - **Extraction:** classify uploads (policy vs invoice vs screenshot), extract dates/covers.
 - **Drafting:** first-pass policies/templates; user reviews before saving.
 - **Gap prompts:** suggest missing evidence based on CE checklist state.
 _No training loops or fine-tuning in v1; models are managed centrally; outputs are user-confirmed. [[Post-MVP: see §9 Roadmap]]_
+
+> **Post-MVP:** External assessor API and auditor portal to be introduced in §9 Roadmap phase v1.5 (Assisted Tier β).
 
 ### 5.3 Reporting, Dashboards, and Insights (v1)
 - CE readiness score, section breakdown, renewal countdown, evidence completeness.  
@@ -1384,12 +1410,11 @@ Strategically, Transcrypt measures sustainability not just in profit but in oper
 
 ## 9. Roadmap
 
-| Phase | Name                   | Focus | Key Adds |
-|------:|------------------------|-------|---------|
-| v1.0  | Transcrypt Core        | UK Cyber Essentials + NIS2 | CE/NIS2 control packs |
-| v1.2  | SME UX Refinement      | UX polish | Reduce jargon, improve guided flows, unify plain-language reporting |
-| v1.3  | Extensible Core        | Add control-pack loader, meta-mapping, early ISO 27001 support | Modular compliance architecture |
-| v2.0  | Multi-Framework Platform | Support multiple national/sectoral frameworks | Unified cross-mapping engine |
+| Phase | Name              | Focus           | Key Adds                                                       |
+| ----: | ----------------- | --------------- | -------------------------------------------------------------- |
+|  v1.0 | Transcrypt Core   | MVP Automation  | Full self-serve flows, no human review paths                   |
+|  v1.5 | Assisted Tier (β) | Hybrid Model    | Auditor portal, limited review API, opt-in expert verification |
+|  v2.0 | Marketplace       | Human Ecosystem | Auditor network, external assurance integration                |
 
 Transcrypt’s Roadmap and Delivery Strategy is structured around disciplined iteration: a lean, verifiable path from concept to commercial traction. The strategy reflects a core principle—deliver small, prove value, refine fast. It prioritises the creation of a Minimum Viable Product (MVP) that demonstrates functional credibility and real customer benefit within the first six months, followed by incremental expansions that compound capability rather than complexity. Each phase is defined by a measurable outcome: working software, validated user engagement, and sustainable revenue growth. The emphasis is on building a product that earns trust early, through demonstrable competence and transparency, rather than pursuing scale prematurely.
 
