@@ -64,6 +64,16 @@
     - [4.2 Interface Philosophy](#42-interface-philosophy)
     - [4.3 Key User Stories](#43-key-user-stories)
     - [4.4 Accessibility and Usability Standards](#44-accessibility-and-usability-standards)
+      - [What this section is for](#what-this-section-is-for-1)
+      - [Priorities (stack-ranked)](#priorities-stack-ranked)
+      - [Non-negotiable standards (what we target)](#non-negotiable-standards-what-we-target)
+      - [Design \& content rules (operationalised)](#design--content-rules-operationalised)
+      - [Interaction \& structure patterns](#interaction--structure-patterns)
+      - [Reports (HTML \& PDF) accessibility](#reports-html--pdf-accessibility)
+      - [Mobile \& low-bandwidth](#mobile--low-bandwidth)
+      - [Cognitive load \& clarity](#cognitive-load--clarity)
+      - [Testing \& enforcement (make it routine)](#testing--enforcement-make-it-routine)
+      - [Acceptance criteria (task-level)](#acceptance-criteria-task-level)
     - [4.5 Offline and Multi-Device Support](#45-offline-and-multi-device-support)
   - [5. Data, Intelligence, and Automation](#5-data-intelligence-and-automation)
     - [5.1 Data Flow Architecture](#51-data-flow-architecture)
@@ -937,6 +947,40 @@ If you’re happy with this spine, the next tangible step is to sketch the **Qui
 
 
 ### 4.2 Interface Philosophy
+
+**It’s the contract for how the product talks and behaves.**
+Interface philosophy is our house style for truth-telling: the rules that decide wording, layout, pacing, and how much the product asks of a person at any moment. It turns vague goals (“be clear,” “be trustworthy”) into operational constraints. For Transcrypt that means: every screen answers three questions in this order—**what is this**, **why it matters**, **what to do next**—and every status must be **explainable** with a visible link to the rule, test, input, and evidence. No mysteries, no hand-waving, no “AI says so.” When people feel oriented and in control, they move faster and trust the output.
+
+**Design tenets (non-negotiable, testable).**
+
+* **Plain first, precise second.** Lead with simple phrasing; keep the formal clause in a fold-out. Example: “MFA not enforced for admins” (plain) with “CE AC.1.1, test: ASSERT.MFA.enforced.admins=false” (precise).
+* **One decision per view.** If a page asks for more than one meaningful choice, it’s two pages. Primary action is obvious; secondary actions look secondary.
+* **Evidence never loose.** Uploads and assertions always bind to a control and citation before the user can continue.
+* **Progress over pages.** Show where you are (“Step 2 of 3”) and the impact of finishing (“This will unlock 3 controls”).
+* **Determinism on display.** “Show trace” exists everywhere a result appears. Identical inputs → identical outputs; the UI lets users verify that.
+* **Calm speed.** Sub-2s perceived loads, subtle motion only when it reduces cognitive load (e.g., focus a just-failed field).
+* **Accessibility as default, not garnish.** WCAG 2.2 AA, keyboard-only flows, real contrast, reduced-motion respected.
+
+**Tone, components, and content grammar.**
+Tone is **quietly competent**: short sentences, active verbs, no fear-mongering. Components embody that tone: cards with a strong sentence up top, a concise reason, and one primary button. Error messages say what broke **and** how to fix it. Tables have first columns that explain the row in human terms; badges are for state (Pass/Fail/Partial), not decoration. When jargon is unavoidable, define it inline. (You can be technical without being theatrical.)
+
+**Constraints we refuse to break (and why).**
+
+* **No runtime AI decisions.** If it affects a finding, the logic is deterministic and inspectable. This preserves auditability and user agency.
+* **No modal labyrinths.** Modals are for small confirmations. If the content needs scrolling or multiple decisions, it’s a page.
+* **No invisible requirements.** If you need data, say exactly why and where it will show up in the report. Hidden asks destroy trust.
+* **No dead-end states.** Every error offers a forward path—retry, download trace, or jump to the field that fixes it.
+
+**How we prove we’re living it (practical tests).**
+
+* **Five-second scan:** Can a new user tell what the page is about and what to do without scrolling?
+* **Breadcrumb of proof:** From any finding, can you reach rule text, test, inputs, and evidence in ≤ 3 clicks?
+* **Red-pen edit:** Can legal/compliance folks tighten copy without touching code (strings externalised)?
+* **Accessibility pass:** Does the page pass axe/Pa11y and keyboard-only use?
+* **Time-to-action:** Does a primary task (upload evidence, re-run assessment) take ≤ 2 obvious clicks from the dashboard?
+
+That’s what “Interface Philosophy” means here: a disciplined, humane protocol for turning regulation into action. It keeps the product boring in the right ways (predictable, verifiable) and sharp where it matters (specific next steps, fast feedback). Next step is to codify this into a tiny UI playbook—component do/don’ts, copy patterns, and acceptance checks—so every new screen inherits the same spine.
+
 ### 4.3 Key User Stories
 
 **1) SME Owner/Admin (decision-maker)**
@@ -961,12 +1005,222 @@ If you’re happy with this spine, the next tangible step is to sketch the **Qui
 * **Acceptance:** magic link scoped to a tenant and expiry; posture roll-up view + latest report; evidence previews/downloads where permitted; no write paths; Problem+JSON errors with `trace_id`; export bundle (JSON + PDFs + manifest with hashes) available on request.
 
 ### 4.4 Accessibility and Usability Standards
+
+#### What this section is for
+
+It’s the contract that every visitor and user—regardless of device, bandwidth, motor control, eyesight, hearing, or cognitive load—can complete core tasks. For Transcrypt, that means: anyone can get from landing page → signup → first report, can understand findings, and can download/hand to an auditor, **without assistance**. No exceptions.
+
+#### Priorities (stack-ranked)
+
+1. **Keyboard-first**: everything works without a mouse, with visible focus and logical order.
+2. **Readable by default**: real contrast, scalable text, plain language first, precise clause second.
+3. **Predictable & recoverable**: errors say what broke and how to fix; no timeouts that eat work.
+4. **Assistive-tech compatible**: correct landmarks, roles, names, and states so screen readers and voice control can operate the app.
+5. **Accessible reports**: the generated **PDF/HTML reports** are tagged, navigable, and readable by screen readers.
+
+#### Non-negotiable standards (what we target)
+
+* **WCAG 2.2 AA** across site and app (including PDFs).
+* **BSI/EN 301 549** alignment where relevant (maps closely to WCAG, useful for EU/UK buyers).
+* **UK Equality Act 2010** spirit: reasonable adjustments baked in.
+* **PDF/UA** principles for reports: semantic structure, tagged tables, alt text for figures.
+
+#### Design & content rules (operationalised)
+
+* **Colour & contrast**: 4.5:1 for body text, 3:1 for large text/icons; tokens pre-checked so designers can’t pick non-compliant colours.
+* **Typography**: respect OS font scaling; never lock line-height < 1.4; avoid justified text; keep measure ≈ 60–80 chars.
+* **Motion**: honour `prefers-reduced-motion`; no essential info conveyed by motion alone; avoid parallax/looped distractions.
+* **Language**: short sentences, active verbs; define jargon inline; reading level ≈ secondary school for all user-facing copy.
+* **Target sizes**: ≥ 44×44 px hit areas on touch; generous spacing between actions.
+* **Timing**: no session timeouts during intake without warning and extend option; autosave on every edit.
+
+#### Interaction & structure patterns
+
+* **Keyboard**: Tab sequence matches visual order; roving tabindex for composite widgets; **skip to content** link; Esc closes non-modal popovers.
+* **Focus management**: put focus where the user expects after route change or dialog open; never trap focus; always return focus sensibly on close.
+* **Semantics**: use native elements first; ARIA only when necessary. Landmark regions (`header`, `nav`, `main`, `aside`, `footer`) present on every page.
+* **Forms**: each input has a **visible label**, programmatic association, helpful hint, and an example; errors are inline, specific, and read by screen readers; don’t rely on colour alone.
+* **Tables & charts**: tables have headers (`<th scope>`), captions, and summaries; charts must include data tables or alt text summarising the finding and trend.
+
+#### Reports (HTML & PDF) accessibility
+
+* HTML report uses proper headings, lists, and table semantics; link text is meaningful (“View MFA policy evidence”), not “click here”.
+* PDF export preserves tags/structure from HTML; figures have alt text; the artifact hash and citations are text, not images; doc language set; reading order verified.
+
+#### Mobile & low-bandwidth
+
+* First meaningful paint fast on 3G/4G; no third-party font/CDN blockers; images responsive; forms resilient to spotty connections (autosave + retry with backoff).
+
+#### Cognitive load & clarity
+
+* One decision per view; progressive disclosure; show *why* each field is needed (“This helps us test AC.1.1”).
+* Provide summaries and “what changed” diffs; avoid modal stacks; always give a safe next step.
+
+#### Testing & enforcement (make it routine)
+
+* **Design-time**: contrast plugin on the token palette; component library examples include keyboard/AT notes.
+* **Build-time**: axe/Pa11y CI checks on key routes (home, product, signup, intake, findings, report preview).
+* **Manual**: quarterly screen-reader sweeps (NVDA + VoiceOver), keyboard-only task run (signup→report), reduced-motion pass.
+* **PDF**: run a tagging validator on sample reports each release.
+* **Telemetry**: log “keyboard only” session ratio (heuristic) and error recovery rates; track time-to-first-action for users with larger font settings.
+
+#### Acceptance criteria (task-level)
+
+* From keyboard only, a new user can:
+  a) sign up + set MFA,
+  b) complete intake,
+  c) upload two evidences,
+  d) run assessment,
+  e) download an accessible PDF—**without touching a mouse**.
+* All interactive controls have programmatic names/states; tab order matches visual order; focus is always visible.
+* No blocking WCAG 2.2 AA violations on top routes; automated a11y score (axe) ≥ 95 on those pages.
+* Report PDFs pass a tag/structure check and a manual NVDA read-through of headings, tables, and citations.
+
 ### 4.5 Offline and Multi-Device Support
 
+**What we’re solving.** Users are on flaky Wi-Fi, 4G in a car park, or rural broadband. The product must be usable without a perfect connection and it must “hand off” cleanly between laptop, phone, and tablet. We will ship an **installable PWA** (Progressive Web App) that precaches the app shell and lets people complete intake, queue evidence, and view the most recent report offline—then sync safely when they’re back online. No magical thinking: *evaluation and billing require a network*, but everything leading up to “Run assessment” should work in airplane mode.
+
+**How it works (architecture & behaviour).**
+
+* **PWA & caching:** Web App Manifest + Service Worker (Workbox). Precache: app shell, fonts, icons, and core routes (`/app`, `/app/intake`, `/app/reports`). Runtime cache with stale-while-revalidate for lightweight JSON (feature flags, RulePack metadata). **Never cache secrets** or authenticated API responses longer than the session TTL.
+* **Offline data store:** **IndexedDB** (via a tiny helper, e.g., `idb-keyval`) caches *intake form state*, *evidence metadata*, and the **most recent HTML/PDF report**. Every local record carries a UUIDv7, timestamp, and a “sync state” (`pending|synced|conflict`).
+* **Queued mutations:** All writes are recorded as idempotent “commands” (e.g., `INTAKE.UPDATE(field,value)`, `EVIDENCE.ADD(meta,sha256,blobRef)`). A Background Sync job (or foreground retry with backoff on iOS) replays them server-side. Conflicts resolve at **field level, last-writer-wins** with a server truth timestamp; conflicts surface a “Review changes” banner and an audit entry.
+* **Evidence files offline:** Blobs are stored temporarily in IndexedDB, **SHA-256 computed client-side**, and chunk-uploaded on reconnect with resume support. Size caps: **50 MB/file (MVP)**, total offline cache **200 MB**; users see a usage meter and can clear cache from Settings. Evidence must be explicitly **bound to a control** even offline; binding syncs as metadata before the binary upload.
+* **Multi-device handoff:** Session is first-party (one origin), short-lived with silent refresh. “Continue where you left off” loads the last saved intake checkpoint from server if newer than local; otherwise offers “Use local draft” vs “Discard draft”. Device list in Settings shows active sessions; owners can revoke a device.
+* **Security of local cache:** By default, we rely on OS user separation. For higher assurance, a **“Secure Device Mode”** encrypts the local cache using WebCrypto (AES-GCM) with a key wrapped by a per-device secret; unlocking requires re-auth (step-up MFA) after 15 minutes of inactivity. Evidence blobs are purged from local storage **immediately after successful upload**.
+
+**What’s in/out, and how we prove it.**
+
+* **Offline supported:** intake edits, evidence **queuing**, report **viewing** (last copy), user invites (queued), and audit entries for local actions (synced later).
+* **Online-only:** running evaluations, generating *new* reports, billing changes, connector imports.
+* **Acceptance tests:**
+
+  1. **Airplane-mode run:** From a fresh install, user completes all required intake fields, attaches two evidence files (queued), and closes the app. On reconnect, sync completes automatically; user taps **Run assessment**.
+  2. **Conflict case:** Field `endpoints.count` edited on phone offline and on desktop online; on reconnect, desktop wins (newer server timestamp). Phone shows non-blocking “Review changes” with a one-click “Apply local edit” (creates a new server write).
+  3. **Report offline:** After generating a report online, user can open the same report offline and print it; artifact hash remains visible and selectable text (not an image).
+  4. **iOS fallback:** Background Sync unavailable—foreground retry with exponential backoff works; user gets a persistent “X items waiting to upload” indicator.
+* **KPIs:** ≥ 95% sync success within 2 minutes of reconnect; ≤ 1% conflicts per 100 edits; < 1 support ticket per 500 offline sessions; median time from reconnect→all uploads complete ≤ 30 s on 4G.
+
+**Device and layout specifics.**
+
+* **Responsive breakpoints:** phone (≤480px), tablet (481–1024px), desktop (≥1025px). Intake and findings adapt to single-column on phone; primary actions stay thumb-reachable; touch targets ≥ 44×44 px.
+* **File picker UX:** camera/document sources on mobile; show per-file progress and a checksum tick when complete. **Never** silently retry more than 5 times; surface “Resume upload” clearly.
+* **Accessibility in offline mode:** all controls keyboard-operable; offline banners are role=`status` with clear language (“You’re offline. We’ll sync 3 items when you reconnect.”).
+
+**Constraints & hygiene.**
+
+* We do **not** persist access tokens in IndexedDB; only ephemeral session info in memory + cookies.
+* We **do not** cache partner/auditor data unless a report was explicitly opened.
+* Clearing cache deletes local drafts and queued evidence (with a confirmation). A redaction setting prevents any evidence bytes from being stored locally on shared machines.
+
+This gives you a boring-reliable PWA: complete the work anywhere, carry on across devices, and never lose a byte—even when the network gremlins are doing parkour.
+
 ## 5. Data, Intelligence, and Automation
+
+This section defines how information becomes value—how raw inputs (answers, evidence, context) move through deterministic logic to produce findings, actions, and reports—without gambling on opaque AI at runtime. We draw a bright line: runtime = deterministic, auditable, reproducible; build-time = where AI helps draft, summarise, and map. Everything here exists to shorten time-to-truth while preserving provenance: explicit schemas for each payload (OrgProfileV1, EvidenceV1, FindingsV1, ReportEnvelopeV1), content-addressed artifacts (rule packs, templates, AI outputs) addressed by hash, and append-only audit trails that explain “who did what, with which inputs, and when.” The result should be boring in the right way: identical inputs produce identical outputs; every assertion and control links to citations; every report footer carries a verifiable artifact hash.
+
+We also specify the automation backbone that keeps posture fresh and reduces toil. Ingest happens via guided intake, file uploads, or light connectors that transform external proofs (IdP exports, backup configs, endpoint inventories) into bound evidence—never loose files—tagged to controls and citations. A job queue handles long-running work (PDF rendering, export bundles, partner webhooks) with idempotency keys and backoff; schedulers run posture refresh, stale-evidence nudges, and framework update prompts. The offline/PWA lane lets users complete intake, queue evidence, and view the last report without a network; a sync layer replays queued mutations safely on reconnect and surfaces conflicts at field level. Dashboards and reports are just different lenses on the same truth: prioritised actions (effort × impact), diffs since last run, coverage of evidence, and simple roll-ups for partners—always explainable, never theatrical.
+
+Finally, this section codifies our trust guarantees and IP boundary. Privacy is engineered by design (data minimisation, tenant isolation, short-lived tokens, local caching that’s optional and encrypted in “Secure Device Mode”), and AI is constrained to build-time with redaction, citation requirements, and human review. We define what is proprietary (rule-pack curation, prioritisation heuristics, templates, admin tools, connector scaffolds) and what remains standardised (REST/JSON, webhooks, JSON/JSON-LD exports, identity flows). We set measurable targets—time-to-first-report ≤ 60 minutes, ≥ 80% of failing/partial findings bound to evidence within 14 days, ≥ 95% sync success within 2 minutes of reconnect—and we make verification first-class (downloadable traces, re-execution procedure, public status/changelog). In short: clear data contracts, deterministic intelligence, automation that earns trust, and a crisp delineation between open interfaces and protected craft.
+
 ### 5.1 Data Flow Architecture
+
+**Purpose & shape.** This defines—end-to-end—how inputs become trustworthy outputs. We model the system as six stages with explicit contracts: **Ingest → Normalise → Evaluate → Render → Distribute → Retain/Dispose**. Every hop uses typed payloads (`OrgProfileV1`, `EvidenceV1`, `FindingsV1`, `ReportEnvelopeV1`) and content-addressed artifacts (RulePacks, templates, AI-assist drafts) addressed by **SHA-256**. Tenancy is enforced at every boundary (RLS in Postgres + per-tenant object paths). Identical inputs produce identical findings; every output carries provenance (who/when/what-hashes).
+
+**Ingest (answers & proof).**
+
+* **Sources:** App intake (≤20 required fields), evidence files (policy PDFs, IdP/backup exports), structured assertions (e.g., `MFA.enforced.admins=true`), plus optional connectors (IdP/backup/EDR).
+* **Client behaviour:** autosave to IndexedDB (PWA) with **UUIDv7** ops queued for sync; file SHA-256 computed client-side; evidence must be **bound to a control** before it can be queued.
+* **API contracts:**
+
+  * `POST /api/intake` → `OrgProfileV1 { tenant_id, schema, data, updated_at }` (idempotent via `X-Idempotency-Key`).
+  * `POST /api/evidence/files` (multipart) → `EvidenceV1(kind="file", sha256, storage_key, control_id, citations[], source)`; large files chunked with resumable upload.
+  * `POST /api/evidence/assertions` → `EvidenceV1(kind="assertion", key, value, control_id, citations[], source)`.
+* **Security:** TLS 1.3; server rejects “loose” evidence (no `control_id`). Audit event `EVIDENCE.ADD` logged with request_id, actor, hashes.
+
+**Normalise (make inputs computable).**
+
+* **Validation:** zod/JSON-Schema on all payloads; coercion of enums (e.g., IdP vendor), basic dedupe by `(tenant_id, sha256)`.
+* **Storage:**
+
+  * Postgres: `org_profiles`, `evidence_items`, `audit_events` (RLS).
+  * Object store: `evidence/{tenant}/{uuid}` (server-side encryption, versioning).
+* **Conflicts:** field-level **last-writer-wins** with server timestamp; conflicts surface in UI as “Review changes” (non-blocking).
+* **Provenance:** each record stamped with `{created_at, actor, sha256/file, source, control_id, citations[]}`.
+
+**Evaluate (deterministic rules).**
+
+* **Inputs:** `OrgProfileV1`, selected `RulePack` (immutable, signed JSON by hash), bound `EvidenceV1`.
+* **Process:** Stateless Rule Engine loads RulePack by **hash**, runs tests (pure functions) → emits `FindingsV1[]`. No LLMs.
+* **Output:**
+
+  ```json
+  {
+    "schema":"FindingsV1",
+    "tenant_id":"…",
+    "rulepack_hash":"…",
+    "findings":[
+      {"rule_id":"CE-AC-001","status":"fail","reason":"Admin MFA not enforced","evidence_ids":["…"],"citations":[{"doc":"CE-2025.3","section":"AC.1.1"}],"priority":1}
+    ],
+    "trace_id":"…",
+    "artifact_hash":"sha256:…"
+  }
+  ```
+* **Invariants:** same inputs → same outputs; each finding has a reproducible **trace** (inputs, test, citations). Audit `EVAL.RUN` recorded.
+
+**Render (reports & bundles).**
+
+* **Inputs:** `FindingsV1` + template pack (HTML) + organisation branding.
+* **Process:** Jinja2 → HTML → WeasyPrint → PDF; embed **artifact footer** with the hashes of RulePack, OrgProfile, and Evidence set.
+* **Outputs:** `ReportEnvelopeV1 { report_id, summary, download_url, artifact_sha256, generated_at }` + optional **Evidence Bundle** (ZIP of PDFs/JSON + manifest.json with checksums). Audit `REPORT.GENERATE`.
+
+**Distribute (to humans & systems).**
+
+* **User delivery:** HTML preview, PDF download, time-boxed read-only share links (auditor).
+* **System delivery:** webhooks (`report.generated`, `finding.changed`) with signed payloads; Partner API read endpoints (`/api/partners/tenants/:id/posture`, pagination).
+* **Idempotency & retries:** all webhook deliveries carry an `event_id` and are retried with exponential backoff; receivers must ack within SLA.
+
+**Retain / Dispose (lifecycle & DSRs).**
+
+* **Retention:** evidence, findings, reports default **7 years** (configurable per tenant). Object store versioning on; DB PITR enabled.
+* **DSR export:** per-tenant export generates a signed bundle of `OrgProfileV1`, `EvidenceV1` metadata, `FindingsV1`, PDF reports, and an index with hashes.
+* **DSR delete:** soft-delete queue → hard-delete after grace period; audit `DSR.DELETE` logged; object versions purged; referential checks ensure no dangling pointers.
+* **Redaction:** optional policy prevents storing evidence blobs locally on shared devices; AI build-time redaction is separate and logged.
+
+**Error handling, sync, and KPIs.**
+
+* **Sync layer:** queued mutations replay on reconnect; resumable file uploads; per-file progress; foreground retry on iOS.
+* **Problem+JSON:** all errors have `type`, `detail`, `status`, and a `trace_id` surfaced in the UI.
+* **Targets:** ≥95% offline-queued ops sync within 2 minutes of reconnect; <1% field conflicts/100 edits; time from “Run assessment” → findings <2 minutes; report render <10 s; ≥80% of fail/partial findings bound to evidence within 14 days.
+
+**ASCII map (at a glance).**
+
+```
+[User/Device] --TLS--> [API Gateway/OPA] --mTLS--> [FastAPI Services]
+   |  \                                 \           \ 
+   |   \--(PWA IndexedDB queue)          \-> [Rule Engine] --reads--> [RulePack Registry]
+   |                                      \-> [Evidence Svc] <--> [S3 Bucket]
+   |                                       \-> [Report Svc]  --> [HTML/PDF + Bundle]
+   |                                                 |
+   v                                                 v
+[Audit Log (append-only)]                     [Webhooks/Partner API]
+                         \--> [Postgres (RLS): profiles, evidence_index, findings, reports]
+```
+
+This architecture gives us **clear contracts, replayable automations, and verifiable outputs**: every byte in a report can be traced back to inputs by hash, every action is auditable, and the offline/multi-device story is robust without compromising determinism or privacy.
+
 ### 5.2 Machine Learning and AI Components
+
+Transcrypt uses AI as an accelerator at build-time—never as a decider at runtime. The goal is to compress the language-heavy work (reading standards, mapping controls, drafting clear explanations) while keeping outcomes deterministic and auditable in production. Concretely, AI workers draft rule objects from legislative text, propose crosswalks between frameworks, summarise guidance diffs, and turn structured findings into plain-English report copy. All AI outputs are treated as artifacts: schema-validated, content-addressed by hash, and stored alongside the RulePacks and templates they relate to, so any sentence in a report can be traced back to inputs, prompts, model version, and citations. The rule engine remains authoritative: it evaluates controls and produces findings; AI only drafts or suggests at build-time, with human acceptance required where appropriate. This bright line—deterministic runtime, AI-assisted build—keeps the product explainable to auditors and safe to evolve.    
+
+The AI pipeline consists of modular jobs that can run offline or in a controlled backend queue. Inputs include redacted legislative/guidance text, the versioned RulePack, and anonymised snippets from OrgProfile/Evidence where language assistance helps (e.g., proposing an evidence-to-control binding). Steps: (1) pre-processing and chunking with citation anchors; (2) provider-pluggable LLM calls via an OpenAI-compatible interface or local models; (3) structured validation into DraftRuleObjects, CrosswalkSuggestions, EvidenceBindingSuggestions, and ReportNarrativeDrafts; (4) human-in-the-loop review where required; and (5) artifact publication to the registry under its SHA-256 address. Every job records provenance and emits a minimal audit bundle (input hashes, prompt/template IDs, model+version, output hash) to enable exact reproduction. Privacy is engineered in: PII redaction before prompts, short-lived credentials, and a “Secure Device Mode” that disables local caching of sensitive material. Scheduling and idempotent queues handle longer jobs (e.g., large rule updates, report regeneration), and dashboards surface coverage and drift so the team can see what changed and why.  
+
+Governance wraps the whole pipeline. Models are pinned by version; prompts/templates are versioned; outputs carry hashes and citations; and CI enforces policy: no artifact without schema validation and trace data. We use golden sets to regression-test draft quality (e.g., crosswalk precision/recall, narrative factual-consistency) and keep a zero-trust stance toward model hallucination—anything not backed by the deterministic engine or explicit citations is rejected. Operationally, this means the platform can ship better explanations faster without creating a runtime dependency on AI; the system remains reproducible and auditor-friendly, while we still harvest the speed of language tooling where it’s safe. The success criterion for this component is simple: shorter time-to-truth and clearer reports, with identical inputs always producing identical runtime findings and every assertion traceable end-to-end.  
+
 ### 5.3 Reporting, Dashboards, and Insights
+
+
+
 ### 5.4 Auditability and Data Provenance
 ### 5.5 Closed-Source Policy and Proprietary Components
 
