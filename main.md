@@ -284,7 +284,13 @@ The long-term impact is measured in endurance and credibility rather than invest
 
 ## 2. Market Context and Competitive Landscape
 
-The market Transcrypt enters is noisy, fragmented, and complacent — an ecosystem where fear, uncertainty, and compliance paperwork have been monetised into confusion. In the UK, government-backed schemes such as Cyber Essentials, NIS, and ISO 27001 certification are promoted as pathways to safety, yet they remain largely procedural and consultant-driven. The existing landscape splits into two extremes. On one side are the certification portals and template sellers: low-cost, high-volume services that automate form-filling without understanding or interpretation. On the other side sit heavyweight GRC platforms designed for enterprises, bristling with features and priced far beyond SME reach. Between them lies a vacuum — a missing layer for businesses that want affordable automation with comprehension. That vacuum is Transcrypt’s entry point: a tool designed to interpret, not just administer, the rules that small organisations must follow.
+Transcrypt Core launches with a **UK-first focus**, helping SMEs meet **Cyber Essentials** and **NIS2** obligations. However, the compliance engine is designed to be **framework-agnostic**. Each regulation—Cyber Essentials, NIS2, ISO 27001, SOC 2, or future national schemes—is represented as a **modular control pack** containing:
+- control definitions,
+- evidence requirements,
+- scoring logic, and
+- mappings to shared baseline controls.
+
+This design allows Transcrypt to remain rooted in UK mandates while enabling future localisation for other jurisdictions without code rewrite.
 
 The incumbents competing for SME attention are largely transactional rather than relational. Companies like CyberSmart, Bulletproof, IASME, and a growing tier of managed-service providers offer compliance as a bundle — certification plus managed antivirus, plus a vague promise of “peace of mind.” Their strength is marketing polish, but their weakness is depth: they simplify by omission, not by design. Few provide continuous alignment with new legislative changes or transparent mappings between regulations. Even fewer generate the kind of live, data-backed assurance that larger supply-chain partners increasingly demand. This creates an opportunity for a product that combines policy literacy with operational empathy — one that helps a small business understand what compliance means day to day rather than just tick a box. Transcrypt’s proposition is not to undercut them on price but to outperform them on authenticity, clarity, and trust.
 
@@ -338,6 +344,15 @@ Transcrypt’s architecture is deliberately simple at the edges and highly struc
 Security and trust are baked into the architecture rather than bolted on. Every human and machine actor is authenticated and authorised before any capability is exposed, with policy-as-code enforcing least privilege across roles, resources, and runtime context; identities (including services and connectors) are unique and cryptographic, enabling short-lived, revocable trust that’s observable end-to-end. Network paths are segmented and verified—no implicit trust, east-west flows are constrained, and all movement is mutually authenticated and encrypted—so the topology itself becomes a living security control. This design aligns the product’s internals with the assurance it sells: evidenceable controls, immutable audit events, and a security posture that can be demonstrated in real time.
 
 Extensibility is a primary property, not a roadmap footnote. Because frameworks are abstracted into portable rule/evidence objects, expansion to new jurisdictions is a data operation—swap in new mappings, keep the engine—and cross-jurisdiction dashboards become feasible without re-architecting. The same decomposition (intake → rule/LLM evaluation → evidence binding → narrative/report) lets us add new collectors, alternative LLMs, and partner connectors without touching the core. Practically, this yields a platform that can start focused on UK SMEs and then scale horizontally into the EU (NIS2/DORA) and Commonwealth markets by adding definitions and localisations while preserving the assurance model and user experience. In short: a composable graph of obligations, controls, and evidence, secured by identity-centric boundaries, and designed to grow by data, not code.
+
+### Framework Modularity
+
+The compliance layer separates **control logic** from **application logic**. Controls, tests, and question sets live as **data-driven schemas**, versioned and loaded from signed configuration bundles. This allows the platform to:
+- plug in new regulatory frameworks by adding schema files,
+- update existing control logic without redeploying the codebase, and
+- map overlapping controls between frameworks (for example, CE → NIS2 → ISO 27001).
+
+All mappings are stored in a normalised meta-model so reporting and dashboards stay consistent across jurisdictions.
 
 ### 3.1.1 System Overview
 
@@ -1153,8 +1168,12 @@ We also specify the automation backbone that keeps posture fresh and reduces toi
 Finally, this section codifies our trust guarantees and IP boundary. Privacy is engineered by design (data minimisation, tenant isolation, short-lived tokens, local caching that’s optional and encrypted in “Secure Device Mode”), and AI is constrained to build-time with redaction, citation requirements, and human review. We define what is proprietary (rule-pack curation, prioritisation heuristics, templates, admin tools, connector scaffolds) and what remains standardised (REST/JSON, webhooks, JSON/JSON-LD exports, identity flows). We set measurable targets—time-to-first-report ≤ 60 minutes, ≥ 80% of failing/partial findings bound to evidence within 14 days, ≥ 95% sync success within 2 minutes of reconnect—and we make verification first-class (downloadable traces, re-execution procedure, public status/changelog). In short: clear data contracts, deterministic intelligence, automation that earns trust, and a crisp delineation between open interfaces and protected craft.
 
 ### 5.1 Data Flow Architecture (v1)
-Input (guided forms/uploads) → Validation → Evidence Vault (tenant-encrypted) → Rules Engine (CE checks) → Insights/Reports.  
+Input (guided forms/uploads) → Validation → Evidence Vault (tenant-encrypted) → Rules Engine (CE checks) → Insights/Reports.
 No cross-tenant processing. All AI calls are stateless inference with minimal PII footprint.
+
+> **Framework Agnostic Design:**
+> Data ingestion, evidence storage, and rules execution reference control-pack metadata, not hard-coded UK criteria.
+> This allows new jurisdictions or standards to be loaded as configuration rather than forked code.
 
 ### 5.2 Machine Learning and AI Components (v1)
 - **Extraction:** classify uploads (policy vs invoice vs screenshot), extract dates/covers.  
@@ -1340,12 +1359,11 @@ Strategically, Transcrypt measures sustainability not just in profit but in oper
 
 ## 9. Roadmap
 
-| Phase | Name                | Focus | Key Adds |
-|------:|---------------------|-------|---------|
-| v1.0  | Transcrypt Core     | MVP   | Guided CE flow, evidence vault, assistive AI, simple reports, append-only audit log |
-| v1.1  | Core+               | UX    | Bulk importers, richer dashboards, renewal reminders, limited role variants |
-| v1.5  | Auditor Assist (β)  | Post  | [[Post-MVP: see §9 Roadmap]] Read-only auditor portal, scoped sharing, attestation export |
-| v2.0  | Transcrypt Platform | Post  | [[Post-MVP: see §9 Roadmap]] Multi-tenant orchestration, ML training loops, provenance ledger, marketplace integrations |
+| Phase | Name                   | Focus | Key Adds |
+|------:|------------------------|-------|---------|
+| v1.0  | Transcrypt Core        | UK Cyber Essentials + NIS2 | CE/NIS2 control packs |
+| v1.3  | Extensible Core        | Add control-pack loader, meta-mapping, early ISO 27001 support | Modular compliance architecture |
+| v2.0  | Multi-Framework Platform | Support multiple national/sectoral frameworks | Unified cross-mapping engine |
 
 Transcrypt’s Roadmap and Delivery Strategy is structured around disciplined iteration: a lean, verifiable path from concept to commercial traction. The strategy reflects a core principle—deliver small, prove value, refine fast. It prioritises the creation of a Minimum Viable Product (MVP) that demonstrates functional credibility and real customer benefit within the first six months, followed by incremental expansions that compound capability rather than complexity. Each phase is defined by a measurable outcome: working software, validated user engagement, and sustainable revenue growth. The emphasis is on building a product that earns trust early, through demonstrable competence and transparency, rather than pursuing scale prematurely.
 
@@ -1461,6 +1479,9 @@ In short, Transcrypt turns compliance from an annual scramble into a steady stat
 ### A. Terminology and Abbreviations
 
 **Verifiable Transparency** — A principle where a closed-source system provides mathematically verifiable evidence of integrity (hashes, signatures, deterministic logs) in place of source disclosure.
+
+**Compliance Pack** — A signed configuration bundle defining a specific regulation or framework (controls, scoring logic, mappings, labels).
+Enables multi-framework operation without code changes.
 
 ### B. Reference Documents
 ### C. Competitive Matrix
