@@ -1219,10 +1219,60 @@ Governance wraps the whole pipeline. Models are pinned by version; prompts/templ
 
 ### 5.3 Reporting, Dashboards, and Insights
 
+Reporting turns findings into decisions people can act on—without interpretation overhead or vendor theatre. Each report is rendered from a single source of truth (the `FindingsV1` set plus the selected RulePack and organisation profile snapshot) and shipped as **HTML + accessible PDF** with a footer that prints the artifact hashes for the inputs (RulePack, OrgProfile, Evidence set). The structure is fixed and auditor-friendly: Executive Summary (plain-English posture, risk themes, and a one-page “Board View”), Prioritised Action Plan (effort × impact, with links that jump to the exact intake/evidence field to fix), Findings Catalogue (Pass/Fail/Partial with the “because…”, test trace, and citations), and an Appendix (evidence manifest with SHA-256, version table for frameworks, and change log since last run). “Identical inputs → identical bytes” is enforced: any rerender with the same inputs must yield the same PDF hash; any change (a field edit, a new evidence file, a RulePack revision) is visible in the report header and diff appendix. Reports support **time-boxed share links** for auditors/insurers, and an **export bundle** (JSON + PDFs + manifest) so partners can ingest the same truth you see.
 
+Dashboards are the living lens on that same data—optimised for **next best action**, not vanity charts. The tenant dashboard shows a posture badge; **Top 5 actions** with estimated effort, dependencies, and impact; a “What changed” diff since the previous assessment; evidence coverage (“N of M failing/partial findings now have proof attached”); and timers such as “Time since last assessment” and “Stale evidence” nudges. Every card links to the singular place where a user can resolve the issue (an intake field or evidence binding). Partner dashboards add a portfolio roll-up (tenant list, posture trend, last-seen timestamp, and outstanding actions), with filters for sector/size and webhooks for `report.generated` and `finding.changed`. All tiles derive from deterministic transformations: priority scoring is transparent (e.g., *impact* = mapped regulatory weight × likelihood proxy; *effort* = from a small, published rubric), trends compare exactly two snapshots by hash, and any aggregation can be exported as **JSON/JSON-LD** for downstream BI without re-interpretation. No runtime AI is involved; language help for summaries is produced at build-time only and stored as artifacts alongside the RulePack release that introduced it.
+
+Insights are small, trustworthy nudges—derived, not divined. The system computes diffs between the latest and previous runs, highlights controls whose status regressed, surfaces **orphaned evidence** (files not bound to a control), and flags **inconsistent assertions** (e.g., “MFA enforced = true” but no matching IdP policy evidence). Where longitudinal data exists, the app projects **time-to-green** based on your own fix cadence and points to **quick wins** (low effort, high impact). For partners, insights include a weekly digest of tenants at risk of expiry (no assessment in X days, stale evidence, or pending RulePack updates) and a CSV/JSON export keyed by tenant IDs. Success is measured by movement, not dashboards watched: median time from first report to first resolved action; proportion of failing/partial findings that acquire bound evidence within 14 days; report regeneration within 90 days; and partner webhook delivery success. Everything shown can be clicked back to a rule, a test, an input, and an evidence ID—in one hop if you’re the user, or with a time-boxed read-only view if you’re the auditor—so every insight is both **explainable** and **fixable**.
 
 ### 5.4 Auditability and Data Provenance
+
+Every user-visible outcome must be **explainable, reproducible, and attributable**. Transcrypt treats all moving parts as artifacts with identity: the **RulePack** (immutable JSON by SHA-256 hash and version), the **OrgProfile snapshot** (schema + timestamp + author), the **Evidence set** (files/assertions each with SHA-256, control binding, citations, source), the **Evaluator version** (build ID + SBOM + cosign signature), and the resulting **Findings set** and **Report** (HTML/PDF) with their own content hashes. These identifiers are stitched together in a **provenance envelope** that travels with the report and appears in its footer (RulePack hash, OrgProfile hash, Evidence manifest hash, Evaluator build ID, Report hash). “Identical inputs → identical bytes” is a product invariant: re-rendering a report using the same artifact hashes must yield the same output hash. Any deviation indicates changed inputs or code and is treated as a defect or a new version.
+
+All interactions generate an **append-only audit log** with high-value fields: `tenant_id`, `actor` (user/service), `action` (EVIDENCE.ADD, INTAKE.UPDATE, EVAL.RUN, REPORT.GENERATE, DSR.EXPORT/DELETE), `request_id` (end-to-end trace), timestamps, client hints (IP/UA), and the **artifact references touched** (e.g., `evidence_sha256`, `rulepack_hash`, `report_sha256`). Audit events are written via a **write-only API** from the gateway/services, stored under Row-Level Security, and mirrored to WORM-like object storage (versioned bucket) for tamper-evidence. Offline actions (PWA) create **local audit stubs** that sync on reconnect; stubs include the client clock time and are reconciled against server time during ingestion. For partner/auditor assurance, the app exposes a **Trace Viewer**: from any finding you can jump to the rule text, the test logic, the exact inputs evaluated, and the bound evidence items, all within three clicks. The same trace can be downloaded as JSON for external archiving or re-execution.
+
+Verification is first-class and **tool-agnostic**. A minimal **re-execution procedure** is published: given the five hashes (RulePack, OrgProfile, Evidence manifest, Evaluator build, Templates), an auditor can ask Transcrypt to regenerate the report and compare the output hash; any mismatch is investigated with the captured **Problem+JSON** traces (errors include `type`, `status`, `detail`, `trace_id`). Webhooks, exports, and share links carry signed payloads with event IDs and artifact references so downstream systems can independently verify integrity. CI gates enforce that no Findings or Report artifact is published without: (a) validated schema, (b) full provenance envelope, and (c) a stored SBOM/provenance attestation for the evaluator build. Success for this section is measurable: (1) 100% of reports include complete provenance, (2) median audit query < 200 ms for per-tenant filters, (3) ≥ 99.9% deterministic re-execution pass rate across released RulePacks, and (4) zero unauthorised audit-log mutations (verified by periodic hash chain checks).
+
 ### 5.5 Closed-Source Policy and Proprietary Components
+
+**Scope and intent.** Transcrypt’s core is closed source. We protect the design and know-how that make the product defensible and commercially viable, while keeping **interfaces, schemas and exports open** so customers and partners never feel locked in. Customers own their data and outputs. We own the code, curated content and heuristics that turn that data into value.
+
+**What is proprietary.**
+
+* **RulePacks and mappings:** curated control text, test clauses, cross-framework equivalences, citations, and our effort × impact prioritisation heuristics.
+* **Evaluator and admin console:** deterministic rules engine, policy gates, governance tooling, release pipeline, and internal QA harnesses.
+* **Templates and narrative library:** report HTML/PDF templates, copy patterns, tone rules, and LLM prompt sets used at build time.
+* **Connector scaffolds:** our hardened fetchers, normalisers and replay logic, including backoff, signing and conflict resolution.
+* **Operational playbooks:** runbooks, incident procedures, test fixtures and golden sets.
+  All proprietary artifacts are content-addressed, watermarked and versioned. We publish hashes in report footers and manifests to prove integrity without disclosing internals.
+
+**What is open and standardised.**
+
+* **APIs and payloads:** REST/JSON, webhooks with signed events, and export bundles in JSON or JSON-LD. Schemas are versioned (`OrgProfileV1`, `EvidenceV1`, `FindingsV1`, `ReportEnvelopeV1`) and public.
+* **Identity and crypto:** OIDC, TLS 1.3, mTLS, cosign signatures, SBOM formats (CycloneDX/SPDX).
+* **Data portability:** one-click exports of org profile, evidence metadata, findings and reports, plus a manifest with hashes so third parties can rehydrate without our code.
+* **Light SDKs:** typed clients for API and webhooks may be source-available with a permissive licence to speed integrations, while the platform remains closed.
+
+**Licensing and use.**
+
+* **Customer licence:** subscription with non-transferable, revocable rights to use the hosted service; no right to copy, modify, or host our software. Generated reports are the customer’s property.
+* **Prohibitions:** reverse engineering, scraping of templates or RulePacks, automated harvesting of copy, and benchmarking disclosure without consent.
+* **Attribution and brands:** Transcrypt marks and template copyrights must remain intact on reports unless a white-label addendum is purchased.
+* **Third-party components:** we keep an OSS allowlist, publish `THIRD_PARTY_NOTICES.md`, and pin versions in SBOMs. Licences are honoured and never contaminate the proprietary core.
+
+**Protection and enforcement.**
+
+* **Watermarking and telemetry:** invisible markers in templates and narrative blocks; rate limits per tenant; anomaly detection for bulk scraping.
+* **Terms and monitoring:** API keys, signed webhook payloads, fair-use limits, and clause-level ToS covering anti-circumvention.
+* **Escrow and continuity (optional):** for larger buyers, source-code escrow tied to specific failure conditions, with a narrow, audited use grant.
+
+**Fair-use and openness commitments.**
+
+* We will not block exports, change schemas without versioning, or require proprietary viewers.
+* We document the re-execution procedure so auditors can verify outputs independently.
+* Partners may build their own connectors against our public contracts without paying a platform fee, provided they respect rate limits and ToS.
+
+This policy gives us a clear IP boundary that protects the craft, preserves customer agency through open contracts and exports, and keeps audits straightforward without exposing the crown jewels.
 
 ## 6. Compliance and Governance Framework
 
