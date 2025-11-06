@@ -83,7 +83,7 @@
     - [5.2 Machine Learning and AI Components (v1)](#52-machine-learning-and-ai-components-v1)
     - [5.3 Reporting, Dashboards, and Insights (v1)](#53-reporting-dashboards-and-insights-v1)
     - [5.4 Auditability and Data Provenance (v1)](#54-auditability-and-data-provenance-v1)
-    - [5.5 Closed-Source Policy and Proprietary Components (v1)](#55-closed-source-policy-and-proprietary-components-v1)
+    - [5.5 Closed-Source Policy and Verifiable Transparency](#55-closed-source-policy-and-verifiable-transparency)
   - [6. Compliance and Governance Framework](#6-compliance-and-governance-framework)
     - [6.1 Alignment with NIS, Cyber Essentials, ISO 27001, and IEC 62443](#61-alignment-with-nis-cyber-essentials-iso-27001-and-iec-62443)
     - [6.2 Risk Management and Assurance](#62-risk-management-and-assurance)
@@ -244,7 +244,7 @@ It provides **guided assessments**, a secure **evidence vault**, **auto-generate
 - **AI in v1:** assistive (extract fields from uploads, draft policies, flag gaps); no model training or user data leaving tenant boundary except for inference.
 - **Security posture:** tenant-encrypted storage; audit log is append-only (no external ledger—see Roadmap).
 
-Transcrypt exists to turn regulatory obligation into operational confidence for small and mid-sized businesses. The vision is simple to state and hard to execute well: take messy frameworks, translate them into clear actions, and back every claim with evidence. The product is a practical interpreter between law and day-to-day operations. It gives an owner a single session route from intake to a tailored report, then keeps them aligned as rules change. Success is measured in steady outcomes rather than theatre: fewer hours lost to forms, faster audits, cleaner hand-offs to insurers and primes, and a live sense of “what is left to do and why”.
+Transcrypt exists to turn regulatory obligation into operational confidence for small and mid-sized businesses. The vision is simple to state and hard to execute well: take messy frameworks, translate them into clear actions, and back every claim with evidence. The product is a practical interpreter between law and day-to-day operations. It gives an owner a single session route from intake to a tailored report, then keeps them aligned as rules change. Success is measured in steady outcomes rather than theatre: fewer hours lost to forms, faster audits, cleaner hand-offs to insurers and primes, and a live sense of “what is left to do and why”. Transcrypt builds trust through **verifiable transparency** rather than open code. Audit confidence is achieved by deterministic, cryptographically signed outputs that anyone can verify, even though the software itself remains proprietary.
 
 AI is the accelerator, not the decider. The platform uses AI where language is a bottleneck and keeps decisions deterministic where auditability matters. In practice that means AI drafts rule objects from legislative text, proposes equivalences across frameworks, summarises diffs when guidance changes, and turns structured findings into plain English. The rule engine remains authoritative. It evaluates controls, records provenance, and explains outcomes in a way an auditor can follow and a team can act on. This is the disciplined version of the “AI dream team” idea above. The Analyst surfaces gaps in the market and in a customer’s posture. The Growth Hacker tests messaging against real behaviour. The Sales Machine writes only from verified benefits. The System Builder generates runbooks that can be executed. The Brand Builder publishes useful, evidence-led content that earns trust. Each assistant is judged by the same standard as the product itself: clarity, relevance, and the ability to be checked.
 
@@ -1167,13 +1167,31 @@ _No training loops or fine-tuning in v1; models are managed centrally; outputs a
 - Export: PDF summary and evidence index.
 
 ### 5.4 Auditability and Data Provenance (v1)
-- **Append-only** event log (who/what/when).  
-- Hashes per evidence file stored in log for tamper detection.  
+> **Closed-Source Alignment:**
+> The audit layer exposes every state change through signed event hashes.
+> Verification tools are open-documented so external auditors can independently confirm integrity without needing code access.
+
+- **Append-only** event log (who/what/when).
+- Hashes per evidence file stored in log for tamper detection.
 - No external ledger in v1 (see Roadmap v2.0).
 
-### 5.5 Closed-Source Policy and Proprietary Components (v1)
-- Code remains proprietary.  
-- **Verifiable outputs:** log hashing, deterministic exports, and evidence checksums provide external verifiability without code disclosure.
+### 5.5 Closed-Source Policy and Verifiable Transparency
+
+**Principle:**  
+Transcrypt’s source code is proprietary, but its **outputs are cryptographically verifiable** and its **behaviour auditable**.  
+We trade *code visibility* for *mathematical verifiability*.
+
+**Implementation (v1):**
+- Core logic and AI models are closed-source binaries signed by Transcrypt Ltd.  
+- Every system artefact—reports, evidence archives, audit logs—is **hashed and timestamped**.  
+- Users can verify integrity via published checksum algorithms and manifest files.  
+- No third-party or government has access to unencrypted user data; only the tenant holds decryption keys.  
+- A public white-paper describes hashing standards, key management, and evidence verification workflow.
+
+**Post-MVP (v2.0+):**
+- Optional “**Proof of Process Ledger**” where audit hashes are notarised to an external distributed log.  
+- Independent auditor verification API for attestations without code exposure.  
+- Third-party reproducibility review programme for components under NDA.
 
 ## 6. Compliance and Governance Framework
 
@@ -1223,6 +1241,8 @@ End-of-life governance is treated with the same rigour as initial release. When 
 ## 7. Security and Infrastructure Requirements
 
 Transcrypt’s Security and Infrastructure Requirements define the technical embodiment of its compliance philosophy — security not as an accessory, but as the substrate of the system. Every design decision is anchored in the principle of zero inherent trust: all actions must be authenticated, all data must be verifiable, and all communication must be observable. The architecture assumes compromise and is therefore built to contain and recover, rather than to depend on prevention alone. Infrastructure is designed to be modular, reproducible, and verifiable — every component declared as code, every dependency pinned, and every change logged. This approach transforms infrastructure into an auditable artefact: a living record of security posture rather than a collection of hidden configurations.
+
+> See §5.5 Closed-Source Policy and Verifiable Transparency for details on how proprietary code maintains audit trustworthiness.
 
 Security controls are embedded directly into the development and deployment pipeline. Continuous integration and continuous delivery (CI/CD) systems are instrumented with policy checks, dependency vulnerability scans, and static analysis gates that enforce compliance before a build can proceed. Runtime environments are ephemeral, instantiated from signed container images built only from verified sources. Secrets management, key rotation, and access provisioning are handled centrally through a dedicated identity and policy engine. Network isolation and strict least-privilege access ensure that each subsystem operates within its defined trust boundary. Monitoring, metrics, and logging form a closed assurance loop — data flows are visible, tamper-evident, and retained according to governance policy. This composition of infrastructure and security into a single pipeline reduces the distance between design intent and operational reality, making compliance continuously enforceable rather than periodically tested.
 
@@ -1439,6 +1459,9 @@ In short, Transcrypt turns compliance from an annual scramble into a steady stat
 
 ## Appendices
 ### A. Terminology and Abbreviations
+
+**Verifiable Transparency** — A principle where a closed-source system provides mathematically verifiable evidence of integrity (hashes, signatures, deterministic logs) in place of source disclosure.
+
 ### B. Reference Documents
 ### C. Competitive Matrix
 
