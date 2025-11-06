@@ -122,6 +122,8 @@ review_cycle: "Quarterly or upon major release"
     - [10.3 Potential Spin-offs and Product Lines](#103-potential-spin-offs-and-product-lines)
     - [10.4 Long-Term Sustainability and Ethical Charter](#104-long-term-sustainability-and-ethical-charter)
     - [10.5 Closing Summary](#105-closing-summary)
+- [Cross-Referencing Framework](#cross-referencing-framework)
+  - [Strategic/Technical Markers (Legacy)](#strategictechnical-markers-legacy)
   - [Appendices](#appendices)
     - [A. Terminology and Abbreviations](#a-terminology-and-abbreviations)
     - [B. Reference Documents](#b-reference-documents)
@@ -180,10 +182,12 @@ It contains two distinct modes of content:
 | **Strategic** | Defines *why* Transcrypt exists, its market context, vision, and roadmap. | Leadership, stakeholders | Guides direction but not implementation detail. |
 | **Specification** | Defines *how* the system functions: architecture, data flows, automation, and user experience. | Engineering, design, QA | Source of truth for build and validation. |
 
-Strategic content appears in **Sections 1–3** and **9**.  
-Specification content appears in **Sections 4–8**.  
-Cross-references between the two are deliberate and annotated using inline comments:  
+Strategic content appears in **Sections 1–3** and **9**.
+Specification content appears in **Sections 4–8**.
+Cross-references between the two are deliberate and annotated using inline comments:
 `<!-- strategic -->` or `<!-- specification -->`.
+
+Every requirement or component in this PRD can be traced to its origin or future delivery lane via inline cross-reference tags and the Traceability Table (§5). No orphaned feature references remain; each dependency resolves backward to strategy or forward to roadmap commitments.
 
 <!-- strategic -->
 ## 0. Prologue - Visionary Statement
@@ -1250,13 +1254,13 @@ This gives you a boring-reliable PWA: complete the work anywhere, carry on acros
 
 This section defines how information becomes value—how raw inputs (answers, evidence, context) move through deterministic logic to produce findings, actions, and reports—without gambling on opaque AI at runtime. We draw a bright line: runtime = deterministic, auditable, reproducible; build-time = where AI helps draft, summarise, and map. Everything here exists to shorten time-to-truth while preserving provenance: explicit schemas for each payload (OrgProfileV1, EvidenceV1, FindingsV1, ReportEnvelopeV1), content-addressed artifacts (rule packs, templates, AI outputs) addressed by hash, and append-only audit trails that explain “who did what, with which inputs, and when.” The result should be boring in the right way: identical inputs produce identical outputs; every assertion and control links to citations; every report footer carries a verifiable artifact hash.
 
-We also specify the automation backbone that keeps posture fresh and reduces toil. Ingest happens via guided intake, file uploads, or light connectors that transform external proofs (IdP exports, backup configs, endpoint inventories) into bound evidence—never loose files—tagged to controls and citations. A job queue handles long-running work (PDF rendering, export bundles, partner webhooks) with idempotency keys and backoff; schedulers run posture refresh, stale-evidence nudges, and framework update prompts. The offline/PWA lane lets users complete intake, queue evidence, and view the last report without a network; a sync layer replays queued mutations safely on reconnect and surfaces conflicts at field level. Dashboards and reports are just different lenses on the same truth: prioritised actions (effort × impact), diffs since last run, coverage of evidence, and simple roll-ups for partners—always explainable, never theatrical.
+We also specify the automation backbone that keeps posture fresh and reduces toil. Ingest happens via guided intake, file uploads, or light connectors that transform external proofs (IdP exports, backup configs, endpoint inventories) into bound evidence—never loose files—tagged to controls and citations [↩ A3.4 – Extensibility and Integration Framework]. A job queue handles long-running work (PDF rendering, export bundles, partner webhooks) with idempotency keys and backoff [↩ A3.2.6 – Report Service]; schedulers run posture refresh, stale-evidence nudges, and framework update prompts [↩ A3.2.10 – Observability & Audit]. The offline/PWA lane lets users complete intake, queue evidence, and view the last report without a network [↩ UX4.5 – Offline and Multi-Device Support]; a sync layer replays queued mutations safely on reconnect and surfaces conflicts at field level [↩ A3.2.9 – Data Stores & Artifacts]. Dashboards and reports are just different lenses on the same truth: prioritised actions (effort × impact), diffs since last run, coverage of evidence, and simple roll-ups for partners [↩ UX4.1 – User Journeys and Onboarding; A3.2.7 – Partner / Integrator API]—always explainable, never theatrical.
 
-Finally, this section codifies our trust guarantees and IP boundary. Privacy is engineered by design (data minimisation, tenant isolation, short-lived tokens, local caching that’s optional and encrypted in “Secure Device Mode”), and AI is constrained to build-time with redaction, citation requirements, and human review. We define what is proprietary (rule-pack curation, prioritisation heuristics, templates, admin tools, connector scaffolds) and what remains standardised (REST/JSON, webhooks, JSON/JSON-LD exports, identity flows). We set measurable targets—time-to-first-report ≤ 60 minutes, ≥ 80% of failing/partial findings bound to evidence within 14 days, ≥ 95% sync success within 2 minutes of reconnect—and we make verification first-class (downloadable traces, re-execution procedure, public status/changelog). In short: clear data contracts, deterministic intelligence, automation that earns trust, and a crisp delineation between open interfaces and protected craft.
+Finally, this section codifies our trust guarantees and IP boundary. Privacy is engineered by design (data minimisation, tenant isolation, short-lived tokens, local caching that’s optional and encrypted in “Secure Device Mode”) [↩ A3.2.5 – Evidence Services; A3.2.9 – Data Stores & Artifacts], and AI is constrained to build-time with redaction, citation requirements, and human review [↩ A3.2.4 – LLM Assist Pipeline]. We define what is proprietary (rule-pack curation, prioritisation heuristics, templates, admin tools, connector scaffolds) and what remains standardised (REST/JSON, webhooks, JSON/JSON-LD exports, identity flows) [↩ A3.2.8 – Admin Console (Internal); A3.4 – Extensibility and Integration Framework]. We set measurable targets—time-to-first-report ≤ 60 minutes, ≥ 80% of failing/partial findings bound to evidence within 14 days, ≥ 95% sync success within 2 minutes of reconnect—and we make verification first-class (downloadable traces, re-execution procedure, public status/changelog) [↩ A3.2.10 – Observability & Audit; A7.4 – Operational Resilience and Incident Response]. In short: clear data contracts, deterministic intelligence, automation that earns trust, and a crisp delineation between open interfaces and protected craft.
 
 ### 5.1 Data Flow Architecture (v1)
-Input (guided forms/uploads) → Validation → Evidence Vault (tenant-encrypted) → Rules Engine (CE checks) → Insights/Reports.
-No cross-tenant processing. All AI calls are stateless inference with minimal PII footprint.
+Input (guided forms/uploads) → Validation → Evidence Vault (tenant-encrypted) [↩ A3.2.5 – Evidence Services] → Rules Engine (CE checks) [↩ A3.2.3 – Rule Evaluation Service] → Insights/Reports [↩ A3.2.6 – Report Service].
+No cross-tenant processing. All AI calls are stateless inference with minimal PII footprint [↩ A3.2.4 – LLM Assist Pipeline].
 Although Transcrypt employs modern orchestration and automation patterns, these are invisible to the SME user. The only visible surface is the guided flow; all scaling, queueing, and AI orchestration run silently in the background.
 
 > **Tenant Isolation:** All evidence and report objects are encrypted client-side before upload.  
@@ -1268,28 +1272,28 @@ Although Transcrypt employs modern orchestration and automation patterns, these 
 > This allows new jurisdictions or standards to be loaded as configuration rather than forked code.
 
 ### 5.2 Machine Learning and AI Components (v1)
-All compliance logic in v1 is executed autonomously by the rules engine and AI assistants.
+All compliance logic in v1 is executed autonomously by the rules engine [↩ A3.2.3 – Rule Evaluation Service] and AI assistants [↩ A3.2.4 – LLM Assist Pipeline].
 Human oversight is not part of the MVP loop; instead the system creates traceable outputs that can later be reviewed by auditors in the Assisted Tier.
-AI assists the user rather than overwhelms them—its purpose is to *simplify judgement calls*, not introduce new interfaces or tuning.
+AI assists the user rather than overwhelms them—its purpose is to *simplify judgement calls*, not introduce new interfaces or tuning [↩ A3.2.4 – LLM Assist Pipeline].
 - **Extraction:** classify uploads (policy vs invoice vs screenshot), extract dates/covers.
 - **Drafting:** first-pass policies/templates; user reviews before saving.
-- **Gap prompts:** suggest missing evidence based on CE checklist state.
-_No training loops or fine-tuning in v1; models are managed centrally; outputs are user-confirmed. [[Post-MVP: see §9 Roadmap]]_
+- **Gap prompts:** suggest missing evidence based on CE checklist state [↩ A3.2.4 – LLM Assist Pipeline].
+_No training loops or fine-tuning in v1; models are managed centrally; outputs are user-confirmed._ [↩ A3.2.4 – LLM Assist Pipeline]
 
-> **Post-MVP:** External assessor API and auditor portal to be introduced in §9 Roadmap phase v1.5 (Assisted Tier β).
+> **Post-MVP:** External assessor API and auditor portal [[Post-MVP: §9.2]].
 
 ### 5.3 Reporting, Dashboards, and Insights (v1)
-- CE readiness score, section breakdown, renewal countdown, evidence completeness.  
-- Export: PDF summary and evidence index.
+- CE readiness score, section breakdown, renewal countdown, evidence completeness [↩ UX4.1 – User Journeys and Onboarding].
+- Export: PDF summary and evidence index [↩ A3.2.6 – Report Service].
 
 ### 5.4 Auditability and Data Provenance (v1)
 > **Closed-Source Alignment:**
-> The audit layer exposes every state change through signed event hashes.
-> Verification tools are open-documented so external auditors can independently confirm integrity without needing code access.
+> The audit layer exposes every state change through signed event hashes [↩ A3.2.10 – Observability & Audit].
+> Verification tools are open-documented so external auditors can independently confirm integrity without needing code access [↩ A3.2.10 – Observability & Audit].
 
-- **Append-only** event log (who/what/when).
-- Hashes per evidence file stored in log for tamper detection.
-- No external ledger in v1 (see Roadmap v2.0).
+- **Append-only** event log (who/what/when) [↩ A3.2.10 – Observability & Audit].
+- Hashes per evidence file stored in log for tamper detection [↩ A3.2.5 – Evidence Services].
+- No external ledger in v1 (see Roadmap v2.0). [[Post-MVP: §9.4]]
 
 ### 5.5 Closed-Source Policy and Verifiable Transparency
 
@@ -1298,16 +1302,27 @@ Transcrypt’s source code is proprietary, but its **outputs are cryptographical
 We trade *code visibility* for *mathematical verifiability*.
 
 **Implementation (v1):**
-- Core logic and AI models are closed-source binaries signed by Transcrypt Ltd.  
-- Every system artefact—reports, evidence archives, audit logs—is **hashed and timestamped**.  
-- Users can verify integrity via published checksum algorithms and manifest files.  
-- No third-party or government has access to unencrypted user data; only the tenant holds decryption keys.  
-- A public white-paper describes hashing standards, key management, and evidence verification workflow.
+- Core logic and AI models are closed-source binaries signed by Transcrypt Ltd. [↩ A3.2.3 – Rule Evaluation Service; A3.2.4 – LLM Assist Pipeline]
+- Every system artefact—reports, evidence archives, audit logs—is **hashed and timestamped** [↩ A3.2.10 – Observability & Audit].
+- Users can verify integrity via published checksum algorithms and manifest files [↩ A3.2.6 – Report Service].
+- No third-party or government has access to unencrypted user data; only the tenant holds decryption keys [↩ A7.3 – Data Encryption and Key Management].
+- A public white-paper describes hashing standards, key management, and evidence verification workflow [↩ A7.5 – Secure Software Supply Chain].
 
 **Post-MVP (v2.0+):**
-- Optional “**Proof of Process Ledger**” where audit hashes are notarised to an external distributed log.  
-- Independent auditor verification API for attestations without code exposure.  
-- Third-party reproducibility review programme for components under NDA.
+- Optional “**Proof of Process Ledger**” where audit hashes are notarised to an external distributed log. [[Post-MVP: §9.4]]
+- Independent auditor verification API for attestations without code exposure. [[Post-MVP: §9.2]]
+- Third-party reproducibility review programme for components under NDA. [[Post-MVP: §9.3]]
+
+### Traceability Table (Section 5)
+
+| Component | Defined In | Consumed By | Status |
+|:-----------|:------------|:------------|:--------|
+| Evidence Vault | §3.2.5 Evidence Services | §5.1 Data Flow Architecture | Implemented v1 |
+| Rules Engine | §3.2.3 Rule Evaluation Service | §5.1 / §5.2 | Implemented v1 |
+| AI Assistant | §3.2.4 LLM Assist Pipeline | §4.1 User Journeys | Implemented v1 |
+| Auditor Portal | §9.2 Phase Milestones and Timelines | – | Post-MVP |
+| Provenance Ledger | §9.4 Risk Register and Mitigation | §5.4 Auditability and Data Provenance | Post-MVP |
+| Compliance Pack Loader | §3.4 Extensibility and Integration Framework | §5.1 Data Flow Architecture | Implemented v1 |
 
 <!-- specification -->
 ## 6. Compliance and Governance Framework
@@ -1586,7 +1601,23 @@ The ethical stance is explicit: clarity over theatre, proportionality over bloat
 In short, Transcrypt turns compliance from an annual scramble into a steady state. It lowers the cognitive load, raises the evidential bar, and earns trust by design. Ship the MVP, prove the loop, compound the value.
 
 
-### Cross-Reference Conventions
+## Cross-Referencing Framework
+
+Transcrypt’s PRD maintains traceability across strategic intent, technical design, and roadmap phases.
+
+Each reference follows the pattern:  
+**[§X.Y – Topic]** for backward links, or **[[Post-MVP: see §9]]** for deferred features.
+
+| Tag | Meaning | Example |
+|:----|:--------|:--------|
+| **[↩ S#]** | Refers back to a Strategic section (Vision, Market Context). | “[↩ S2]” = Vision §2. |
+| **[↩ A#]** | Refers back to an Architectural or System section. | “[↩ A3.2.3 – Rule Evaluation Service]”. |
+| **[[Post-MVP: §9]]** | Denotes a dependency deferred to Roadmap phase. | “Auditor Portal [[Post-MVP: §9.2]].” |
+| **[→ UX#]** | Points forward to a UX section once drafted. | “Dashboard [→ UX6.3].” |
+
+All future internal links must use these tags so dependencies can be traced programmatically.
+
+### Strategic/Technical Markers (Legacy)
 
 To maintain coherence between strategy and specification:
 
@@ -1607,6 +1638,9 @@ Enables multi-framework operation without code changes.
 **Centrally Orchestrated, Locally Encrypted SaaS** — A deployment pattern where a central service handles coordination and updates but cannot read tenant data because all content is encrypted with tenant-held keys.
 
 ### B. Reference Documents
+> **[[Placeholder]]** Section under development.  \
+> Dependencies from §5 and §4 tagged accordingly.  \
+> See Traceability Table for cross-section linkage.
 ### C. Competitive Matrix
 
 #### UK SME Cybersecurity Compliance Landscape
@@ -1848,6 +1882,9 @@ In summary, UK SMEs have an increasing array of options to help meet cyber GRC o
 
 
 ### D. Change Log
+> **[[Placeholder]]** Section under development.  \
+> Dependencies from §5 and §4 tagged accordingly.  \
+> See Traceability Table for cross-section linkage.
 ### E. Markdown Codes
 
 # Markdown Syntax Cheatsheet

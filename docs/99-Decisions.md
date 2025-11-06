@@ -60,11 +60,23 @@
 
 ## 2025-11-10 – Decision: Document Duality (Strategy vs Specification)
 
-- **Problem:** PRD blended strategic vision with technical specification without explicit structure, creating ambiguity of authority.  
-- **Decision:** Establish clear dual-mode structure — strategic (why) and specification (how) — with markers and guidance table.  
+- **Problem:** PRD blended strategic vision with technical specification without explicit structure, creating ambiguity of authority.
+- **Decision:** Establish clear dual-mode structure — strategic (why) and specification (how) — with markers and guidance table.
 - **Consequences:**  
   - Added “Document Scope and Usage” section near top.  
   - Tagged sections using `<!-- strategic -->` and `<!-- specification -->` comments.  
   - Added YAML front-matter metadata and Cross-Reference Conventions.  
   - Updated introduction to explain hybrid purpose.  
 - **Outcome:** Readers now understand which sections are directional versus binding; document retains flexibility without confusion.
+
+## 2025-11-11 – Decision: Cross-Reference and Traceability Framework
+
+- **Problem:** Several sections (notably §5) referenced undefined or future components, creating ambiguity.
+- **Decision:** Implement a structured cross-reference and traceability system using tags [↩ S#], [↩ A#], [[Post-MVP: §9]], and [→ UX#].
+- **Consequences:**
+  - Added “Cross-Referencing Framework” section.
+  - Annotated all §5 dependencies with proper tags.
+  - Introduced Traceability Table in §5.
+  - Updated intro to describe new system.
+  - Marked unfinished sections with [[Placeholder]] notice.
+- **Outcome:** Full internal coherence; every feature can now be traced backward to strategy or forward to roadmap.
