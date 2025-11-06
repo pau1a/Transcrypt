@@ -38,11 +38,22 @@
 
 ## 2025-11-09 – Decision: Automation vs Human Expertise Clarification
 
-- **Problem:** PRD blurred self-serve automation and human-assisted models.  
-- **Decision:** v1 (Transcrypt Core) is 100% automated. Human expertise enters only in future Assisted Tier and Marketplace phases.  
-- **Consequences:**  
-  - Vision updated with Human Role Definition.  
-  - System Overview expanded with Automation-First Operating Model.  
-  - §5.2 clarified for self-serve loop.  
-  - Roadmap now includes Assisted Tier and Marketplace stages.  
+- **Problem:** PRD blurred self-serve automation and human-assisted models.
+- **Decision:** v1 (Transcrypt Core) is 100% automated. Human expertise enters only in future Assisted Tier and Marketplace phases.
+- **Consequences:**
+  - Vision updated with Human Role Definition.
+  - System Overview expanded with Automation-First Operating Model.
+  - §5.2 clarified for self-serve loop.
+  - Roadmap now includes Assisted Tier and Marketplace stages.
 - **Outcome:** Removes confusion between automation and manual review while preserving a scalable future for expert involvement.
+
+## 2025-11-09 – Decision: Data Ownership and SaaS Alignment
+
+- **Problem:** PRD created tension between “data sovereignty” and “centralised SaaS.”
+- **Decision:** Transcrypt remains a cloud service but uses **centrally orchestrated, locally encrypted architecture**.  
+  Each tenant controls their own encryption keys and data cannot be decrypted by Transcrypt Ltd.
+- **Consequences:**  
+  - System Overview and §5.1 updated with tenant isolation and encryption model.  
+  - Vision clarified for cryptographic ownership.  
+  - Glossary and Roadmap updated for Tenant Vaults and Geo-sovereign Nodes.
+- **Outcome:** Eliminates philosophical contradiction — data remains private within shared infrastructure.

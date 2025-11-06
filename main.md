@@ -245,6 +245,7 @@ It provides **guided assessments**, a secure **evidence vault**, **auto-generate
 - **Security posture:** tenant-encrypted storage; audit log is append-only (no external ledger—see Roadmap).
 
 Transcrypt exists to turn regulatory obligation into operational confidence for small and mid-sized businesses. The vision is simple to state and hard to execute well: take messy frameworks, translate them into clear actions, and back every claim with evidence. The product is a practical interpreter between law and day-to-day operations. It gives an owner a single session route from intake to a tailored report, then keeps them aligned as rules change. Success is measured in steady outcomes rather than theatre: fewer hours lost to forms, faster audits, cleaner hand-offs to insurers and primes, and a live sense of “what is left to do and why”. Transcrypt builds trust through **verifiable transparency** rather than open code. Audit confidence is achieved by deterministic, cryptographically signed outputs that anyone can verify, even though the software itself remains proprietary.
+Transcrypt’s SaaS model delivers cloud convenience without cloud exposure — **users own their data cryptographically, not contractually.**
 
 ### Human Role Definition
 
@@ -378,6 +379,14 @@ All mappings are stored in a normalised meta-model so reporting and dashboards s
 ### 3.1.1 System Overview
 
 Transcrypt Core’s architecture adopts mature enterprise patterns—segmented networks, signed artifacts, containerised services—but packages them as a managed backbone that the SME user never has to configure. Every component is orchestrated for resilience and assurance while presenting only a guided workflow at the surface.
+
+### Data Ownership and Sovereignty
+
+Transcrypt operates as a **centrally orchestrated, locally encrypted SaaS**.  
+Each tenant’s data resides within shared infrastructure but is sealed with **tenant-specific encryption keys** that only the tenant can use.  
+Transcrypt Ltd cannot decrypt customer evidence, policies, or logs.  
+Backups and replicas are encrypted at rest and in transit, ensuring geographic redundancy without central visibility.  
+Data sovereignty follows a “trust by math, not by policy” principle — enforced through cryptography rather than contractual language.
 
 ### Automation-First Operating Model
 
@@ -1217,6 +1226,10 @@ Input (guided forms/uploads) → Validation → Evidence Vault (tenant-encrypted
 No cross-tenant processing. All AI calls are stateless inference with minimal PII footprint.
 Although Transcrypt employs modern orchestration and automation patterns, these are invisible to the SME user. The only visible surface is the guided flow; all scaling, queueing, and AI orchestration run silently in the background.
 
+> **Tenant Isolation:** All evidence and report objects are encrypted client-side before upload.  
+> Processing occurs on ephemeral decrypted copies inside isolated containers that are destroyed after execution.  
+> Only encrypted artefacts persist; no plaintext is stored centrally.
+
 > **Framework Agnostic Design:**
 > Data ingestion, evidence storage, and rules execution reference control-pack metadata, not hard-coded UK criteria.
 > This allows new jurisdictions or standards to be loaded as configuration rather than forked code.
@@ -1342,6 +1355,14 @@ Key management follows a hierarchical model designed for both automation and aud
 
 Operationally, encryption is not treated as a background function but as an active, testable control. Regular cryptographic health checks verify algorithm strength, configuration drift, and certificate validity across environments. Penetration tests and automated scanners validate that all external endpoints enforce TLS 1.3 and strong cipher suites. Audit logs record every key operation, signed and timestamped, enabling forensic reconstruction of any event involving cryptographic material. For compliance and future-proofing, the cryptographic baseline adheres to FIPS 140-3 and NCSC guidance on cryptographic design, and the architecture is already positioned for migration to post-quantum algorithms as they stabilise. In Transcrypt, encryption and key management are not bolt-ons but embedded assurances — mechanisms that make the platform’s promise of trust verifiable in both code and cryptography.
 
+### Key Management Model
+
+- Each tenant possesses a unique key pair generated during on-boarding.  
+- Private keys never leave the tenant’s secure vault (local device or KMS instance).  
+- Transcrypt services perform encryption/decryption via tenant-approved ephemeral tokens.  
+- Key rotation and revocation are fully tenant-driven.  
+- Loss of keys renders data unrecoverable by design — true ownership includes responsibility.
+
 ### 7.4 Operational Resilience and Incident Response
 
 Transcrypt’s Operational Resilience and Incident Response framework is designed around one principle: assume failure, prove recovery. The platform’s architecture is intentionally built to absorb shocks—technical, environmental, or human—without loss of integrity or evidence. Core services run in redundant clusters across multiple availability zones, with health monitoring and automatic failover orchestrated through infrastructure-as-code templates. All configuration states are versioned and reproducible, enabling rapid redeployment in the event of a catastrophic incident. Backups are encrypted, immutable, and tested weekly for restoration accuracy. This operational stance turns resilience from an abstract goal into an engineered property: the ability to maintain service continuity even when individual components fail.
@@ -1413,8 +1434,9 @@ Strategically, Transcrypt measures sustainability not just in profit but in oper
 | Phase | Name              | Focus           | Key Adds                                                       |
 | ----: | ----------------- | --------------- | -------------------------------------------------------------- |
 |  v1.0 | Transcrypt Core   | MVP Automation  | Full self-serve flows, no human review paths                   |
+|  v1.2 | Tenant Vaults     | Security        | Client-side encryption, key management API                     |
 |  v1.5 | Assisted Tier (β) | Hybrid Model    | Auditor portal, limited review API, opt-in expert verification |
-|  v2.0 | Marketplace       | Human Ecosystem | Auditor network, external assurance integration                |
+|  v2.0 | Geo-sovereign Nodes | Scalability    | Regional data anchors, bring-your-own-KMS option               |
 
 Transcrypt’s Roadmap and Delivery Strategy is structured around disciplined iteration: a lean, verifiable path from concept to commercial traction. The strategy reflects a core principle—deliver small, prove value, refine fast. It prioritises the creation of a Minimum Viable Product (MVP) that demonstrates functional credibility and real customer benefit within the first six months, followed by incremental expansions that compound capability rather than complexity. Each phase is defined by a measurable outcome: working software, validated user engagement, and sustainable revenue growth. The emphasis is on building a product that earns trust early, through demonstrable competence and transparency, rather than pursuing scale prematurely.
 
@@ -1533,6 +1555,8 @@ In short, Transcrypt turns compliance from an annual scramble into a steady stat
 
 **Compliance Pack** — A signed configuration bundle defining a specific regulation or framework (controls, scoring logic, mappings, labels).
 Enables multi-framework operation without code changes.
+
+**Centrally Orchestrated, Locally Encrypted SaaS** — A deployment pattern where a central service handles coordination and updates but cannot read tenant data because all content is encrypted with tenant-held keys.
 
 ### B. Reference Documents
 ### C. Competitive Matrix
