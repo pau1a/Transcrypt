@@ -50,10 +50,21 @@
 ## 2025-11-09 – Decision: Data Ownership and SaaS Alignment
 
 - **Problem:** PRD created tension between “data sovereignty” and “centralised SaaS.”
-- **Decision:** Transcrypt remains a cloud service but uses **centrally orchestrated, locally encrypted architecture**.  
+- **Decision:** Transcrypt remains a cloud service but uses **centrally orchestrated, locally encrypted architecture**.
   Each tenant controls their own encryption keys and data cannot be decrypted by Transcrypt Ltd.
-- **Consequences:**  
-  - System Overview and §5.1 updated with tenant isolation and encryption model.  
-  - Vision clarified for cryptographic ownership.  
+- **Consequences:**
+  - System Overview and §5.1 updated with tenant isolation and encryption model.
+  - Vision clarified for cryptographic ownership.
   - Glossary and Roadmap updated for Tenant Vaults and Geo-sovereign Nodes.
 - **Outcome:** Eliminates philosophical contradiction — data remains private within shared infrastructure.
+
+## 2025-11-10 – Decision: Document Duality (Strategy vs Specification)
+
+- **Problem:** PRD blended strategic vision with technical specification without explicit structure, creating ambiguity of authority.  
+- **Decision:** Establish clear dual-mode structure — strategic (why) and specification (how) — with markers and guidance table.  
+- **Consequences:**  
+  - Added “Document Scope and Usage” section near top.  
+  - Tagged sections using `<!-- strategic -->` and `<!-- specification -->` comments.  
+  - Added YAML front-matter metadata and Cross-Reference Conventions.  
+  - Updated introduction to explain hybrid purpose.  
+- **Outcome:** Readers now understand which sections are directional versus binding; document retains flexibility without confusion.
