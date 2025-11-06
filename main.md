@@ -246,6 +246,20 @@ It provides **guided assessments**, a secure **evidence vault**, **auto-generate
 
 Transcrypt exists to turn regulatory obligation into operational confidence for small and mid-sized businesses. The vision is simple to state and hard to execute well: take messy frameworks, translate them into clear actions, and back every claim with evidence. The product is a practical interpreter between law and day-to-day operations. It gives an owner a single session route from intake to a tailored report, then keeps them aligned as rules change. Success is measured in steady outcomes rather than theatre: fewer hours lost to forms, faster audits, cleaner hand-offs to insurers and primes, and a live sense of “what is left to do and why”. Transcrypt builds trust through **verifiable transparency** rather than open code. Audit confidence is achieved by deterministic, cryptographically signed outputs that anyone can verify, even though the software itself remains proprietary.
 
+### Audience and Philosophy
+
+Transcrypt Core is built **for SMEs**, not large enterprises.  
+Its architecture borrows security and reliability practices from enterprise systems, but these operate **entirely behind the scenes**.  
+The user interacts only with clear guidance, automated actions, and human-readable results—never raw controls or configuration pages.  
+In short: *enterprise-grade under the bonnet, SME-simple at the wheel*.
+
+### Design Tenets
+
+1. **Invisible Complexity** – advanced engineering should be felt only as speed or accuracy, never as extra controls.  
+2. **Plain Language** – all interfaces, reports, and AI feedback are written for non-specialists.  
+3. **Zero Setup** – onboarding requires no infrastructure knowledge; configuration is automatic.  
+4. **Guided Autonomy** – users can achieve compliance independently, yet remain on safe rails.
+
 AI is the accelerator, not the decider. The platform uses AI where language is a bottleneck and keeps decisions deterministic where auditability matters. In practice that means AI drafts rule objects from legislative text, proposes equivalences across frameworks, summarises diffs when guidance changes, and turns structured findings into plain English. The rule engine remains authoritative. It evaluates controls, records provenance, and explains outcomes in a way an auditor can follow and a team can act on. This is the disciplined version of the “AI dream team” idea above. The Analyst surfaces gaps in the market and in a customer’s posture. The Growth Hacker tests messaging against real behaviour. The Sales Machine writes only from verified benefits. The System Builder generates runbooks that can be executed. The Brand Builder publishes useful, evidence-led content that earns trust. Each assistant is judged by the same standard as the product itself: clarity, relevance, and the ability to be checked.
 
 The purpose is commercial as well as technical. Year one proves a lean, founder-led business can earn while it learns. Ship an MVP that pays for itself, reach a clean £500 monthly profit by month twelve, and compound value through retention and partner channels rather than ad spend. From there the platform grows by translation, not reinvention: extend Cyber Essentials to NIS2 and ISO mappings, add insurer and MSP views, and make interoperability a feature customers feel rather than see. Everything in this document points at the same outcome. Transcrypt should feel like a quiet, capable companion that makes difficult things understandable, keeps its promises, and leaves a paper trail you can show to anyone.
@@ -355,6 +369,15 @@ The compliance layer separates **control logic** from **application logic**. Con
 All mappings are stored in a normalised meta-model so reporting and dashboards stay consistent across jurisdictions.
 
 ### 3.1.1 System Overview
+
+Transcrypt Core’s architecture adopts mature enterprise patterns—segmented networks, signed artifacts, containerised services—but packages them as a managed backbone that the SME user never has to configure. Every component is orchestrated for resilience and assurance while presenting only a guided workflow at the surface.
+
+### Invisible Infrastructure Principle
+
+Complexity in Transcrypt exists only to remove effort for the user.  
+Containerisation, encryption layers, and rule engines are hidden beneath a **single guided workflow**.  
+Every architectural decision—data isolation, AI pipelines, event hashing—serves one aim: **fewer clicks, clearer answers, faster compliance**.  
+The platform never exposes its internal mechanics; it turns them into plain-English outcomes.
 
 **3.1.1.1 Runtime topology (high level)**
 
@@ -1170,15 +1193,17 @@ Finally, this section codifies our trust guarantees and IP boundary. Privacy is 
 ### 5.1 Data Flow Architecture (v1)
 Input (guided forms/uploads) → Validation → Evidence Vault (tenant-encrypted) → Rules Engine (CE checks) → Insights/Reports.
 No cross-tenant processing. All AI calls are stateless inference with minimal PII footprint.
+Although Transcrypt employs modern orchestration and automation patterns, these are invisible to the SME user. The only visible surface is the guided flow; all scaling, queueing, and AI orchestration run silently in the background.
 
 > **Framework Agnostic Design:**
 > Data ingestion, evidence storage, and rules execution reference control-pack metadata, not hard-coded UK criteria.
 > This allows new jurisdictions or standards to be loaded as configuration rather than forked code.
 
 ### 5.2 Machine Learning and AI Components (v1)
-- **Extraction:** classify uploads (policy vs invoice vs screenshot), extract dates/covers.  
-- **Drafting:** first-pass policies/templates; user reviews before saving.  
-- **Gap prompts:** suggest missing evidence based on CE checklist state.  
+AI assists the user rather than overwhelms them—its purpose is to *simplify judgement calls*, not introduce new interfaces or tuning.
+- **Extraction:** classify uploads (policy vs invoice vs screenshot), extract dates/covers.
+- **Drafting:** first-pass policies/templates; user reviews before saving.
+- **Gap prompts:** suggest missing evidence based on CE checklist state.
 _No training loops or fine-tuning in v1; models are managed centrally; outputs are user-confirmed. [[Post-MVP: see §9 Roadmap]]_
 
 ### 5.3 Reporting, Dashboards, and Insights (v1)
@@ -1362,6 +1387,7 @@ Strategically, Transcrypt measures sustainability not just in profit but in oper
 | Phase | Name                   | Focus | Key Adds |
 |------:|------------------------|-------|---------|
 | v1.0  | Transcrypt Core        | UK Cyber Essentials + NIS2 | CE/NIS2 control packs |
+| v1.2  | SME UX Refinement      | UX polish | Reduce jargon, improve guided flows, unify plain-language reporting |
 | v1.3  | Extensible Core        | Add control-pack loader, meta-mapping, early ISO 27001 support | Modular compliance architecture |
 | v2.0  | Multi-Framework Platform | Support multiple national/sectoral frameworks | Unified cross-mapping engine |
 
