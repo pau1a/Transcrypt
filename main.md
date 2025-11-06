@@ -99,7 +99,7 @@
     - [8.3 Partner and Reseller Ecosystem](#83-partner-and-reseller-ecosystem)
     - [8.4 Licensing and Legal Terms](#84-licensing-and-legal-terms)
     - [8.5 Metrics for Financial Sustainability](#85-metrics-for-financial-sustainability)
-  - [9. Roadmap and Delivery Strategy](#9-roadmap-and-delivery-strategy)
+  - [9. Roadmap](#9-roadmap)
     - [9.1 MVP Definition](#91-mvp-definition)
     - [9.2 Phase Milestones and Timelines](#92-phase-milestones-and-timelines)
     - [9.3 Resource and Budget Planning](#93-resource-and-budget-planning)
@@ -160,60 +160,30 @@
 # Transcrypt Product Requirements Document (PRD)
 
 ## 1. Vision and Purpose
+ 
+### Product Definition (MVP)
 
-If I sold my company today, I'd start my next multi-million dollar business in 90 days using only AI. 
+**Transcrypt Core (v1)** is a lightweight, approachable compliance assistant for UK SMEs.  
+It provides **guided assessments**, a secure **evidence vault**, **auto-generated policies/templates**, and **AI-assisted suggestions** that reduce human effort while keeping costs low.
 
-Here's how:
+**Non-goals (MVP):**
+- No multi-tenant orchestration layer for external assessors/auditors. [[Post-MVP: see §9 Roadmap]]
+- No advanced ML training loops or model fine-tuning pipelines. [[Post-MVP: see §9 Roadmap]]
+- No cryptographic provenance ledger or blockchain-style attestations. [[Post-MVP: see §9 Roadmap]]
+- No marketplace or collaboration features beyond basic account roles. [[Post-MVP: see §9 Roadmap]]
 
-I'd create 5 AI specialists that work 24/7 for a fraction of what a single employee costs.
+**Design Principle:** “Automation you don’t feel.” AI is used to remove toil (classification, drafting, gap-spotting), not to introduce operational complexity.
 
-Meet my AI dream team:
+**Naming:**  
+- **Transcrypt Core** = MVP (this document’s scope).  
+- **Transcrypt Platform** = post-MVP expansion (see Roadmap).
 
-THE ANALYST
+### Scope Guardrails (v1)
 
-I'd upload a detailed vision document explaining my business model
-I'd have it identify emerging market opportunities with hard data
-I'd ask: "Find the top 3 underserved problems in profitable industries"
-I'd demand specific research on customer behavior and spending patterns
-I'd make it spot trends competitors are missing
-
-THE GROWTH HACKER
-
-I'd ask: "What's the fastest path to 10,000 customers with supporting evidence?"
-I'd have it design rapid testing frameworks for every assumption
-I'd make it identify the highest-impact growth levers specific to my business
-I'd run every strategy through "What would break this?" analysis
-I'd demand concrete timelines and success metrics for each test
-
-THE SALES MACHINE
-
-I'd never ask for generic sales copy - too weak
-I'd build systematically: pain points → value props → objection handling → close
-I'd force it to create sales sequences that convert strangers into buyers
-I'd make it design irresistible offers that feel like no-brainers
-I'd have it craft follow-up systems that turn one-time buyers into repeat customers
-
-THE SYSTEM BUILDER
-
-I'd make it map out every process needed to scale efficiently
-I'd have it create detailed automation workflows for customer onboarding
-I'd ask for complete operational frameworks that work without me
-I'd make it identify bottlenecks before they become problems
-I'd demand step-by-step scaling plans with specific resource requirements
-
-THE BRAND BUILDER
-
-I'd have it create 20+ pieces of authority-building content per week
-I'd make it analyze successful competitors and find content gaps
-I'd force it to create posts that position me as the obvious expert
-I'd have it develop content that builds trust before anyone meets me
-I'd make it test messaging until it resonates with my exact audience
-
-AI without direction is worthless. 
-AI with basic direction gets basic results. 
-AI with elite direction builds empires.
-
-While you're debating AI ethics, I'm building AI empires.
+- **User:** SME owner/manager or their in-house IT; no external auditor workflows.
+- **Jobs-to-be-done (v1):** pass Cyber Essentials quickly, keep up with renewals, store evidence, generate simple reports.
+- **AI in v1:** assistive (extract fields from uploads, draft policies, flag gaps); no model training or user data leaving tenant boundary except for inference.
+- **Security posture:** tenant-encrypted storage; audit log is append-only (no external ledger—see Roadmap).
 
 Transcrypt exists to turn regulatory obligation into operational confidence for small and mid-sized businesses. The vision is simple to state and hard to execute well: take messy frameworks, translate them into clear actions, and back every claim with evidence. The product is a practical interpreter between law and day-to-day operations. It gives an owner a single session route from intake to a tailored report, then keeps them aligned as rules change. Success is measured in steady outcomes rather than theatre: fewer hours lost to forms, faster audits, cleaner hand-offs to insurers and primes, and a live sense of “what is left to do and why”.
 
@@ -867,7 +837,7 @@ Four top-level journeys, each with a minimum set of proof blocks and a single, o
   **Promises shown:** controls overview, responsible disclosure (`/.well-known/security.txt`), DPA/subprocessors, signed build/provenance note.
   **CTA:** `…/app/demo` (read-only sample) or `/contact`.
   **KPIs:** Time on `/security` > 90 s; ≥ 60% touch at least one legal page.
-* **Partner/MSP (portfolio path):** `/partners` → `/product#multi-tenant` → `/docs/api` → **Book Partner Call**.
+* **Partner/MSP (portfolio path):** `/partners` → `/product#multi-tenant` → `/docs/api` → **Book Partner Call**. [[Post-MVP: see §9 Roadmap]]
   **Promises shown:** posture roll-up, webhook catalogue, JSON export sample.
   **CTA:** `/contact?topic=partner`.
   **KPIs:** Partner page→contact ≥ 8%; ≥2 API pages viewed.
@@ -1123,156 +1093,28 @@ We also specify the automation backbone that keeps posture fresh and reduces toi
 
 Finally, this section codifies our trust guarantees and IP boundary. Privacy is engineered by design (data minimisation, tenant isolation, short-lived tokens, local caching that’s optional and encrypted in “Secure Device Mode”), and AI is constrained to build-time with redaction, citation requirements, and human review. We define what is proprietary (rule-pack curation, prioritisation heuristics, templates, admin tools, connector scaffolds) and what remains standardised (REST/JSON, webhooks, JSON/JSON-LD exports, identity flows). We set measurable targets—time-to-first-report ≤ 60 minutes, ≥ 80% of failing/partial findings bound to evidence within 14 days, ≥ 95% sync success within 2 minutes of reconnect—and we make verification first-class (downloadable traces, re-execution procedure, public status/changelog). In short: clear data contracts, deterministic intelligence, automation that earns trust, and a crisp delineation between open interfaces and protected craft.
 
-### 5.1 Data Flow Architecture
+### 5.1 Data Flow Architecture (v1)
+Input (guided forms/uploads) → Validation → Evidence Vault (tenant-encrypted) → Rules Engine (CE checks) → Insights/Reports.  
+No cross-tenant processing. All AI calls are stateless inference with minimal PII footprint.
 
-**Purpose & shape.** This defines—end-to-end—how inputs become trustworthy outputs. We model the system as six stages with explicit contracts: **Ingest → Normalise → Evaluate → Render → Distribute → Retain/Dispose**. Every hop uses typed payloads (`OrgProfileV1`, `EvidenceV1`, `FindingsV1`, `ReportEnvelopeV1`) and content-addressed artifacts (RulePacks, templates, AI-assist drafts) addressed by **SHA-256**. Tenancy is enforced at every boundary (RLS in Postgres + per-tenant object paths). Identical inputs produce identical findings; every output carries provenance (who/when/what-hashes).
+### 5.2 Machine Learning and AI Components (v1)
+- **Extraction:** classify uploads (policy vs invoice vs screenshot), extract dates/covers.  
+- **Drafting:** first-pass policies/templates; user reviews before saving.  
+- **Gap prompts:** suggest missing evidence based on CE checklist state.  
+_No training loops or fine-tuning in v1; models are managed centrally; outputs are user-confirmed. [[Post-MVP: see §9 Roadmap]]_
 
-**Ingest (answers & proof).**
+### 5.3 Reporting, Dashboards, and Insights (v1)
+- CE readiness score, section breakdown, renewal countdown, evidence completeness.  
+- Export: PDF summary and evidence index.
 
-* **Sources:** App intake (≤20 required fields), evidence files (policy PDFs, IdP/backup exports), structured assertions (e.g., `MFA.enforced.admins=true`), plus optional connectors (IdP/backup/EDR).
-* **Client behaviour:** autosave to IndexedDB (PWA) with **UUIDv7** ops queued for sync; file SHA-256 computed client-side; evidence must be **bound to a control** before it can be queued.
-* **API contracts:**
+### 5.4 Auditability and Data Provenance (v1)
+- **Append-only** event log (who/what/when).  
+- Hashes per evidence file stored in log for tamper detection.  
+- No external ledger in v1 (see Roadmap v2.0).
 
-  * `POST /api/intake` → `OrgProfileV1 { tenant_id, schema, data, updated_at }` (idempotent via `X-Idempotency-Key`).
-  * `POST /api/evidence/files` (multipart) → `EvidenceV1(kind="file", sha256, storage_key, control_id, citations[], source)`; large files chunked with resumable upload.
-  * `POST /api/evidence/assertions` → `EvidenceV1(kind="assertion", key, value, control_id, citations[], source)`.
-* **Security:** TLS 1.3; server rejects “loose” evidence (no `control_id`). Audit event `EVIDENCE.ADD` logged with request_id, actor, hashes.
-
-**Normalise (make inputs computable).**
-
-* **Validation:** zod/JSON-Schema on all payloads; coercion of enums (e.g., IdP vendor), basic dedupe by `(tenant_id, sha256)`.
-* **Storage:**
-
-  * Postgres: `org_profiles`, `evidence_items`, `audit_events` (RLS).
-  * Object store: `evidence/{tenant}/{uuid}` (server-side encryption, versioning).
-* **Conflicts:** field-level **last-writer-wins** with server timestamp; conflicts surface in UI as “Review changes” (non-blocking).
-* **Provenance:** each record stamped with `{created_at, actor, sha256/file, source, control_id, citations[]}`.
-
-**Evaluate (deterministic rules).**
-
-* **Inputs:** `OrgProfileV1`, selected `RulePack` (immutable, signed JSON by hash), bound `EvidenceV1`.
-* **Process:** Stateless Rule Engine loads RulePack by **hash**, runs tests (pure functions) → emits `FindingsV1[]`. No LLMs.
-* **Output:**
-
-  ```json
-  {
-    "schema":"FindingsV1",
-    "tenant_id":"…",
-    "rulepack_hash":"…",
-    "findings":[
-      {"rule_id":"CE-AC-001","status":"fail","reason":"Admin MFA not enforced","evidence_ids":["…"],"citations":[{"doc":"CE-2025.3","section":"AC.1.1"}],"priority":1}
-    ],
-    "trace_id":"…",
-    "artifact_hash":"sha256:…"
-  }
-  ```
-* **Invariants:** same inputs → same outputs; each finding has a reproducible **trace** (inputs, test, citations). Audit `EVAL.RUN` recorded.
-
-**Render (reports & bundles).**
-
-* **Inputs:** `FindingsV1` + template pack (HTML) + organisation branding.
-* **Process:** Jinja2 → HTML → WeasyPrint → PDF; embed **artifact footer** with the hashes of RulePack, OrgProfile, and Evidence set.
-* **Outputs:** `ReportEnvelopeV1 { report_id, summary, download_url, artifact_sha256, generated_at }` + optional **Evidence Bundle** (ZIP of PDFs/JSON + manifest.json with checksums). Audit `REPORT.GENERATE`.
-
-**Distribute (to humans & systems).**
-
-* **User delivery:** HTML preview, PDF download, time-boxed read-only share links (auditor).
-* **System delivery:** webhooks (`report.generated`, `finding.changed`) with signed payloads; Partner API read endpoints (`/api/partners/tenants/:id/posture`, pagination).
-* **Idempotency & retries:** all webhook deliveries carry an `event_id` and are retried with exponential backoff; receivers must ack within SLA.
-
-**Retain / Dispose (lifecycle & DSRs).**
-
-* **Retention:** evidence, findings, reports default **7 years** (configurable per tenant). Object store versioning on; DB PITR enabled.
-* **DSR export:** per-tenant export generates a signed bundle of `OrgProfileV1`, `EvidenceV1` metadata, `FindingsV1`, PDF reports, and an index with hashes.
-* **DSR delete:** soft-delete queue → hard-delete after grace period; audit `DSR.DELETE` logged; object versions purged; referential checks ensure no dangling pointers.
-* **Redaction:** optional policy prevents storing evidence blobs locally on shared devices; AI build-time redaction is separate and logged.
-
-**Error handling, sync, and KPIs.**
-
-* **Sync layer:** queued mutations replay on reconnect; resumable file uploads; per-file progress; foreground retry on iOS.
-* **Problem+JSON:** all errors have `type`, `detail`, `status`, and a `trace_id` surfaced in the UI.
-* **Targets:** ≥95% offline-queued ops sync within 2 minutes of reconnect; <1% field conflicts/100 edits; time from “Run assessment” → findings <2 minutes; report render <10 s; ≥80% of fail/partial findings bound to evidence within 14 days.
-
-**ASCII map (at a glance).**
-
-```
-[User/Device] --TLS--> [API Gateway/OPA] --mTLS--> [FastAPI Services]
-   |  \                                 \           \ 
-   |   \--(PWA IndexedDB queue)          \-> [Rule Engine] --reads--> [RulePack Registry]
-   |                                      \-> [Evidence Svc] <--> [S3 Bucket]
-   |                                       \-> [Report Svc]  --> [HTML/PDF + Bundle]
-   |                                                 |
-   v                                                 v
-[Audit Log (append-only)]                     [Webhooks/Partner API]
-                         \--> [Postgres (RLS): profiles, evidence_index, findings, reports]
-```
-
-This architecture gives us **clear contracts, replayable automations, and verifiable outputs**: every byte in a report can be traced back to inputs by hash, every action is auditable, and the offline/multi-device story is robust without compromising determinism or privacy.
-
-### 5.2 Machine Learning and AI Components
-
-Transcrypt uses AI as an accelerator at build-time—never as a decider at runtime. The goal is to compress the language-heavy work (reading standards, mapping controls, drafting clear explanations) while keeping outcomes deterministic and auditable in production. Concretely, AI workers draft rule objects from legislative text, propose crosswalks between frameworks, summarise guidance diffs, and turn structured findings into plain-English report copy. All AI outputs are treated as artifacts: schema-validated, content-addressed by hash, and stored alongside the RulePacks and templates they relate to, so any sentence in a report can be traced back to inputs, prompts, model version, and citations. The rule engine remains authoritative: it evaluates controls and produces findings; AI only drafts or suggests at build-time, with human acceptance required where appropriate. This bright line—deterministic runtime, AI-assisted build—keeps the product explainable to auditors and safe to evolve.    
-
-The AI pipeline consists of modular jobs that can run offline or in a controlled backend queue. Inputs include redacted legislative/guidance text, the versioned RulePack, and anonymised snippets from OrgProfile/Evidence where language assistance helps (e.g., proposing an evidence-to-control binding). Steps: (1) pre-processing and chunking with citation anchors; (2) provider-pluggable LLM calls via an OpenAI-compatible interface or local models; (3) structured validation into DraftRuleObjects, CrosswalkSuggestions, EvidenceBindingSuggestions, and ReportNarrativeDrafts; (4) human-in-the-loop review where required; and (5) artifact publication to the registry under its SHA-256 address. Every job records provenance and emits a minimal audit bundle (input hashes, prompt/template IDs, model+version, output hash) to enable exact reproduction. Privacy is engineered in: PII redaction before prompts, short-lived credentials, and a “Secure Device Mode” that disables local caching of sensitive material. Scheduling and idempotent queues handle longer jobs (e.g., large rule updates, report regeneration), and dashboards surface coverage and drift so the team can see what changed and why.  
-
-Governance wraps the whole pipeline. Models are pinned by version; prompts/templates are versioned; outputs carry hashes and citations; and CI enforces policy: no artifact without schema validation and trace data. We use golden sets to regression-test draft quality (e.g., crosswalk precision/recall, narrative factual-consistency) and keep a zero-trust stance toward model hallucination—anything not backed by the deterministic engine or explicit citations is rejected. Operationally, this means the platform can ship better explanations faster without creating a runtime dependency on AI; the system remains reproducible and auditor-friendly, while we still harvest the speed of language tooling where it’s safe. The success criterion for this component is simple: shorter time-to-truth and clearer reports, with identical inputs always producing identical runtime findings and every assertion traceable end-to-end.  
-
-### 5.3 Reporting, Dashboards, and Insights
-
-Reporting turns findings into decisions people can act on—without interpretation overhead or vendor theatre. Each report is rendered from a single source of truth (the `FindingsV1` set plus the selected RulePack and organisation profile snapshot) and shipped as **HTML + accessible PDF** with a footer that prints the artifact hashes for the inputs (RulePack, OrgProfile, Evidence set). The structure is fixed and auditor-friendly: Executive Summary (plain-English posture, risk themes, and a one-page “Board View”), Prioritised Action Plan (effort × impact, with links that jump to the exact intake/evidence field to fix), Findings Catalogue (Pass/Fail/Partial with the “because…”, test trace, and citations), and an Appendix (evidence manifest with SHA-256, version table for frameworks, and change log since last run). “Identical inputs → identical bytes” is enforced: any rerender with the same inputs must yield the same PDF hash; any change (a field edit, a new evidence file, a RulePack revision) is visible in the report header and diff appendix. Reports support **time-boxed share links** for auditors/insurers, and an **export bundle** (JSON + PDFs + manifest) so partners can ingest the same truth you see.
-
-Dashboards are the living lens on that same data—optimised for **next best action**, not vanity charts. The tenant dashboard shows a posture badge; **Top 5 actions** with estimated effort, dependencies, and impact; a “What changed” diff since the previous assessment; evidence coverage (“N of M failing/partial findings now have proof attached”); and timers such as “Time since last assessment” and “Stale evidence” nudges. Every card links to the singular place where a user can resolve the issue (an intake field or evidence binding). Partner dashboards add a portfolio roll-up (tenant list, posture trend, last-seen timestamp, and outstanding actions), with filters for sector/size and webhooks for `report.generated` and `finding.changed`. All tiles derive from deterministic transformations: priority scoring is transparent (e.g., *impact* = mapped regulatory weight × likelihood proxy; *effort* = from a small, published rubric), trends compare exactly two snapshots by hash, and any aggregation can be exported as **JSON/JSON-LD** for downstream BI without re-interpretation. No runtime AI is involved; language help for summaries is produced at build-time only and stored as artifacts alongside the RulePack release that introduced it.
-
-Insights are small, trustworthy nudges—derived, not divined. The system computes diffs between the latest and previous runs, highlights controls whose status regressed, surfaces **orphaned evidence** (files not bound to a control), and flags **inconsistent assertions** (e.g., “MFA enforced = true” but no matching IdP policy evidence). Where longitudinal data exists, the app projects **time-to-green** based on your own fix cadence and points to **quick wins** (low effort, high impact). For partners, insights include a weekly digest of tenants at risk of expiry (no assessment in X days, stale evidence, or pending RulePack updates) and a CSV/JSON export keyed by tenant IDs. Success is measured by movement, not dashboards watched: median time from first report to first resolved action; proportion of failing/partial findings that acquire bound evidence within 14 days; report regeneration within 90 days; and partner webhook delivery success. Everything shown can be clicked back to a rule, a test, an input, and an evidence ID—in one hop if you’re the user, or with a time-boxed read-only view if you’re the auditor—so every insight is both **explainable** and **fixable**.
-
-### 5.4 Auditability and Data Provenance
-
-Every user-visible outcome must be **explainable, reproducible, and attributable**. Transcrypt treats all moving parts as artifacts with identity: the **RulePack** (immutable JSON by SHA-256 hash and version), the **OrgProfile snapshot** (schema + timestamp + author), the **Evidence set** (files/assertions each with SHA-256, control binding, citations, source), the **Evaluator version** (build ID + SBOM + cosign signature), and the resulting **Findings set** and **Report** (HTML/PDF) with their own content hashes. These identifiers are stitched together in a **provenance envelope** that travels with the report and appears in its footer (RulePack hash, OrgProfile hash, Evidence manifest hash, Evaluator build ID, Report hash). “Identical inputs → identical bytes” is a product invariant: re-rendering a report using the same artifact hashes must yield the same output hash. Any deviation indicates changed inputs or code and is treated as a defect or a new version.
-
-All interactions generate an **append-only audit log** with high-value fields: `tenant_id`, `actor` (user/service), `action` (EVIDENCE.ADD, INTAKE.UPDATE, EVAL.RUN, REPORT.GENERATE, DSR.EXPORT/DELETE), `request_id` (end-to-end trace), timestamps, client hints (IP/UA), and the **artifact references touched** (e.g., `evidence_sha256`, `rulepack_hash`, `report_sha256`). Audit events are written via a **write-only API** from the gateway/services, stored under Row-Level Security, and mirrored to WORM-like object storage (versioned bucket) for tamper-evidence. Offline actions (PWA) create **local audit stubs** that sync on reconnect; stubs include the client clock time and are reconciled against server time during ingestion. For partner/auditor assurance, the app exposes a **Trace Viewer**: from any finding you can jump to the rule text, the test logic, the exact inputs evaluated, and the bound evidence items, all within three clicks. The same trace can be downloaded as JSON for external archiving or re-execution.
-
-Verification is first-class and **tool-agnostic**. A minimal **re-execution procedure** is published: given the five hashes (RulePack, OrgProfile, Evidence manifest, Evaluator build, Templates), an auditor can ask Transcrypt to regenerate the report and compare the output hash; any mismatch is investigated with the captured **Problem+JSON** traces (errors include `type`, `status`, `detail`, `trace_id`). Webhooks, exports, and share links carry signed payloads with event IDs and artifact references so downstream systems can independently verify integrity. CI gates enforce that no Findings or Report artifact is published without: (a) validated schema, (b) full provenance envelope, and (c) a stored SBOM/provenance attestation for the evaluator build. Success for this section is measurable: (1) 100% of reports include complete provenance, (2) median audit query < 200 ms for per-tenant filters, (3) ≥ 99.9% deterministic re-execution pass rate across released RulePacks, and (4) zero unauthorised audit-log mutations (verified by periodic hash chain checks).
-
-### 5.5 Closed-Source Policy and Proprietary Components
-
-**Scope and intent.** Transcrypt’s core is closed source. We protect the design and know-how that make the product defensible and commercially viable, while keeping **interfaces, schemas and exports open** so customers and partners never feel locked in. Customers own their data and outputs. We own the code, curated content and heuristics that turn that data into value.
-
-**What is proprietary.**
-
-* **RulePacks and mappings:** curated control text, test clauses, cross-framework equivalences, citations, and our effort × impact prioritisation heuristics.
-* **Evaluator and admin console:** deterministic rules engine, policy gates, governance tooling, release pipeline, and internal QA harnesses.
-* **Templates and narrative library:** report HTML/PDF templates, copy patterns, tone rules, and LLM prompt sets used at build time.
-* **Connector scaffolds:** our hardened fetchers, normalisers and replay logic, including backoff, signing and conflict resolution.
-* **Operational playbooks:** runbooks, incident procedures, test fixtures and golden sets.
-  All proprietary artifacts are content-addressed, watermarked and versioned. We publish hashes in report footers and manifests to prove integrity without disclosing internals.
-
-**What is open and standardised.**
-
-* **APIs and payloads:** REST/JSON, webhooks with signed events, and export bundles in JSON or JSON-LD. Schemas are versioned (`OrgProfileV1`, `EvidenceV1`, `FindingsV1`, `ReportEnvelopeV1`) and public.
-* **Identity and crypto:** OIDC, TLS 1.3, mTLS, cosign signatures, SBOM formats (CycloneDX/SPDX).
-* **Data portability:** one-click exports of org profile, evidence metadata, findings and reports, plus a manifest with hashes so third parties can rehydrate without our code.
-* **Light SDKs:** typed clients for API and webhooks may be source-available with a permissive licence to speed integrations, while the platform remains closed.
-
-**Licensing and use.**
-
-* **Customer licence:** subscription with non-transferable, revocable rights to use the hosted service; no right to copy, modify, or host our software. Generated reports are the customer’s property.
-* **Prohibitions:** reverse engineering, scraping of templates or RulePacks, automated harvesting of copy, and benchmarking disclosure without consent.
-* **Attribution and brands:** Transcrypt marks and template copyrights must remain intact on reports unless a white-label addendum is purchased.
-* **Third-party components:** we keep an OSS allowlist, publish `THIRD_PARTY_NOTICES.md`, and pin versions in SBOMs. Licences are honoured and never contaminate the proprietary core.
-
-**Protection and enforcement.**
-
-* **Watermarking and telemetry:** invisible markers in templates and narrative blocks; rate limits per tenant; anomaly detection for bulk scraping.
-* **Terms and monitoring:** API keys, signed webhook payloads, fair-use limits, and clause-level ToS covering anti-circumvention.
-* **Escrow and continuity (optional):** for larger buyers, source-code escrow tied to specific failure conditions, with a narrow, audited use grant.
-
-**Fair-use and openness commitments.**
-
-* We will not block exports, change schemas without versioning, or require proprietary viewers.
-* We document the re-execution procedure so auditors can verify outputs independently.
-* Partners may build their own connectors against our public contracts without paying a platform fee, provided they respect rate limits and ToS.
-
-This policy gives us a clear IP boundary that protects the craft, preserves customer agency through open contracts and exports, and keeps audits straightforward without exposing the crown jewels.
+### 5.5 Closed-Source Policy and Proprietary Components (v1)
+- Code remains proprietary.  
+- **Verifiable outputs:** log hashing, deterministic exports, and evidence checksums provide external verifiability without code disclosure.
 
 ## 6. Compliance and Governance Framework
 
@@ -1390,13 +1232,13 @@ Transcrypt’s Subscription Tiers and Value Differentiation are designed to scal
 
 Above this sits the Professional Plan, targeting SMEs that handle more sensitive data or operate within regulated supply chains. It builds on the Core features with advanced evidence automation, multi-user role management, and integrations with identity providers, backup systems, and insurers. This tier adds continuous assurance dashboards, showing live compliance posture across multiple frameworks (Cyber Essentials, NIS2, ISO 27001), and includes optional access to quarterly compliance reviews or AI-assisted report drafting for external auditors. The differentiation here is sophistication, not exclusivity—customers upgrade because they outgrow simplicity, not because functionality is paywalled. The pricing delta reflects measurable value: less manual effort, richer insight, and smoother stakeholder reporting.
 
-At the top end, the Enterprise or Partner Plan is designed for MSPs, insurers, and sector bodies who want to use Transcrypt as a managed or white-labelled service for their own clients. It provides multi-tenancy controls, API access, and private branding options while maintaining the same underlying rule engine and compliance logic. This tier converts Transcrypt from a standalone platform into a compliance backbone—an engine others can trust and resell. Across all tiers, differentiation is rooted in capability depth and integration, not arbitrary restriction. Every customer, regardless of plan, receives the same data security, transparency, and quality of support. Transcrypt’s subscription structure thus mirrors its engineering ethos: modular, fair, and designed for longevity—each tier a deepening of partnership, not a barrier to entry.
+At the top end, the Enterprise or Partner Plan is designed for MSPs, insurers, and sector bodies who want to use Transcrypt as a managed or white-labelled service for their own clients. It provides [[Post-MVP: see §9 Roadmap]] multi-tenancy controls, API access, and private branding options while maintaining the same underlying rule engine and compliance logic. This tier converts Transcrypt from a standalone platform into a compliance backbone—an engine others can trust and resell. Across all tiers, differentiation is rooted in capability depth and integration, not arbitrary restriction. Every customer, regardless of plan, receives the same data security, transparency, and quality of support. Transcrypt’s subscription structure thus mirrors its engineering ethos: modular, fair, and designed for longevity—each tier a deepening of partnership, not a barrier to entry.
 
 ### 8.3 Partner and Reseller Ecosystem
 
 Transcrypt’s Partner and Reseller Ecosystem is a deliberate extension of its business model — a multiplier for reach, trust, and resilience. The ecosystem is built around the idea that compliance is most powerful when distributed through trusted intermediaries who already serve SMEs in adjacent domains: managed service providers (MSPs), insurers, accountants, and sector associations. These partners act as local conduits, embedding Transcrypt into their existing service portfolios to deliver continuous compliance without the need for technical expertise. For them, Transcrypt becomes a plug-in trust layer — an automated tool that enhances their own credibility and customer retention. For the platform, it becomes a cost-efficient growth mechanism that replaces traditional sales and marketing with relationship-driven distribution.
 
-The partnership model operates on a white-label or co-branded basis, depending on the partner’s market position and customer relationship. MSPs and IT support firms can deploy Transcrypt as part of their managed security offering, using the platform’s APIs and multi-tenant dashboard to monitor client compliance at scale. Insurers can integrate it as a live assurance layer within cyber insurance policies, using compliance telemetry to adjust premiums or validate claims. Professional bodies and trade associations can offer it as a member benefit — a digital companion that simplifies certification and risk management. Transcrypt handles hosting, updates, and support centrally, while partners focus on client engagement and value delivery. This division of labour keeps operational complexity low and margins healthy for both sides.
+The partnership model operates on a white-label or co-branded basis, depending on the partner’s market position and customer relationship. MSPs and IT support firms can deploy Transcrypt as part of their managed security offering, using the platform’s APIs and [[Post-MVP: see §9 Roadmap]] multi-tenant dashboard to monitor client compliance at scale. Insurers can integrate it as a live assurance layer within cyber insurance policies, using compliance telemetry to adjust premiums or validate claims. Professional bodies and trade associations can offer it as a member benefit — a digital companion that simplifies certification and risk management. Transcrypt handles hosting, updates, and support centrally, while partners focus on client engagement and value delivery. This division of labour keeps operational complexity low and margins healthy for both sides.
 
 To preserve trust and brand integrity, Transcrypt’s partner ecosystem is governed by clear participation criteria and transparent commercial terms. Revenue-sharing agreements are straightforward — a fixed percentage of each subscription sold through the partner channel, with no lock-in or exclusivity clauses. Partners receive technical onboarding, marketing collateral, and access to a sandbox environment to customise workflows and branding. A dedicated partner portal provides analytics, billing visibility, and joint-customer support tools. The ecosystem will evolve selectively, prioritising depth of relationship over volume of participants. By growing through aligned experts rather than resellers, Transcrypt maintains its reputation for clarity and credibility while multiplying its market reach — turning its partners into trusted amplifiers of both product and philosophy.
 
@@ -1417,7 +1259,14 @@ Secondary metrics focus on customer retention, lifetime value (LTV), and acquisi
 Strategically, Transcrypt measures sustainability not just in profit but in operational efficiency and resilience. Key performance indicators such as uptime, incident recovery time, and automation coverage directly correlate to cost control and trust. Annual audits track the ratio of manual to automated tasks, with the goal of achieving at least 85% automation of repeatable workflows by year two. Profitability is reinvested conservatively—split between technical debt reduction, security enhancements, and gradual feature expansion. These metrics combine to form a simple philosophy of financial governance: growth must serve longevity. By focusing on recurring value, low churn, and operational discipline, Transcrypt ensures that its financial model mirrors its engineering one—lean, transparent, and resilient by design.
 
 
-## 9. Roadmap and Delivery Strategy
+## 9. Roadmap
+
+| Phase | Name                | Focus | Key Adds |
+|------:|---------------------|-------|---------|
+| v1.0  | Transcrypt Core     | MVP   | Guided CE flow, evidence vault, assistive AI, simple reports, append-only audit log |
+| v1.1  | Core+               | UX    | Bulk importers, richer dashboards, renewal reminders, limited role variants |
+| v1.5  | Auditor Assist (β)  | Post  | [[Post-MVP: see §9 Roadmap]] Read-only auditor portal, scoped sharing, attestation export |
+| v2.0  | Transcrypt Platform | Post  | [[Post-MVP: see §9 Roadmap]] Multi-tenant orchestration, ML training loops, provenance ledger, marketplace integrations |
 
 Transcrypt’s Roadmap and Delivery Strategy is structured around disciplined iteration: a lean, verifiable path from concept to commercial traction. The strategy reflects a core principle—deliver small, prove value, refine fast. It prioritises the creation of a Minimum Viable Product (MVP) that demonstrates functional credibility and real customer benefit within the first six months, followed by incremental expansions that compound capability rather than complexity. Each phase is defined by a measurable outcome: working software, validated user engagement, and sustainable revenue growth. The emphasis is on building a product that earns trust early, through demonstrable competence and transparency, rather than pursuing scale prematurely.
 
@@ -1474,7 +1323,7 @@ Acceptance criteria themselves follow a simple triad: functional, security, and 
 
 Transcrypt’s Future Outlook and Strategic Extensions represent the natural evolution of a platform designed from the start to be adaptive — technically, commercially, and ethically. The product’s immediate purpose is to simplify UK SME compliance, but its architecture and data model are intentionally global and extensible. By structuring every rule, evidence item, and report output as interoperable objects, Transcrypt can evolve into a multi-framework, multi-jurisdictional compliance fabric — one that adjusts automatically as new regulations appear or existing ones converge. The long-term strategy is to make compliance continuous, contextual, and border-agnostic: a layer of digital assurance that translates government language into operational reality for businesses of any size.
 
-This forward trajectory rests on measured innovation, not speculation. As AI and automation mature, Transcrypt will expand beyond reactive compliance to predictive governance — identifying emerging risks and recommending pre-emptive controls before regulators demand them. The same mechanisms that interpret rule logic today can later benchmark security posture, simulate audit scenarios, and even validate controls in real time against live telemetry feeds. In parallel, the platform’s foundation in applied cryptography and transparency positions it to integrate with distributed trust infrastructures — from verifiable credentials to blockchain-backed attestations — where compliance proofs can be shared securely across supply chains. The future product family thus grows not by bolt-on features but by deepening its capacity to measure, verify, and explain trust.
+This forward trajectory rests on measured innovation, not speculation. As AI and automation mature, Transcrypt will expand beyond reactive compliance to predictive governance — identifying emerging risks and recommending pre-emptive controls before regulators demand them. The same mechanisms that interpret rule logic today can later benchmark security posture, simulate audit scenarios, and even validate controls in real time against live telemetry feeds. In parallel, the platform’s foundation in applied cryptography and transparency positions it to integrate with distributed trust infrastructures — from verifiable credentials to [[Post-MVP: see §9 Roadmap]] blockchain-backed attestations — where compliance proofs can be shared securely across supply chains. The future product family thus grows not by bolt-on features but by deepening its capacity to measure, verify, and explain trust.
 
 Strategically, Transcrypt’s outlook is pragmatic and sustainable. Expansion will follow credibility, not hype: first consolidating UK market dominance, then extending into EU, Commonwealth, and allied jurisdictions where data sovereignty and trust frameworks align. Each geographic expansion will be accompanied by localised regulatory mapping, native-language interfaces, and partnership with in-country experts. The company’s structure will remain lean and founder-led, scaling through partnerships, licensing, and white-label channels rather than capital-intensive hiring. Every strategic extension must meet three conditions — technical feasibility, ethical defensibility, and customer relevance. In short, the outlook is neither utopian nor defensive: Transcrypt’s future lies in making regulatory complexity not just manageable but measurable, turning compliance from a burden into a continuous competitive advantage.
 
@@ -1498,7 +1347,7 @@ The second thread, dynamic assurance, aims to transform compliance from static r
 
 Transcrypt’s Potential Spin-offs and Product Lines represent the natural diversification of a platform that treats compliance data as structured intelligence rather than static paperwork. Once the core engine—rule evaluation, evidence management, and reporting—is established, the same architecture can underpin several adjacent products, each serving a different slice of the trust ecosystem. These extensions allow the company to grow laterally without bloating the core offering, reusing the same underlying data model, and differentiating primarily through interface, integration, and market positioning. The overarching principle is reuse of logic, repackaging of value: one compliance brain, many specialised expressions.
 
-The most immediate spin-off opportunity is Transcrypt for Insurers—a live assurance companion that feeds compliance posture directly into cyber-insurance risk models. SMEs using the base platform could opt-in to share continuous assurance data with underwriters, enabling dynamic premium pricing and faster claims validation. Parallel to this sits Transcrypt Partner Hub, a white-label version for MSPs and auditors who need multi-tenant dashboards to manage client compliance portfolios. Over time, a Transcrypt Lite edition could target micro-enterprises and sole traders, offering a guided “compliance in an afternoon” experience with simplified evidence requirements and automated report generation—a low-touch, high-volume product optimised for direct self-service sales.
+The most immediate spin-off opportunity is Transcrypt for Insurers—a live assurance companion that feeds compliance posture directly into cyber-insurance risk models. SMEs using the base platform could opt-in to share continuous assurance data with underwriters, enabling dynamic premium pricing and faster claims validation. Parallel to this sits Transcrypt Partner Hub, a white-label version for MSPs and auditors who need [[Post-MVP: see §9 Roadmap]] multi-tenant dashboards to manage client compliance portfolios. Over time, a Transcrypt Lite edition could target micro-enterprises and sole traders, offering a guided “compliance in an afternoon” experience with simplified evidence requirements and automated report generation—a low-touch, high-volume product optimised for direct self-service sales.
 
 Longer-term product diversification looks outward to the data economy. A TrustGraph API could expose anonymised, aggregated compliance trends to research institutions, insurers, and policy analysts, creating a data-as-a-service stream that helps quantify SME cyber-maturity across sectors and regions. Another trajectory leads into Transcrypt Verify, a credentials and attestation product that allows suppliers to issue digitally signed proof of compliance—verifiable by customers or regulators without revealing proprietary data. Finally, a developer-facing SDK would let third-party platforms embed Transcrypt’s rule-evaluation logic into their own ecosystems, expanding reach without operational overhead. Each spin-off reinforces the core mission: converting compliance from an administrative burden into an ecosystem of living, portable trust signals.
 
