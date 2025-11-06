@@ -1,3 +1,11 @@
+---
+document_type: "Dual-mode PRD"
+strategic_sections: [1,2,3,9]
+specification_sections: [4,5,6,7,8]
+version_control: "Git tracked"
+review_cycle: "Quarterly or upon major release"
+---
+
 - [Transcrypt Product Requirements Document (PRD)](#transcrypt-product-requirements-document-prd)
   - [0. Prologue - Visionary Statement](#0-prologue---visionary-statement)
   - [1. Vision and Purpose](#1-vision-and-purpose)
@@ -162,6 +170,22 @@
 
 # Transcrypt Product Requirements Document (PRD)
 
+## Document Scope and Usage
+
+This document operates dually as both the **Product Requirements Document (PRD)** and the **Project Plan** for Transcrypt.  
+It contains two distinct modes of content:
+
+| Mode | Purpose | Audience | Authority |
+|:----:|:---------|:----------|:-----------|
+| **Strategic** | Defines *why* Transcrypt exists, its market context, vision, and roadmap. | Leadership, stakeholders | Guides direction but not implementation detail. |
+| **Specification** | Defines *how* the system functions: architecture, data flows, automation, and user experience. | Engineering, design, QA | Source of truth for build and validation. |
+
+Strategic content appears in **Sections 1–3** and **9**.  
+Specification content appears in **Sections 4–8**.  
+Cross-references between the two are deliberate and annotated using inline comments:  
+`<!-- strategic -->` or `<!-- specification -->`.
+
+<!-- strategic -->
 ## 0. Prologue - Visionary Statement
 
 If I sold my company today, I'd start my next multi-million dollar business in 90 days using only AI. 
@@ -218,6 +242,7 @@ AI with elite direction builds empires.
 
 While you're debating AI ethics, I'm building AI empires.
 
+<!-- strategic -->
 ## 1. Vision and Purpose
  
 ### Product Definition (MVP)
@@ -304,6 +329,11 @@ From month seven onward, the measure becomes profitability, not revenue. The tar
 
 The long-term impact is measured in endurance and credibility rather than investor multiples. If Transcrypt continues beyond its first thousand customers as a stable, self-funded company, it will have proved a much larger idea — that cyber compliance can be made humane, intelligible, and profitable at micro-scale. The goal is a business that never needs to chase venture money or artificial growth curves, but instead becomes a trusted small-business ally whose income compounds steadily year after year. Over time, it can evolve into a platform that represents the lived compliance reality of the UK’s SME sector — a dataset and reputation that regulators, insurers, and primes quietly rely on. The enduring success metric will not be valuation but influence: that the standards of clarity, honesty, and craftsmanship established by Transcrypt subtly raise the bar for how cyber assurance is done across the country.
 
+This PRD is deliberately *hybrid*.  
+It records not just requirements but reasoning — both the *what* and the *why*.  
+Readers should treat strategic sections as context and technical sections as binding for implementation.
+
+<!-- strategic -->
 ## 2. Market Context and Competitive Landscape
 
 Transcrypt Core launches with a **UK-first focus**, helping SMEs meet **Cyber Essentials** and **NIS2** obligations. However, the compliance engine is designed to be **framework-agnostic**. Each regulation—Cyber Essentials, NIS2, ISO 27001, SOC 2, or future national schemes—is represented as a **modular control pack** containing:
@@ -359,6 +389,7 @@ This landscape is not managed as a single ecosystem but as a loose federation of
 The opportunity for Transcrypt emerges directly from this disorder. The direction of travel is clear: continuous, evidence-based assurance will replace annual attestations; supply-chain accountability will extend obligations beyond direct regulators; and machine-readable compliance will become a policy goal as government digitalises its oversight mechanisms. Yet the tools that can operationalise those ambitions at SME scale do not exist. Transcrypt’s purpose is to occupy that emerging layer: the connective tissue between legislation, auditor interpretation, and business execution. By modelling each control as data and linking it to live evidence sources, Transcrypt mirrors the regulatory structure itself—capable of tracking updates, mapping equivalence between frameworks, and translating policy into actionable guidance. As the legislative environment continues to converge with international norms under NIS2 and DORA, Transcrypt can become the practical interpreter that allows SMEs to keep pace, turning compliance from a confusing landscape into a coherent ecosystem they can actually navigate.
 
 
+<!-- strategic -->
 ## 3. Product Architecture and Core Platform Design
 
 Transcrypt’s architecture is deliberately simple at the edges and highly structured in the core. At the edge, a clean, low-friction web interface orchestrates an intake pipeline that gathers business context and technical signals; in the core, a rules/ML evaluation layer translates those signals into assured guidance and audit-grade outputs. The platform is organised into clearly bounded subsystems—front-end UI, API gateway, rule/LLM evaluation, evidence collectors, report/export services—each with its own trust boundary and identity, so compromise cannot cascade. This mirrors the philosophy already set elsewhere in the PRD: regulation is treated as structured data, not prose, allowing the engine to map obligations to evidence artifacts and keep those mappings current as frameworks evolve. The same foundation that powers cross-framework equivalence also powers product simplicity: rule logic and evidence relationships live as first-class objects the system can version, test, and explain.
@@ -822,6 +853,7 @@ Extensibility is governed by **versioned contracts** and forward-compat rules. E
 * **Safety rails:** Blocklist/allowlist filters on inputs; refusal to process unredacted evidence; explicit user consent flags control any external processing.
 * **(Optional later)** Embedding/indexing: `pgvector` in Postgres for search over internal docs/policies (still build-time), with the same redaction and audit rules.
 
+<!-- specification -->
 ## 4. User Experience and Functional Requirements
 
 Here’s how I’d frame **what Section 4 is for** and **what we must prioritise** so the product feels “quietly competent” from the first click.
@@ -1213,6 +1245,7 @@ It’s the contract that every visitor and user—regardless of device, bandwidt
 
 This gives you a boring-reliable PWA: complete the work anywhere, carry on across devices, and never lose a byte—even when the network gremlins are doing parkour.
 
+<!-- specification -->
 ## 5. Data, Intelligence, and Automation
 
 This section defines how information becomes value—how raw inputs (answers, evidence, context) move through deterministic logic to produce findings, actions, and reports—without gambling on opaque AI at runtime. We draw a bright line: runtime = deterministic, auditable, reproducible; build-time = where AI helps draft, summarise, and map. Everything here exists to shorten time-to-truth while preserving provenance: explicit schemas for each payload (OrgProfileV1, EvidenceV1, FindingsV1, ReportEnvelopeV1), content-addressed artifacts (rule packs, templates, AI outputs) addressed by hash, and append-only audit trails that explain “who did what, with which inputs, and when.” The result should be boring in the right way: identical inputs produce identical outputs; every assertion and control links to citations; every report footer carries a verifiable artifact hash.
@@ -1276,6 +1309,7 @@ We trade *code visibility* for *mathematical verifiability*.
 - Independent auditor verification API for attestations without code exposure.  
 - Third-party reproducibility review programme for components under NDA.
 
+<!-- specification -->
 ## 6. Compliance and Governance Framework
 
 Transcrypt’s own credibility rests on the same standards it helps others to meet. Its internal compliance and governance framework is therefore designed as a living system of assurance that mirrors the principles of the product itself: transparency, proportionality, and continuous verification rather than static certification. The platform is engineered and operated within a structure that satisfies legal, ethical, and regulatory obligations from day one but remains light enough for a founder-led company. Governance is treated as architecture, not paperwork — embedded in code, workflows, and data handling policies.
@@ -1321,6 +1355,7 @@ During operation, lifecycle governance shifts from creation to maintenance and i
 End-of-life governance is treated with the same rigour as initial release. When components, APIs, or dependencies are retired, a formal sunset record is created documenting the reason, data-handling implications, and customer impact. Backward-compatibility layers or migration tools are maintained until all dependent customers have transitioned. Decommissioned data is securely wiped following NCSC and NIST 800-88 guidance, and audit logs are archived under retention policy for future verification. This ensures that even obsolescence is managed transparently — an often-neglected part of compliance that becomes a differentiator when customers or auditors assess maturity. Through this lifecycle discipline, Transcrypt demonstrates that governance is not a static certification badge but an ongoing expression of engineering integrity: every release, every fix, and every retirement leaves a clear, auditable trail of intent and accountability.
 
 
+<!-- specification -->
 ## 7. Security and Infrastructure Requirements
 
 Transcrypt’s Security and Infrastructure Requirements define the technical embodiment of its compliance philosophy — security not as an accessory, but as the substrate of the system. Every design decision is anchored in the principle of zero inherent trust: all actions must be authenticated, all data must be verifiable, and all communication must be observable. The architecture assumes compromise and is therefore built to contain and recover, rather than to depend on prevention alone. Infrastructure is designed to be modular, reproducible, and verifiable — every component declared as code, every dependency pinned, and every change logged. This approach transforms infrastructure into an auditable artefact: a living record of security posture rather than a collection of hidden configurations.
@@ -1380,6 +1415,7 @@ At the policy level, supply chain integrity is enforced through signed commits, 
 Transcrypt also extends supply chain assurance to its operational dependencies: hosting infrastructure, AI models, and third-party APIs. External components are continuously inventoried, version-locked, and monitored for CVEs and supplier advisories. For AI systems, model provenance, training data sources, and licensing terms are catalogued with the same rigour as software packages, preventing the introduction of opaque or unlicensed components. Regular third-party reviews and internal red-team exercises validate that the pipeline and its controls remain tamper-proof and effective. In aggregate, this secure supply chain governance provides not just confidence in code integrity but demonstrable compliance with NIS2, ISO 27001, and IEC 62443 expectations for component provenance and update management. In Transcrypt’s model, trust is not implied by reputation—it is earned by signature, enforced by automation, and proven by design.
 
 
+<!-- specification -->
 ## 8. Monetisation and Revenue Model
 
 Transcrypt’s Monetisation and Revenue Model is designed to sustain a founder-led business that grows through credibility, not scale at any cost. The model balances accessibility for small businesses with predictability for the company, using a subscription-first approach anchored in recurring monthly revenue. The goal is to create a compounding utility product—one that earns retention through genuine operational value, not lock-in. Pricing is transparent, all-inclusive, and proportionate to the size and complexity of the customer’s organisation. No hidden consultancy, no per-seat penalties, no punitive renewal clauses. The system’s automation and clarity deliver cost efficiency at scale, allowing Transcrypt to compete effectively against both low-cost certification brokers and high-end compliance consultancies while maintaining healthy margins.
@@ -1429,6 +1465,7 @@ Secondary metrics focus on customer retention, lifetime value (LTV), and acquisi
 Strategically, Transcrypt measures sustainability not just in profit but in operational efficiency and resilience. Key performance indicators such as uptime, incident recovery time, and automation coverage directly correlate to cost control and trust. Annual audits track the ratio of manual to automated tasks, with the goal of achieving at least 85% automation of repeatable workflows by year two. Profitability is reinvested conservatively—split between technical debt reduction, security enhancements, and gradual feature expansion. These metrics combine to form a simple philosophy of financial governance: growth must serve longevity. By focusing on recurring value, low churn, and operational discipline, Transcrypt ensures that its financial model mirrors its engineering one—lean, transparent, and resilient by design.
 
 
+<!-- strategic -->
 ## 9. Roadmap
 
 | Phase | Name              | Focus           | Key Adds                                                       |
@@ -1489,6 +1526,7 @@ The testing framework combines static and dynamic validation. Unit tests verify 
 Acceptance criteria themselves follow a simple triad: functional, security, and user validation. Functionally, the product must deliver accurate and complete results under defined inputs; security-wise, all data must remain encrypted, access-controlled, and free from known vulnerabilities; from a user perspective, the experience must remain clear, intuitive, and error-free within a standard use session. Releases are not accepted by date but by evidence—passing tests, verified results, and documented peer review. Post-release telemetry further validates performance, latency, and reliability against service-level targets (e.g., 99.9% uptime, sub-second API response). Any regression automatically reopens its related requirement for correction, closing the loop between QA and roadmap. This framework turns assurance into a living discipline: every accepted release is not only functional but provably compliant with the same rigour Transcrypt will one day automate for its customers.
 
 
+<!-- strategic -->
 ## 10. Future Outlook and Strategic Extensions
 
 Transcrypt’s Future Outlook and Strategic Extensions represent the natural evolution of a platform designed from the start to be adaptive — technically, commercially, and ethically. The product’s immediate purpose is to simplify UK SME compliance, but its architecture and data model are intentionally global and extensible. By structuring every rule, evidence item, and report output as interoperable objects, Transcrypt can evolve into a multi-framework, multi-jurisdictional compliance fabric — one that adjusts automatically as new regulations appear or existing ones converge. The long-term strategy is to make compliance continuous, contextual, and border-agnostic: a layer of digital assurance that translates government language into operational reality for businesses of any size.
@@ -1547,6 +1585,16 @@ The ethical stance is explicit: clarity over theatre, proportionality over bloat
 
 In short, Transcrypt turns compliance from an annual scramble into a steady state. It lowers the cognitive load, raises the evidential bar, and earns trust by design. Ship the MVP, prove the loop, compound the value.
 
+
+### Cross-Reference Conventions
+
+To maintain coherence between strategy and specification:
+
+- **(S)** → refers to a strategic concept or intent.
+- **(T)** → refers to a technical requirement or implementation detail.
+- When both are relevant, use **(S/T)**.
+
+Example: “Automation ensures consistent SME outcomes (S/T).”
 
 ## Appendices
 ### A. Terminology and Abbreviations
