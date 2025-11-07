@@ -1,6 +1,6 @@
 ---
 document_type: "Dual-mode PRD"
-strategic_sections: [1,2,3,9]
+strategic_sections: [0,1,2,3,9,10]
 specification_sections: [4,5,6,7,8]
 version_control: "Git tracked"
 review_cycle: "Quarterly or upon major release"
@@ -8,7 +8,7 @@ review_cycle: "Quarterly or upon major release"
 
 - [Transcrypt Product Requirements Document (PRD)](#transcrypt-product-requirements-document-prd)
   - [Document Scope and Usage](#document-scope-and-usage)
-  - [0. Prologue - Visionary Statement](#0-prologue---visionary-statement)
+  - [0. Prologue – Visionary Statement (Non-Technical; Context Setting Only)](#0-prologue--visionary-statement-non-technical-context-setting-only)
   - [1. Vision and Purpose](#1-vision-and-purpose)
     - [Product Definition (MVP)](#product-definition-mvp)
     - [Scope Guardrails (v1)](#scope-guardrails-v1)
@@ -196,14 +196,14 @@ It contains two distinct modes of content:
 | **Specification** | Defines *how* the system functions: architecture, data flows, automation, and user experience. | Engineering, design, QA | Source of truth for build and validation. |
 
 Strategic content is concentrated in **Sections 0–3**, **9**, and **10**, where we set the vision, market stance, and long-range direction for Transcrypt.
-Specification content lives in **Sections 4–8**, translating that intent into architecture, UX, security, and monetisation mechanics, with §5 carrying the Traceability Table that binds strategy to delivery.
+Specification content lives in **Sections 4–8**, translating that intent into architecture, UX, security, and monetisation mechanics, with §5 carrying the **[Traceability Table (§5)](#traceability-table-section-5)** that binds strategy to delivery.
 Cross-references between the two are deliberate and annotated using inline comments:
 `<!-- strategic -->` or `<!-- specification -->`.
 
-Every requirement or component in this PRD can be traced to its origin or future delivery lane via inline cross-reference tags and the Traceability Table (§5). No orphaned feature references remain; each dependency resolves backward to strategy or forward to roadmap commitments.
+Every requirement or component in this PRD can be traced to its origin or future delivery lane via inline cross-reference tags and the **[Traceability Table (§5)](#traceability-table-section-5)**. No orphaned feature references remain; each dependency resolves backward to strategy or forward to roadmap commitments.
 
 <!-- strategic -->
-## 0. Prologue - Visionary Statement
+## 0. Prologue – Visionary Statement (Non-Technical; Context Setting Only)
 
 If I sold my company today, I'd start my next multi-million dollar business in 90 days using only AI. 
 
@@ -1311,7 +1311,7 @@ _No training loops or fine-tuning in v1; models are managed centrally; outputs a
 
 - **Append-only** event log (who/what/when) [↩ A3.2.10 – Observability & Audit].
 - Hashes per evidence file stored in log for tamper detection [↩ A3.2.5 – Evidence Services].
-- No external ledger in v1 (see Roadmap v2.0). [[Post-MVP: §9.4]]
+- No external ledger in v1 (see Roadmap v2.0). [[Post-MVP: §9.4 Risk Register and Mitigation]]
 
 ### 5.5 Closed-Source Policy and Verifiable Transparency
 
@@ -1327,7 +1327,7 @@ We trade *code visibility* for *mathematical verifiability*.
 - A public white-paper describes hashing standards, key management, and evidence verification workflow [↩ A7.5 – Secure Software Supply Chain].
 
 **Post-MVP (v2.0+):**
-- Optional “**Proof of Process Ledger**” where audit hashes are notarised to an external distributed log. [[Post-MVP: §9.4]]
+- Optional “**Proof of Process Ledger**” where audit hashes are notarised to an external distributed log. [[Post-MVP: §9.4 Risk Register and Mitigation]]
 - Independent auditor verification API for attestations without code exposure. [[Post-MVP: §9.2]]
 - Third-party reproducibility review programme for components under NDA. [[Post-MVP: §9.3]]
 
@@ -1335,20 +1335,20 @@ We trade *code visibility* for *mathematical verifiability*.
 
 | ID | Requirement / Feature | Strategic Origin | Specification Anchor | Delivery Path | Status |
 |:---|:-----------------------|:-----------------|:---------------------|:--------------|:--------|
-| UX-01 | Self-serve onboarding workflow | §1 – Vision and Purpose (Product Definition) | §4.1 User Journeys and Onboarding | §9.1 MVP Definition | v1.0 Core |
-| EV-01 | Tenant evidence vault & secure storage | §1 – Scope Guardrails (v1) | §3.2.5 Evidence Services; §5.1 Data Flow Architecture | §9.1 MVP Definition | v1.0 Core |
-| AI-01 | AI-assisted drafting & gap prompts | §1 – Design Principle “Automation you don’t feel” | §3.2.4 LLM Assist Pipeline; §5.2 Machine Learning and AI Components | §9.2 Phase Milestones (Phase 2 – Validation) | Phase 2 |
-| RL-01 | Deterministic rule evaluation & control mapping | §1.2 Mission and Guiding Principles | §3.2.3 Rule Evaluation Service; §3.4 Extensibility and Integration Framework | §9.1 MVP Definition | v1.0 Core |
-| RP-01 | Compliance reporting & dashboards | §1.4 Success Criteria and Long-Term Impact | §5.3 Reporting, Dashboards, and Insights | §9.1 MVP Definition | v1.0 Core |
-| AP-01 | Auditability & provenance guarantees | §1 – Vision and Purpose (Verifiable Transparency) | §5.4 Auditability and Data Provenance; §7.4 Operational Resilience and Incident Response | §9.2 Phase Milestones (Phase 4 – Stabilisation) | Phase 4 |
-| CP-01 | Closed-source verification policy | §1 – Vision and Purpose (Verifiable Transparency) | §5.5 Closed-Source Policy and Verifiable Transparency | §9.4 Risk Register and Mitigation | Post-MVP |
-| SC-01 | Zero-trust security baseline | §2.5 Legislative Environment and Compliance Ecosystem | §7 Security and Infrastructure Requirements | §9.2 Phase Milestones (Phase 1 – Foundation) | v1.0 Core |
-| CG-01 | Internal governance & policy library | §2.5 Legislative Environment and Compliance Ecosystem | §6.1 Alignment with NIS, Cyber Essentials, ISO 27001, and IEC 62443; §6.3 Policy Library and Evidence Management | §9.2 Phase Milestones (Phase 3 – Expansion) | Phase 3 |
-| RM-01 | Subscription tiers & monetisation metrics | §1.4 Success Criteria and Long-Term Impact | §8 Monetisation and Revenue Model | §9.2 Phase Milestones (Phase 3 – Expansion) | Phase 3 |
-| RD-01 | Assisted Tier auditor workflow | §1 – Human Role Definition | §3.2.8 Admin Console (Internal); §5.2 Machine Learning and AI Components (Post-MVP notes) | §9 Roadmap (v1.5 Assisted Tier β) | Post-MVP |
-| COL-01 | Assisted Tier collaboration flows (auditor support) | §1 – Non-goals (MVP framing); §2.5 Legislative Environment and Compliance Ecosystem | §5.2 Machine Learning and AI Components (Post-MVP notes) | §9.4.1 Assisted Tier & Collaboration | Post-MVP |
-| CHN-01 | Partner channel: co-brand, license, revenue share | §1 – Non-goals (MVP framing); §8.3 Partner and Reseller Ecosystem | §3.4 Extensibility and Integration Framework; §8.3 Partner and Reseller Ecosystem | §9.4.2 Partner Channel & Co-Branding | Future |
-| RD-02 | Geo-sovereign nodes & regional deployment | §2.4 Future Extensibility to Other Nations; §10.1 Interoperability with Other National Frameworks | §7.2 Network Segmentation and Zero Trust Architecture; §7.5 Secure Software Supply Chain | §9 Roadmap (v2.0 Geo-sovereign Nodes) | Future |
+| UX-01 | Self-serve onboarding workflow | §1 – Vision and Purpose (Product Definition) | §4.1 User Journeys and Onboarding | §9.1 MVP Definition | **v1.0 Core (planned)** |
+| EV-01 | Tenant evidence vault & secure storage | §1 – Scope Guardrails (v1) | §3.2.5 Evidence Services; §5.1 Data Flow Architecture | §9.1 MVP Definition | **v1.0 Core (planned)** |
+| AI-01 | AI-assisted drafting & gap prompts | §1 – Design Principle “Automation you don’t feel” | §3.2.4 LLM Assist Pipeline; §5.2 Machine Learning and AI Components | §9.2 Phase Milestones and Timelines (Phase 2 – Validation) | **Phase 2 (planned)** |
+| RL-01 | Deterministic rule evaluation & control mapping | §1.2 Mission and Guiding Principles | §3.2.3 Rule Evaluation Service; §3.4 Extensibility and Integration Framework | §9.1 MVP Definition | **v1.0 Core (planned)** |
+| RP-01 | Compliance reporting & dashboards | §1.4 Success Criteria and Long-Term Impact | §5.3 Reporting, Dashboards, and Insights | §9.1 MVP Definition | **v1.0 Core (planned)** |
+| AP-01 | Auditability & provenance guarantees | §1 – Vision and Purpose (Verifiable Transparency) | §5.4 Auditability and Data Provenance; §7.4 Operational Resilience and Incident Response | §9.2 Phase Milestones and Timelines (Phase 4 – Stabilisation) | **Phase 4 (planned)** |
+| CP-01 | Closed-source verification policy | §1 – Vision and Purpose (Verifiable Transparency) | §5.5 Closed-Source Policy and Verifiable Transparency | §9.4 Risk Register and Mitigation | **Post-MVP (planned)** |
+| SC-01 | Zero-trust security baseline | §2.5 Legislative Environment and Compliance Ecosystem | §7 Security and Infrastructure Requirements | §9.2 Phase Milestones and Timelines (Phase 1 – Foundation) | **v1.0 Core (planned)** |
+| CG-01 | Internal governance & policy library | §2.5 Legislative Environment and Compliance Ecosystem | §6.1 Alignment with NIS, Cyber Essentials, ISO 27001, and IEC 62443; §6.3 Policy Library and Evidence Management | §9.2 Phase Milestones and Timelines (Phase 3 – Expansion) | **Phase 3 (planned)** |
+| RM-01 | Subscription tiers & monetisation metrics | §1.4 Success Criteria and Long-Term Impact | §8 Monetisation and Revenue Model | §9.2 Phase Milestones and Timelines (Phase 3 – Expansion) | **Phase 3 (planned)** |
+| RD-01 | Assisted Tier auditor workflow | §1 – Human Role Definition | §3.2.8 Admin Console (Internal); §5.2 Machine Learning and AI Components (Post-MVP notes) | §9.2 Phase Milestones and Timelines (v1.5 Assisted Tier β) | **Post-MVP (planned)** |
+| COL-01 | Assisted Tier collaboration flows (auditor support) | §1 – Non-goals (MVP framing); §2.5 Legislative Environment and Compliance Ecosystem | §5.2 Machine Learning and AI Components (Post-MVP notes) | §9.4.1 Assisted Tier & Collaboration | **Post-MVP (planned)** |
+| CHN-01 | Partner channel: co-brand, license, revenue share | §1 – Non-goals (MVP framing); §8.3 Partner and Reseller Ecosystem | §3.4 Extensibility and Integration Framework; §8.3 Partner and Reseller Ecosystem | §9.4.2 Partner Channel & Co-Branding | **Future (planned)** |
+| RD-02 | Geo-sovereign nodes & regional deployment | §2.4 Future Extensibility to Other Nations; §10.1 Interoperability with Other National Frameworks | §7.2 Network Segmentation and Zero Trust Architecture; §7.5 Secure Software Supply Chain | §9.2 Phase Milestones and Timelines (v2.0 Geo-sovereign Nodes) | **Future (planned)** |
 
 <!-- specification -->
 ## 6. Compliance and Governance Framework
@@ -1655,13 +1655,13 @@ In short, Transcrypt turns compliance from an annual scramble into a steady stat
 Transcrypt’s PRD maintains traceability across strategic intent, technical design, and roadmap phases.
 
 Each reference follows the pattern:  
-**[§X.Y – Topic]** for backward links, or **[[Post-MVP: see §9]]** for deferred features.
+**[§X.Y – Topic]** for backward links, or **[[Post-MVP: §9.2 Phase Milestones and Timelines]]** for deferred features.
 
 | Tag | Meaning | Example |
 |:----|:--------|:--------|
 | **[↩ S#]** | Refers back to a Strategic section (Vision, Market Context). | “[↩ S2]” = Vision §2. |
 | **[↩ A#]** | Refers back to an Architectural or System section. | “[↩ A3.2.3 – Rule Evaluation Service]”. |
-| **[[Post-MVP: §9]]** | Denotes a dependency deferred to Roadmap phase. | “Auditor Portal [[Post-MVP: §9.2]].” |
+| **[[Post-MVP: §9.2 Phase Milestones and Timelines]]** | Denotes a dependency deferred to Roadmap phase. | “Auditor Portal [[Post-MVP: §9.2 Phase Milestones and Timelines]].” |
 | **[→ UX#]** | Points forward to a UX section once drafted. | “Dashboard [→ UX6.3].” |
 
 All future internal links must use these tags so dependencies can be traced programmatically.
