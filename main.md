@@ -25,6 +25,7 @@ review_cycle: "Quarterly or upon major release"
     - [2.3 Market Share Estimates and Pricing Models](#23-market-share-estimates-and-pricing-models)
     - [2.4 Future Extensibility to Other Nations](#24-future-extensibility-to-other-nations)
     - [2.5 Legislative Environment and Compliance Ecosystem](#25-legislative-environment-and-compliance-ecosystem)
+  - [Tenancy Model (Design Intention)](#tenancy-model-design-intention)
   - [3. Product Architecture and Core Platform Design](#3-product-architecture-and-core-platform-design)
     - [Framework Modularity](#framework-modularity)
     - [3.1.1 System Overview](#311-system-overview)
@@ -270,6 +271,9 @@ While you're debating AI ethics, I'm building AI empires.
 It provides **guided assessments**, a secure **evidence vault**, **auto-generated policies/templates**, and **AI-assisted suggestions** that reduce human effort while keeping costs low.
 
 **Non-goals (MVP):**
+
+Within this PRD, a **tenant** represents a single customer instance that lives alongside others inside the shared Transcrypt environment. Tenants remain distinct through logical separation—data boundaries, identity scopes, and policy controls—rather than through separate hardware or deployments. For this phase every tenant is assumed to operate locally, and all tenancy references describe this co-resident but strictly isolated model.
+
 - No multi-tenant orchestration layer for external assessors/auditors. [[Post-MVP: §9.4.1 Assisted Tier & Collaboration]]
 - No advanced ML training loops or model fine-tuning pipelines. [[Post-MVP: §9.2 Phase Milestones and Timelines]]
 - No cryptographic provenance ledger or blockchain-style attestations. [[Post-MVP: §9.4 Risk Register and Mitigation]]
@@ -409,6 +413,14 @@ The opportunity for Transcrypt emerges directly from this disorder. The directio
 
 
 <!-- strategic -->
+## Tenancy Model (Design Intention)
+
+Transcrypt operates as a multi-tenant system, where each customer instance is logically separated but runs within a shared environment.
+
+The architecture is designed such that, when production readiness is achieved, the database and storage components can be relocated to separate managed services with no change to application logic.
+
+This PRD defines the behavioural requirement — strict tenant isolation, testability of segregation, and portability of data layer — not the infrastructure method.
+
 ## 3. Product Architecture and Core Platform Design
 
 Transcrypt’s architecture is deliberately simple at the edges and highly structured in the core. At the edge, a clean, low-friction web interface orchestrates an intake pipeline that gathers business context and technical signals; in the core, a rules/ML evaluation layer translates those signals into assured guidance and audit-grade outputs. The platform is organised into clearly bounded subsystems—front-end UI, API gateway, rule/LLM evaluation, evidence collectors, report/export services—each with its own trust boundary and identity, so compromise cannot cascade. This mirrors the philosophy already set elsewhere in the PRD: regulation is treated as structured data, not prose, allowing the engine to map obligations to evidence artifacts and keep those mappings current as frameworks evolve. The same foundation that powers cross-framework equivalence also powers product simplicity: rule logic and evidence relationships live as first-class objects the platform can version, test, and explain.
