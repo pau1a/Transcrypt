@@ -41,7 +41,7 @@ review_cycle: "Quarterly or upon major release"
     - [3.1.8 Minimal Viable Slice (MVP cut)](#318-minimal-viable-slice-mvp-cut)
     - [3.1.9 Technology Choices (initial)](#319-technology-choices-initial)
     - [3.1.10 Operational Runbooks (high level)](#3110-operational-runbooks-high-level)
-    - [3.x Technical Constraints & Conventions (non-normative)](#3x-technical-constraints--conventions-non-normative)
+    - [3.x Technical Constraints \& Conventions (non-normative)](#3x-technical-constraints--conventions-non-normative)
     - [3.2 Core Components and Interfaces](#32-core-components-and-interfaces)
       - [3.2.1 Web App (Next.js @ `https://transcrypt.xyz`)](#321-web-app-nextjs--httpstranscryptxyz)
       - [3.2.2 API Gateway \& Policy Enforcement](#322-api-gateway--policy-enforcement)
