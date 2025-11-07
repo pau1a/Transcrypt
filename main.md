@@ -182,8 +182,8 @@ It contains two distinct modes of content:
 | **Strategic** | Defines *why* Transcrypt exists, its market context, vision, and roadmap. | Leadership, stakeholders | Guides direction but not implementation detail. |
 | **Specification** | Defines *how* the system functions: architecture, data flows, automation, and user experience. | Engineering, design, QA | Source of truth for build and validation. |
 
-Strategic content appears in **Sections 1–3** and **9**.
-Specification content appears in **Sections 4–8**.
+Strategic content is concentrated in **Sections 0–3**, **9**, and **10**, where we set the vision, market stance, and long-range direction for Transcrypt.
+Specification content lives in **Sections 4–8**, translating that intent into architecture, UX, security, and monetisation mechanics, with §5 carrying the Traceability Table that binds strategy to delivery.
 Cross-references between the two are deliberate and annotated using inline comments:
 `<!-- strategic -->` or `<!-- specification -->`.
 
@@ -1315,14 +1315,20 @@ We trade *code visibility* for *mathematical verifiability*.
 
 ### Traceability Table (Section 5)
 
-| Component | Defined In | Consumed By | Status |
-|:-----------|:------------|:------------|:--------|
-| Evidence Vault | §3.2.5 Evidence Services | §5.1 Data Flow Architecture | Implemented v1 |
-| Rules Engine | §3.2.3 Rule Evaluation Service | §5.1 / §5.2 | Implemented v1 |
-| AI Assistant | §3.2.4 LLM Assist Pipeline | §4.1 User Journeys | Implemented v1 |
-| Auditor Portal | §9.2 Phase Milestones and Timelines | – | Post-MVP |
-| Provenance Ledger | §9.4 Risk Register and Mitigation | §5.4 Auditability and Data Provenance | Post-MVP |
-| Compliance Pack Loader | §3.4 Extensibility and Integration Framework | §5.1 Data Flow Architecture | Implemented v1 |
+| ID | Requirement / Feature | Strategic Origin | Specification Anchor | Delivery Path | Status |
+|:---|:-----------------------|:-----------------|:---------------------|:--------------|:--------|
+| UX-01 | Self-serve onboarding workflow | §1 – Vision and Purpose (Product Definition) | §4.1 User Journeys and Onboarding | §9.1 MVP Definition | v1.0 Core |
+| EV-01 | Tenant evidence vault & secure storage | §1 – Scope Guardrails (v1) | §3.2.5 Evidence Services; §5.1 Data Flow Architecture | §9.1 MVP Definition | v1.0 Core |
+| AI-01 | AI-assisted drafting & gap prompts | §1 – Design Principle “Automation you don’t feel” | §3.2.4 LLM Assist Pipeline; §5.2 Machine Learning and AI Components | §9.2 Phase Milestones (Phase 2 – Validation) | Phase 2 |
+| RL-01 | Deterministic rule evaluation & control mapping | §1.2 Mission and Guiding Principles | §3.2.3 Rule Evaluation Service; §3.4 Extensibility and Integration Framework | §9.1 MVP Definition | v1.0 Core |
+| RP-01 | Compliance reporting & dashboards | §1.4 Success Criteria and Long-Term Impact | §5.3 Reporting, Dashboards, and Insights | §9.1 MVP Definition | v1.0 Core |
+| AP-01 | Auditability & provenance guarantees | §1 – Vision and Purpose (Verifiable Transparency) | §5.4 Auditability and Data Provenance; §7.4 Operational Resilience and Incident Response | §9.2 Phase Milestones (Phase 4 – Stabilisation) | Phase 4 |
+| CP-01 | Closed-source verification policy | §1 – Vision and Purpose (Verifiable Transparency) | §5.5 Closed-Source Policy and Verifiable Transparency | §9.4 Risk Register and Mitigation | Post-MVP |
+| SC-01 | Zero-trust security baseline | §2.5 Legislative Environment and Compliance Ecosystem | §7 Security and Infrastructure Requirements | §9.2 Phase Milestones (Phase 1 – Foundation) | v1.0 Core |
+| CG-01 | Internal governance & policy library | §2.5 Legislative Environment and Compliance Ecosystem | §6.1 Alignment with NIS, Cyber Essentials, ISO 27001, and IEC 62443; §6.3 Policy Library and Evidence Management | §9.2 Phase Milestones (Phase 3 – Expansion) | Phase 3 |
+| RM-01 | Subscription tiers & monetisation metrics | §1.4 Success Criteria and Long-Term Impact | §8 Monetisation and Revenue Model | §9.2 Phase Milestones (Phase 3 – Expansion) | Phase 3 |
+| RD-01 | Assisted Tier auditor workflow | §1 – Human Role Definition | §3.2.8 Admin Console (Internal); §5.2 Machine Learning and AI Components (Post-MVP notes) | §9 Roadmap (v1.5 Assisted Tier β) | Post-MVP |
+| RD-02 | Geo-sovereign nodes & regional deployment | §2.4 Future Extensibility to Other Nations; §10.1 Interoperability with Other National Frameworks | §7.2 Network Segmentation and Zero Trust Architecture; §7.5 Secure Software Supply Chain | §9 Roadmap (v2.0 Geo-sovereign Nodes) | Future |
 
 <!-- specification -->
 ## 6. Compliance and Governance Framework
