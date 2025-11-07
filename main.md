@@ -41,6 +41,7 @@ review_cycle: "Quarterly or upon major release"
     - [3.1.8 Minimal Viable Slice (MVP cut)](#318-minimal-viable-slice-mvp-cut)
     - [3.1.9 Technology Choices (initial)](#319-technology-choices-initial)
     - [3.1.10 Operational Runbooks (high level)](#3110-operational-runbooks-high-level)
+    - [3.x Technical Constraints & Conventions (non-normative)](#3x-technical-constraints--conventions-non-normative)
     - [3.2 Core Components and Interfaces](#32-core-components-and-interfaces)
       - [3.2.1 Web App (Next.js @ `https://transcrypt.xyz`)](#321-web-app-nextjs--httpstranscryptxyz)
       - [3.2.2 API Gateway \& Policy Enforcement](#322-api-gateway--policy-enforcement)
@@ -649,6 +650,19 @@ The platform never exposes its internal mechanics; it turns them into plain-Engl
 * **Onboard tenant:** create tenant → OIDC bind → rule pack select → intake link.
 * **Rotate keys:** trigger KMS rotation → restart sidecars → verify mTLS → attest.
 * **Incident:** declare → capture state → contain → RCA → publish improvement.
+
+### 3.x Technical Constraints & Conventions (non-normative)
+
+These conventions define baseline implementation expectations for the MVP but do not lock in deployment architecture.
+
+**Styling**  
+The UI uses **SCSS** with Transcrypt’s preset variables. No CSS framework (e.g., Tailwind, Bootstrap) is adopted for MVP. This preserves control of branding and reduces bundle complexity.
+
+**Database Engine**  
+The product uses **PostgreSQL (v15 or higher)** as the primary datastore.  
+- Required recovery objectives: RPO ≤ 24h, RTO ≤ 4h.  
+- Backups must be encrypted and retained for a minimum of 30 days.  
+- Deployment topology (local vs managed instance) is defined separately in system design and **ADR-0007: Database Topology for MVP**.
 
 ### 3.2 Core Components and Interfaces
 
@@ -1325,6 +1339,8 @@ We trade *code visibility* for *mathematical verifiability*.
 - Users can verify integrity via published checksum algorithms and manifest files [↩ A3.2.6 – Report Service].
 - No third-party or government has access to unencrypted user data; only the tenant holds decryption keys [↩ A7.3 – Data Encryption and Key Management].
 - A public white-paper describes hashing standards, key management, and evidence verification workflow [↩ A7.5 – Secure Software Supply Chain].
+
+Implementation topology choices are recorded as ADRs (see ADR-0007 for database topology).
 
 **Post-MVP (v2.0+):**
 - Optional “**Proof of Process Ledger**” where audit hashes are notarised to an external distributed log. [[Post-MVP: §9.4 Risk Register and Mitigation]]
