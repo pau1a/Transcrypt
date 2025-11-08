@@ -287,13 +287,15 @@ Within this PRD, a **tenant** represents a single customer instance that lives a
 
 ### Scope Guardrails (v1)
 
-- **User:** SME owner/manager or their in-house IT; no external auditor workflows.
-- **Jobs-to-be-done (v1):** pass Cyber Essentials quickly, keep up with renewals, store evidence, generate simple reports.
-- **AI in v1:** assistive (extract fields from uploads, draft policies, flag gaps); no model training or user data leaving tenant boundary except for inference.
-- **Security posture:** tenant-encrypted storage; audit log is append-only (no external ledger—see Roadmap).
+- **User:** SME owner/manager or their in-house IT; no external auditor workflows.  
+- **Jobs-to-be-done (v1):** pass Cyber Essentials quickly, keep up with renewals, store evidence, generate simple reports.  
+- **AI in v1:** assistive (extract fields from uploads, draft policies, flag gaps); no model training or user data leaving tenant boundary except for inference.  
+- **Security posture:** tenant-encrypted storage; audit log is append-only (no external ledger—see Roadmap).  
 
-Transcrypt exists to turn regulatory obligation into operational confidence for small and mid-sized businesses. The vision is simple to state and hard to execute well: take messy frameworks, translate them into clear actions, and back every claim with evidence. The product is a practical interpreter between law and day-to-day operations. It gives an owner a single session route from intake to a tailored report, then keeps them aligned as rules change. Success is measured in steady outcomes rather than theatre: fewer hours lost to forms, faster audits, cleaner hand-offs to insurers and primes, and a live sense of “what is left to do and why”. Transcrypt builds trust through **verifiable transparency** rather than open code. Audit confidence is achieved by deterministic, cryptographically signed outputs that anyone can verify, even though the software itself remains proprietary.
-Transcrypt’s SaaS model delivers cloud convenience without cloud exposure — **users own their data cryptographically, not contractually.**
+Transcrypt exists to turn **UK regulatory and statutory cybersecurity obligations** — including Cyber Essentials, NIS Regulations, and data-protection requirements — into operational confidence for small and mid-sized businesses. The vision is simple to state and hard to execute well: take messy frameworks, translate them into clear actions, and back every claim with evidence. The product is a practical interpreter between **regulation and day-to-day operations**, giving an owner a single session route from intake to a tailored report, then keeping them aligned as rules change. Success is measured in steady outcomes rather than theatre: fewer hours lost to forms, faster audits, cleaner hand-offs to insurers and primes, and a live sense of “what is left to do and why.”  
+
+Transcrypt builds trust through **verifiable transparency** rather than open code. Audit confidence is achieved by deterministic, cryptographically signed outputs that anyone can verify, even though the software itself remains proprietary. Transcrypt’s SaaS model delivers cloud convenience without cloud exposure — **users own their data cryptographically, not contractually.**
+
 
 ### Human Role Definition
 
