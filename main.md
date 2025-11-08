@@ -283,7 +283,7 @@ Within this PRD, a **tenant** represents a single customer instance that lives a
 
 **Naming:**  
 - **Transcrypt Core** = MVP (this document’s scope).  
-- **Transcrypt Platform** = post-MVP expansion (see Roadmap).
+- **Transcrypt Platform** = [post-MVP expansion (see Roadmap)](#10-future-outlook-and-strategic-extensions).
 
 ### Scope Guardrails (v1)
 
@@ -315,14 +315,26 @@ In short: *enterprise-grade under the bonnet, SME-simple at the wheel*.
 
 ### Design Tenets
 
-1. **Invisible Complexity** – advanced engineering should be felt only as speed or accuracy, never as extra controls.  
-2. **Plain Language** – all interfaces, reports, and AI feedback are written for non-specialists.  
-3. **Zero Setup** – onboarding requires no infrastructure knowledge; configuration is automatic.  
+1. **Invisible Complexity** – advanced engineering should be felt only as speed or accuracy, never as extra controls.
+2. **Plain Language** – all interfaces, reports, and AI feedback are written for non-specialists.
+3. **Zero Setup** – onboarding requires no infrastructure knowledge; configuration is automatic.
 4. **Guided Autonomy** – users can achieve compliance independently, yet remain on safe rails.
 
-AI is the accelerator, not the decider. The platform uses AI where language is a bottleneck and keeps decisions deterministic where auditability matters. In practice that means AI drafts rule objects from legislative text, proposes equivalences across frameworks, summarises diffs when guidance changes, and turns structured findings into plain English. The rule engine remains authoritative. It evaluates controls, records provenance, and explains outcomes in a way an auditor can follow and a team can act on. This is the disciplined version of the “AI dream team” idea above. The Analyst surfaces gaps in the market and in a customer’s posture. The Growth Hacker tests messaging against real behaviour. The Sales Machine writes only from verified benefits. The System Builder generates runbooks that can be executed. The Brand Builder publishes useful, evidence-led content that earns trust. Each assistant is judged by the same standard as the product itself: clarity, relevance, and the ability to be checked.
+**AI is the accelerator, not the decider.** The platform uses AI where language is the bottleneck and keeps decisions deterministic where auditability matters. In practice that means AI reads the *framework text itself* — for example, the Cyber Essentials control wording, the assessor guidance, and related NCSC notes — and drafts **rule objects** that express each requirement in machine-readable form. It also proposes equivalences across frameworks, summarises differences when guidance changes, and turns structured findings into plain English. The **rule engine** remains authoritative. It evaluates controls, records provenance, and explains its reasoning in a way an auditor can follow and a team can act on.
 
-The purpose is commercial as well as technical. Year one proves a lean, founder-led business can earn while it learns. Ship an MVP that pays for itself, reach a clean £500 monthly profit by month twelve, and compound value through retention and partner channels rather than ad spend. From there the wider Transcrypt Platform can grow by translation rather than reinvention: extend Cyber Essentials knowledge into other frameworks, add insurer and MSP views, and make interoperability a feature customers feel rather than see. Everything in this document points at the same outcome. Transcrypt should feel like a quiet, capable companion that makes difficult things understandable, keeps its promises, and leaves a paper trail you can show to anyone.
+AI operates within clear boundaries: it structures, summarises, and proposes, but does not adjudicate. Where interpretation demands nuance, it may adopt a defined **analyst persona** that characterises the situation and provides a reasoned position, but the outcome itself is always resolved deterministically.
+
+This is the disciplined version of the “AI dream team” idea above.
+The **Analyst** surfaces gaps in the market and in a customer’s posture.
+The **Growth Hacker** tests messaging against real behaviour.
+The **Sales Machine** writes only from verified benefit.
+The **System Builder** generates executable runbooks.
+The **Brand Builder** publishes evidence-led insights that earn trust.
+Each assistant is judged by the same standard as the product itself: clarity, relevance, and the ability to be checked.
+
+The purpose is commercial as well as technical. Year one proves that a lean, founder-led business can earn while it learns. Ship an MVP that pays for itself, reach a clean £500 monthly profit by month twelve, and compound value through retention and partner channels rather than ad spend. From there the wider Transcrypt Platform grows by *translation rather than reinvention*: extending Cyber Essentials knowledge into other frameworks, adding insurer and MSP views, and making interoperability a feature customers feel rather than see.
+
+Everything in this document points toward the same outcome: Transcrypt should feel like a quiet, capable companion — one that makes difficult things understandable, keeps its promises, and leaves a paper trail you can show to anyone.
 
 ### 1.1 Problem Statement
 
