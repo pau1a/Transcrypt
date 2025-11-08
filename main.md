@@ -320,21 +320,22 @@ In short: *enterprise-grade under the bonnet, SME-simple at the wheel*.
 3. **Zero Setup** – onboarding requires no infrastructure knowledge; configuration is automatic.
 4. **Guided Autonomy** – users can achieve compliance independently, yet remain on safe rails.
 
-**AI is the accelerator, not the decider.** The platform uses AI where language is the bottleneck and keeps decisions deterministic where auditability matters. In practice that means AI reads the *framework text itself* — for example, the Cyber Essentials control wording, the assessor guidance, and related NCSC notes — and drafts **rule objects** that express each requirement in machine-readable form. It also proposes equivalences across frameworks, summarises differences when guidance changes, and turns structured findings into plain English. The **rule engine** remains authoritative. It evaluates controls, records provenance, and explains its reasoning in a way an auditor can follow and a team can act on.
+**AI is the accelerator, not the decider.**
+The platform uses AI to interpret unstructured customer input against framework expectations and to return a considered view of conformance, expressed in natural language. It identifies which controls appear met, which are uncertain, and which need action—then recommends what to do next. The AI’s reasoning remains visible and explainable. The **rule engine** handles anything that must be verified, logged, or proven: it performs deterministic checks, records provenance, and ensures that what the AI infers can be evidenced and audited.
 
-AI operates within clear boundaries: it structures, summarises, and proposes, but does not adjudicate. Where interpretation demands nuance, it may adopt a defined **analyst persona** that characterises the situation and provides a reasoned position, but the outcome itself is always resolved deterministically.
+AI operates within clear boundaries. It can interpret, compare, and advise, but it does not issue binding outcomes. When interpretation involves nuance, it may speak through defined **analyst personas** that provide perspective rather than verdict—human-style reasoning with transparent logic the user can inspect.
 
-This is the disciplined version of the “AI dream team” idea above.
-The **Analyst** surfaces gaps in the market and in a customer’s posture.
-The **Growth Hacker** tests messaging against real behaviour.
+This is the disciplined version of the “AI dream team” concept.
+The **Analyst** surfaces posture gaps and market opportunities.
+The **Growth Hacker** tests language and engagement.
 The **Sales Machine** writes only from verified benefit.
-The **System Builder** generates executable runbooks.
+The **System Builder** drafts executable runbooks.
 The **Brand Builder** publishes evidence-led insights that earn trust.
-Each assistant is judged by the same standard as the product itself: clarity, relevance, and the ability to be checked.
+Each assistant is held to the same test as the product itself: clarity, relevance, and verifiability.
 
-The purpose is commercial as well as technical. Year one proves that a lean, founder-led business can earn while it learns. Ship an MVP that pays for itself, reach a clean £500 monthly profit by month twelve, and compound value through retention and partner channels rather than ad spend. From there the wider Transcrypt Platform grows by *translation rather than reinvention*: extending Cyber Essentials knowledge into other frameworks, adding insurer and MSP views, and making interoperability a feature customers feel rather than see.
+The purpose is commercial as well as technical. Year one proves that a lean, founder-led business can earn while it learns: ship an MVP that pays for itself, reach a clean £500 monthly profit by month twelve, and grow through retention and partnerships rather than advertising. From there the wider Transcrypt Platform expands by *translation rather than reinvention*—re-using the same interpretive core across new frameworks, insurers, and service providers, making interoperability something customers feel rather than see.
 
-Everything in this document points toward the same outcome: Transcrypt should feel like a quiet, capable companion — one that makes difficult things understandable, keeps its promises, and leaves a paper trail you can show to anyone.
+Everything in this document points toward a single goal: Transcrypt should feel like a quiet, capable companion—one that makes difficult things understandable, keeps its promises, and leaves a paper trail anyone can trust.
 
 ### 1.1 Problem Statement
 
