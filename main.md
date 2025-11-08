@@ -268,7 +268,7 @@ While you're debating AI ethics, I'm building AI empires.
 ### Product Definition (MVP)
 
 **Transcrypt Core (v1)** is a web-based compliance platform for UK SMEs, combining a secure site, progressive web app, and automation engine.
-It provides **guided assessments**, a secure **evidence vault**, **auto-generated policies/templates**, and **AI-assisted suggestions** that reduce human effort while keeping costs low.
+It provides **guided assessments**, encrypted **evidence storage**, **auto-generated policies/templates**, and **AI-assisted suggestions** that reduce human effort while keeping costs low.
 
 **Non-goals (MVP):**
 
@@ -1446,7 +1446,7 @@ These controls keep pace with Cyber Essentials expectations while leaving room f
 ### 7.3 Data Encryption and Key Management
 
 - TLS 1.2+ for all user-facing and service-to-service traffic; HSTS enforced on public endpoints.
-- Managed database and object storage encryption at rest is handled by cloud services using platform-level key rotation.
+- Managed database and object storage encryption at rest is handled by cloud services using platform-level key rotation. No customer-managed keys or client-side encryption are used in this phase.
 - Secrets stored in a central secrets manager; access limited to service identities with least privilege.
 - Annual encryption configuration review to confirm algorithms and certificates meet current NCSC guidance.
 
@@ -1506,7 +1506,7 @@ To preserve trust and brand integrity, Transcrypt’s partner ecosystem is gover
 
 ### 8.4 Licensing and Legal Terms
 
-Transcrypt’s Licensing and Legal Terms framework is designed to be as clear and trustworthy as the product itself—written in plain English, enforceable in law, and comprehensible to non-specialists. The software is licensed on a subscription basis, granting customers the right to use the platform for the duration of their active plan, with all updates, framework mappings, and technical support included. There are no per-seat restrictions or hidden metering clauses: pricing is tied solely to organisational tier, not individual usage. All intellectual property—including the rule engine, policy mappings, and AI-assisted tooling—remains the property of Transcrypt Ltd., but customers retain full ownership of their uploaded data, evidence, and generated reports. Each account operates as a logically isolated tenant; Transcrypt acts as a processor under UK GDPR definitions, with all processing locations and sub-processors transparently listed in the Data Processing Agreement (DPA).
+Transcrypt’s Licensing and Legal Terms framework is designed to be as clear and trustworthy as the product itself—written in plain English, enforceable in law, and comprehensible to non-specialists. The software is licensed on a subscription basis, granting customers the right to use the platform for the duration of their active plan, with all updates, framework mappings, and technical support included. There are no per-seat restrictions or hidden metering clauses: pricing is tied solely to organisational tier, not individual usage. All intellectual property—including the rule engine, policy mappings, and AI-assisted tooling—remains the property of Transcrypt Ltd., but customers retain full ownership of their uploaded data, evidence, and generated reports. Each account operates as a logically isolated tenant; Transcrypt processes customer-submitted compliance artefacts only and does not collect or process end-user personal data, with all processing locations and sub-processors transparently listed in the Data Processing Agreement (DPA).
 
 Legal governance aligns with UK and EU digital service obligations while remaining lightweight and transparent. The Terms of Service establish mutual responsibilities: users must provide accurate information and comply with lawful use policies, while Transcrypt commits to uptime, data security, and fair access. Service availability targets are defined explicitly, with compensation or credit mechanisms in the event of sustained outages. The Privacy Policy adheres to the principles of data minimisation and purpose limitation, and the DPA specifies encryption, deletion, and audit mechanisms for data subject rights. Optional features that involve AI summarisation or analysis require explicit user consent, with clear disclosure of any third-party model processing. There are no dark patterns, opt-outs disguised as opt-ins, or silent data sharing arrangements—compliance integrity begins with legal integrity.
 
