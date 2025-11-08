@@ -102,7 +102,7 @@ review_cycle: "Quarterly or upon major release"
     - [5.2 Machine Learning and AI Components (v1)](#52-machine-learning-and-ai-components-v1)
     - [5.3 Reporting, Dashboards, and Insights (v1)](#53-reporting-dashboards-and-insights-v1)
     - [5.4 Auditability and Data Provenance (v1)](#54-auditability-and-data-provenance-v1)
-    - [5.5 Closed-Source Policy and Verifiable Transparency](#55-closed-source-policy-and-verifiable-transparency)
+    - [5.5 Closed-Source Policy and Evidence Integrity](#55-closed-source-policy-and-evidence-integrity)
     - [Traceability Table (Section 5)](#traceability-table-section-5)
   - [6. Compliance and Governance Framework](#6-compliance-and-governance-framework)
     - [6.1 Operating Baseline (Cyber Essentials in Practice)](#61-operating-baseline-cyber-essentials-in-practice)
@@ -1343,25 +1343,18 @@ _No training loops or fine-tuning in v1; models are managed centrally; outputs a
 - **Searchable activity log.** Key actions (uploads, edits, submissions, exports) are recorded in chronological order so teams can replay who did what and when without specialist tooling [↩ A3.2.5 – Evidence Services].
 - **Downloadable change reports.** Users can export change logs alongside their evidence bundle to satisfy IASME follow-up questions without digging through the UI. [[Post-MVP: §9.4 Risk Register and Mitigation]]
 
-### 5.5 Closed-Source Policy and Verifiable Transparency
+### 5.5 Closed-Source Policy and Evidence Integrity
 
-**Principle:**  
-Transcrypt’s source code is proprietary, but its **outputs are cryptographically verifiable** and its **behaviour auditable**.  
-We trade *code visibility* for *mathematical verifiability*.
+Users retain contractual ownership of their data. Transcrypt Core ensures data integrity through versioning, hashing, and audit trails rather than tenant-managed cryptography.
 
 **Implementation (v1):**
 - Core logic and AI models are closed-source binaries signed by Transcrypt Ltd. [↩ A3.2.3 – Rule Evaluation Service; A3.2.4 – LLM Assist Pipeline]
-- Every system artefact—reports, evidence archives, audit logs—is **hashed and timestamped** [↩ A3.2.10 – Observability & Audit].
-- Users can verify integrity via published checksum algorithms and manifest files [↩ A3.2.6 – Report Service].
-- No third-party or government has access to unencrypted user data; only the tenant holds decryption keys [↩ A7.3 – Data Encryption and Key Management].
-- A public white-paper describes hashing standards, key management, and evidence verification workflow [↩ A7.5 – Secure Software Supply Chain].
+- System artefacts—reports, evidence archives, audit logs—are hashed and timestamped so tampering attempts are detectable. [↩ A3.2.10 – Observability & Audit]
+- Integrity manifests and checksum algorithms are published so customers can validate exported packages independently. [↩ A3.2.6 – Report Service]
+- Managed encryption controls ensure data at rest follows the baseline described in §7.3. [↩ §7.3 – Data Security Basics]
+- Release documentation captures evidence-handling procedures and any changes to audit workflows.
 
 Implementation topology choices are recorded as ADRs (see ADR-0007 for database topology).
-
-**Post-MVP (v2.0+):**
-- Optional “**Proof of Process Ledger**” where audit hashes are notarised to an external distributed log. [[Post-MVP: §9.4 Risk Register and Mitigation]]
-- Independent auditor verification API for attestations without code exposure. [[Post-MVP: §9.2]]
-- Third-party reproducibility review programme for components under NDA. [[Post-MVP: §9.3]]
 
 ### Traceability Table (Section 5)
 
@@ -1372,8 +1365,8 @@ Implementation topology choices are recorded as ADRs (see ADR-0007 for database 
 | AI-01 | AI-assisted drafting & gap prompts | §1 – Design Principle “Automation you don’t feel” | §3.2.4 LLM Assist Pipeline; §5.2 Machine Learning and AI Components | §9.2 Phase Milestones and Timelines (Phase 2 – Validation) | **Phase 2 (planned)** |
 | RL-01 | Deterministic rule evaluation & control mapping | §1.2 Mission and Guiding Principles | §3.2.3 [Rule Evaluation Service](#323-rule-evaluation-service-deterministic); §3.4 Extensibility and Integration Framework | §9.1 MVP Definition | **v1.0 Core (planned)** |
 | RP-01 | [Compliance reporting & dashboards](#53-reporting-dashboards-and-insights-v1) | §1.4 Success Criteria and Long-Term Impact | §5.3 Reporting, Dashboards, and Insights | §9.1 MVP Definition | **v1.0 Core (planned)** |
-| AP-01 | Auditability & provenance guarantees | §1 – Vision and Purpose (Verifiable Transparency) | §5.4 Auditability and Data Provenance; §7.4 Operational Resilience and Incident Response | §9.2 Phase Milestones and Timelines (Phase 4 – Stabilisation) | **Phase 4 (planned)** |
-| CP-01 | Closed-source verification policy | §1 – Vision and Purpose (Verifiable Transparency) | §5.5 Closed-Source Policy and Verifiable Transparency | §9.4 Risk Register and Mitigation | **Post-MVP (planned)** |
+| AP-01 | Auditability & provenance guarantees | §1 – Vision and Purpose (Evidence Integrity) | §5.4 Auditability and Data Provenance; §7.4 Operational Resilience and Incident Response | §9.2 Phase Milestones and Timelines (Phase 4 – Stabilisation) | **Phase 4 (planned)** |
+| CP-01 | Closed-source evidence integrity policy | §1 – Vision and Purpose (Evidence Integrity) | §5.5 Closed-Source Policy and Evidence Integrity | §9.4 Risk Register and Mitigation | **Post-MVP (planned)** |
 | SC-01 | Zero-trust security baseline | §2.5 Legislative Environment and Compliance Ecosystem | §7 Security and Infrastructure Requirements | §9.2 Phase Milestones and Timelines (Phase 1 – Foundation) | **v1.0 Core (planned)** |
 | CG-01 | Internal governance & policy library | §2.5 Legislative Environment and Compliance Ecosystem | §6.1 Alignment with NIS, Cyber Essentials, ISO 27001, and IEC 62443; §6.4 Policy Library and Evidence Management | §9.2 Phase Milestones and Timelines (Phase 3 – Expansion) | **Phase 3 (planned)** |
 | RM-01 | Subscription tiers & monetisation metrics | §1.4 Success Criteria and Long-Term Impact | §8 Monetisation and Revenue Model | §9.2 Phase Milestones and Timelines (Phase 3 – Expansion) | **Phase 3 (planned)** |
@@ -1452,15 +1445,15 @@ These controls keep pace with Cyber Essentials expectations while leaving room f
 ### 7.3 Data Encryption and Key Management
 
 - TLS 1.2+ for all user-facing and service-to-service traffic; HSTS enforced on public endpoints.
-- Managed database and object storage encryption at rest with automated key rotation provided by the hosting platform.
+- Managed database and object storage encryption at rest is handled by cloud services using platform-level key rotation.
 - Secrets stored in a central secrets manager; access limited to service identities with least privilege.
 - Annual encryption configuration review to confirm algorithms and certificates meet current NCSC guidance.
 
-### Key Management Model
+### Managed Key Operations Summary
 
-- Tenant encryption keys are generated during onboarding and rotated automatically on a defined schedule.
-- Key material is stored in the managed KMS; application components request short-lived data keys when needed.
-- Key usage, rotation, and deletion events are logged for later review.
+- Platform-operated keys reside in the managed KMS with automated rotation tracked through change management.
+- Service components request access via scoped identities and short-lived credentials issued by the hosting provider.
+- Key usage and rotation events are logged centrally and included in quarterly security reviews.
 
 ### 7.4 Operational Resilience and Incident Response
 
@@ -1533,11 +1526,13 @@ Strategically, Transcrypt measures sustainability not just in profit but in oper
 | Phase | Name              | Focus           | Key Adds                                                       |
 | ----: | ----------------- | --------------- | -------------------------------------------------------------- |
 |  v1.0 | Transcrypt Core   | MVP Automation  | Full self-serve flows, no human review paths                   |
-|  v1.2 | Tenant Vaults     | Security        | Client-side encryption, key management API                     |
+|  v1.2 | Tenant Vaults     | Security        | Enhanced Encryption (future)                                   |
 |  v1.5 | Assisted Tier (β) | Hybrid Model    | Auditor portal, limited review API, opt-in expert verification |
 |  v2.0 | Geo-sovereign Nodes | Scalability    | Regional data anchors, bring-your-own-KMS option               |
 
 Rows from **v1.5 onward mark the Transcrypt Platform wave** and begin only after Core profitability.
+
+Enhanced Encryption (future) is a roadmap placeholder for the Platform phase; it is not part of the Core MVP. [[Post-MVP: Platform Phase]]
 
 Transcrypt’s Roadmap and Delivery Strategy is structured around disciplined iteration: a lean, verifiable path from concept to commercial traction. The strategy reflects a core principle—deliver small, prove value, refine fast. It prioritises the creation of a Minimum Viable Product (MVP) that demonstrates functional credibility and real customer benefit within the first six months, followed by incremental expansions that compound capability rather than complexity. Each phase is defined by a measurable outcome: working software, validated user engagement, and sustainable revenue growth. The emphasis is on building a product that earns trust early, through demonstrable competence and transparency, rather than pursuing scale prematurely.
 
@@ -1565,6 +1560,12 @@ Transcrypt’s delivery plan runs in two waves:
   - *Stabilisation (after Core profitability):* Harden collaboration tooling, explore additional frameworks, and prepare the hosted service for regional deployment. These items are gated until Phase 2 funding and capacity are confirmed.
 
 The split keeps the initial six months laser-focused on making Cyber Essentials effortless while clearly signalling that anything broader belongs to the follow-on Transcrypt Platform programme.
+
+#### Post-MVP: Platform Phase Highlights
+
+- Proof-of-Process Ledger to notarise audit hashes against an external distributed log. [[Post-MVP: Platform Phase]]
+- Independent auditor verification API for attestations without code exposure. [[Post-MVP: Platform Phase]]
+- Reproducibility review programme for components under NDA. [[Post-MVP: Platform Phase]]
 
 ### 9.3 Resource and Budget Planning
 
@@ -1711,12 +1712,12 @@ All examples refer to artefacts generated or consumed within the Transcrypt web 
 
 **Audit Confidence** — The ability for an SME to show clear evidence, timestamps, and change history for Cyber Essentials controls without needing external attestations.
 
-**Verifiable Transparency** — A principle where a closed-source system provides mathematically verifiable evidence of integrity (hashes, signatures, deterministic logs) in place of source disclosure.
+**Verifiable Transparency** [[Post-MVP: Platform]] — Future advanced data trust mechanism where a closed-source system provides mathematically verifiable evidence of integrity (hashes, signatures, deterministic logs) in place of source disclosure; not part of Transcrypt Core.
 
 **Compliance Pack** — A signed configuration bundle defining a specific regulation or framework (controls, scoring logic, mappings, labels).
 Enables multi-framework operation without code changes.
 
-**Centrally Orchestrated, Locally Encrypted SaaS** — A deployment pattern where a central service handles coordination and updates but cannot read tenant data because all content is encrypted with tenant-held keys.
+**Centrally Orchestrated, Locally Encrypted SaaS** [[Post-MVP: Platform]] — Future deployment pattern where a central service handles coordination and updates but relies on tenant-held keys; not part of Transcrypt Core.
 
 ### B. Reference Documents
 > **[[Placeholder]]** Section under development.  \
