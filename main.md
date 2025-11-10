@@ -45,149 +45,6 @@ review_cycle: "Quarterly or upon major release"
       - [User Tiers and Human Interaction Model](#user-tiers-and-human-interaction-model)
     - [3.1.2 Core Components and Interfaces](#312-core-components-and-interfaces)
     - [3.1.3 Data Model (Canonical Contracts)](#313-data-model-canonical-contracts)
-    - [3.1.4 Storage and Artifacts](#314-storage-and-artifacts)
-    - [3.1.5 Security, Privacy, and Trust Model](#315-security-privacy-and-trust-model)
-    - [3.1.6 Extensibility \& Integration Framework](#316-extensibility--integration-framework)
-    - [3.1.7 DevEx, QA, and Delivery](#317-devex-qa-and-delivery)
-    - [3.1.8 Minimal Viable Slice (MVP cut)](#318-minimal-viable-slice-mvp-cut)
-    - [3.1.9 Technology Choices (initial)](#319-technology-choices-initial)
-    - [3.1.10 Operational Runbooks (high level)](#3110-operational-runbooks-high-level)
-    - [3.x Technical Constraints \& Conventions (non-normative)](#3x-technical-constraints--conventions-non-normative)
-    - [3.2 Core Components and Interfaces](#32-core-components-and-interfaces)
-      - [3.2.1 Web App (Next.js @ `https://transcrypt.xyz`)](#321-web-app-nextjs--httpstranscryptxyz)
-      - [3.2.2 API Gateway \& Policy Enforcement](#322-api-gateway--policy-enforcement)
-      - [3.2.3 Rule Evaluation Service (Deterministic)](#323-rule-evaluation-service-deterministic)
-      - [3.2.4 LLM Assist Pipeline (Build-Time Only)](#324-llm-assist-pipeline-build-time-only)
-      - [3.2.5 Evidence Services](#325-evidence-services)
-      - [3.2.6 Report Service](#326-report-service)
-      - [3.2.7 Partner / Integrator API](#327-partner--integrator-api)
-      - [3.2.8 Admin Console (Internal)](#328-admin-console-internal)
-      - [3.2.9 Data Stores \& Artifacts (Interface Contracts)](#329-data-stores--artifacts-interface-contracts)
-      - [3.2.10 Observability \& Audit](#3210-observability--audit)
-      - [3.2.11 Public Site \& Content (Marketing, Legal, Support)](#3211-public-site--content-marketing-legal-support)
-      - [3.2.12 External Integrations (First-Party)](#3212-external-integrations-first-party)
-      - [3.2.13 Non-Functional Interface Contracts](#3213-non-functional-interface-contracts)
-    - [3.3 Security, Privacy, and Trust Model](#33-security-privacy-and-trust-model)
-    - [3.4 Extensibility and Integration Framework](#34-extensibility-and-integration-framework)
-    - [3.5 Technical Stack and Dependencies](#35-technical-stack-and-dependencies)
-  - [4. User Experience and Functional Requirements](#4-user-experience-and-functional-requirements)
-    - [What this section is for](#what-this-section-is-for)
-    - [Top priorities (stack-ranked)](#top-priorities-stack-ranked)
-    - [Who we’re designing for (and what they care about)](#who-were-designing-for-and-what-they-care-about)
-    - [Minimal journeys we must nail (MVP)](#minimal-journeys-we-must-nail-mvp)
-    - [Copy \& interaction tone](#copy--interaction-tone)
-    - [Where we will *not* compromise](#where-we-will-not-compromise)
-    - [Trade-offs we’ll manage deliberately](#trade-offs-well-manage-deliberately)
-    - [Instrumentation that keeps us honest](#instrumentation-that-keeps-us-honest)
-    - [What this means for design \& build right now](#what-this-means-for-design--build-right-now)
-    - [Why the site matters to UX (not just marketing)](#why-the-site-matters-to-ux-not-just-marketing)
-    - [Site journeys (the “public” half of 4.1)](#site-journeys-the-public-half-of-41)
-    - [What each top page must guarantee (content promises)](#what-each-top-page-must-guarantee-content-promises)
-    - [How the site and app handshake (frictionless routing)](#how-the-site-and-app-handshake-frictionless-routing)
-    - [Priorities for the site (stack-ranked)](#priorities-for-the-site-stack-ranked)
-    - [What to build first (site)](#what-to-build-first-site)
-    - [4.1 User Journeys and Onboarding](#41-user-journeys-and-onboarding)
-      - [4.1.1 Public Site Journeys (credibility → correct door → app intent)](#411-public-site-journeys-credibility--correct-door--app-intent)
-      - [4.1.2 App Onboarding Spine (four entry lanes, one shared flow)](#412-app-onboarding-spine-four-entry-lanes-one-shared-flow)
-      - [4.1.3 Guardrails, Acceptance, and UX KPIs](#413-guardrails-acceptance-and-ux-kpis)
-      - [4.1.4 Site↔App Handshake (routing \& truth alignment)](#414-siteapp-handshake-routing--truth-alignment)
-    - [Screen-by-screen: what good looks like](#screen-by-screen-what-good-looks-like)
-    - [Guardrails, nudges, and acceptance](#guardrails-nudges-and-acceptance)
-    - [4.2 Interface Philosophy](#42-interface-philosophy)
-    - [4.3 Key User Stories](#43-key-user-stories)
-    - [4.4 Accessibility and Usability Standards](#44-accessibility-and-usability-standards)
-      - [What this section is for](#what-this-section-is-for-1)
-      - [Priorities (stack-ranked)](#priorities-stack-ranked)
-      - [Non-negotiable standards (what we target)](#non-negotiable-standards-what-we-target)
-      - [Design \& content rules (operationalised)](#design--content-rules-operationalised)
-      - [Interaction \& structure patterns](#interaction--structure-patterns)
-      - [Reports (HTML \& PDF) accessibility](#reports-html--pdf-accessibility)
-      - [Mobile \& low-bandwidth](#mobile--low-bandwidth)
-      - [Cognitive load \& clarity](#cognitive-load--clarity)
-      - [Testing \& enforcement (make it routine)](#testing--enforcement-make-it-routine)
-      - [Acceptance criteria (task-level)](#acceptance-criteria-task-level)
-    - [4.5 Offline and Multi-Device Support](#45-offline-and-multi-device-support)
-  - [5. Data, Intelligence, and Automation](#5-data-intelligence-and-automation)
-    - [5.1 Data Flow Architecture (v1)](#51-data-flow-architecture-v1)
-    - [5.2 Machine Learning and AI Components (v1)](#52-machine-learning-and-ai-components-v1)
-    - [5.3 Reporting, Dashboards, and Insights (v1)](#53-reporting-dashboards-and-insights-v1)
-    - [5.4 Auditability and Data Provenance (v1)](#54-auditability-and-data-provenance-v1)
-    - [5.5 Closed-Source Policy and Evidence Integrity](#55-closed-source-policy-and-evidence-integrity)
-    - [Traceability Table (Section 5)](#traceability-table-section-5)
-  - [6. Compliance and Governance Framework](#6-compliance-and-governance-framework)
-    - [6.1 Operating Baseline (Cyber Essentials in Practice)](#61-operating-baseline-cyber-essentials-in-practice)
-    - [6.2 Cyber Essentials Alignment (v3.2)](#62-cyber-essentials-alignment-v32)
-    - [6.3 Risk Management and Assurance](#63-risk-management-and-assurance)
-    - [6.4 Policy Library and Evidence Management](#64-policy-library-and-evidence-management)
-    - [6.5 Governance of Product Lifecycle](#65-governance-of-product-lifecycle)
-  - [7. Security and Infrastructure Requirements](#7-security-and-infrastructure-requirements)
-    - [7.1 Authentication, Authorisation, and Identity Management](#71-authentication-authorisation-and-identity-management)
-    - [7.2 Network Segmentation and Zero Trust Architecture](#72-network-segmentation-and-zero-trust-architecture)
-    - [7.3 Data Encryption and Key Management](#73-data-encryption-and-key-management)
-    - [Managed Key Operations Summary](#managed-key-operations-summary)
-    - [7.4 Operational Resilience and Incident Response](#74-operational-resilience-and-incident-response)
-    - [7.5 Secure Software Supply Chain](#75-secure-software-supply-chain)
-  - [8. Monetisation and Revenue Model](#8-monetisation-and-revenue-model)
-    - [8.1 Pricing Strategy](#81-pricing-strategy)
-    - [8.2 Subscription Tiers and Value Differentiation](#82-subscription-tiers-and-value-differentiation)
-    - [8.3 Partner and Reseller Ecosystem](#83-partner-and-reseller-ecosystem)
-    - [8.4 Licensing and Legal Terms](#84-licensing-and-legal-terms)
-    - [8.5 Metrics for Financial Sustainability](#85-metrics-for-financial-sustainability)
-  - [9. Roadmap](#9-roadmap)
-    - [9.1 MVP Definition](#91-mvp-definition)
-    - [9.2 Phase Milestones and Timelines](#92-phase-milestones-and-timelines)
-      - [Post-MVP: Platform Phase Highlights](#post-mvp-platform-phase-highlights)
-    - [9.3 Resource and Budget Planning](#93-resource-and-budget-planning)
-    - [9.4 Risk Register and Mitigation](#94-risk-register-and-mitigation)
-      - [9.4.1 Assisted Tier \& Collaboration (Post-MVP)](#941-assisted-tier--collaboration-post-mvp)
-      - [9.4.2 Partner Channel \& Co-Branding (Post-MVP)](#942-partner-channel--co-branding-post-mvp)
-    - [9.5 Quality Assurance and Acceptance Criteria](#95-quality-assurance-and-acceptance-criteria)
-  - [10. Future Outlook and Strategic Extensions](#10-future-outlook-and-strategic-extensions)
-    - [10.1 Interoperability with Other National Frameworks](#101-interoperability-with-other-national-frameworks)
-    - [10.2 Research and Development Themes](#102-research-and-development-themes)
-    - [10.3 Potential Spin-offs and Product Lines](#103-potential-spin-offs-and-product-lines)
-    - [10.4 Long-Term Sustainability and Ethical Charter](#104-long-term-sustainability-and-ethical-charter)
-    - [10.5 Closing Summary](#105-closing-summary)
-  - [Cross-Referencing Framework](#cross-referencing-framework)
-    - [Strategic/Technical Markers (Legacy)](#strategictechnical-markers-legacy)
-  - [Appendices](#appendices)
-    - [A. Terminology and Abbreviations](#a-terminology-and-abbreviations)
-    - [B. Reference Documents](#b-reference-documents)
-    - [C. Competitive Matrix](#c-competitive-matrix)
-      - [UK SME Cybersecurity Compliance Landscape](#uk-sme-cybersecurity-compliance-landscape)
-        - [Introduction: SME Cybersecurity Obligations in the UK](#introduction-sme-cybersecurity-obligations-in-the-uk)
-        - [Key Compliance Frameworks \& Requirements for UK SMEs (Context)](#key-compliance-frameworks--requirements-for-uk-smes-context)
-        - [Competitive Landscape: Compliance Solution Providers for UK SMEs](#competitive-landscape-compliance-solution-providers-for-uk-smes)
-        - [CyberSmart (UK) – Cyber Essentials Compliance Made Easy](#cybersmart-uk--cyber-essentials-compliance-made-easy)
-        - [Drata (US) – Automated GRC Platform with UK Framework Support](#drata-us--automated-grc-platform-with-uk-framework-support)
-        - [Vanta (US) – Expanding into UK Standards (Cyber Essentials, NIS2)](#vanta-us--expanding-into-uk-standards-cyber-essentials-nis2)
-        - [DataGuard (Germany/UK) – “Compliance-as-a-Service” with Human Expertise](#dataguard-germanyuk--compliance-as-a-service-with-human-expertise)
-        - [SureCloud (UK) – Integrated GRC Platform with SME Packages](#surecloud-uk--integrated-grc-platform-with-sme-packages)
-        - [ISMS.online (UK) – Cloud Platform for ISO 27001 and More](#ismsonline-uk--cloud-platform-for-iso-27001-and-more)
-        - [OneTrust (US/UK) – Broad Compliance Platform (Privacy-Focused)](#onetrust-usuk--broad-compliance-platform-privacy-focused)
-        - [6clicks (Australia) – Agile GRC with Extensive Framework Library](#6clicks-australia--agile-grc-with-extensive-framework-library)
-        - [Kaseya Compliance Manager GRC (RapidFire Tools) – MSP-oriented Compliance Automation](#kaseya-compliance-manager-grc-rapidfire-tools--msp-oriented-compliance-automation)
-        - [Enterprise GRC Solutions (RSA Archer, ServiceNow, etc.) – High-End Options (Rarely Used by SMEs)](#enterprise-grc-solutions-rsa-archer-servicenow-etc--high-end-options-rarely-used-by-smes)
-        - [Comparison of Key Compliance Solutions for UK SMEs](#comparison-of-key-compliance-solutions-for-uk-smes)
-        - [Conclusion](#conclusion)
-        - [Citations](#citations)
-    - [D. Change Log](#d-change-log)
-    - [E. Markdown Codes](#e-markdown-codes)
-- [Markdown Syntax Cheatsheet](#markdown-syntax-cheatsheet)
-  - [Headings](#headings)
-- [H1](#h1)
-  - [H2](#h2)
-    - [H3](#h3)
-      - [H4](#h4)
-        - [H5](#h5)
-          - [H6](#h6)
-  - [Emphasis](#emphasis)
-  - [Lists](#lists)
-    - [Unordered](#unordered)
-    - [Ordered](#ordered)
-  - [Links and Images](#links-and-images)
-  - [Code](#code)
-    - [Code Block](#code-block)
   - [Blockquote](#blockquote)
   - [Horizontal Rule](#horizontal-rule)
   - [Table](#table)
@@ -605,10 +462,10 @@ Version 1 operates entirely self-serve: all evaluation, reporting, and evidence 
 
 #### Invisible Infrastructure Principle
 
-Complexity in Transcrypt exists only to remove effort for the user.  
-Containerisation, encryption layers, and rule engines are hidden beneath a **single guided workflow**.  
-Every architectural decision—data isolation, AI pipelines, event hashing—serves one aim: **fewer clicks, clearer answers, faster compliance**.  
-The platform never exposes its internal mechanics; it turns them into plain-English outcomes.
+Transcrypt hides operational complexity behind a single guided workflow.
+Encryption, process isolation, and rule evaluation happen automatically and transparently; users never interact with servers, storage, or configuration.
+Internal mechanics are explainable but not exposed—every layer exists solely to deliver clarity at the surface.
+Each architectural choice serves one aim: **fewer steps, clearer guidance, faster assurance**.
 
 **3.1.1.1 Runtime topology (high level)**
 
@@ -672,47 +529,123 @@ The platform never exposes its internal mechanics; it turns them into plain-Engl
 
 ### 3.1.3 Data Model (Canonical Contracts)
 
-**3.1.3.1 OrgProfile**
+**3.1.3.1 OrgProfile (V1)**
 
 ```json
-{ "company": {"name":"", "employees":0, "sector":""},
-  "it": {"idp":"EntraID|Okta|Google","email":"M365|Google","endpoints":{"count":0,"edr":""}},
-  "remote_access":{"vpn":true}, "backups":{"server":"daily","immutable":false},
-  "policies":{"password":"exists","incident":"missing"}, "notes":[] }
+{
+  "schema": "OrgProfile",
+  "version": "1.0",
+  "tenant_id": "tn_abc123",
+  "company": { "name": "Acme Ltd", "employees": 42, "sector": "manufacturing" },
+  "it": {
+    "idp": "EntraID|Okta|Google",
+    "email": "M365|Google",
+    "endpoints": { "count": 120, "edr": "Defender|CrowdStrike|None" }
+  },
+  "remote_access": { "vpn": true },
+  "backups": { "server_schedule": "daily|weekly|none", "immutable": false },
+  "policies": { "password": "exists|missing", "incident": "exists|missing" },
+  "notes": [],
+  "observed_at": "2025-11-10T10:00:00Z"
+}
 ```
 
-**3.1.3.2 EvidenceInventory**
+**3.1.3.2 EvidenceInventory (V1)**
 
 ```json
-{ "files":[{"name":"idp_policy.json","type":"config","hash":"..."}],
-  "assertions":[{"key":"MFA.enforced.admins","value":true,"source":"idp_policy.json"}] }
+{
+  "schema": "EvidenceInventory",
+  "version": "1.0",
+  "tenant_id": "tn_abc123",
+  "files": [
+    {
+      "id": "evf_001",
+      "name": "idp_policy.json",
+      "type": "config|screenshot|export|log",
+      "mime": "application/json",
+      "size_bytes": 18342,
+      "sha256": "…",
+      "captured_at": "2025-11-10T09:58:21Z",
+      "source": "user_upload|connector:idp",
+      "signed_url": { "expires_at": "2025-11-10T10:28:21Z" }
+    }
+  ],
+  "assertions": [
+    {
+      "key": "MFA.enforced.admins",
+      "type": "boolean",
+      "value": true,
+      "source": "idp_policy.json",
+      "source_type": "file_ref",
+      "observed_at": "2025-11-10T09:58:21Z"
+    }
+  ]
+}
 ```
 
-**3.1.3.3 Rule (compiled)**
+**3.1.3.3 Rule (compiled) (V1)**
 
 ```json
-{ "id":"CE-AC-001","title":"MFA for admin accounts",
-  "applicability":{"if":["ORG.it.idp != null"]},
-  "test":{"all":[{"equals":["ASSERT.MFA.enforced.admins", true]}]},
-  "evidence":["idp_policy.json"], "citations":[{"doc":"CE-2025","section":"AC.1.1"}] }
+{
+  "schema": "Rule",
+  "version": "1.0",
+  "id": "CE-AC-001",
+  "title": "MFA for admin accounts",
+  "applicability": { "if": ["ORG.it.idp != null"] },
+  "test": { "all": [ { "equals": ["ASSERT.MFA.enforced.admins", true] } ] },
+  "evidence": ["idp_policy.json"],
+  "citations": [
+    { "framework": "CE", "version": "3.2", "section": "AC.1.1" }
+  ],
+  "equivalents": [
+    { "framework": "ISO27001", "clause": "A.5.17" }
+  ],
+  "rule_pack_hash": "sha256:…"
+}
 ```
 
-**3.1.3.4 Finding**
+**3.1.3.4 Finding (V1)**
 
 ```json
-{ "rule_id":"CE-AC-001","status":"pass|fail|partial",
-  "reason":"Exact test result…","evidence":["idp_policy.json"],
-  "citations":[{"doc":"CE-2025","section":"AC.1.1"}], "priority":1 }
+{
+  "schema": "Finding",
+  "version": "1.0",
+  "tenant_id": "tn_abc123",
+  "rule_id": "CE-AC-001",
+  "status": "pass|fail|partial",
+  "priority": 1,
+  "reason": "Exact test result…",
+  "evidence": ["idp_policy.json"],
+  "citations": [
+    { "framework": "CE", "version": "3.2", "section": "AC.1.1" }
+  ],
+  "provenance": {
+    "rule_pack_hash": "sha256:…",
+    "org_profile_hash": "sha256:…",
+    "evidence_inventory_hash": "sha256:…",
+    "evaluated_at": "2025-11-10T10:01:02Z"
+  }
+}
 ```
 
-**3.1.3.5 Report (envelope)**
+**3.1.3.5 Report (envelope) (V1)**
 
 ```json
-{ "tenant":"...", "generated_at":"ISO8601", "summary":"…",
-  "top_actions":[ "...", "..." ], "findings":[ ... ], "artifact_hash":"..." }
-```
-
----
+{
+  "schema": "Report",
+  "version": "1.0",
+  "tenant_id": "tn_abc123",
+  "generated_at": "2025-11-10T10:02:33Z",
+  "summary": "…",
+  "top_actions": ["…", "…"],
+  "findings": ["finding_id_1", "finding_id_2"],
+  "artefact_hash": "sha256:…",
+  "inputs": {
+    "rule_pack_hash": "sha256:…",
+    "org_profile_hash": "sha256:…",
+    "evidence_inventory_hash": "sha256:…"
+  }
+}
 
 ### 3.1.4 Storage and Artifacts
 
