@@ -39,10 +39,10 @@ review_cycle: "Quarterly or upon major release"
     - [Framework Modularity](#framework-modularity)
   - [3.1 Core Architecture Overview](#31-core-architecture-overview)
     - [3.1.1 System Overview](#311-system-overview)
-    - [Data Ownership and Sovereignty](#data-ownership-and-sovereignty)
-    - [Automation-First Operating Model](#automation-first-operating-model)
-    - [Invisible Infrastructure Principle](#invisible-infrastructure-principle)
-    - [User Tiers and Human Interaction Model](#user-tiers-and-human-interaction-model)
+      - [Data Ownership and Sovereignty](#data-ownership-and-sovereignty)
+      - [Automation-First Operating Model](#automation-first-operating-model)
+      - [Invisible Infrastructure Principle](#invisible-infrastructure-principle)
+      - [User Tiers and Human Interaction Model](#user-tiers-and-human-interaction-model)
     - [3.1.2 Core Components and Interfaces](#312-core-components-and-interfaces)
     - [3.1.3 Data Model (Canonical Contracts)](#313-data-model-canonical-contracts)
     - [3.1.4 Storage and Artifacts](#314-storage-and-artifacts)
@@ -581,7 +581,7 @@ All mappings are stored in a normalised meta-model so reporting and dashboards s
 
 Transcrypt Core’s architecture adopts mature enterprise patterns—segmented networks, signed artifacts, containerised services—but packages them as a managed backbone that the SME user never has to configure. Every component is orchestrated for resilience and assurance while presenting only a guided workflow at the surface.
 
-### Data Ownership and Sovereignty
+#### Data Ownership and Sovereignty
 
 Transcrypt operates as a **centrally orchestrated, locally encrypted SaaS**.  
 Each tenant’s data resides within shared infrastructure but is sealed with **tenant-specific encryption keys** that only the tenant can use.  
@@ -589,14 +589,14 @@ Transcrypt Ltd cannot decrypt customer evidence, policies, or logs.
 Backups and replicas are encrypted at rest and in transit, ensuring geographic redundancy without central visibility.  
 Data sovereignty follows a “trust by math, not by policy” principle — enforced through cryptography rather than contractual language.
 
-### Automation-First Operating Model
+#### Automation-First Operating Model
 
 Transcrypt operates on the principle of **Automation First**:
 every task that can be safely automated is automated before humans are involved.
 Where expert review adds assurance (e.g. external certification, policy vetting), the platform supports a future “Assisted Tier” via secure review portals. [[Post-MVP: §9.4.1 Assisted Tier & Collaboration]]
 v1 contains no human-review workflow.
 
-### Invisible Infrastructure Principle
+#### Invisible Infrastructure Principle
 
 Complexity in Transcrypt exists only to remove effort for the user.  
 Containerisation, encryption layers, and rule engines are hidden beneath a **single guided workflow**.  
@@ -614,7 +614,7 @@ The platform never exposes its internal mechanics; it turns them into plain-Engl
 * **App zone:** Stateless services (evaluation, reporting, connectors).
 * **Data zone:** DB, object storage, KMS; isolated network, access via service identities only.
 
-### User Tiers and Human Interaction Model
+#### User Tiers and Human Interaction Model
 
 | Tier | Name | Description | Human Involvement |
 |:----:|:-----|:-------------|:-----------------|
