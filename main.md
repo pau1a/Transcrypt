@@ -469,7 +469,7 @@ Each architectural choice serves one aim: **fewer steps, clearer guidance, faste
 
 **3.1.1.1 Runtime topology (high level)**
 
-* **Edge/UI** → **API Gateway** → **Core Services** (Evaluation, Reporting, Evidence) → **Data Stores** (Rules, Tenants, Artifacts).
+* **Edge/UI** → **API Gateway** → **Core Services** (Evaluation, Reporting, Evidence) → **Data Stores** (Rules, Tenants, Artefacts).
 * Identity-aware proxy in front of every service; no east–west traffic without mutual auth.
 
 **3.1.1.2 Trust boundaries**
@@ -502,8 +502,8 @@ Each architectural choice serves one aim: **fewer steps, clearer guidance, faste
 
 **3.1.2.3 Rule Engine (Deterministic)**
 
-* Responsibilities: Load compiled rule artifacts; evaluate applicability/tests; produce findings with provenance.
-* Interfaces: `POST /evaluate` (OrgProfile, EvidenceInventory, RulePackID) → Findings JSON; `GET /explain/:rule_id`.
+* Responsibilities: Load compiled rule artefacts; evaluate applicability/tests; produce findings with provenance.
+* Interfaces: `POST /evaluate` (OrgProfile, EvidenceInventory, rule_pack_id) → Findings JSON; `GET /explain/:rule_id`.
 
 **3.1.2.4 LLM Assist Pipeline (Build-time only)**
 
@@ -529,6 +529,18 @@ Each architectural choice serves one aim: **fewer steps, clearer guidance, faste
 
 ### 3.1.3 Data Model (Canonical Contracts)
 
+The following canonical contracts define the minimum JSON structure for core Transcrypt data objects. All objects carry schema identifiers, version tags, and deterministic hashes to enable auditability and forward compatibility. Optional fields are omitted when unknown rather than populated with `null`.
+
+`status ∈ { "pass", "fail", "partial" }`
+
+`priority ∈ {1..5}`, with `1` as highest urgency
+
+`file.type ∈ {"config", "screenshot", "export", "log"}`
+
+`backups.server_schedule ∈ {"daily", "weekly", "none"}`
+
+`time format = ISO8601 (Z)`
+
 **3.1.3.1 OrgProfile (V1)**
 
 ```json
@@ -536,15 +548,15 @@ Each architectural choice serves one aim: **fewer steps, clearer guidance, faste
   "schema": "OrgProfile",
   "version": "1.0",
   "tenant_id": "tn_abc123",
-  "company": { "name": "Acme Ltd", "employees": 42, "sector": "manufacturing" },
+  "company": { "name": "Acme Ltd", "employee_count": 42, "sector": "manufacturing" },
   "it": {
-    "idp": "EntraID|Okta|Google",
-    "email": "M365|Google",
-    "endpoints": { "count": 120, "edr": "Defender|CrowdStrike|None" }
+    "idp": "entra_id",
+    "email": "m365",
+    "endpoints": { "endpoint_count": 120, "edr": "defender" }
   },
-  "remote_access": { "vpn": true },
-  "backups": { "server_schedule": "daily|weekly|none", "immutable": false },
-  "policies": { "password": "exists|missing", "incident": "exists|missing" },
+  "remote_access": { "vpn_enabled": true },
+  "backups": { "server_schedule": "daily", "immutable": false },
+  "policies": { "password": "exists", "incident": "exists" },
   "notes": [],
   "observed_at": "2025-11-10T10:00:00Z"
 }
@@ -559,23 +571,28 @@ Each architectural choice serves one aim: **fewer steps, clearer guidance, faste
   "tenant_id": "tn_abc123",
   "files": [
     {
-      "id": "evf_001",
+      "file_id": "evf_001",
       "name": "idp_policy.json",
-      "type": "config|screenshot|export|log",
+      "type": "config",
       "mime": "application/json",
       "size_bytes": 18342,
       "sha256": "…",
       "captured_at": "2025-11-10T09:58:21Z",
-      "source": "user_upload|connector:idp",
-      "signed_url": { "expires_at": "2025-11-10T10:28:21Z" }
+      "source": "user_upload",
+      "signed_url": { "expires_at": "2025-11-10T10:28:21Z" },
+      "retention_class": "1y",
+      "control_refs": [
+        { "framework": "CE", "version": "3.2", "section": "AC.1.1" }
+      ]
     }
   ],
   "assertions": [
     {
-      "key": "MFA.enforced.admins",
+      "assertion_id": "ast_001",
+      "key": "mfa.enforced.admins",
       "type": "boolean",
       "value": true,
-      "source": "idp_policy.json",
+      "source_file_id": "evf_001",
       "source_type": "file_ref",
       "observed_at": "2025-11-10T09:58:21Z"
     }
@@ -589,11 +606,11 @@ Each architectural choice serves one aim: **fewer steps, clearer guidance, faste
 {
   "schema": "Rule",
   "version": "1.0",
-  "id": "CE-AC-001",
+  "rule_id": "CE-AC-001",
   "title": "MFA for admin accounts",
   "applicability": { "if": ["ORG.it.idp != null"] },
-  "test": { "all": [ { "equals": ["ASSERT.MFA.enforced.admins", true] } ] },
-  "evidence": ["idp_policy.json"],
+  "test": { "all": [ { "equals": ["ASSERT.mfa.enforced.admins", true] } ] },
+  "evidence_ids": ["evf_001"],
   "citations": [
     { "framework": "CE", "version": "3.2", "section": "AC.1.1" }
   ],
@@ -611,11 +628,12 @@ Each architectural choice serves one aim: **fewer steps, clearer guidance, faste
   "schema": "Finding",
   "version": "1.0",
   "tenant_id": "tn_abc123",
+  "finding_id": "find_001",
   "rule_id": "CE-AC-001",
-  "status": "pass|fail|partial",
+  "status": "pass",
   "priority": 1,
   "reason": "Exact test result…",
-  "evidence": ["idp_policy.json"],
+  "evidence_ids": ["evf_001"],
   "citations": [
     { "framework": "CE", "version": "3.2", "section": "AC.1.1" }
   ],
@@ -623,7 +641,8 @@ Each architectural choice serves one aim: **fewer steps, clearer guidance, faste
     "rule_pack_hash": "sha256:…",
     "org_profile_hash": "sha256:…",
     "evidence_inventory_hash": "sha256:…",
-    "evaluated_at": "2025-11-10T10:01:02Z"
+    "evaluated_at": "2025-11-10T10:01:02Z",
+    "evaluator_version": "v1.0"
   }
 }
 ```
@@ -635,31 +654,36 @@ Each architectural choice serves one aim: **fewer steps, clearer guidance, faste
   "schema": "Report",
   "version": "1.0",
   "tenant_id": "tn_abc123",
+  "report_id": "rpt_001",
   "generated_at": "2025-11-10T10:02:33Z",
   "summary": "…",
   "top_actions": ["…", "…"],
-  "findings": ["finding_id_1", "finding_id_2"],
+  "finding_ids": ["find_001", "find_002"],
   "artefact_hash": "sha256:…",
-  "inputs": {
+  "provenance": {
     "rule_pack_hash": "sha256:…",
     "org_profile_hash": "sha256:…",
-    "evidence_inventory_hash": "sha256:…"
+    "evidence_inventory_hash": "sha256:…",
+    "evaluated_at": "2025-11-10T10:01:02Z",
+    "evaluator_version": "v1.0",
+    "report_signature": "sig:…",
+    "signing_key_id": "key_001"
   }
 }
 
-### 3.1.4 Storage and Artifacts
+### 3.1.4 Storage and Artefacts
 
 **3.1.4.1 Tenant DB (Postgres)**
 
 * Tables: `tenants`, `users`, `org_profiles`, `findings`, `reports`, `audit_events`.
 * JSONB for profiles/findings; row-level security per tenant.
 
-**3.1.4.2 Object Storage (Artifacts & Evidence)**
+**3.1.4.2 Object Storage (Artefacts & Evidence)**
 
-* Buckets: `rule-artifacts/` (immutable, hash-addressed), `evidence/tenant-id/`.
+* Buckets: `rule-artefacts/` (immutable, hash-addressed), `evidence/tenant-id/`.
 * Server-side encryption + per-object metadata (hash, uploader, rule links).
 
-**3.1.4.3 Artifact Registry**
+**3.1.4.3 Artefact Registry**
 
 * Compiled RulePacks indexed by SHA-256; manifest lists versions, diffs, effective dates.
 
@@ -693,7 +717,7 @@ Each architectural choice serves one aim: **fewer steps, clearer guidance, faste
 
 **3.1.6.1 Framework Packs**
 
-* Portable rule/evidence packs for Cyber Essentials v3.2, NIS2, ISO 27001; locale text separated; hot-swappable by `RulePackID`.
+* Portable rule/evidence packs for Cyber Essentials v3.2, NIS2, ISO 27001; locale text separated; hot-swappable by `rule_pack_id`.
 
 **3.1.6.2 Connectors**
 
@@ -790,7 +814,7 @@ All user interaction occurs through the Transcrypt web platform, which unifies p
   * `POST /api/evaluate`
 
     * **Request:** `{ "rule_pack": "CE-2025.3#sha256:...", "org_profile": {...}, "evidence": {...} }`
-    * **Response:** `{ "findings":[{ "rule_id":"...", "status":"pass|fail|partial", "reason":"...", "evidence":[...], "citations":[...] }], "artifact_hash":"..." }`
+    * **Response:** `{ "findings":[{ "rule_id":"...", "status":"pass|fail|partial", "reason":"...", "evidence":[...], "citations":[...] }], "artefact_hash":"..." }`
   * `GET /api/evaluate/explain/:rule_id` → returns provenance (tests run, inputs, citations).
 * **Notes:** Stateless; loads RulePacks by hash; **no LLM** in runtime path; will emit findings decorated with `ce_ref` question identifiers and renewal flags aligned to the 14-day vulnerability, MFA, password, device lockout, and software-support rules mandated in [§6.2](#62-cyber-essentials-alignment-v32).
 
@@ -815,7 +839,7 @@ All user interaction occurs through the Transcrypt web platform, which unifies p
 
 #### 3.2.6 Report Service
 
-* **Purpose:** Convert findings → prioritised actions → **HTML/PDF** with embedded citations and artifact hash.
+* **Purpose:** Convert findings → prioritised actions → **HTML/PDF** with embedded citations and artefact hash.
 * **Interfaces:**
 
   * `POST /api/reports/generate` → `{ report_id, download_url, summary }`.
@@ -840,10 +864,10 @@ All user interaction occurs through the Transcrypt web platform, which unifies p
   * `POST /api/admin/rulepacks/publish`, `GET /api/admin/rulepacks/:hash`.
   * `POST /api/admin/evaluate/simulate` with synthetic OrgProfile/Evidence.
 
-#### 3.2.9 Data Stores & Artifacts (Interface Contracts)
+#### 3.2.9 Data Stores & Artefacts (Interface Contracts)
 
 * **Postgres (RLS per tenant):** `tenants`, `users`, `org_profiles(jsonb)`, `evidence_index`, `findings(jsonb)`, `reports`, `audit_events`.
-* **Artifact Registry (immutable):** `rulepacks/{hash}.json`, `manifest.json`, `diffs/{from}-{to}.json`.
+* **Artefact Registry (immutable):** `rulepacks/{hash}.json`, `manifest.json`, `diffs/{from}-{to}.json`.
 * **Schemas:** All payloads carry `"schema": "OrgProfileV1" | "EvidenceV1" | "FindingsV1"` for fwd/back compat.
 
 #### 3.2.10 Observability & Audit
@@ -878,19 +902,19 @@ All user interaction occurs through the Transcrypt web platform, which unifies p
 
 ### 3.3 Security, Privacy, and Trust Model
 
-Transcrypt treats **identity as the perimeter** and **evidence as the arbiter of trust**. Every human and machine action is authenticated (OIDC for users, mTLS for services), authorised by **policy-as-code** (OPA/Rego), and logged with immutable metadata (tenant, actor, rule pack, trace ID). Network paths are **zero-trust by default**: no implicit east–west access, service meshes enforce mutual TLS, and privileges are created just-in-time and discarded immediately after use. Data is encrypted **in transit (TLS 1.3/PFS)** and **at rest (AES-256-GCM)** with keys managed and rotated by a KMS; secrets are injected at runtime via a vault and never committed to source. Runtime environments are ephemeral and reproducible; builds are signed and accompanied by SBOMs and SLSA-style provenance so that what runs can be traced back to who approved it and which inputs it contained. The result is a platform where security isn’t a bolted-on checklist but a property of the topology, the pipeline, and the artifacts.
+Transcrypt treats **identity as the perimeter** and **evidence as the arbiter of trust**. Every human and machine action is authenticated (OIDC for users, mTLS for services), authorised by **policy-as-code** (OPA/Rego), and logged with immutable metadata (tenant, actor, rule pack, trace ID). Network paths are **zero-trust by default**: no implicit east–west access, service meshes enforce mutual TLS, and privileges are created just-in-time and discarded immediately after use. Data is encrypted **in transit (TLS 1.3/PFS)** and **at rest (AES-256-GCM)** with keys managed and rotated by a KMS; secrets are injected at runtime via a vault and never committed to source. Runtime environments are ephemeral and reproducible; builds are signed and accompanied by SBOMs and SLSA-style provenance so that what runs can be traced back to who approved it and which inputs it contained. The result is a platform where security isn’t a bolted-on checklist but a property of the topology, the pipeline, and the artefacts.
 
 Privacy is engineered as **data minimisation, isolation, and control**. Tenants are logically isolated (row-level security on Postgres plus per-tenant object-store prefixes), and the app collects only what’s needed to evaluate controls and generate reports. Evidence is never “loose”: every file or assertion is bound to a control, version, and citation, with hashes and timestamps for provenance. Users own their data; Transcrypt is a processor under UK GDPR. The platform exposes **self-service Data Subject Rights** (export/delete) and publishes clear retention schedules; AI prompts are **redacted** to avoid sending sensitive content to models, and LLMs are used **only** at build-time for drafting and summarisation—never for runtime scoring. Legal pages (Privacy, DPA, Sub-processors) are versioned in the repo; changes are diffable and linked from the site. Cookie/telemetry loading respects explicit consent, and analytics run in a privacy-preserving mode with PII excluded by design.
 
-Trust is made observable through **transparent operations and verifiable assurances**. A public status page, changelog, and governance notes show uptime, incidents, and remediation; `/.well-known/security.txt` advertises a responsible disclosure path and optional PGP key. Incident response follows a time-boxed playbook (detect → contain → eradicate → recover → RCA), and every RCA is a signed artifact linked to the code/config changes it triggered. Continuous testing covers security (dependency and container scans), functionality (unit/integration/E2E), and drift (policy and posture checks); failed gates block release. Where standards matter, the platform maps directly to **Cyber Essentials** hygiene, **ISO 27001** governance, **NIS/NIS2** resilience, and **IEC 62443** zone/conduit separation—so controls aren’t just present, they are **explainable** in the language auditors use. In short: authenticate everything, authorise least, encrypt always, minimise data, and prove it—with artifacts anyone qualified can inspect.
+Trust is made observable through **transparent operations and verifiable assurances**. A public status page, changelog, and governance notes show uptime, incidents, and remediation; `/.well-known/security.txt` advertises a responsible disclosure path and optional PGP key. Incident response follows a time-boxed playbook (detect → contain → eradicate → recover → RCA), and every RCA is a signed artefact linked to the code/config changes it triggered. Continuous testing covers security (dependency and container scans), functionality (unit/integration/E2E), and drift (policy and posture checks); failed gates block release. Where standards matter, the platform maps directly to **Cyber Essentials** hygiene, **ISO 27001** governance, **NIS/NIS2** resilience, and **IEC 62443** zone/conduit separation—so controls aren’t just present, they are **explainable** in the language auditors use. In short: authenticate everything, authorise least, encrypt always, minimise data, and prove it—with artefacts anyone qualified can inspect.
 
 ### 3.4 Extensibility and Integration Framework
 
-Transcrypt is designed to grow **by data, not by rewrite**. The core engine treats frameworks, controls, and evidence definitions as portable **RulePacks**—signed JSON artifacts that the runtime loads by hash. Adding NIS2, DORA, or ISO 27001 doesn’t change code paths: you publish a new RulePack with mapped controls, equivalence links, and test clauses; the evaluation service remains deterministic. Textual outputs (headings, rationales, actions) live as locale bundles, so jurisdictional expansion is translation work, not refactoring. Report rendering is a themeable template layer (HTML → PDF) that reads the same Findings schema, allowing new formats or styles without touching evaluation logic.
+Transcrypt is designed to grow **by data, not by rewrite**. The core engine treats frameworks, controls, and evidence definitions as portable **RulePacks**—signed JSON artefacts that the runtime loads by hash. Adding NIS2, DORA, or ISO 27001 doesn’t change code paths: you publish a new RulePack with mapped controls, equivalence links, and test clauses; the evaluation service remains deterministic. Textual outputs (headings, rationales, actions) live as locale bundles, so jurisdictional expansion is translation work, not refactoring. Report rendering is a themeable template layer (HTML → PDF) that reads the same Findings schema, allowing new formats or styles without touching evaluation logic.
 
-Integration follows a **connector + event** model. Connectors are small, sandboxed pullers/posters that transform external proofs (IdP exports, backup configs, EDR posture, cloud config snapshots) into **EvidenceInventory** assertions or file artifacts. They run out-of-band via jobs/queues, publish to the evidence API, and never gain direct DB write access. Events from the core—`report.generated`, `finding.changed`, `evidence.added`—are emitted to webhooks with signed payloads, enabling MSP dashboards, insurer ingestion, or customer SIEM correlation. Post-MVP, a curated **Partner API** exposes read-scoped endpoints (tenant roll-ups, findings, reports) for contracted collaborators with strict RBAC, pagination, and approval workflows—an API-level integration surface for customers and approved partners only. [[Post-MVP: §9.4.2 Partner Channel & Co-Branding]] Exports continue to use open, durable formats (JSON/JSON-LD) so downstream systems can store or rehydrate results without vendor lock-in.
+Integration follows a **connector + event** model. Connectors are small, sandboxed pullers/posters that transform external proofs (IdP exports, backup configs, EDR posture, cloud config snapshots) into **EvidenceInventory** assertions or file artefacts. They run out-of-band via jobs/queues, publish to the evidence API, and never gain direct DB write access. Events from the core—`report.generated`, `finding.changed`, `evidence.added`—are emitted to webhooks with signed payloads, enabling MSP dashboards, insurer ingestion, or customer SIEM correlation. Post-MVP, a curated **Partner API** exposes read-scoped endpoints (tenant roll-ups, findings, reports) for contracted collaborators with strict RBAC, pagination, and approval workflows—an API-level integration surface for customers and approved partners only. [[Post-MVP: §9.4.2 Partner Channel & Co-Branding]] Exports continue to use open, durable formats (JSON/JSON-LD) so downstream systems can store or rehydrate results without vendor lock-in.
 
-Extensibility is governed by **versioned contracts** and forward-compat rules. Every payload carries a `schema` tag (e.g., `OrgProfileV1`, `EvidenceV1`, `FindingsV1`); minor releases add optional fields, major releases ship with a migration manifest and deprecation window. RulePacks and templates are immutable by content hash; new revisions publish as new artifacts with a machine-readable `diff.json` so partners can pre-compute the impact of framework updates. SDKs (lightweight) provide typed models, request builders, webhook verifiers, and a connector scaffold (auth, polling, backoff, signing). LLM use remains a **build-time extension point** only—providers are pluggable, prompts redacted, outputs schema-validated—so runtime determinism and auditability never depend on a model vendor. In combination, RulePacks, connectors, events, and stable schemas make the platform easy to extend, safe to integrate, and boring to operate—the exact temperament you want in compliance infrastructure.
+Extensibility is governed by **versioned contracts** and forward-compat rules. Every payload carries a `schema` tag (e.g., `OrgProfileV1`, `EvidenceV1`, `FindingsV1`); minor releases add optional fields, major releases ship with a migration manifest and deprecation window. RulePacks and templates are immutable by content hash; new revisions publish as new artefacts with a machine-readable `diff.json` so partners can pre-compute the impact of framework updates. SDKs (lightweight) provide typed models, request builders, webhook verifiers, and a connector scaffold (auth, polling, backoff, signing). LLM use remains a **build-time extension point** only—providers are pluggable, prompts redacted, outputs schema-validated—so runtime determinism and auditability never depend on a model vendor. In combination, RulePacks, connectors, events, and stable schemas make the platform easy to extend, safe to integrate, and boring to operate—the exact temperament you want in compliance infrastructure.
 
 ### 3.5 Technical Stack and Dependencies
 
@@ -918,8 +942,8 @@ Extensibility is governed by **versioned contracts** and forward-compat rules. E
 **Data & Storage**
 
 * **Primary DB:** **Postgres 15+ (local instance on the app server)** with RLS per tenant; JSONB for OrgProfile/Findings; migrations via Alembic. Listen on `127.0.0.1`; pool with **pgBouncer**; PITR enabled.
-* **Object storage:** S3-compatible bucket(s) for evidence/artifacts; server-side encryption; signed URLs.
-* **Artifact registry:** Immutable RulePacks (`rulepacks/{sha256}.json`), manifests, diffs; addressed by content hash.
+* **Object storage:** S3-compatible bucket(s) for evidence/artefacts; server-side encryption; signed URLs.
+* **Artefact registry:** Immutable RulePacks (`rulepacks/{sha256}.json`), manifests, diffs; addressed by content hash.
 * **Secrets & keys:** **Vault** (or cloud KMS + Secrets Manager) for app secrets; KMS-managed KEKs; automated rotation.
 * **Caching:** Redis (ephemeral) for queue/session where necessary; avoid caching sensitive payloads.
 * **Backups & DR:** Daily encrypted DB snapshots + WAL archiving; object-store versioning; **quarterly restore drills** into staging with checksum verification.
@@ -969,12 +993,12 @@ Extensibility is governed by **versioned contracts** and forward-compat rules. E
 * **Purpose:** Draft rule objects from legislation, propose cross-framework equivalences, and generate human-readable report copy. **Never** used for runtime scoring or access decisions.
 * **Abstraction:** Provider-agnostic via an OpenAI-compatible client (e.g., SDK or lightweight gateway). Pluggable backends: hosted APIs or local models.
 * **Redaction & privacy:** Structured redaction pass strips PII/secrets from prompts; opt-in only. Redaction logs keep hashed placeholders for traceability.
-* **Determinism & audit:** Fixed prompts with versioned templates; low-variance settings; prompt + response + model/version **persisted as an artifact** tied to the resulting RulePack or text block.
+* **Determinism & audit:** Fixed prompts with versioned templates; low-variance settings; prompt + response + model/version **persisted as an artefact** tied to the resulting RulePack or text block.
 * **Validation:** JSON outputs schema-validated; missing citations or invalid structure = build fail; human review required before publish.
 * **Evaluation harness:** Golden-file tests for copy; regression checks to detect drift across model upgrades.
 * **Caching:** Content-addressed cache of prompt→response during builds to reduce cost/latency; cache is invalidated on template/model changes.
 * **Model registry & provenance:** Track model name, version/commit, licence/usage terms; surface in `/licenses` and internal release notes.
-* **Storage:** All AI artifacts stored in the **artifact registry** alongside RulePacks; reproducible by hash.
+* **Storage:** All AI artefacts stored in the **artefact registry** alongside RulePacks; reproducible by hash.
 * **Safety rails:** Blocklist/allowlist filters on inputs; refusal to process unredacted evidence; explicit user consent flags control any external processing.
 * **(Optional later)** Embedding/indexing: `pgvector` in Postgres for search over internal docs/policies (still build-time), with the same redaction and audit rules.
 
@@ -1007,7 +1031,7 @@ It sets the contract between us and the user: what journeys exist, how fast valu
 * **Onboard → Quick Start (3 cards only):** “Tell us about your setup,” “Add evidence (or skip),” “Run assessment.” No more than ~20 core fields to start.
 * **Intake that feels like a conversation:** Sections with short explanations and examples; autosave; can leave and return.
 * **Findings that teach, not scold:** Pass/Fail/Partial with the *because* in one sentence and an expandable trace.
-* **Report that stands on its own:** Executive summary, top actions, citations, artifact hash in the footer, printable and shareable.
+* **Report that stands on its own:** Executive summary, top actions, citations, artefact hash in the footer, printable and shareable.
 * **Posture page that changes behaviour:** A small set of “next best actions” that link back to the exact input/evidence needed.
 
 ### Copy & interaction tone
@@ -1152,7 +1176,7 @@ The onboarding flow is delivered through the Transcrypt web application.
 **Finding & report experience**
 
 * **Finding cards:** Pass/Fail/Partial chip; one-sentence “because…”, **Show trace** (inputs, test, citations), **Fix it** jumps to exact intake/evidence field. Right rail: **Top 5 actions** (effort × impact).
-* **Report:** Branded HTML/PDF with exec summary, citations, and artifact hash in footer; **Download PDF** and **Share read-only link** (time-boxed). From report: **Invite tech helper** and **Connect insurer/MSP**.
+* **Report:** Branded HTML/PDF with exec summary, citations, and artefact hash in footer; **Download PDF** and **Share read-only link** (time-boxed). From report: **Invite tech helper** and **Connect insurer/MSP**.
 
 ---
 
@@ -1190,7 +1214,7 @@ Regardless of lane, everyone hits the same **three-card Quick Start**:
 * **Signup & MFA (≤3 minutes):** OIDC, confirm email, show recovery codes, friendly “You’re done—let’s get your first report.”
 * **Quick Start (single page, three cards):** Progress bar + “Time left ~15 min.” Card 1 uses branching (e.g., selecting “Entra ID” unlocks a small panel: “Upload your Conditional Access export or tick ‘we’ll upload later’”). Card 2 is an **Evidence Tray** with drag-and-drop and instant SHA-256 display; duplicates are flagged, and each file must be bound to a control (“Bind to: MFA policy” dropdown). Card 3 is a big primary button: **Run assessment**; we show a 10–30s progress state with a line like “Evaluating 15 controls from CE-2025.3…”.
 * **Results (finding cards):** Pass/Fail/Partial chips; one-sentence “because…”, a “Show trace” link (inputs, test, citations), and a **Fix it** CTA that jumps to the exact intake/evidence field. A right-side panel lists the **Top 5 actions** with estimated effort and impact.
-* **Report (download/preview):** Branded HTML with exec summary, citations, and artifact hash in the footer; **Download PDF** and **Share read-only link (time-boxed)**. From here: “Invite your tech helper” (precomposed invite) and “Connect insurer/MSP” (partner flow).
+* **Report (download/preview):** Branded HTML with exec summary, citations, and artefact hash in the footer; **Download PDF** and **Share read-only link (time-boxed)**. From here: “Invite your tech helper” (precomposed invite) and “Connect insurer/MSP” (partner flow).
 * **Return experience (dashboard):** Posture badge, “time since last assessment,” and “What changed” diff if they’ve re-run.
 
 ### Guardrails, nudges, and acceptance
@@ -1200,7 +1224,7 @@ Regardless of lane, everyone hits the same **three-card Quick Start**:
 * **Acceptance criteria:** From a fresh browser, **signup→MFA→first report in ≤60 minutes** without docs. Intake ≤20 required fields; first evaluation <2 minutes; PDF in <10s; every finding links to rule, trace, and evidence (if any). Support load target: ≤0.2 tickets/user/month for onboarding.
 * **Fields we’ll start with (tight list):** company name/sector/size, IdP (Entra/Okta/Google) + admin MFA yes/no, email platform (M365/Google), endpoints count (rough), backups (y/n + immutable y/n), remote access (VPN y/n), key policies present (password, incident, access control y/n), contact email for reports. That’s it.
 
-If you’re happy with this spine, the next tangible step is to sketch the **Quick Start** and **Finding Card** as wireframes in your doc—the rest of the UX hangs from those two artifacts.
+If you’re happy with this spine, the next tangible step is to sketch the **Quick Start** and **Finding Card** as wireframes in your doc—the rest of the UX hangs from those two artefacts.
 
 
 ### 4.2 Interface Philosophy
@@ -1245,7 +1269,7 @@ That’s what “Interface Philosophy” means here: a disciplined, humane proto
 * **As a** small business owner
 * **I want** to sign up, answer a short guided intake, upload a couple of key docs, and get a defensible Cyber Essentials assessment with a prioritised action list in one sitting
 * **So that** I know exactly what to fix, how urgent it is, and can show progress to my board/insurer.
-* **Acceptance:** account+MFA in <3 minutes; intake ≤20 required fields with autosave; first evaluation <2 minutes; report renders HTML/PDF with citations and artifact hash; dashboard shows “Top 5 actions” linking back to precise inputs; billing works via Stripe; audit trail records major actions.
+* **Acceptance:** account+MFA in <3 minutes; intake ≤20 required fields with autosave; first evaluation <2 minutes; report renders HTML/PDF with citations and artefact hash; dashboard shows “Top 5 actions” linking back to precise inputs; billing works via Stripe; audit trail records major actions.
 
 **2) Tech Helper / IT Contributor (in-house or MSP)**
 
@@ -1302,7 +1326,7 @@ It’s the contract that every visitor and user—regardless of device, bandwidt
 #### Reports (HTML & PDF) accessibility
 
 * HTML report uses proper headings, lists, and table semantics; link text is meaningful (“View MFA policy evidence”), not “click here”.
-* PDF export preserves tags/structure from HTML; figures have alt text; the artifact hash and citations are text, not images; doc language set; reading order verified.
+* PDF export preserves tags/structure from HTML; figures have alt text; the artefact hash and citations are text, not images; doc language set; reading order verified.
 
 #### Mobile & low-bandwidth
 
@@ -1354,7 +1378,7 @@ It’s the contract that every visitor and user—regardless of device, bandwidt
 
   1. **Airplane-mode run:** From a fresh install, user completes all required intake fields, attaches two evidence files (queued), and closes the app. On reconnect, sync completes automatically; user taps **Run assessment**.
   2. **Conflict case:** Field `endpoints.count` edited on phone offline and on desktop online; on reconnect, desktop wins (newer server timestamp). Phone shows non-blocking “Review changes” with a one-click “Apply local edit” (creates a new server write).
-  3. **Report offline:** After generating a report online, user can open the same report offline and print it; artifact hash remains visible and selectable text (not an image).
+  3. **Report offline:** After generating a report online, user can open the same report offline and print it; artefact hash remains visible and selectable text (not an image).
   4. **iOS fallback:** Background Sync unavailable—foreground retry with exponential backoff works; user gets a persistent “X items waiting to upload” indicator.
 * **KPIs:** ≥ 95% sync success within 2 minutes of reconnect; ≤ 1% conflicts per 100 edits; < 1 support ticket per 500 offline sessions; median time from reconnect→all uploads complete ≤ 30 s on 4G.
 
@@ -1377,9 +1401,9 @@ This gives you a boring-reliable PWA: complete the work anywhere, carry on acros
 
 This section covers how Transcrypt Core collects, organises, and reuses **Cyber Essentials evidence**—the screenshots, logs, inventory exports, and policy documents that prove each control. The platform centres on predictable routines: guided forms capture structured answers, file uploads are immediately tagged to controls, and reminders close the loop when evidence goes stale. Runtime behaviour stays straightforward and reviewable so small teams can trust what the system is doing on their behalf.
 
-Automation focuses on chores that normally consume evenings before certification: gathering proof from devices, checking that required screenshots exist, and packaging everything into the IASME submission order. Background jobs handle PDF creation, evidence bundling, and reminder schedules while keeping the visible experience simple [↩ A3.2.6 – Report Service; A3.2.10 – Observability & Audit]. Offline/PWA support lets users capture photos or notes on-site and sync them later without losing context [↩ UX4.5 – Offline and Multi-Device Support; A3.2.9 – Data Stores & Artifacts]. Dashboards surface action lists, renewal countdowns, and evidence completeness in plain English so teams can act quickly.
+Automation focuses on chores that normally consume evenings before certification: gathering proof from devices, checking that required screenshots exist, and packaging everything into the IASME submission order. Background jobs handle PDF creation, evidence bundling, and reminder schedules while keeping the visible experience simple [↩ A3.2.6 – Report Service; A3.2.10 – Observability & Audit]. Offline/PWA support lets users capture photos or notes on-site and sync them later without losing context [↩ UX4.5 – Offline and Multi-Device Support; A3.2.9 – Data Stores & Artefacts]. Dashboards surface action lists, renewal countdowns, and evidence completeness in plain English so teams can act quickly.
 
-Transcrypt Core keeps privacy practical: collect only what is needed for Cyber Essentials, isolate each tenant, and ensure users can export or delete their own records when required [↩ A3.2.5 – Evidence Services; A3.2.9 – Data Stores & Artifacts]. AI remains a build-time assistant that drafts policies or suggests missing artefacts, with humans confirming every output before it becomes part of the record [↩ A3.2.4 – LLM Assist Pipeline]. The goal is simple—clear data contracts, lightweight automation, and evidence that is always ready for the next renewal.
+Transcrypt Core keeps privacy practical: collect only what is needed for Cyber Essentials, isolate each tenant, and ensure users can export or delete their own records when required [↩ A3.2.5 – Evidence Services; A3.2.9 – Data Stores & Artefacts]. AI remains a build-time assistant that drafts policies or suggests missing artefacts, with humans confirming every output before it becomes part of the record [↩ A3.2.4 – LLM Assist Pipeline]. The goal is simple—clear data contracts, lightweight automation, and evidence that is always ready for the next renewal.
 
 ### 5.1 Data Flow Architecture (v1)
 These components operate within the hosted Transcrypt platform integrated with the web app and evidence vault.
@@ -1651,7 +1675,7 @@ Budget allocation mirrors this simplicity. Approximately 40% of the initial budg
 
 ### 9.4 Risk Register and Mitigation
 
-Transcrypt’s Risk Register and Mitigation framework is the operational embodiment of its engineering philosophy: every risk is documented, measurable, and actionable. The register is maintained as a version-controlled artifact, reviewed quarterly, and categorised across four dimensions—technical, operational, financial, and strategic. Each entry defines the risk description, likelihood, potential impact, owner, and mitigation strategy, with real-time updates whenever control effectiveness changes. Risks are ranked on a five-point scale for probability and severity, producing a live heat map that feeds directly into roadmap prioritisation. This approach ensures that mitigation is not reactive or bureaucratic but built into the product’s evolution: risks drive sprints, tests, and design improvements, not afterthoughts or excuses.
+Transcrypt’s Risk Register and Mitigation framework is the operational embodiment of its engineering philosophy: every risk is documented, measurable, and actionable. The register is maintained as a version-controlled artefact, reviewed quarterly, and categorised across four dimensions—technical, operational, financial, and strategic. Each entry defines the risk description, likelihood, potential impact, owner, and mitigation strategy, with real-time updates whenever control effectiveness changes. Risks are ranked on a five-point scale for probability and severity, producing a live heat map that feeds directly into roadmap prioritisation. This approach ensures that mitigation is not reactive or bureaucratic but built into the product’s evolution: risks drive sprints, tests, and design improvements, not afterthoughts or excuses.
 
 Technical risks centre on platform security, AI reliability, and infrastructure integrity. Mitigations include defence-in-depth architecture, automated testing, regular dependency audits, and isolation of AI components from production decision paths. Security posture is verified continuously through penetration tests and red–blue exercises, while cryptographic controls (encryption, signed builds, SBOMs) minimise the blast radius of compromise. Operational risks—such as cloud service disruption or key-person dependency—are reduced through infrastructure-as-code deployments, daily backups, and documented recovery workflows. Critical configurations are mirrored across availability zones, and a part-time external security consultant will periodically validate operational readiness to provide external assurance.
 
@@ -1682,7 +1706,7 @@ Financial and strategic risks revolve around cash flow volatility, customer acqu
 
 Transcrypt’s Quality Assurance and Acceptance Criteria are designed to ensure that every release—no matter how small—meets the same standards of precision, stability, and integrity that define its compliance ethos. Quality is not treated as a final gate but as a continuous state, achieved through automation, version control, and human review. The QA framework spans the entire lifecycle: requirement definition, code implementation, testing, deployment, and post-release validation. Every requirement is expressed as a verifiable condition—“what done looks like”—and mapped to acceptance tests that run automatically within the CI/CD pipeline. This deterministic approach ensures that compliance, security, and functionality are tested in one integrated process, not as separate afterthoughts. No feature can be released unless it satisfies its acceptance criteria, passes all regression and security tests, and generates reproducible results in staging.
 
-The testing framework combines static and dynamic validation. Unit tests verify logic consistency in the rule engine and evidence mapping; integration tests confirm that authentication, API, and report generation components behave correctly across boundaries. End-to-end tests simulate real customer workflows—from intake to report delivery—executed through scripted environments to ensure predictable behaviour under load. Automated security scans, dependency vulnerability checks, and licence audits run on every build, with failures blocking deployment until resolved. For AI-assisted components, deterministic outputs are compared against stored “golden files” to prevent drift or hallucination. Every build produces a signed test report artifact stored in the project’s audit ledger, creating permanent evidence of compliance with the defined acceptance criteria.
+The testing framework combines static and dynamic validation. Unit tests verify logic consistency in the rule engine and evidence mapping; integration tests confirm that authentication, API, and report generation components behave correctly across boundaries. End-to-end tests simulate real customer workflows—from intake to report delivery—executed through scripted environments to ensure predictable behaviour under load. Automated security scans, dependency vulnerability checks, and licence audits run on every build, with failures blocking deployment until resolved. For AI-assisted components, deterministic outputs are compared against stored “golden files” to prevent drift or hallucination. Every build produces a signed test report artefact stored in the project’s audit ledger, creating permanent evidence of compliance with the defined acceptance criteria.
 
 Acceptance criteria themselves follow a simple triad: functional, security, and user validation. Functionally, the product must deliver accurate and complete results under defined inputs; security-wise, all data must remain encrypted, access-controlled, and free from known vulnerabilities; from a user perspective, the experience must remain clear, intuitive, and error-free within a standard use session. Releases are not accepted by date but by evidence—passing tests, verified results, and documented peer review. Post-release telemetry further validates performance, latency, and reliability against service-level targets (e.g., 99.9% uptime, sub-second API response). Any regression automatically reopens its related requirement for correction, closing the loop between QA and roadmap. This framework turns assurance into a living discipline: every accepted release is not only functional but provably compliant with the same rigour Transcrypt will one day automate for its customers.
 
@@ -1944,7 +1968,7 @@ Having reviewed the major competitors, we can see the landscape spans from speci
 | **ISMS.online** (UK)                                                  | **Cloud ISMS platform** tailored for achieving standards like **ISO 27001** (with guided implementation) and managing ongoing compliance. Comes with pre-written policies, control mappings, and a Virtual Coach for step-by-step progress. Supports multiple frameworks (ISO series, GDPR, NIS2, etc.) in one system. Focuses on documentation, risk assessment, and action tracking to satisfy auditors. Great for formal certification preparation and maintenance.                                                                                                                             | **Subscription-based**, but **pricing is bespoke** (no public tiers). Cost depends on number of frameworks and users. Generally affordable for small organisations compared to big GRC suites, but requires a quotation – e.g. a single-framework package for a small business might be in low **** thousands/year.                                             | **Hundreds of SMEs and tech firms** in the UK use it, especially for **ISO 27001**. It’s also popular among consultants who implement ISMS for clients (IO offers partner programs). Known for its ease-of-use and fast deployment. Not as visible as venture-backed rivals, but a steady player with a solid reputation in compliance circles.                                                                                                 |
 | **OneTrust** (US/UK)                                                  | **Comprehensive trust platform** spanning privacy, security, data governance, and more. The **Tech Risk & Compliance** module covers infosec GRC: policy management, control assessments, risk registers, compliance automation to an extent. OneTrust excels in **privacy (UK GDPR, cookie compliance)** and integrates that with security incident and vendor risk management. However, its breadth can make it complex; it’s **geared toward larger orgs**, and some specific cybersecurity frameworks may need custom configuration (e.g. not a turnkey Cyber Essentials solution out-of-box). | **Modular licensing** – enterprise pricing. Clients might purchase a bundle of modules. Prices can run **tens of thousands £/year** for a full suite. They do offer scaled-down packages, but for most SMEs this is a significant investment. Often justified if the company has serious privacy compliance obligations (and then adds security module on top). | **Global leader** with 12k+ customers (many in Fortune 500). In UK, widely used for GDPR and vendor compliance. Less common for SME cyber compliance specifically, but some mid-sized UK firms leverage OneTrust for integrated risk management. Has a strong brand and resources (2700+ employees). **Not typically the first choice for basic CE needs**, but a powerful option for those needing a unified privacy-security-ethics solution. |
 | **6clicks** (Australia)                                               | **Modern GRC platform** with a wide library of standards and **rapid deployment** focus. Includes AI features to streamline compliance mapping. Supports **UK frameworks (NIS2, ISO, etc.)** and international ones by default. Offers risk management, audits, incident tracking in one platform. UI is web-based and geared for consultants and internal teams alike. Some limitations in user experience and fewer native integrations, but very comprehensive feature set for the price.                                                                                                       | **SaaS subscription**. Offers flexible options (including a free tier and partner licensing). Likely priced by the number of accounts and modules. Aimed to be cost-effective – e.g. could be a mid-£ thousands/year for an SME deployment, but exact pricing varies.                                                                                           | **Emerging player** – used by a growing number of consulting firms and SMEs globally. Still building UK presence; not as well-known as others yet. Those who use it appreciate the all-in-one approach. Seen as a challenger to older GRC tools, with successful deployments in finance, government, etc., in APAC and expanding in Europe.                                                                                                     |
-| **Kaseya Compliance Manager GRC** (RapidFire Tools)                   | **Compliance automation software** often leveraged by MSPs. Covers **UK Cyber Essentials** (latest version) and other standards, with built-in scanning of IT systems to check compliance. Auto-generates policies, reports, and evidence artifacts, and tracks remediation tasks. Designed to allow even non-security-experts (like IT technicians) to deliver compliance assessments. Provides continuous compliance monitoring especially for Windows environments. Ideal for multi-tenant use (managing several businesses’ compliance in one console).                                        | **Annual license** (usually MSP-oriented). MSPs pay per client or per asset; they in turn offer it as a service to SMEs (often bundled, e.g. a monthly fee for “compliance service”). Direct use by SMEs is possible but less common; would be a software subscription likely in the **low thousands £/yr** if sized for one organisation.                      | **Widely deployed via MSPs** in the UK/US. Many SMEs indirectly use it through their IT providers. Strong in the niche of IT audit automation. Backed by Kaseya (large MSP software company). Its inclusion of Cyber Essentials content and SMB-specific standards shows commitment to the SME market. Not as visible in direct marketing to end-users, but a significant player through channel.                                               |
+| **Kaseya Compliance Manager GRC** (RapidFire Tools)                   | **Compliance automation software** often leveraged by MSPs. Covers **UK Cyber Essentials** (latest version) and other standards, with built-in scanning of IT systems to check compliance. Auto-generates policies, reports, and evidence artefacts, and tracks remediation tasks. Designed to allow even non-security-experts (like IT technicians) to deliver compliance assessments. Provides continuous compliance monitoring especially for Windows environments. Ideal for multi-tenant use (managing several businesses’ compliance in one console).                                        | **Annual license** (usually MSP-oriented). MSPs pay per client or per asset; they in turn offer it as a service to SMEs (often bundled, e.g. a monthly fee for “compliance service”). Direct use by SMEs is possible but less common; would be a software subscription likely in the **low thousands £/yr** if sized for one organisation.                      | **Widely deployed via MSPs** in the UK/US. Many SMEs indirectly use it through their IT providers. Strong in the niche of IT audit automation. Backed by Kaseya (large MSP software company). Its inclusion of Cyber Essentials content and SMB-specific standards shows commitment to the SME market. Not as visible in direct marketing to end-users, but a significant player through channel.                                               |
 | **Enterprise GRC Suites** (e.g. RSA Archer, ServiceNow, MetricStream) | **High-end GRC/IRM systems** with exhaustive capabilities to manage risk and compliance at scale. Can be configured for any standard or regulation (NIS, ISO, internal policies, etc.) and integrated deeply into business processes. Offer advanced analytics, workflows, and enterprise system integrations. However, **not productized for specific SME needs** – require heavy customization and expertise. Reviews note they are **cumbersome and expensive**, with outdated interfaces in some cases.                                                                                        | **Enterprise pricing (very high)**. Typically involve large setup fees and ongoing costs per module/user. Often on-prem or private cloud deployments for security. Not feasible for SME budgets – usually only justified in organisations with dedicated risk departments.                                                                                      | **Dominant in large enterprise** segment (Fortune 500, governments). Virtually **0% market share in SMEs** due to cost/complexity. In context of UK SME compliance, these are mentioned only as theoretical options – in practice SMEs opt for more accessible solutions. Even mid-tier firms find these overly complex for needs like Cyber Essentials.                                                                                        |
 
 Table Source: Compiled from product documentation and industry analyses, including: 
