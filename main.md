@@ -579,22 +579,29 @@ All mappings are stored in a normalised meta-model so reporting and dashboards s
 
 ### 3.1.1 System Overview
 
-Transcrypt Core’s architecture adopts mature enterprise patterns—segmented networks, signed artifacts, containerised services—but packages them as a managed backbone that the SME user never has to configure. Every component is orchestrated for resilience and assurance while presenting only a guided workflow at the surface.
+Transcrypt Core runs as a set of isolated processes on a single managed host, secured by strict identity and access controls rather than external orchestration. Each service performs one function — API, evaluation, reporting, storage — and communicates only through authenticated local interfaces. Artefacts such as rulepacks and binaries are signed and verified before use. Network segmentation is logical, enforced through policy and service identity, not through container or cluster boundaries.
+
+The system is designed for reliability through simplicity: fewer moving parts, clear process boundaries, and minimal configuration for the SME user. Everything runs under least privilege and produces verifiable audit trails, but the user experiences only a guided workflow at the surface.
 
 #### Data Ownership and Sovereignty
 
-Transcrypt operates as a **centrally orchestrated, locally encrypted SaaS**.  
-Each tenant’s data resides within shared infrastructure but is sealed with **tenant-specific encryption keys** that only the tenant can use.  
-Transcrypt Ltd cannot decrypt customer evidence, policies, or logs.  
-Backups and replicas are encrypted at rest and in transit, ensuring geographic redundancy without central visibility.  
-Data sovereignty follows a “trust by math, not by policy” principle — enforced through cryptography rather than contractual language.
+Transcrypt’s design separates **data ownership** from **data custody**. Customers remain the legal owners of their information and evidence, while Transcrypt provides the secure infrastructure and processes required to store, process, and protect it.
+
+Each tenant’s data lives within shared infrastructure but inside a clearly bounded namespace secured by encryption and access policy. Encryption keys are managed centrally, scoped per tenant, and rotated automatically; no long-term shared secrets exist.
+
+Authorised Transcrypt engineers can access decrypted tenant data only under controlled conditions — for example, to assist in incident investigation, data recovery, or compliance verification — and such access is both **time-bound and fully auditable**. Every administrative session is logged, reviewed, and tied to a ticketed reason.
+
+Backups and replicas are encrypted at rest and in transit, preserving integrity and continuity while maintaining isolation between tenants.
+
+This model delivers sovereignty through **accountable transparency**, not obscurity: customers can export or delete their data at any time, while Transcrypt guarantees that any operator access is deliberate, justified, and traceable.
 
 #### Automation-First Operating Model
 
-Transcrypt operates on the principle of **Automation First**:
-every task that can be safely automated is automated before humans are involved.
-Where expert review adds assurance (e.g. external certification, policy vetting), the platform supports a future “Assisted Tier” via secure review portals. [[Post-MVP: §9.4.1 Assisted Tier & Collaboration]]
-v1 contains no human-review workflow.
+Transcrypt is designed around an **automation-first** principle: routine, repeatable compliance work is performed by software, not by people. Data collection, control evaluation, and report generation are deterministic processes executed without human intervention, ensuring consistency, speed, and evidence integrity.
+
+Human expertise enters only where judgement or assurance adds value—such as certification review or independent validation. Those touchpoints will be introduced later through a controlled **Assisted Tier** that provides secure, auditable collaboration spaces between customers and accredited reviewers. [[Post-MVP: §9.4.1 Assisted Tier & Collaboration]]
+
+Version 1 operates entirely self-serve: all evaluation, reporting, and evidence handling are automated end-to-end. The operating model treats human involvement as an exception pathway, not the default workflow.
 
 #### Invisible Infrastructure Principle
 
