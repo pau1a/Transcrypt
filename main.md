@@ -37,6 +37,7 @@ review_cycle: "Quarterly or upon major release"
     - [Extensibility Model](#extensibility-model)
     - [Architectural Summary](#architectural-summary)
     - [Framework Modularity](#framework-modularity)
+  - [3.1 Core Architecture Overview](#31-core-architecture-overview)
     - [3.1.1 System Overview](#311-system-overview)
     - [Data Ownership and Sovereignty](#data-ownership-and-sovereignty)
     - [Automation-First Operating Model](#automation-first-operating-model)
@@ -566,12 +567,15 @@ Transcrypt is a graph of obligations, controls, and evidence objects bound by id
 
 ### Framework Modularity
 
-The compliance layer separates **control logic** from **application logic**. Controls, tests, and question sets live as **data-driven schemas**, versioned and loaded from signed configuration bundles. This allows the platform to:
-- plug in new regulatory frameworks by adding schema files,
-- update existing control logic without redeploying the codebase, and
-- map overlapping controls between frameworks (for example, Cyber Essentials v3.2 (CE) → NIS2 → ISO 27001).
+The compliance layer separates **control logic** from **application logic**. Controls, tests, and question sets are defined as **data-driven schemas**, versioned and loaded from signed configuration bundles known as **RulePacks**. This design allows the platform to:
 
-All mappings are stored in a normalised meta-model so reporting and dashboards stay consistent across jurisdictions.
+* plug in new assurance or regulatory frameworks by adding schema bundles,
+* update existing control logic without redeploying the codebase, and
+* map overlapping controls between frameworks (for example, Cyber Essentials v3.2 ↔ NIS2 ↔ ISO 27001).
+
+All mappings are stored in a normalised meta-model so reporting and dashboards stay consistent across **frameworks**, regardless of jurisdiction.
+
+## 3.1 Core Architecture Overview
 
 ### 3.1.1 System Overview
 
