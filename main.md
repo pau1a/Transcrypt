@@ -31,6 +31,11 @@ review_cycle: "Quarterly or upon major release"
     - [2.5 Regulatory and Assurance Environment](#25-regulatory-and-assurance-environment)
   - [Tenancy Model (Design Intention)](#tenancy-model-design-intention)
   - [3. Product Architecture and Core Platform Design](#3-product-architecture-and-core-platform-design)
+    - [Edge Layer](#edge-layer)
+    - [Core Layer](#core-layer)
+    - [Security Model](#security-model)
+    - [Extensibility Model](#extensibility-model)
+    - [Architectural Summary](#architectural-summary)
     - [Framework Modularity](#framework-modularity)
     - [3.1.1 System Overview](#311-system-overview)
     - [Data Ownership and Sovereignty](#data-ownership-and-sovereignty)
@@ -512,19 +517,52 @@ The opportunity for Transcrypt arises from this fragmentation. The trend is unmi
 <!-- strategic -->
 ## Tenancy Model (Design Intention)
 
-Transcrypt operates as a multi-tenant system, where each customer instance is logically separated but runs within a shared environment.
+Transcrypt operates as a multi-tenant system in which each customer instance is logically and cryptographically isolated while sharing a common platform runtime. The tenancy boundary applies across all data types:
 
-The architecture is designed such that, when production readiness is achieved, the database and storage components can be relocated to separate managed services with no change to application logic.
+* **Structured data** — relational and document data such as rulebases, control mappings, evidence metadata, and user records are held within an isolated schema or database namespace unique to each tenant. No cross-tenant queries or joins are permitted, and backups, restores, and migrations must operate solely within that namespace.
 
-This PRD defines the behavioural requirement — strict tenant isolation, testability of segregation, and portability of data layer — not the infrastructure method.
+* **Binary evidence** — uploaded artefacts such as PDFs, screenshots, and configuration exports are stored in an object store under a dedicated per-tenant namespace. The tenancy ID is embedded in both the storage path and access policy to prevent cross-tenant enumeration or retrieval. Each object is encrypted at rest, checksummed, and retrievable only through short-lived, signed URLs issued under that tenant’s identity.
+
+The architecture is designed so that, when production readiness is achieved, both the database and binary storage layers can be re-homed to managed services (for example PostgreSQL or S3-compatible object storage) without modification to application logic or tenancy abstraction.
+
+This PRD defines the behavioural requirements—strict tenant isolation, verifiable segregation of structured and binary data, and portability of each storage layer—not the infrastructure method by which those requirements are implemented.
 
 ## 3. Product Architecture and Core Platform Design
 
-Transcrypt’s architecture is deliberately simple at the edges and highly structured in the core. At the edge, a clean, low-friction web interface orchestrates an intake pipeline that gathers business context and technical signals; in the core, a rules/ML evaluation layer translates those signals into assured guidance and audit-grade outputs. The platform is organised into clearly bounded subsystems—front-end UI, API gateway, rule/LLM evaluation, evidence collectors, report/export services—each with its own trust boundary and identity, so compromise cannot cascade. This mirrors the philosophy already set elsewhere in the PRD: regulation is treated as structured data, not prose, allowing the engine to map obligations to evidence artifacts and keep those mappings current as frameworks evolve. The same foundation that powers cross-framework equivalence also powers product simplicity: rule logic and evidence relationships live as first-class objects the platform can version, test, and explain.
+Transcrypt’s platform is built for separation, assurance, and auditability. Its design is intentionally simple at the edges and tightly structured in the core.
 
-Security and trust are baked into the architecture rather than bolted on. Every human and machine actor is authenticated and authorised before any capability is exposed, with policy-as-code enforcing least privilege across roles, resources, and runtime context; identities (including services and connectors) are unique and cryptographic, enabling short-lived, revocable trust that’s observable end-to-end. Network paths are segmented and verified—no implicit trust, east-west flows are constrained, and all movement is mutually authenticated and encrypted—so the topology itself becomes a living security control. This design aligns the product’s internals with the assurance it sells: evidenceable controls, immutable audit events, and a security posture that can be demonstrated in real time.
+### Edge Layer
 
-Extensibility is a primary property, not a roadmap footnote. Because frameworks are abstracted into portable rule/evidence objects, expansion to new jurisdictions is a data operation—swap in new mappings, keep the engine—and cross-jurisdiction dashboards become feasible without re-architecting. The same decomposition (intake → rule/LLM evaluation → evidence binding → narrative/report) lets us add new collectors, alternative LLMs, and partner connectors without touching the core. Practically, this yields a platform that can start focused on UK SMEs and then scale horizontally into the EU (NIS2/DORA) and Commonwealth markets by adding definitions and localisations while preserving the assurance model and user experience. In short: a composable graph of obligations, controls, and evidence, secured by identity-centric boundaries, and designed to grow by data, not code.
+The platform has two surface experiences that share a design system and analytics instrumentation but operate on separate trust boundaries:
+
+* **Public site** — the publication and community layer for articles, updates, and social engagement. It is publicly readable, cacheable, and instrumented for discoverability, but it has no path to tenant data.
+* **Tenant portal** — the authenticated workspace for customers to manage their assurance activities. It communicates through the API gateway using short-lived credentials and tenant-scoped routes. All user actions terminate at this gateway, which enforces authentication, rate limiting, and routing based on tenant context.
+
+### Core Layer
+
+Within the core, an evaluation engine processes all inputs received through the gateway. The core is composed of discrete, bounded services:
+
+* **Rule and LLM evaluation** — interprets structured obligations, applies deterministic logic and model-based reasoning, and produces control guidance.
+* **Evidence binding** — associates each control with verified data sources and binary artefacts within the tenant’s isolated namespace.
+* **Report and export** — renders outputs in both human-readable and machine-readable formats suitable for auditors or automated ingestion.
+
+Each service has its own identity, credentials, and token-scoped access policy. Inter-service communication is mutually authenticated, signed, and logged so that a fault or compromise cannot propagate beyond its trust boundary.
+
+### Security Model
+
+Security is intrinsic to the design. Every human and machine actor authenticates through short-lived cryptographic credentials issued by the identity service. Authorisation is enforced by policy-as-code, evaluated per request, and scoped to a single tenant. All data in transit is encrypted; internal traffic is accepted only from verified service identities. Every request, job, and data mutation emits an immutable audit event containing timestamp, actor identity, tenant ID, and cryptographic hash of the action. These events form a complete, verifiable audit trail.
+
+Network paths are segmented and verified—no implicit trust. East–west traffic is constrained, mutually authenticated, and encrypted so the topology itself functions as a living security control. This alignment between internal design and external assurance makes every control demonstrable: evidenceable controls, immutable audit events, and a verifiable security posture.
+
+### Extensibility Model
+
+Extensibility is a design property, not a roadmap item. Framework logic and evidence relationships exist as versioned data objects within the rulebase schema. Adding or updating a framework—whether an assurance scheme such as Cyber Essentials or a regulatory mapping introduced later—requires only new data definitions and metadata, not code modification. External connectors, collectors, or alternative LLMs integrate through defined APIs without altering core modules.
+
+The architecture is data-driven and jurisdiction-agnostic. It begins with the UK Cyber Essentials rulebase but can host any other framework as a dataset through configuration and localisation. Jurisdictional alignment occurs entirely in data, not in code.
+
+### Architectural Summary
+
+Transcrypt is a graph of obligations, controls, and evidence objects bound by identity and policy. Its behaviour is defined by data and enforced by cryptography. The system’s two surfaces—the public content site and the tenant portal—operate independently yet share a consistent trust model and design language. Security, auditability, and portability are first-order properties. Growth—new frameworks, new regions, new delivery environments—requires only new data and configuration, never alteration of core logic.
 
 ### Framework Modularity
 
