@@ -1,7 +1,7 @@
-## 2025-11-06 – Decision: MVP scope lock (Transcrypt Core)
+## 2025-11-06 – Decision: MVP scope lock (Transcrypt Essential)
 
 - **Problem:** Vision drift between “lightweight assistant” and “full automation platform”.
-- **Decision:** v1 is **Transcrypt Core** (lightweight assistant). Platform features are post-MVP.
+- **Decision:** v1 is **Transcrypt Essential** (lightweight assistant). Platform features are post-MVP.
 - **Consequences:** Section 5 constrained to assistive AI; provenance ledger and auditor marketplace deferred to v2.0; Roadmap section added.
 
 ## 2025-11-07 – Decision: Closed-Source Policy and Transparency Alignment
@@ -17,7 +17,7 @@
 ## 2025-11-07 – Decision: Framework-Agnostic Compliance Architecture
 
 - **Problem:** PRD implied a fixed UK scope (Cyber Essentials/NIS2) but hinted at future expansion without structural basis.
-- **Decision:** Core compliance logic is **framework-agnostic** using pluggable **Compliance Packs**.
+- **Decision:** MVP compliance logic is **framework-agnostic** using pluggable **Compliance Packs**.
 - **Consequences:**
   - Market Context now states UK-first but extensible design.
   - System Overview adds “Framework Modularity.”
@@ -39,7 +39,7 @@
 ## 2025-11-09 – Decision: Automation vs Human Expertise Clarification
 
 - **Problem:** PRD blurred self-serve automation and human-assisted models.
-- **Decision:** v1 (Transcrypt Core) is 100% automated. Human expertise enters only in future Assisted Tier and Marketplace phases.
+- **Decision:** v1 (Transcrypt Essential) is 100% automated. Human expertise enters only in future Assisted Tier and Marketplace phases.
 - **Consequences:**
   - Vision updated with Human Role Definition.
   - System Overview expanded with Automation-First Operating Model.

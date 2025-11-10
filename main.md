@@ -26,7 +26,7 @@ review_cycle: "Quarterly or upon major release"
     - [✅ Why it could make sense](#-why-it-could-make-sense)
     - [⚠️ What to watch / what needs clear design](#️-what-to-watch--what-needs-clear-design)
     - [🔍 Relevant actors / opportunities](#-relevant-actors--opportunities)
-    - [🎯 How you might incorporate it into Transcrypt Core offering](#-how-you-might-incorporate-it-into-transcrypt-core-offering)
+    - [🎯 How you might incorporate it into Transcrypt Essential offering](#-how-you-might-incorporate-it-into-transcrypt-essential-offering)
     - [2.4 Future Extensibility to Other Nations](#24-future-extensibility-to-other-nations)
     - [2.5 Regulatory and Assurance Environment](#25-regulatory-and-assurance-environment)
   - [Tenancy Model (Design Intention)](#tenancy-model-design-intention)
@@ -134,7 +134,7 @@ While you're debating AI ethics, I'm building AI empires.
  
 ### Product Definition (MVP)
 
-**Transcrypt Core (v1)** is a web-based compliance platform for UK SMEs, combining a secure site, progressive web app, and automation engine.
+**Transcrypt Essential (v1)** is a web-based compliance platform for UK SMEs, combining a secure site, progressive web app, and automation engine.
 It provides **guided assessments**, encrypted **evidence storage**, **auto-generated policies/templates**, and **AI-assisted suggestions** that reduce human effort while keeping costs low.
 
 **Non-goals (MVP):**
@@ -149,7 +149,7 @@ Within this PRD, a **tenant** represents a single customer instance that lives a
 **Design Principle:** “Automation you don’t feel.” AI is used to remove toil (classification, drafting, gap-spotting), not to introduce operational complexity.
 
 **Naming:**  
-- **Transcrypt Core** = MVP (this document’s scope).  
+- **Transcrypt Essential** = MVP (this document’s scope).
 - **Transcrypt Platform** = [post-MVP expansion (see Roadmap)](#10-future-outlook-and-strategic-extensions).
 
 ### Scope Guardrails (v1)
@@ -159,23 +159,23 @@ Within this PRD, a **tenant** represents a single customer instance that lives a
 - **AI in v1:** assistive (extract fields from uploads, draft policies, flag gaps); no model training or user data leaving tenant boundary except for inference.  
 - **Security posture:** tenant-encrypted storage; audit log is append-only (no external ledger—see Roadmap).
 
-> **Terminology:** Within this PRD, references to “law” mean the published Cyber Essentials scheme documentation and IASME guidance. Broader regulatory alignment is out of scope for Transcrypt Core.
+> **Terminology:** Within this PRD, references to “law” mean the published Cyber Essentials scheme documentation and IASME guidance. Broader regulatory alignment is out of scope for Transcrypt Essential.
 
-Transcrypt Core exists to help **UK SMEs meet and renew Cyber Essentials** without drowning in admin or jargon. The first release is intentionally narrow: translate the scheme’s guidance into the plain-language steps and evidence an in-house team needs, surface what is missing, and keep everything tidy for the next renewal cycle. It is a **framework-to-operations translator**, giving an owner a single place to collect answers, evidence, and reports. Success is measured in hours saved, fewer surprises during certification, and confidence that nothing has fallen through the cracks.
+Transcrypt Essential exists to help **UK SMEs meet and renew Cyber Essentials** without drowning in admin or jargon. The first release is intentionally narrow: translate the scheme’s guidance into the plain-language steps and evidence an in-house team needs, surface what is missing, and keep everything tidy for the next renewal cycle. It is a **framework-to-operations translator**, giving an owner a single place to collect answers, evidence, and reports. Success is measured in hours saved, fewer surprises during certification, and confidence that nothing has fallen through the cracks.
 
 Trust comes from clarity. Every recommendation, reminder, and report is backed by traceable rationale so an SME team can see exactly why Cyber Essentials expects a given action and how they can evidence it. Transcrypt keeps the promise of a simple tool that quietly does the heavy lifting: organise tasks, track progress, and preserve artefacts so renewals feel like a routine health check rather than a yearly scramble.
 
 
 ### Human Role Definition
 
-For v1 (**Transcrypt Core**) all compliance flows are **self-serve**.
+For v1 (**Transcrypt Essential**) all compliance flows are **self-serve**.
 AI-driven automation replaces most manual review steps and guides the user end-to-end without external assistance.
 Human experts re-enter the loop only in later versions (see §9.4.1 Assisted Tier & Collaboration) to deliver optional audit reviews and trust attestations.
 This ensures automation is the revenue engine while human expertise remains an opt-in premium service, not a bottleneck.
 
 ### Audience and Philosophy
 
-Transcrypt Core is built **for SMEs**, not large enterprises.  
+Transcrypt Essential is built **for SMEs**, not large enterprises.
 Its architecture borrows security and reliability practices from enterprise systems, but these operate **entirely behind the scenes**.  
 The user interacts only with clear guidance, automated actions, and human-readable results—never raw controls or configuration pages.  
 In short: *enterprise-grade under the bonnet, SME-simple at the wheel*.
@@ -218,17 +218,17 @@ Three principles shape this mission:
 
 1. **Show the why.** Every prompt and policy template links back to the relevant Cyber Essentials control so teams know exactly why a task matters.
 2. **Keep it lightweight.** The product assumes an SME reality—limited time, lean tooling, and people wearing multiple hats. Automations focus on the moments that burn time: gathering screenshots, checking device lists, and chasing sign-offs.
-3. **Build for continuity.** Everything saved in Transcrypt Core is versioned and easy to pick up again, so renewals feel like an update, not a restart.
+3. **Build for continuity.** Everything saved in Transcrypt Essential is versioned and easy to pick up again, so renewals feel like an update, not a restart.
 
 ### 1.3 Target Users and Stakeholders
 
-Transcrypt Core serves **SME owners, directors, and in-house IT leads** who carry the responsibility for Cyber Essentials but not the time to dedicate a full role to it. Typical users include:
+Transcrypt Essential serves **SME owners, directors, and in-house IT leads** who carry the responsibility for Cyber Essentials but not the time to dedicate a full role to it. Typical users include:
 
 - Owner-operators and managing directors who need a clear view of progress toward certification without wading through technical jargon.
 - Internal IT managers or trusted generalists who juggle helpdesk, infrastructure, and compliance duties and need a structured checklist that keeps everyone aligned.
 - Operations or office managers asked to “own the questionnaire” alongside their day job and who need templates, examples, and reminders to keep momentum.
 
-These users want a self-serve product that respects their time, explains expectations in context, and stores everything needed for next year. Transcrypt Core deliberately excludes third-party auditors, primes, or external assurance teams from the product surface; they remain out of scope until the wider Transcrypt Platform phases. While third-party auditors and assurance bodies are not direct users of Transcrypt Core, subscribers can generate and export structured reports, evidence summaries, or assessor-ready bundles in the format most useful to them. This keeps external interactions one step removed yet fully supported.
+These users want a self-serve product that respects their time, explains expectations in context, and stores everything needed for next year. Transcrypt Essential deliberately excludes third-party auditors, primes, or external assurance teams from the product surface; they remain out of scope until the wider Transcrypt Platform phases. While third-party auditors and assurance bodies are not direct users of Transcrypt Essential, subscribers can generate and export structured reports, evidence summaries, or assessor-ready bundles in the format most useful to them. This keeps external interactions one step removed yet fully supported.
 
 ### 1.4 Success Criteria and Long-Term Impact
 
@@ -251,7 +251,7 @@ Readers should treat strategic sections as context and technical sections as bin
 <!-- strategic -->
 ## 2. Market Context and Competitive Landscape
 
-Transcrypt Core launches with a **UK-first focus**, helping SMEs achieve and maintain **Cyber Essentials** certification — the government-endorsed baseline for cyber hygiene. The compliance engine beneath it is **framework-agnostic**, designed so that each framework can be represented as a **modular control pack** containing:
+Transcrypt Essential launches with a **UK-first focus**, helping SMEs achieve and maintain **Cyber Essentials** certification — the government-endorsed baseline for cyber hygiene. The compliance engine beneath it is **framework-agnostic**, designed so that each framework can be represented as a **modular control pack** containing:
 
 * control definitions,
 * evidence expectations,
@@ -297,7 +297,7 @@ Transcrypt’s pricing strategy is deliberately designed to undercut both consul
 
 **Supplemental**
 
-Good thinking — yes *and* there are indeed interesting possibilities with decentralised insurance models or blockchain-enabled risk pools that could be leveraged in your offering for Transcrypt Core. Below is a breakdown of how they might fit, what to watch out for, and some short-list of relevant players.
+Good thinking — yes *and* there are indeed interesting possibilities with decentralised insurance models or blockchain-enabled risk pools that could be leveraged in your offering for Transcrypt Essential. Below is a breakdown of how they might fit, what to watch out for, and some short-list of relevant players.
 
 ---
 
@@ -330,7 +330,7 @@ Good thinking — yes *and* there are indeed interesting possibilities with dece
 
 ---
 
-### 🎯 How you might incorporate it into Transcrypt Core offering
+### 🎯 How you might incorporate it into Transcrypt Essential offering
 
 You could propose a “Future Tier” or “Insurance-Ready Tier” in your pricing/roadmap where:
 
@@ -353,15 +353,15 @@ If you like, I can **scan 5-10 current SME cyber insurance products in the UK** 
 
 ### 2.4 Future Extensibility to Other Nations
 
-Transcrypt’s foundation is deliberately architectural rather than jurisdictional. The initial focus is the UK SME landscape—centred on Cyber Essentials, a standards-based assurance framework rather than a legislative regime. TC Core, comprising both the hosted site and the compliance tool, codifies Cyber Essentials controls into structured rulebases, links them to evidence workflows, and renders the guidance in plain human language. That same logic is data-driven, not regulation-bound: each framework is expressed as a dataset that defines requirements, controls, and verification paths.
+Transcrypt’s foundation is deliberately architectural rather than jurisdictional. The initial focus is the UK SME landscape—centred on Cyber Essentials, a standards-based assurance framework rather than a legislative regime. Transcrypt Essential, comprising both the hosted site and the compliance tool, codifies Cyber Essentials controls into structured rulebases, links them to evidence workflows, and renders the guidance in plain human language. That same logic is data-driven, not regulation-bound: each framework is expressed as a dataset that defines requirements, controls, and verification paths.
 
-Because TC Core treats frameworks as datasets rather than documents, its model can be configured for any jurisdiction without rebuilding the system. Each assurance or regulatory scheme—whether the EU’s NIS2 or DORA, the US’s CMMC model, or Australia’s Essential Eight—follows the same underlying grammar of obligation, control, and verification. Extensibility is therefore engineered from the start: the same compliance engine can ingest a different rulebase and localisation layer while preserving a consistent user experience and assurance logic.
+Because Transcrypt Essential treats frameworks as datasets rather than documents, its model can be configured for any jurisdiction without rebuilding the system. Each assurance or regulatory scheme—whether the EU’s NIS2 or DORA, the US’s CMMC model, or Australia’s Essential Eight—follows the same underlying grammar of obligation, control, and verification. Extensibility is therefore engineered from the start: the same compliance engine can ingest a different rulebase and localisation layer while preserving a consistent user experience and assurance logic.
 
-The first natural expansion path is Europe, where NIS2 and DORA create regulatory convergence across member states. Transcrypt’s rulebase design already mirrors NIS2’s modular structure and emphasis on proportionality, even though TC Core itself does not implement NIS2 logic. A multilingual adaptation layer—initially targeting Ireland, the Netherlands, and the Nordics—would enable rapid scaling through localised text and authority references without structural change to the core.
+The first natural expansion path is Europe, where NIS2 and DORA create regulatory convergence across member states. Transcrypt’s rulebase design already mirrors NIS2’s modular structure and emphasis on proportionality, even though Transcrypt Essential itself does not implement NIS2 logic. A multilingual adaptation layer—initially targeting Ireland, the Netherlands, and the Nordics—would enable rapid scaling through localised text and authority references without structural change to the core.
 
 The second phase would target Commonwealth markets such as Canada, Australia, and New Zealand, where cyber regulation shares the same risk-based vocabulary but lacks consistent SME tooling. These regions also share cultural affinity for plain-English communication and pragmatic governance, making Transcrypt’s approachable tone and subscription model directly transferable. By this stage, partnerships with local auditors or insurers could seed market presence without the need for physical offices, using the UK deployment as proof of legitimacy.
 
-In the longer term, extensibility extends beyond geography. The same regulatory graph that maps controls to evidence in one framework can support cross-framework assurance—a single dashboard showing how a firm’s Cyber Essentials compliance posture aligns with equivalent controls in other regimes. This “compliance interoperability” remains outside TC Core’s MVP but defines the long-term trajectory: a platform where structured assurance data forms a common language across frameworks and nations. Extensibility, therefore, is not an afterthought but a defining characteristic of both the site and tool architecture, shaping Transcrypt’s technical design and commercial ambition.
+In the longer term, extensibility extends beyond geography. The same regulatory graph that maps controls to evidence in one framework can support cross-framework assurance—a single dashboard showing how a firm’s Cyber Essentials compliance posture aligns with equivalent controls in other regimes. This “compliance interoperability” remains outside Transcrypt Essential’s MVP but defines the long-term trajectory: a platform where structured assurance data forms a common language across frameworks and nations. Extensibility, therefore, is not an afterthought but a defining characteristic of both the site and tool architecture, shaping Transcrypt’s technical design and commercial ambition.
 
 ### 2.5 Regulatory and Assurance Environment
 
@@ -436,7 +436,7 @@ All mappings are stored in a normalised meta-model so reporting and dashboards s
 
 ### 3.1.1 System Overview
 
-Transcrypt Core runs as a set of isolated processes on a single managed host, secured by strict identity and access controls rather than external orchestration. Each service performs one function — API, evaluation, reporting, storage — and communicates only through authenticated local interfaces. Artefacts such as rulepacks and binaries are signed and verified before use. Network segmentation is logical, enforced through policy and service identity, not through container or cluster boundaries.
+Transcrypt Essential runs as a set of isolated processes on a single managed host, secured by strict identity and access controls rather than external orchestration. Each service performs one function — API, evaluation, reporting, storage — and communicates only through authenticated local interfaces. Artefacts such as rulepacks and binaries are signed and verified before use. Network segmentation is logical, enforced through policy and service identity, not through container or cluster boundaries.
 
 The system is designed for reliability through simplicity: fewer moving parts, clear process boundaries, and minimal configuration for the SME user. Everything runs under least privilege and produces verifiable audit trails, but the user experiences only a guided workflow at the surface.
 
@@ -482,7 +482,7 @@ Each architectural choice serves one aim: **fewer steps, clearer guidance, faste
 
 | Tier | Name | Description | Human Involvement |
 |:----:|:-----|:-------------|:-----------------|
-| v1.0 | Transcrypt Core | Full self-serve AI automation for SMEs | None |
+| v1.0 | Transcrypt Essential | Full self-serve AI automation for SMEs | None |
 | v1.5 | Assisted Tier (β) | Optional human review of AI-generated reports via auditor portal | Limited |
 | v2.0 | Platform Tier | Integrated marketplace for auditors, consultants and partners | Extensive |
 
@@ -747,7 +747,7 @@ The following canonical contracts define the minimum JSON structure for core Tra
 
 ### 3.1.8 Minimal Viable Slice (MVP cut)
 
-* **Includes:** Core Plan only; 15 Cyber Essentials v3.2 controls; OrgProfile/Evidence schemas; `/evaluate` + `/reports/generate`; Stripe billing; evidence uploads.
+* **Includes:** Essential Plan only; 15 Cyber Essentials v3.2 controls; OrgProfile/Evidence schemas; `/evaluate` + `/reports/generate`; Stripe billing; evidence uploads.
 * **Excludes (stubbed):** NIS2 pack, partner APIs, advanced connectors, VC attestations.
 
 ---
@@ -1105,7 +1105,7 @@ Four top-level journeys, each with a minimum set of proof blocks and a single, o
 
 * **/ (Home):** In 10 seconds: who it’s for, what it does, and a single promise (“From zero to defensible report in one sitting.”) One primary CTA + one secondary (“See how it works”).
 * **/product:** 3 anchored sections—Intake, Findings, Reports—each with a screenshot, a 2-line explanation, and one proof (trace, citation, or hash). End with a tiny FAQ about evidence, privacy, and runtime AI.
-* **/pricing:** Three plans (Core/Pro/Partner) plus “What’s included” map to features the app really ships. No hidden fees. Annual toggle.
+* **/pricing:** Three plans (Essential/Pro/Partner) plus “What’s included” map to features the app really ships. No hidden fees. Annual toggle.
 * **/security:** Identity, encryption, zero trust, incident process, responsible disclosure, and links to status/changelog. Publish PGP and `/.well-known/security.txt`.
 * **/privacy, /terms, /cookies, /dpa, /subprocessors:** Versioned MDX; last-updated stamp; diff links.
 * **/changelog & /status:** Plain language, dates, and actions taken.
@@ -1399,11 +1399,11 @@ This gives you a boring-reliable PWA: complete the work anywhere, carry on acros
 <!-- specification -->
 ## 5. Data, Intelligence, and Automation
 
-This section covers how Transcrypt Core collects, organises, and reuses **Cyber Essentials evidence**—the screenshots, logs, inventory exports, and policy documents that prove each control. The platform centres on predictable routines: guided forms capture structured answers, file uploads are immediately tagged to controls, and reminders close the loop when evidence goes stale. Runtime behaviour stays straightforward and reviewable so small teams can trust what the system is doing on their behalf.
+This section covers how Transcrypt Essential collects, organises, and reuses **Cyber Essentials evidence**—the screenshots, logs, inventory exports, and policy documents that prove each control. The platform centres on predictable routines: guided forms capture structured answers, file uploads are immediately tagged to controls, and reminders close the loop when evidence goes stale. Runtime behaviour stays straightforward and reviewable so small teams can trust what the system is doing on their behalf.
 
 Automation focuses on chores that normally consume evenings before certification: gathering proof from devices, checking that required screenshots exist, and packaging everything into the IASME submission order. Background jobs handle PDF creation, evidence bundling, and reminder schedules while keeping the visible experience simple [↩ A3.2.6 – Report Service; A3.2.10 – Observability & Audit]. Offline/PWA support lets users capture photos or notes on-site and sync them later without losing context [↩ UX4.5 – Offline and Multi-Device Support; A3.2.9 – Data Stores & Artefacts]. Dashboards surface action lists, renewal countdowns, and evidence completeness in plain English so teams can act quickly.
 
-Transcrypt Core keeps privacy practical: collect only what is needed for Cyber Essentials, isolate each tenant, and ensure users can export or delete their own records when required [↩ A3.2.5 – Evidence Services; A3.2.9 – Data Stores & Artefacts]. AI remains a build-time assistant that drafts policies or suggests missing artefacts, with humans confirming every output before it becomes part of the record [↩ A3.2.4 – LLM Assist Pipeline]. The goal is simple—clear data contracts, lightweight automation, and evidence that is always ready for the next renewal.
+Transcrypt Essential keeps privacy practical: collect only what is needed for Cyber Essentials, isolate each tenant, and ensure users can export or delete their own records when required [↩ A3.2.5 – Evidence Services; A3.2.9 – Data Stores & Artefacts]. AI remains a build-time assistant that drafts policies or suggests missing artefacts, with humans confirming every output before it becomes part of the record [↩ A3.2.4 – LLM Assist Pipeline]. The goal is simple—clear data contracts, lightweight automation, and evidence that is always ready for the next renewal.
 
 ### 5.1 Data Flow Architecture (v1)
 These components operate within the hosted Transcrypt platform integrated with the web app and evidence vault.
@@ -1443,7 +1443,7 @@ _No training loops or fine-tuning in v1; models are managed centrally; outputs a
 
 ### 5.5 Closed-Source Policy and Evidence Integrity
 
-Users retain contractual ownership of their data. Transcrypt Core ensures data integrity through versioning, hashing, and audit trails rather than tenant-managed cryptography.
+Users retain contractual ownership of their data. Transcrypt Essential ensures data integrity through versioning, hashing, and audit trails rather than tenant-managed cryptography.
 
 **Implementation (v1):**
 - Core logic and AI models are closed-source binaries signed by Transcrypt Ltd. [↩ A3.2.3 – Rule Evaluation Service; A3.2.4 – LLM Assist Pipeline]
@@ -1458,14 +1458,14 @@ Implementation topology choices are recorded as ADRs (see ADR-0007 for database 
 
 | ID | Requirement / Feature | Strategic Origin | Specification Anchor | Delivery Path | Status |
 |:---|:-----------------------|:-----------------|:---------------------|:--------------|:--------|
-| UX-01 | Self-serve onboarding workflow | §1 – Vision and Purpose (Product Definition) | §4.1 User Journeys and Onboarding | §9.1 MVP Definition | **v1.0 Core (planned)** |
-| EV-01 | Tenant evidence vault & secure storage | §1 – Scope Guardrails (v1) | §3.2.5 Evidence Services; §5.1 Data Flow Architecture | §9.1 MVP Definition | **v1.0 Core (planned)** |
+| UX-01 | Self-serve onboarding workflow | §1 – Vision and Purpose (Product Definition) | §4.1 User Journeys and Onboarding | §9.1 MVP Definition | **v1.0 Transcrypt Essential (planned)** |
+| EV-01 | Tenant evidence vault & secure storage | §1 – Scope Guardrails (v1) | §3.2.5 Evidence Services; §5.1 Data Flow Architecture | §9.1 MVP Definition | **v1.0 Transcrypt Essential (planned)** |
 | AI-01 | AI-assisted drafting & gap prompts | §1 – Design Principle “Automation you don’t feel” | §3.2.4 LLM Assist Pipeline; §5.2 Machine Learning and AI Components | §9.2 Phase Milestones and Timelines (Phase 2 – Validation) | **Phase 2 (planned)** |
-| RL-01 | Deterministic rule evaluation & control mapping | §1.2 Mission and Guiding Principles | §3.2.3 [Rule Evaluation Service](#323-rule-evaluation-service-deterministic); §3.4 Extensibility and Integration Framework | §9.1 MVP Definition | **v1.0 Core (planned)** |
-| RP-01 | [Compliance reporting & dashboards](#53-reporting-dashboards-and-insights-v1) | §1.4 Success Criteria and Long-Term Impact | §5.3 Reporting, Dashboards, and Insights | §9.1 MVP Definition | **v1.0 Core (planned)** |
+| RL-01 | Deterministic rule evaluation & control mapping | §1.2 Mission and Guiding Principles | §3.2.3 [Rule Evaluation Service](#323-rule-evaluation-service-deterministic); §3.4 Extensibility and Integration Framework | §9.1 MVP Definition | **v1.0 Transcrypt Essential (planned)** |
+| RP-01 | [Compliance reporting & dashboards](#53-reporting-dashboards-and-insights-v1) | §1.4 Success Criteria and Long-Term Impact | §5.3 Reporting, Dashboards, and Insights | §9.1 MVP Definition | **v1.0 Transcrypt Essential (planned)** |
 | AP-01 | Auditability & provenance guarantees | §1 – Vision and Purpose (Evidence Integrity) | §5.4 Auditability and Data Provenance; §7.4 Operational Resilience and Incident Response | §9.2 Phase Milestones and Timelines (Phase 4 – Stabilisation) | **Phase 4 (planned)** |
 | CP-01 | Closed-source evidence integrity policy | §1 – Vision and Purpose (Evidence Integrity) | §5.5 Closed-Source Policy and Evidence Integrity | §9.4 Risk Register and Mitigation | **Post-MVP (planned)** |
-| SC-01 | Zero-trust security baseline | §2.5 Legislative Environment and Compliance Ecosystem | §7 Security and Infrastructure Requirements | §9.2 Phase Milestones and Timelines (Phase 1 – Foundation) | **v1.0 Core (planned)** |
+| SC-01 | Zero-trust security baseline | §2.5 Legislative Environment and Compliance Ecosystem | §7 Security and Infrastructure Requirements | §9.2 Phase Milestones and Timelines (Phase 1 – Foundation) | **v1.0 Transcrypt Essential (planned)** |
 | CG-01 | Internal governance & policy library | §2.5 Legislative Environment and Compliance Ecosystem | §6.1 Alignment with NIS, Cyber Essentials, ISO 27001, and IEC 62443; §6.4 Policy Library and Evidence Management | §9.2 Phase Milestones and Timelines (Phase 3 – Expansion) | **Phase 3 (planned)** |
 | RM-01 | Subscription tiers & monetisation metrics | §1.4 Success Criteria and Long-Term Impact | §8 Monetisation and Revenue Model | §9.2 Phase Milestones and Timelines (Phase 3 – Expansion) | **Phase 3 (planned)** |
 | RD-01 | Assisted Tier auditor workflow | §1 – Human Role Definition | §3.2.8 Admin Console (Internal); §5.2 Machine Learning and AI Components (Post-MVP notes) | §9.2 Phase Milestones and Timelines (v1.5 Assisted Tier β) | **Post-MVP (planned)** |
@@ -1476,7 +1476,7 @@ Implementation topology choices are recorded as ADRs (see ADR-0007 for database 
 <!-- specification -->
 ## 6. Compliance and Governance Framework
 
-Transcrypt Core earns trust by operating on the same Cyber Essentials practices it promotes to customers. Governance is therefore lightweight, inspectable, and focused on keeping those five control areas healthy without adding bureaucracy that a founder-led company cannot sustain.
+Transcrypt Essential earns trust by operating on the same Cyber Essentials practices it promotes to customers. Governance is therefore lightweight, inspectable, and focused on keeping those five control areas healthy without adding bureaucracy that a founder-led company cannot sustain.
 
 ### 6.1 Operating Baseline (Cyber Essentials in Practice)
 
@@ -1486,7 +1486,7 @@ Transcrypt Core earns trust by operating on the same Cyber Essentials practices 
 
 ### 6.2 Cyber Essentials Alignment (v3.2)
 
-Transcrypt Core’s features map directly to the control families assessed by IASME. Each module is responsible for collecting the right artefacts and highlighting the most common gaps.
+Transcrypt Essential’s features map directly to the control families assessed by IASME. Each module is responsible for collecting the right artefacts and highlighting the most common gaps.
 
 | Cyber Essentials Control | Platform Support | Evidence Focus |
 |:--------------------------|:-----------------|:----------------|
@@ -1504,7 +1504,7 @@ Risk handling is pragmatic. The company keeps a short, living register of issues
 
 ### 6.4 Policy Library and Evidence Management
 
-Policy templates within Transcrypt Core are versioned documents aligned to Cyber Essentials expectations (acceptable use, patching, remote working, bring-your-own-device). Every update records author, reason, and effective date so SMEs can demonstrate policy currency. Evidence storage treats screenshots, config files, meeting minutes, and supplier confirmations equally—each item tagged to its control, renewal cycle, and reviewer. Nothing floats loose; everything has a home tied to the questionnaire reference.
+Policy templates within Transcrypt Essential are versioned documents aligned to Cyber Essentials expectations (acceptable use, patching, remote working, bring-your-own-device). Every update records author, reason, and effective date so SMEs can demonstrate policy currency. Evidence storage treats screenshots, config files, meeting minutes, and supplier confirmations equally—each item tagged to its control, renewal cycle, and reviewer. Nothing floats loose; everything has a home tied to the questionnaire reference.
 
 ### 6.5 Governance of Product Lifecycle
 
@@ -1515,7 +1515,7 @@ Feature work, fixes, and operational updates follow a simple gating model: ticke
 <!-- specification -->
 ## 7. Security and Infrastructure Requirements
 
-Transcrypt Core follows **established SaaS security practice** suited to small-business customers: encrypt data in transit and at rest, require MFA for administrative access, keep access logs, and run regular backups. The goal is to deliver a trustworthy service without demanding enterprise-level overhead from the team or the users who rely on it.
+Transcrypt Essential follows **established SaaS security practice** suited to small-business customers: encrypt data in transit and at rest, require MFA for administrative access, keep access logs, and run regular backups. The goal is to deliver a trustworthy service without demanding enterprise-level overhead from the team or the users who rely on it.
 
 Key expectations for v1:
 
@@ -1571,9 +1571,9 @@ These controls keep pace with Cyber Essentials expectations while leaving room f
 
 Transcrypt’s Monetisation and Revenue Model is designed to sustain a founder-led business that grows through credibility, not scale at any cost. The model balances accessibility for small businesses with predictability for the company, using a subscription-first approach anchored in recurring monthly revenue. The goal is to create a compounding utility product—one that earns retention through genuine operational value, not lock-in. Pricing is transparent, all-inclusive, and proportionate to the size and complexity of the customer’s organisation. No hidden consultancy, no per-seat penalties, no punitive renewal clauses. The platform’s automation and clarity deliver cost efficiency at scale, allowing Transcrypt to compete effectively against both low-cost certification brokers and high-end compliance consultancies while maintaining healthy margins.
 
-Revenue generation is phased deliberately to match the company’s maturity. In the first twelve months, the emphasis is on validation and traction—converting early adopters into paying customers and achieving the target of £500 per month profit by month twelve. As adoption grows, the subscription base becomes self-reinforcing: recurring revenue funds incremental product improvements, which in turn attract more subscribers through word-of-mouth trust. Long-term sustainability rests on progressive value: Phase 2 (Transcrypt Platform) may introduce additional frameworks (for example, NIS2, DORA, ISO 27001) and features (automated evidence mapping, partner dashboards) once the Core business is stable. These expansions must lift user value without complicating the simple subscription at the heart of Transcrypt Core. Each addition must raise both user value and lifetime revenue per customer while preserving affordability for SMEs.
+Revenue generation is phased deliberately to match the company’s maturity. In the first twelve months, the emphasis is on validation and traction—converting early adopters into paying customers and achieving the target of £500 per month profit by month twelve. As adoption grows, the subscription base becomes self-reinforcing: recurring revenue funds incremental product improvements, which in turn attract more subscribers through word-of-mouth trust. Long-term sustainability rests on progressive value: Phase 2 (Transcrypt Platform) may introduce additional frameworks (for example, NIS2, DORA, ISO 27001) and features (automated evidence mapping, partner dashboards) once the Transcrypt Essential business is stable. These expansions must lift user value without complicating the simple subscription at the heart of Transcrypt Essential. Each addition must raise both user value and lifetime revenue per customer while preserving affordability for SMEs.
 
-Strategically, Transcrypt’s monetisation model is built for credibility and optionality. A core subscription service delivers continuous compliance guidance, with optional enterprise features and integrations for supply-chain partners or insurers forming natural upsell paths. Partnerships and white-label arrangements with MSPs, insurers, or professional bodies will provide parallel revenue streams that do not require mass marketing or venture funding. The model’s simplicity—clear value, low churn, low support overhead—makes it robust even at small scale. Profitability, not growth for its own sake, remains the governing metric. Transcrypt’s business design mirrors its technical ethos: lean, transparent, and verifiable. Every pound earned should represent genuine value delivered and demonstrable trust built.
+Strategically, Transcrypt’s monetisation model is built for credibility and optionality. The Essential subscription service delivers continuous compliance guidance, with optional enterprise features and integrations for supply-chain partners or insurers forming natural upsell paths. Partnerships and white-label arrangements with MSPs, insurers, or professional bodies will provide parallel revenue streams that do not require mass marketing or venture funding. The model’s simplicity—clear value, low churn, low support overhead—makes it robust even at small scale. Profitability, not growth for its own sake, remains the governing metric. Transcrypt’s business design mirrors its technical ethos: lean, transparent, and verifiable. Every pound earned should represent genuine value delivered and demonstrable trust built.
 
 ### 8.1 Pricing Strategy
 
@@ -1585,9 +1585,9 @@ Long term, the pricing model is designed to support predictable recurring revenu
 
 ### 8.2 Subscription Tiers and Value Differentiation
 
-Transcrypt’s Subscription Tiers and Value Differentiation are designed to scale naturally with customer maturity while keeping the onboarding experience frictionless. The entry point is the Core Plan—a single, low-cost subscription that delivers the full compliance journey for Cyber Essentials today, with hooks ready for future Platform upgrades. It includes the essentials: guided self-assessment, tailored risk and action reports, automated evidence tracking, and continuous updates when regulatory guidance changes. This tier is aimed at the micro and small-business segment—the backbone of the UK economy—where simplicity and affordability drive adoption. The Core Plan’s value lies in clarity: customers receive ongoing, intelligible compliance without the noise or dependency of external consultants. It establishes Transcrypt as a trusted companion rather than a one-time certificate broker.
+Transcrypt’s Subscription Tiers and Value Differentiation are designed to scale naturally with customer maturity while keeping the onboarding experience frictionless. The entry point is the Essential Plan—a single, low-cost subscription that delivers the full compliance journey for Cyber Essentials today, with hooks ready for future Platform upgrades. It includes the essentials: guided self-assessment, tailored risk and action reports, automated evidence tracking, and continuous updates when regulatory guidance changes. This tier is aimed at the micro and small-business segment—the backbone of the UK economy—where simplicity and affordability drive adoption. The Essential Plan’s value lies in clarity: customers receive ongoing, intelligible compliance without the noise or dependency of external consultants. It establishes Transcrypt as a trusted companion rather than a one-time certificate broker.
 
-Above this sits the Professional Plan, targeting SMEs that handle more sensitive data or operate within regulated supply chains. It builds on the Core features with advanced evidence automation, multi-user role management, and integrations with identity providers, backup systems, and insurers. This tier adds continuous assurance dashboards for Cyber Essentials and, once Phase 2 lands, optional modules for other frameworks. It also includes access to quarterly compliance reviews or AI-assisted report drafting for external auditors when the Platform tier launches. The differentiation here is sophistication, not exclusivity—customers upgrade because they outgrow simplicity, not because functionality is paywalled. The pricing delta reflects measurable value: less manual effort, richer insight, and smoother stakeholder reporting.
+Above this sits the Professional Plan, targeting SMEs that handle more sensitive data or operate within regulated supply chains. It builds on the Essential Plan features with advanced evidence automation, multi-user role management, and integrations with identity providers, backup systems, and insurers. This tier adds continuous assurance dashboards for Cyber Essentials and, once Phase 2 lands, optional modules for other frameworks. It also includes access to quarterly compliance reviews or AI-assisted report drafting for external auditors when the Platform tier launches. The differentiation here is sophistication, not exclusivity—customers upgrade because they outgrow simplicity, not because functionality is paywalled. The pricing delta reflects measurable value: less manual effort, richer insight, and smoother stakeholder reporting.
 
 At the top end, the Enterprise or Partner Plan is designed for MSPs, insurers, and sector bodies who want to use Transcrypt as a managed or white-labelled service for their own clients. It provides [[Post-MVP: §9.4.2 Partner Channel & Co-Branding]] multi-tenancy controls, API access, and private branding options while maintaining the same underlying rule engine and compliance logic. This tier converts Transcrypt from a standalone platform into a compliance backbone—an engine others can trust and resell. Across all tiers, differentiation is rooted in capability depth and integration, not arbitrary restriction. Every customer, regardless of plan, receives the same data security, transparency, and quality of support. Transcrypt’s subscription structure thus mirrors its engineering ethos: modular, fair, and designed for longevity—each tier a deepening of partnership, not a barrier to entry.
 
@@ -1623,14 +1623,14 @@ Strategically, Transcrypt measures sustainability not just in profit but in oper
 
 | Phase | Name              | Focus           | Key Adds                                                       |
 | ----: | ----------------- | --------------- | -------------------------------------------------------------- |
-|  v1.0 | Transcrypt Core   | MVP Automation  | Full self-serve flows, no human review paths                   |
+|  v1.0 | Transcrypt Essential   | MVP Automation  | Full self-serve flows, no human review paths                   |
 |  v1.2 | Tenant Vaults     | Security        | Enhanced Encryption (future)                                   |
 |  v1.5 | Assisted Tier (β) | Hybrid Model    | Auditor portal, limited review API, opt-in expert verification |
 |  v2.0 | Geo-sovereign Nodes | Scalability    | Regional data anchors, bring-your-own-KMS option               |
 
-Rows from **v1.5 onward mark the Transcrypt Platform wave** and begin only after Core profitability.
+Rows from **v1.5 onward mark the Transcrypt Platform wave** and begin only after Transcrypt Essential is profitable.
 
-Enhanced Encryption (future) is a roadmap placeholder for the Platform phase; it is not part of the Core MVP. [[Post-MVP: Platform Phase]]
+Enhanced Encryption (future) is a roadmap placeholder for the Platform phase; it is not part of the Transcrypt Essential MVP. [[Post-MVP: Platform Phase]]
 
 Transcrypt’s Roadmap and Delivery Strategy is structured around disciplined iteration: a lean, verifiable path from concept to commercial traction. The strategy reflects a core principle—deliver small, prove value, refine fast. It prioritises the creation of a Minimum Viable Product (MVP) that demonstrates functional credibility and real customer benefit within the first six months, followed by incremental expansions that compound capability rather than complexity. Each phase is defined by a measurable outcome: working software, validated user engagement, and sustainable revenue growth. The emphasis is on building a product that earns trust early, through demonstrable competence and transparency, rather than pursuing scale prematurely.
 
@@ -1650,12 +1650,12 @@ Success criteria for the MVP are clear and measurable. First, functional validat
 
 Transcrypt’s delivery plan runs in two waves:
 
-- **Phase 1 – Transcrypt Core (Months 1–6):** Build, prove, and monetise the Cyber Essentials-only product.
+- **Phase 1 – Transcrypt Essential (Months 1–6):** Build, prove, and monetise the Cyber Essentials-only product.
   - *Foundation (Months 1–3):* Intake workflow, rule engine limited to Cyber Essentials, report generation, secure hosting, and payment plumbing.
   - *Validation (Months 4–6):* Live onboarding of SMEs, UX polish, evidence reminders, and first renewal cycle rehearsals. Success metric: three paying customers and >90% task completion without manual intervention.
-- **Phase 2 – Transcrypt Platform (post-MVP):** Heavier features land only after Core is profitable.
+- **Phase 2 – Transcrypt Platform (post-MVP):** Heavier features land only after Transcrypt Essential is profitable.
   - *Expansion (target Months 7–12):* Optional Assisted Tier beta, partner experiments, and preparation work for multi-framework mapping. All non-Cyber Essentials controls remain behind feature flags until Platform launch.
-  - *Stabilisation (after Core profitability):* Harden collaboration tooling, explore additional frameworks, and prepare the hosted service for regional deployment. These items are gated until Phase 2 funding and capacity are confirmed.
+  - *Stabilisation (after Transcrypt Essential profitability):* Harden collaboration tooling, explore additional frameworks, and prepare the hosted service for regional deployment. These items are gated until Phase 2 funding and capacity are confirmed.
 
 The split keeps the initial six months laser-focused on making Cyber Essentials effortless while clearly signalling that anything broader belongs to the follow-on Transcrypt Platform programme.
 
@@ -1683,7 +1683,7 @@ Financial and strategic risks revolve around cash flow volatility, customer acqu
 
 #### 9.4.1 Assisted Tier & Collaboration (Post-MVP)
 
-- **Milestone:** Targeted for v1.5 “Assisted Tier β” after core self-serve reliability is proven.
+- **Milestone:** Targeted for v1.5 “Assisted Tier β” after Transcrypt Essential self-serve reliability is proven.
 - **Collaboration scope:** Invite-only auditor and consultant roles operating strictly within tenant boundaries; no cross-tenant visibility. [[Post-MVP: §5.2 Machine Learning and AI Components (v1)]]
 - **Workflow additions:** Assignment queues, escalation paths, and reviewer hand-offs that keep ownership clear while preserving audit trails.
 - **Shared workspaces:** Controlled comment threads, attest/reject loops, and evidence request prompts surfaced to both SME owners and approved professionals.
@@ -1802,20 +1802,20 @@ All examples refer to artefacts generated or consumed within the Transcrypt web 
 
 ### A. Terminology and Abbreviations
 
-**Law (within this PRD)** — References to “law” mean the official Cyber Essentials scheme documentation and IASME guidance; wider legislation is out of scope for Transcrypt Core.
+**Law (within this PRD)** — References to “law” mean the official Cyber Essentials scheme documentation and IASME guidance; wider legislation is out of scope for Transcrypt Essential.
 
 **Regulation (within this PRD)** — Used interchangeably with the above Cyber Essentials guidance when describing required actions.
 
-**Tenant** — A single SME customer space in the hosted service, logically separated from others but running on the shared Transcrypt Core infrastructure.
+**Tenant** — A single SME customer space in the hosted service, logically separated from others but running on the shared Transcrypt Essential infrastructure.
 
 **Audit Confidence** — The ability for an SME to show clear evidence, timestamps, and change history for Cyber Essentials controls without needing external attestations.
 
-**Verifiable Transparency** [[Post-MVP: Platform]] — Future advanced data trust mechanism where a closed-source system provides mathematically verifiable evidence of integrity (hashes, signatures, deterministic logs) in place of source disclosure; not part of Transcrypt Core.
+**Verifiable Transparency** [[Post-MVP: Platform]] — Future advanced data trust mechanism where a closed-source system provides mathematically verifiable evidence of integrity (hashes, signatures, deterministic logs) in place of source disclosure; not part of Transcrypt Essential.
 
 **Compliance Pack** — A signed configuration bundle defining a specific regulation or framework (controls, scoring logic, mappings, labels).
 Enables multi-framework operation without code changes.
 
-**Centrally Orchestrated, Locally Encrypted SaaS** [[Post-MVP: Platform]] — Future deployment pattern where a central service handles coordination and updates but relies on tenant-held keys; not part of Transcrypt Core.
+**Centrally Orchestrated, Locally Encrypted SaaS** [[Post-MVP: Platform]] — Future deployment pattern where a central service handles coordination and updates but relies on tenant-held keys; not part of Transcrypt Essential.
 
 ### B. Reference Documents
 > **[[Placeholder]]** Section under development.  \
