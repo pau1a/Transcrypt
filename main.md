@@ -56,7 +56,7 @@ review_cycle: "Quarterly or upon major release"
     - [3.x Technical Constraints \& Conventions (non-normative)](#3x-technical-constraints--conventions-non-normative)
     - [3.2 Core Components and Interfaces](#32-core-components-and-interfaces)
       - [3.2.1 Web App (Next.js @ `https://transcrypt.xyz`)](#321-web-app-nextjs--httpstranscryptxyz)
-      - [3.2.2 API Gateway \& Policy Enforcement](#322-api-gateway--policy-enforcement)
+      - [3.2.2 API Gateway \& Policy Enforcement {#API-Gateway-\&-Policy-Enforcement}](#322-api-gateway--policy-enforcement-api-gateway--policy-enforcement)
       - [3.2.3 Rule Evaluation Service (Deterministic + Runtime Inference)](#323-rule-evaluation-service-deterministic--runtime-inference)
       - [3.2.4 LLM Assist Pipeline (Build-Time Only)](#324-llm-assist-pipeline-build-time-only)
       - [3.2.5 Evidence Services](#325-evidence-services)
@@ -640,7 +640,7 @@ Transcrypt hides operational complexity behind a single guided workflow. Encrypt
 
 **3.1.1.2 Trust boundaries**
 
-* **Public zone:** Web app + gateway.
+* **Public zone:** Web app + [API gateway](#API-Gateway-&-Policy-Enforcement).
 * **App zone:** Stateless services (evaluation, reporting, connectors).
 * **Data zone:** DB, object storage, KMS; isolated network, access via service identities only.
 
@@ -973,7 +973,7 @@ All user interaction occurs through the Transcrypt web platform, which unifies p
 * **Auth/session:** OIDC (Entra/Okta/Google) via next-auth; short-lived JWT session (`SameSite=Lax`, `Secure`, `HttpOnly`); step-up MFA for admin actions.
 * **Interfaces:** HTTPS → `/api/*` (REST/JSON with zod validation). Tenant context from session claim; optional deep links `/t/:tenant/*`.
 
-#### 3.2.2 API Gateway & Policy Enforcement
+#### 3.2.2 API Gateway & Policy Enforcement {#API-Gateway-&-Policy-Enforcement}
 
 * **Purpose:** Single ingress for all APIs; central AuthN/AuthZ, rate limiting, audit headers.
 * **Responsibilities:** Verify OIDC tokens; attach `X-Tenant-Id`, `X-Request-Id`, `X-Audit-Actor`; enforce **policy-as-code** (OPA/Rego); terminate TLS; mTLS to internal services.
