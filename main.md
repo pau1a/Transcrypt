@@ -83,6 +83,7 @@ review_cycle: "Quarterly or upon major release"
     - [What this section is for](#what-this-section-is-for)
     - [Launch phases and early experience](#launch-phases-and-early-experience)
     - [Top priorities (stack-ranked)](#top-priorities-stack-ranked)
+    - [Top priorities (stack-ranked)](#top-priorities-stack-ranked-1)
     - [Who we’re designing for (and what they care about)](#who-were-designing-for-and-what-they-care-about)
     - [Minimal journeys we must nail (MVP)](#minimal-journeys-we-must-nail-mvp)
     - [Copy \& interaction tone](#copy--interaction-tone)
@@ -1740,6 +1741,20 @@ Early-access users transition from curiosity to action.  They can create a tenan
 4. **Evidence never “loose.”** Uploads and assertions are always bound to a control and citation, so the report is defensible.
 5. **Accessibility and calm speed.** WCAG 2.2 AA, predictable motion, sub-2s perceived loads on normal 4G.
 6. **Privacy by design.** Ask only what’s needed, show why it’s needed, and give obvious controls for export/delete.
+
+---
+
+### Top priorities (stack-ranked)
+
+1. **Clarity before capability.** From the first visit, users should understand what Transcrypt does, why it matters, and what to expect next. The Marketing Site / Blog must build trust and comprehension before asking for action.
+2. **Time-to-value in one sitting (once live).** When the App opens, a new SME should move from signup → intake → first report in under an hour. This single metric aligns product, tech, and copy.
+3. **Deterministic, explainable results.** Every finding links to the rule, the test, the inputs, and the evidence. No opaque automation or “LLM roulette.”
+4. **Low cognitive load.** Tight language, progressive disclosure, and defaults that match the most common setups. The interface—public or logged-in—guides rather than puzzles.
+5. **Evidence never “loose.”** Uploads and assertions are always bound to a control and citation so reports are defensible and reproducible.
+6. **Accessibility and calm speed.** WCAG 2.2 AA compliance, predictable motion, sub-2 second perceived loads on normal 4 G connections.
+7. **Privacy by design.** Collect only what’s needed, explain why it’s needed, and offer clear export/delete controls.
+
+---
 
 ### Who we’re designing for (and what they care about)
 
