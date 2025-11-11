@@ -641,8 +641,52 @@ Transcrypt hides operational complexity behind a single guided workflow. Encrypt
 **3.1.1.2 Trust boundaries**
 
 * **Public zone:** Web app + [API gateway](#API-Gateway-&-Policy-Enforcement).
-* **App zone:** Stateless services (evaluation, reporting, connectors).
-* **Data zone:** DB, object storage, KMS; isolated network, access via service identities only.
+
+- **App zone**
+    
+    - **Stateless services (evaluation, reporting, connectors).**
+
+    - **What runs here**
+        - **Evaluation:** takes `OrgProfile` + `Evidence` + `RulePack` → produces Findings; writes audit events; calls data zone for reads/writes.
+        - **Reporting:** renders Findings → HTML/PDF/JSON; no long-lived state; fetches inputs from data zone.
+        - **Connectors:** ingest IdP/backup/EDR/cloud configs → normalize → post into Evidence APIs; queue/worker style, but job state is disposable.
+
+    - **What does *not* run here**
+        - No primary databases, object stores, or KMS.
+        - No public UI or login endpoints (those terminate at the gateway).
+        - No long-term secrets beyond short-lived service credentials.
+
+    - **Why stateless**
+        1. **Reliability & scale:** instances can be killed/restarted without data loss.
+        2. **Security:** minimal blast radius; secrets live in the data/identity layers.
+        3. **Ops simplicity:** blue/green or rolling deploys without drains/migrations.
+
+    - **Data flow**
+        1. Browser → **Gateway** (AuthN/AuthZ, rate-limit, audit headers)
+        2. Gateway → **Evaluation** (tenant-scoped request)
+        3. Evaluation ↔ **Data zone** (read profiles/evidence, write findings/audit)
+        4. Gateway → client (status) and/or **Reporting** → PDF/HTML export
+
+    - **Access controls**
+        - Gateway-only ingress; no direct public access to services.
+        - mTLS between services; per-service identity and least-privilege tokens.
+        - Policy-as-code (OPA) decisions enforced per request; everything audited.
+
+- **Data zone**
+    
+    - **What runs here**
+        - **DB:** Postgres (RLS per tenant) for org profiles, findings, reports, audit events.
+        - **Object storage:** evidence and artefacts (S3-compatible), content-addressed; per-tenant namespace.
+        - **KMS/Secrets:** key management, envelope encryption; vault/secret store; automated rotation.
+
+    - **What does *not* run here**
+        - No application logic or rendering.
+        - No direct public ingress or UI.
+
+    - **Access controls**
+        - Only app-zone services with valid service identity can reach data endpoints.
+        - Network isolation (app ↔ data) with strict allow-lists.
+        - All mutations emit immutable audit events (tenant, actor, hashes, timestamps).
 
 #### User Tiers and Human Interaction Model
 
