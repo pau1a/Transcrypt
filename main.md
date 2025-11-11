@@ -83,7 +83,6 @@ review_cycle: "Quarterly or upon major release"
     - [What this section is for](#what-this-section-is-for)
     - [Launch phases and early experience](#launch-phases-and-early-experience)
     - [Top priorities (stack-ranked)](#top-priorities-stack-ranked)
-    - [Top priorities (stack-ranked)](#top-priorities-stack-ranked-1)
     - [Who we’re designing for (and what they care about)](#who-were-designing-for-and-what-they-care-about)
     - [Minimal journeys we must nail (MVP)](#minimal-journeys-we-must-nail-mvp)
     - [Copy \& interaction tone](#copy--interaction-tone)
@@ -1730,17 +1729,6 @@ The public website goes live first. Its job is to make Transcrypt credible befor
 
 **Phase 2 — App Launch**
 Early-access users transition from curiosity to action.  They can create a tenant, upload evidence, and generate a first report.  All the UX priorities below—clarity, speed, determinism, privacy—extend naturally from what the Marketing Site / Blog already promised.
-
----
-
-### Top priorities (stack-ranked)
-
-1. **Time-to-value in one sitting.** A new SME should go from signup → intake → first report in under an hour. This single metric aligns product, tech, and copy.
-2. **Deterministic, explainable results.** Every finding must link to the rule, the test, the inputs, and the evidence. No LLM roulette at runtime.
-3. **Low cognitive load.** Tight language, progressive disclosure, defaults that match the most common setups. The UI is a guide, not a puzzle.
-4. **Evidence never “loose.”** Uploads and assertions are always bound to a control and citation, so the report is defensible.
-5. **Accessibility and calm speed.** WCAG 2.2 AA, predictable motion, sub-2s perceived loads on normal 4G.
-6. **Privacy by design.** Ask only what’s needed, show why it’s needed, and give obvious controls for export/delete.
 
 ---
 
