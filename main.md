@@ -1157,9 +1157,170 @@ That is exactly what “segmented VPC/VNet: public, app, data; only proxy reache
 
 * Data minimisation, per-tenant isolation, GDPR DSR endpoints (export/delete), redaction pipeline for AI prompts (build-time only).
 
+**Goal:** collect the minimum data needed to evaluate controls and generate reports; isolate each tenant; give users self-serve export/delete; ensure anything sent to external services (including LLMs) is redacted and policy-bound.
+
+**Principles**
+
+* **Data minimisation:** only store fields required for CE evaluation, reporting, billing, and security. No speculative hoarding.
+* **Isolation:** every record is tenant-scoped; no cross-tenant joins or reports.
+* **Transparent control:** users can export or delete their data without tickets or email chains.
+* **No shadow copies:** evidence and personal data have one authoritative location with versioning; backups are encrypted, catalogued, and purged on schedule.
+
+**What we store (and what we don’t)**
+
+* **OrgProfile:** business metadata (name, sector, counts), posture fields strictly needed for rules; optional notes.
+  *Do not store*: passport/NI numbers, home addresses, or payroll data.
+* **Evidence:** configs, screenshots, exports tied to controls. If a file contains PII, it’s encrypted and bound to the control reference; never indexed full-text.
+* **Accounts:** email, name, role, MFA status. No password storage (OIDC). No tracking pixels in app emails.
+
+**Tenant isolation**
+
+* **DB:** Postgres with Row-Level Security keyed by `tenant_id`. App roles are per-service, least privilege, no superuser in runtime.
+* **Objects:** `evidence/{tenant}/{uuid}` prefix per tenant, signed URLs, server-side encryption + client-side envelope for sensitive classes.
+* **Audit:** every access includes tenant, actor, purpose, hash of artefact.
+
+**DSR endpoints (GDPR Articles 15–20)**
+
+* **Export:** `/dsr/export` (auth required) → produces a signed, time-boxed ZIP of OrgProfile, Evidence index + blobs, Findings, Reports, Audit events for that tenant. Queued job; notify on completion.
+* **Delete:** `/dsr/delete` (auth + tenant admin + re-auth) → queues a tombstone job:
+
+  * Soft-lock account, revoke tokens.
+  * Delete PII in primary DB (cascade by tenant).
+  * Queue object-store deletions, then write a **deletion receipt** with artefact hashes and timestamps.
+  * Mark backups for **crypto-erasure** on rotation (document retention window; e.g., 30 days).
+* **Status:** `/dsr/status/:ticket` shows progress. All actions land audit events.
+
+**Retention schedule**
+
+* **Evidence:** default 15 months (covers renewal + buffer), per-tenant override allowed.
+* **Audit/Logs:** 12 months (immutable).
+* **Billing records:** per HMRC requirements; separate from app data.
+* **Backups:** daily snapshots; retained 30 days; restore drills quarterly.
+
+**LLM privacy (runtime + build-time)**
+
+* **Scope:** LLMs are used at runtime for **inference only** and at build-time for rule drafting. No training/fine-tuning on tenant data.
+* **Redaction pipeline (both paths):**
+
+  * Structured scrubbing before any call (email, phone, IPs, hostnames, user names, serials, ticket IDs) with reversible tokens stored **inside the tenant only**.
+  * Field-level allowlist: only the minimal text fragments needed for a judgement are sent (e.g., a policy clause snippet), never whole files.
+  * Size limits and PII budgets enforced; if redaction would gut meaning, fall back to deterministic or require user consent.
+* **Provider controls:**
+
+  * Pinned model/version; region-locked endpoint (UK/EU if available).
+  * “No data retention” mode when supported; otherwise tunnel via our proxy that strips metadata and rotates keys.
+  * Contractual DPA with sub-processor list published; any change = notice + repo diff.
+* **Auditability:** every LLM call writes: model_version, prompt_version, param_set, input_hash, output_hash, finding_id (if applicable). Replay uses redacted inputs + token map inside tenant scope.
+
+**Access controls**
+
+* **Human support access:** off by default. Break-glass requires: ticket ID, time-boxed mTLS session, approval, and auto-recorded terminal log.
+* **Download controls:** signed URLs (short TTL), single-use option for sensitive artefacts, watermarking for PDFs.
+
+**Analytics/telemetry**
+
+* **Consent-gated:** load analytics only after consent; never send PII.
+* **App telemetry:** OpenTelemetry events tagged with tenant and request ID; shipped to an internal collector. No third-party log shipping of evidence or PII.
+
+**DO MVP wiring**
+
+* **Endpoints:** implement `/dsr/export`, `/dsr/delete`, `/dsr/status/*` as FastAPI jobs via Celery/Redis; store artefacts in a private Spaces bucket with per-tenant prefixes.
+* **Scrubber:** middleware that runs before LLM calls; regex + dictionary rules; maintain a per-tenant token map in Postgres (encrypted column).
+* **Backups:** nightly `pg_dump` + WAL archiving to a separate Spaces bucket with lifecycle rules (30-day retention); document crypto-erasure policy.
+* **Consent:** simple cookie banner for the public site; app analytics disabled by default until toggled in settings.
+
+**What this buys you**
+
+* Minimal PII exposure, hard isolation by tenant, one-click export/delete, and auditable LLM use that doesn’t leak raw evidence. It’s practical to ship now and strong enough to stand in front of a GDPR-aware customer.
+
+---
+
 **3.1.5.5 Audit & Observability**
 
 * Structured logs with tenant/request IDs; immutable audit trail (write-once store); traces/metrics with SLO alerts.
+
+**Goal:** every action is explainable after the fact (audit) and every failure is visible before users feel it (observability).
+
+**Principles**
+
+* **One source of truth:** business-grade **Audit Events** (immutable, append-only).
+* **Three pillars of telemetry:** **logs** (what happened), **traces** (where time went), **metrics** (how healthy).
+* **Correlation:** every request carries `trace_id`, `span_id`, `tenant_id`, `request_id`.
+
+**What we emit**
+
+* **Structured logs** (JSON): timestamp, level, tenant_id, actor_id, request_id, trace_id, route, status, latency_ms, error_code, message.
+
+  * **Redaction:** no raw evidence or PII; large payloads are hashed, not logged.
+* **Audit Events** (append-only): as defined in §Security → Audit event schema (tenant_id, actor_id, timestamp, org_profile_hash, evidence_bundle_hash, rulepack_hash, model_version, prompt_version, param_set, llm_input_hash, llm_output_hash, finding_id).
+
+  * **Immutability:** write-once store + hash chain (each record contains `prev_event_hash` and `event_hash`).
+* **Distributed traces:** OpenTelemetry spans for gateway → evaluation → evidence → report; carry tenant_id as an attribute (never in trace name).
+* **Metrics:** Prometheus-style counters/gauges/histograms with tenant-safe labels:
+
+  * API: `http_requests_total{route,method,status}`, `request_duration_seconds_bucket`.
+  * Jobs: `report_jobs_total{result}`, `queue_lag_seconds`.
+  * LLM: `llm_calls_total{model,provider,result}`, `llm_latency_seconds_bucket`.
+  * DB/Storage: `db_errors_total{op}`, `object_store_failures_total{op}`.
+  * Business: `findings_changed_total{status}`, `reports_generated_total`.
+
+**SLOs (initial)**
+
+* **API availability:** ≥ 99.5% monthly.
+* **p95 latency:** `< 300 ms` for read endpoints, `< 1.5 s` for `/api/evaluate`.
+* **Job success:** ≥ 99% for report builds in 10 minutes.
+* **Error budget:** page if >= 25% of monthly budget is burned in 24h.
+
+**Alerting (first wave)**
+
+* **High error rate:** `rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.02` for 10m.
+* **Latency breach:** `histogram_quantile(0.95, rate(request_duration_seconds_bucket[5m])) > 1.5` on evaluate route for 10m.
+* **Queue stuck:** `queue_lag_seconds > 120` for 5m.
+* **LLM failures:** `rate(llm_calls_total{result="error"}[5m]) > 2`.
+* **DB errors:** sustained `db_errors_total` increase for 5m.
+* **Disk/object store near full:** > 80% for 30m.
+
+**Storage & retention**
+
+* **Logs:** keep 14 days hot; roll to object storage monthly.
+* **Traces:** 3 days full fidelity, then 30-day head-based sampling (e.g., 5%).
+* **Metrics:** 15-month retention (downsample older than 30 days).
+* **Audit Events:** 12 months minimum immutable (WORM semantics).
+
+**Immutability options (MVP)**
+
+* **Hash-chain ledger:** each audit row stores `prev_event_hash` and `event_hash` (SHA-256 over event JSON).
+* **Write-once bucket:** versioned DO Spaces bucket with lifecycle rules; write via append API; deny overwrite/delete by policy.
+* **Checkpointing:** hourly Merkle root of the last hour’s events stored separately (and printed in report footers).
+
+**Dashboards (must-have)**
+
+* **API health:** RPS, p50/p95, 4xx/5xx, top routes.
+* **Evaluation pipeline:** requests, latency, LLM calls, failure reasons, queue lag.
+* **DB/Storage:** CPU, connections, slow queries, object-store ops/failures.
+* **Business view:** evaluations per tenant, reports generated, failing controls by category.
+
+**DO MVP wiring**
+
+* **Collector:** run an **OpenTelemetry Collector** on the app host; SDKs in FastAPI and Next.js emit OTLP to it.
+* **Metrics/alerts:** **Prometheus** + **Alertmanager** (Docker) scrape the Collector/Exporter endpoints.
+* **Logs:** app writes JSON to stdout → **Loki** (or Vector/Fluent Bit) → DO Spaces (monthly object rotation).
+* **Traces:** **Tempo** (or OTLP → vendor if you prefer) with 3-day retention + sampling.
+* **Audit Events:** Postgres table `audit_events` (append-only API that refuses UPDATE/DELETE) **and** hourly export to a versioned Spaces prefix `audit/{yyyy}/{mm}/{dd}/hour=$H/part-*.json` with a manifest and Merkle root.
+
+**Data hygiene**
+
+* **PII guard:** logging middleware strips emails, IPs, hostnames, serials unless explicitly allow-listed; payload bodies logged as hashes.
+* **Secrets:** never log tokens/keys; set `blocklist` for common header names; enforce `max_log_line` length.
+
+**Operator access**
+
+* **Read paths:** Grafana (for metrics/logs/traces) behind OIDC; read-only dashboards for support.
+* **Break-glass:** to query raw audit rows, require ticket ID, time-boxed DB role, and automatic query logging.
+
+**What this buys you**
+
+* Fast incident triage with trace-level visibility, provable, tamper-evident audits that stand up to scrutiny, and clear error budgets that tell you when to slow shipping and fix reliability.
 
 ---
 
