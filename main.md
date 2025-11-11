@@ -155,8 +155,8 @@ Within this PRD, a **tenant** represents a single customer instance that lives a
 ### Scope Guardrails (v1)
 
 - **User:** SME owner/manager or their in-house IT; no external auditor workflows.  
-- **Jobs-to-be-done (v1):** pass Cyber Essentials quickly, keep up with renewals, store evidence, generate simple reports.  
-- **AI in v1:** assistive (extract fields from uploads, draft policies, flag gaps); no model training or user data leaving tenant boundary except for inference.  
+- **Jobs-to-be-done (v1):** pass Cyber Essentials quickly, keep up with renewals, store evidence, generate simple reports.   
+- **AI in v1:** assistive **and evaluative at runtime** (inference only; **no training/fine-tuning**). Deterministic checks gate issuance; AI provides advisory findings and rationale. 
 - **Security posture:** tenant-encrypted storage; audit log is append-only (no external ledger—see Roadmap).
 
 > **Terminology:** Within this PRD, references to “law” mean the published Cyber Essentials scheme documentation and IASME guidance. Broader regulatory alignment is out of scope for Transcrypt Essential.
@@ -172,6 +172,7 @@ For v1 (**Transcrypt Essential**) all compliance flows are **self-serve**.
 AI-driven automation replaces most manual review steps and guides the user end-to-end without external assistance.
 Human experts re-enter the loop only in later versions (see §9.4.1 Assisted Tier & Collaboration) to deliver optional audit reviews and trust attestations.
 This ensures automation is the revenue engine while human expertise remains an opt-in premium service, not a bottleneck.
++ Runtime AI produces advisory findings and rationale; only deterministic checks can change pass/fail (issuance).
 
 ### Audience and Philosophy
 
@@ -439,6 +440,9 @@ All mappings are stored in a normalised meta-model so reporting and dashboards s
 Transcrypt Essential runs as a set of isolated processes on a single managed host, secured by strict identity and access controls rather than external orchestration. Each service performs one function — API, evaluation, reporting, storage — and communicates only through authenticated local interfaces. Artefacts such as rulepacks and binaries are signed and verified before use. Network segmentation is logical, enforced through policy and service identity, not through container or cluster boundaries.
 
 The system is designed for reliability through simplicity: fewer moving parts, clear process boundaries, and minimal configuration for the SME user. Everything runs under least privilege and produces verifiable audit trails, but the user experiences only a guided workflow at the surface.
+
+For LLM-assisted evaluations, every assessment stores its full reasoning metadata — ModelVersion, PromptVersion, ParamSet (including temperature/seed), input hashes, 
+output hash, and per-finding rationale snippets — so explanations can be shown to the user and the run can be fully replayed for audit purposes.
 
 #### Data Ownership and Sovereignty
 
@@ -816,26 +820,64 @@ All user interaction occurs through the Transcrypt web platform, which unifies p
   * Tenant: `GET /api/tenants/me`, `POST /api/tenants/switch`.
   * Health: `GET /api/healthz` (unauthenticated ping), `GET /api/readyz` (auth, deeper checks).
 
-#### 3.2.3 Rule Evaluation Service (Deterministic)
+#### 3.2.3 Rule Evaluation Service (Deterministic + Runtime Inference)
 
-* **Purpose:** Evaluate controls for a tenant/profile against an **immutable, signed RulePack** while enforcing the automation thresholds and evidence schema defined in [§6.2 Cyber Essentials Alignment (v3.2)](#62-cyber-essentials-alignment-v32).
+* **Purpose:** Evaluate a tenant’s controls against an **immutable, signed RulePack** using a **composite engine**: deterministic checks for objective controls, plus **runtime LLM inference (inference-only, no training/fine-tuning)** for interpretive text and evidence mapping. Enforces automation thresholds and evidence schema defined in [§6.2 Cyber Essentials Alignment (v3.2)](#62-cyber-essentials-alignment-v32).
+
 * **Interfaces:**
 
   * `POST /api/evaluate`
+    **Request:**
 
-    * **Request:** `{ "rule_pack": "CE-2025.3#sha256:...", "org_profile": {...}, "evidence": {...} }`
-    * **Response:** `{ "findings":[{ "rule_id":"...", "status":"pass|fail|partial", "reason":"...", "evidence":[...], "citations":[...] }], "artefact_hash":"..." }`
-  * `GET /api/evaluate/explain/:rule_id` → returns provenance (tests run, inputs, citations).
-* **Notes:** Stateless; loads RulePacks by hash; **no LLM** in runtime path; will emit findings decorated with `ce_ref` question identifiers and renewal flags aligned to the 14-day vulnerability, MFA, password, device lockout, and software-support rules mandated in [§6.2](#62-cyber-essentials-alignment-v32).
+    ```json
+    {
+      "rule_pack": "CE-2025.3#sha256:<digest>",
+      "org_profile": { ... },
+      "evidence": { ... },
+      "model_version": "llm:vendor:model@rev"   // required when inference paths are enabled
+    }
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "findings": [
+        {
+          "rule_id": "...",
+          "status": "pass|fail|partial",
+          "reason": "...",                       // human-readable rationale
+          "evidence": [ ... ],                   // bound artefact refs
+          "citations": [ ... ],                  // CE clause refs
+          "components": {
+            "deterministic": { "tests": [ ... ], "verdict": "pass|fail|partial" },
+            "ai": { "enabled": true, "verdict": "pass|fail|partial", "model_version": "..." }
+          }
+        }
+      ],
+      "artefact_hash": "...",                    // content-addressed bundle of inputs
+      "rulepack_hash": "sha256:<digest>"
+    }
+    ```
+  * `GET /api/evaluate/explain/:rule_id` → returns provenance (inputs, tests run, prompts used for that rule’s inference path if applicable, model version, citations).
+
+* **Notes:**
+
+  * **Stateless** service; **loads RulePacks by hash**.
+  * **Runtime LLM is inference-only** (no training, no fine-tuning, no external data egress beyond inference).
+  * **Deterministic gates** always run; the **final status is a composite** of deterministic checks and AI rationale, per rule policy.
+  * **Reproducibility:** same `org_profile` + `evidence` + `rulepack_hash` + `model_version` ⇒ same findings; mismatch triggers rejection and audit log.
+  * Emits findings decorated with `ce_ref` identifiers and renewal flags for 14-day vulnerability management, MFA, passwords, device lockout, and software-support rules per [§6.2](#62-cyber-essentials-alignment-v32).
 
 #### 3.2.4 LLM Assist Pipeline (Build-Time Only)
 
-* **Purpose:** Draft rule objects from clauses; suggest cross-framework equivalences; produce human-readable summaries/diffs.
-* **Interfaces (CLI/worker):**
+Purpose: Draft rule objects from clauses; suggest cross-framework equivalences; produce human-readable summaries/diffs. Outputs become signed RulePack artefacts.
 
-  * `rules draft <source.pdf>` → `rules/*.json` (schema-conformant, citations required).
-  * `rules diff <old> <new>` → `diff.json` + `CHANGELOG.md`.
-* **Guardrails:** JSON Schema validation; missing citations = build fail; human review before publish.
+Interfaces (CLI/worker):
+• rules draft <source.pdf> → rules/*.json (schema-conformant, citations required)
+• rules diff <old> <new> → diff.json + CHANGELOG.md
+
+Guardrails: JSON Schema validation; missing citations = build fail; human review before publish. No authoring pipeline calls occur during tenant assessments; runtime inference is handled by the Evaluation Service (§3.2.3).
 
 #### 3.2.5 Evidence Services
 
