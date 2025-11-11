@@ -631,10 +631,7 @@ Version 1 operates entirely self-serve: all evaluation, reporting, and evidence 
 
 #### Invisible Infrastructure Principle
 
-Transcrypt hides operational complexity behind a single guided workflow.
-Encryption, process isolation, and rule evaluation happen automatically and transparently; users never interact with servers, storage, or configuration.
-Internal mechanics are explainable but not exposed—every layer exists solely to deliver clarity at the surface.
-Each architectural choice serves one aim: **fewer steps, clearer guidance, faster assurance**.
+Transcrypt hides operational complexity behind a single guided workflow. Encryption, process isolation, and rule evaluation happen automatically and transparently; users never interact with servers, storage, or configuration. Internal mechanics are explainable but not exposed—every layer exists solely to deliver clarity at the surface. Each architectural choice serves one aim: **fewer steps, clearer guidance, faster assurance**.
 
 **3.1.1.1 Runtime topology (high level)**
 
