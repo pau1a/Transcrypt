@@ -81,6 +81,7 @@ review_cycle: "Quarterly or upon major release"
     - [3.5 Technical Stack and Dependencies](#35-technical-stack-and-dependencies)
   - [4. User Experience and Functional Requirements](#4-user-experience-and-functional-requirements)
     - [What this section is for](#what-this-section-is-for)
+    - [Launch phases and early experience](#launch-phases-and-early-experience)
     - [Top priorities (stack-ranked)](#top-priorities-stack-ranked)
     - [Who we’re designing for (and what they care about)](#who-were-designing-for-and-what-they-care-about)
     - [Minimal journeys we must nail (MVP)](#minimal-journeys-we-must-nail-mvp)
@@ -1716,6 +1717,20 @@ Here’s how I’d frame **what Section 4 is for** and **what we must prioritise
 ### What this section is for
 
 It sets the contract between us and the user: what journeys exist, how fast value appears, and which guarantees hold (clarity, repeatability, evidence). It’s not just screens; it’s the behavioural spec for trust. Everything else in the PRD—rule engine, security model, pricing—exists to make these user promises true and boringly reliable.
+
+---
+
+### Launch phases and early experience
+
+Transcrypt launches in two clear phases.
+
+**Phase 1 — Marketing Site / Blog**
+The public website goes live first. Its job is to make Transcrypt credible before a single account exists: explain cyber legislation and certification frameworks in plain English, publish useful how-to content, and collect early-access sign-ups.  The voice is educational and practical, not salesy.  Visitors should leave understanding *why* the product will matter and how it will save them work when it arrives.  The site must feel fast, trustworthy, and authoritative—clean design, no dead ends, obvious paths to register interest.
+
+**Phase 2 — App Launch**
+Early-access users transition from curiosity to action.  They can create a tenant, upload evidence, and generate a first report.  All the UX priorities below—clarity, speed, determinism, privacy—extend naturally from what the Marketing Site / Blog already promised.
+
+---
 
 ### Top priorities (stack-ranked)
 
