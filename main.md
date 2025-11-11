@@ -43,7 +43,7 @@ review_cycle: "Quarterly or upon major release"
       - [Automation-First Operating Model](#automation-first-operating-model)
       - [Invisible Infrastructure Principle](#invisible-infrastructure-principle)
       - [User Tiers and Human Interaction Model](#user-tiers-and-human-interaction-model)
-    - [3.1.2 Core Components and Interfaces](#312-core-components-and-interfaces)
+    - [3.1.2 Transcrypt Components and Interfaces](#312-transcrypt-components-and-interfaces)
     - [3.1.3 Data Model (Canonical Contracts)](#313-data-model-canonical-contracts)
   - [Blockquote](#blockquote)
   - [Horizontal Rule](#horizontal-rule)
@@ -488,7 +488,7 @@ Each architectural choice serves one aim: **fewer steps, clearer guidance, faste
 
 ---
 
-### 3.1.2 Core Components and Interfaces
+### 3.1.2 Transcrypt Components and Interfaces
 
 **3.1.2.1 Web App (Intake & Console)**
 Responsibilities: Guided intake, evidence uploads, job/status views, report downloads, billing entry points.
@@ -502,9 +502,11 @@ Interfaces: `/api/auth/*`, `/api/tenants/*`, `/api/reports/*`, `/api/evidence/*`
 Responsibilities: Load compiled rule artefacts; evaluate applicability/tests; emit findings with provenance.
 Interfaces: `POST /api/evaluations` (body: OrgProfile, EvidenceInventory, rule_pack_id) → Findings JSON; `GET /api/rules/:rule_id/explain`.
 
-**3.1.2.4 Rule Authoring Pipeline (LLM Assist, Build-time only)**
-Responsibilities: Draft rules from clauses, suggest equivalences, summarise diffs, generate plain-English copy. Runs offline/asynchronously; never used at runtime.
-Interfaces: CLI/worker queue; outputs JSON conforming to Rule Schema (consumed by the rule build/compile step).
+**3.1.2.4 LLM Inference (Runtime, Evaluative)**
+
+* Responsibilities: At runtime, interpret tenant submissions against Cyber Essentials. Produce findings with plain-English rationale and control references. Identify uncertainties and gaps. No training or fine-tuning on tenant data, inference only. Deterministic checks still run in the Rule Engine and must corroborate any automatic pass.
+* Interfaces: `POST /evaluate/ai` (tenant_id, org_profile_hash, evidence_hashes[], rulepack_hash, model_version, prompt_version, param_set) → Findings JSON {control_id, status, confidence, rationale, references[]}. Emits an audit event with all input hashes and model/prompt/parameter versions for replay.
+* Guardrails: Pinned model and prompt versions. Token and PII budgets enforced. Outbound calls restricted to approved endpoints. Full request and response traces stored per finding. Objective checks remain in the Rule Engine and override AI when they conflict.
 
 **3.1.2.5 Evidence Services**
 Responsibilities: File ingest, hashing, metadata capture, connector pulls (e.g., IdP exports, backups, EDR). Persistence and retrieval of evidence artefacts.
@@ -519,8 +521,10 @@ Responsibilities: Enforce mTLS east–west, apply per-service AuthN/Z (OPA sidec
 Interfaces: `/healthz`, `/metrics`, SDS/control-plane for certificate distribution.
 
 **3.1.2.8 Front-End Site / Blog**
-Responsibilities: Marketing surface separate from the app; hosts onboarding funnel (static content, product pages, CTA into the Web App).
-Interfaces: Public GET endpoints and form POST to `/api/contact`.
+
+* Responsibilities: Marketing surface separate from the app; hosts the onboarding funnel (static content, product pages, CTA into the Web App).
+* Interfaces: Public GET endpoints (`/`, `/product`, `/pricing`, `/security`, `/blog/*`, `/contact`) and `POST /api/contact` (rate-limited with hCaptcha/Turnstile). 
+* SEO/Discoverability: `sitemap.xml`, `robots.txt`, JSON-LD/OG tags; status and changelog are linked but live in their own sections.
 
 ---
 
@@ -744,7 +748,7 @@ The following canonical contracts define the minimum JSON structure for core Tra
 
 ### 3.1.8 Minimal Viable Slice (MVP cut)
 
-* **Includes:** Essential Plan only; 15 Cyber Essentials v3.2 controls; OrgProfile/Evidence schemas; `/api/evaluations` + `/api/reports`; Stripe billing; evidence uploads.
+* **Includes:** Essential Plan only; 15 Cyber Essentials v3.2 controls; OrgProfile/Evidence schemas; `/evaluate` + `/reports/generate`; Stripe billing; evidence uploads.
 * **Excludes (stubbed):** NIS2 pack, partner APIs, advanced connectors, VC attestations.
 
 ---
@@ -817,11 +821,11 @@ All user interaction occurs through the Transcrypt web platform, which unifies p
 * **Purpose:** Evaluate controls for a tenant/profile against an **immutable, signed RulePack** while enforcing the automation thresholds and evidence schema defined in [§6.2 Cyber Essentials Alignment (v3.2)](#62-cyber-essentials-alignment-v32).
 * **Interfaces:**
 
-  * `POST /api/evaluations`
+  * `POST /api/evaluate`
 
     * **Request:** `{ "rule_pack": "CE-2025.3#sha256:...", "org_profile": {...}, "evidence": {...} }`
-    * **Response:** `{ "evaluation_id":"eval_...", "findings":[{ "rule_id":"...", "status":"pass|fail|partial", "reason":"...", "evidence":[...], "citations":[...] }], "artefact_hash":"..." }`
-  * `GET /api/rules/:rule_id/explain` → returns provenance (tests run, inputs, citations).
+    * **Response:** `{ "findings":[{ "rule_id":"...", "status":"pass|fail|partial", "reason":"...", "evidence":[...], "citations":[...] }], "artefact_hash":"..." }`
+  * `GET /api/evaluate/explain/:rule_id` → returns provenance (tests run, inputs, citations).
 * **Notes:** Stateless; loads RulePacks by hash; **no LLM** in runtime path; will emit findings decorated with `ce_ref` question identifiers and renewal flags aligned to the 14-day vulnerability, MFA, password, device lockout, and software-support rules mandated in [§6.2](#62-cyber-essentials-alignment-v32).
 
 #### 3.2.4 LLM Assist Pipeline (Build-Time Only)
