@@ -1769,11 +1769,15 @@ They define what “minimum viable” actually means for a user who has already 
 
 Plain English, short sentences, active verbs. Replace abstractions with concrete asks (“Upload your IdP export” not “Provide identity artefacts”). For every required field, a one-line “why this matters” anchored to the framework.
 
+---
+
 ### Where we will *not* compromise
 
-* **No runtime AI decisions.** LLMs help at build-time to draft text or mappings; the user-visible output is deterministic and traceable.
-* **No labyrinthine nav.** Five app areas maximum: Dashboard, Intake, Evidence, Reports, Settings. Partner view is deferred (v2.0 – see §9.2 Partner/Integrator API) and stays separate.
-* **No vendor theatre.** Fewer animations, more receipts: hashes, timestamps, citations.
+* **No untraceable AI.** Runtime models generate findings and reports, but each inference is logged with its model version, prompt, parameters, and content hash. Every output must be reproducible and explainable.
+* **No labyrinthine navigation.** Five core areas only: Dashboard, Intake, Evidence, Reports, Settings. Partner access remains deferred (v2.0 – see §9.2 Partner/Integrator API) and separate from user flows.
+* **No vendor theatre.** Fast loads, quiet transitions, and visible proof—hashes, timestamps, citations—over animation and hype.
+
+---
 
 ### Trade-offs we’ll manage deliberately
 
