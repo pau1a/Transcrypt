@@ -63,8 +63,8 @@ review_cycle: "Quarterly or upon major release"
     - [3.1.9 Technology Choices (initial)](#319-technology-choices-initial)
     - [3.1.10 Operational Runbooks (high level)](#3110-operational-runbooks-high-level)
     - [3.1.11 Technical Constraints \& Conventions (non-normative)](#3111-technical-constraints--conventions-non-normative)
-    - [3.2 Core Components and Interfaces](#32-core-components-and-interfaces)
-      - [3.2.1 Web App (Next.js @ `https://transcrypt.xyz`)](#321-web-app-nextjs--httpstranscryptxyz)
+    - [3.2 Central Components and Interfaces](#32-central-components-and-interfaces)
+      - [3.2.1 Marketing Site / Blog (Next.js @ `https://transcrypt.xyz`)](#321-marketing-site--blog-nextjs--httpstranscryptxyz)
       - [3.2.2 API Gateway \& Policy Enforcement {#API-Gateway-\&-Policy-Enforcement}](#322-api-gateway--policy-enforcement-api-gateway--policy-enforcement)
       - [3.2.3 Rule Evaluation Service (Deterministic + Runtime Inference)](#323-rule-evaluation-service-deterministic--runtime-inference)
       - [3.2.4 LLM Assist Pipeline (Build-Time Only)](#324-llm-assist-pipeline-build-time-only)
@@ -1457,31 +1457,31 @@ The product uses **PostgreSQL (v15 or higher)** as the primary datastore.
 - Backups must be encrypted and retained for a minimum of 30 days.  
 - Deployment topology (local vs managed instance) is defined separately in system design and **ADR-0007: Database Topology for MVP**.
 
-### 3.2 Core Components and Interfaces
+### 3.2 Central Components and Interfaces
 
 All user interaction occurs through the Transcrypt web platform, which unifies public, tenant, and administrative interfaces.
 
-#### 3.2.1 Web App (Next.js @ `https://transcrypt.xyz`)
+#### 3.2.1 Marketing Site / Blog (Next.js @ `https://transcrypt.xyz`)
 
-* **Purpose:** Guided intake, evidence uploads, posture dashboard, report generation/download, billing.
+* **Purpose:** General front end site and blog. Attract members and tease benefits.
 * **Key routes:**
 
   * **Marketing:** `/`, `/product`, `/pricing`, `/about`, `/contact`, `/blog/*`, `/changelog`, `/status`, `/roadmap` (optional).
   * **Legal & trust:** `/privacy` → alias to `/legal/privacy`, `/terms` → `/legal/terms`, `/cookies` → `/legal/cookies`, `/dpa`, `/subprocessors`, `/acceptable-use`, `/accessibility`, `/licenses`, `/security`.
-  * **App (auth-gated):** `/app/*` – intake `/app/intake/*`, evidence `/app/evidence`, reports `/app/reports/*`, settings `/app/settings`.
   * **Developer (future):** `/developers`, `/docs/api`, `/webhooks` (catalogue).
 * **Auth/session:** OIDC (Entra/Okta/Google) via next-auth; short-lived JWT session (`SameSite=Lax`, `Secure`, `HttpOnly`); step-up MFA for admin actions.
 * **Interfaces:** HTTPS → `/api/*` (REST/JSON with zod validation). Tenant context from session claim; optional deep links `/t/:tenant/*`.
 
 #### 3.2.2 API Gateway & Policy Enforcement {#API-Gateway-&-Policy-Enforcement}
 
-* **Purpose:** Single ingress for all APIs; central AuthN/AuthZ, rate limiting, audit headers.
+* **Purpose:** Single ingress for all APIs; central AuthN/AuthZ, rate limiting, audit headers. Guided intake, evidence uploads, posture dashboard, report generation/download, billing.
 * **Responsibilities:** Verify OIDC tokens; attach `X-Tenant-Id`, `X-Request-Id`, `X-Audit-Actor`; enforce **policy-as-code** (OPA/Rego); terminate TLS; mTLS to internal services.
 * **Interfaces:**
 
   * Auth: `POST /api/auth/callback`, `POST /api/auth/logout`.
   * Tenant: `GET /api/tenants/me`, `POST /api/tenants/switch`.
   * Health: `GET /api/healthz` (unauthenticated ping), `GET /api/readyz` (auth, deeper checks).
+**App (auth-gated):** `/app/*` – intake `/app/intake/*`, evidence `/app/evidence`, reports `/app/reports/*`, settings `/app/settings`.
 
 #### 3.2.3 Rule Evaluation Service (Deterministic + Runtime Inference)
 
@@ -1607,15 +1607,15 @@ Guardrails: JSON Schema validation; missing citations = build fail; human review
 
 ### 3.3 Security, Privacy, and Trust Model
 
-Transcrypt treats **identity as the perimeter** and **evidence as the arbiter of trust**. Every human and machine action is authenticated (OIDC for users, mTLS for services), authorised by **policy-as-code** (OPA/Rego), and logged with immutable metadata (tenant, actor, rule pack, trace ID). Network paths are **zero-trust by default**: no implicit east–west access, service meshes enforce mutual TLS, and privileges are created just-in-time and discarded immediately after use. Data is encrypted **in transit (TLS 1.3/PFS)** and **at rest (AES-256-GCM)** with keys managed and rotated by a KMS; secrets are injected at runtime via a vault and never committed to source. Runtime environments are ephemeral and reproducible; builds are signed and accompanied by SBOMs and SLSA-style provenance so that what runs can be traced back to who approved it and which inputs it contained. The result is a platform where security isn’t a bolted-on checklist but a property of the topology, the pipeline, and the artefacts.
+Transcrypt treats **identity as the perimeter** and **evidence as the arbiter of trust**. Every human and machine action is authenticated (OIDC for users, mTLS for services), authorised by **policy-as-code** (OPA/Rego), and logged with immutable metadata (tenant, actor, rule pack, trace ID). Network paths follow zero-trust principles: all service-to-service calls require mutual TLS and explicit authorisation; nothing inside the network is trusted by default. No implicit east–west access, service meshes enforce mutual TLS, and privileges are created just-in-time and discarded immediately after use. All data paths inherit the encryption and key-management model defined in 3.1.5.2. Runtime environments are ephemeral and reproducible; builds are signed and accompanied by SBOMs and SLSA-style provenance so that what runs can be traced back to who approved it and which inputs it contained. The result is a platform where security isn’t a bolted-on checklist but a property of the topology, the pipeline, and the artefacts.
 
 Privacy is engineered as **data minimisation, isolation, and control**. Tenants are logically isolated (row-level security on Postgres plus per-tenant object-store prefixes), and the app collects only what’s needed to evaluate controls and generate reports. Evidence is never “loose”: every file or assertion is bound to a control, version, and citation, with hashes and timestamps for provenance. Users own their data; Transcrypt is a processor under UK GDPR. The platform exposes **self-service Data Subject Rights** (export/delete) and publishes clear retention schedules; AI prompts are minimised and redacted, and runtime LLM inference is confined to the Evaluation/Findings path with pinned model/prompt/parameter versions and full audit capture. Legal pages (Privacy, DPA, Sub-processors) are versioned in the repo; changes are diffable and linked from the site. Cookie/telemetry loading respects explicit consent, and analytics run in a privacy-preserving mode with PII excluded by design.
 
-Trust is made observable through **transparent operations and verifiable assurances**. A public status page, changelog, and governance notes show uptime, incidents, and remediation; `/.well-known/security.txt` advertises a responsible disclosure path and optional PGP key. Incident response follows a time-boxed playbook (detect → contain → eradicate → recover → RCA), and every RCA is a signed artefact linked to the code/config changes it triggered. Continuous testing covers security (dependency and container scans), functionality (unit/integration/E2E), and drift (policy and posture checks); failed gates block release. Where standards matter, the platform maps directly to **Cyber Essentials** hygiene, **ISO 27001** governance, **NIS/NIS2** resilience, and **IEC 62443** zone/conduit separation—so controls aren’t just present, they are **explainable** in the language auditors use. In short: authenticate everything, authorise least, encrypt always, minimise data, and prove it—with artefacts anyone qualified can inspect.
+Trust is made observable through **transparent operations and verifiable assurances**. A public status page, changelog, and governance notes show uptime, incidents, and remediation; `/.well-known/security.txt` advertises a responsible disclosure path and optional PGP key. Incident response follows a time-boxed playbook (detect → contain → eradicate → recover → RCA), and every RCA is a signed artefact linked to the code/config changes it triggered. Continuous testing covers security (dependency and container scans), functionality (unit/integration/E2E), and drift (policy and posture checks); failed gates block release. Where standards matter, the platform maps directly to **Cyber Essentials** hygiene, and later, **ISO 27001** governance, **NIS/NIS2** resilience, and **IEC 62443** zone/conduit separation—so controls aren’t just present, they are **explainable** in the language auditors use. In short: authenticate everything, authorise least, encrypt always, minimise data, and prove it—with artefacts anyone qualified can inspect.
 
 ### 3.4 Extensibility and Integration Framework
 
-Transcrypt is designed to grow **by data, not by rewrite**. The core engine treats frameworks, controls, and evidence definitions as portable **RulePacks**—signed JSON artefacts that the runtime loads by hash. Adding NIS2, DORA, or ISO 27001 doesn’t change code paths: you publish a new RulePack with mapped controls, equivalence links, and test clauses; the evaluation service remains deterministic. Textual outputs (headings, rationales, actions) live as locale bundles, so jurisdictional expansion is translation work, not refactoring. Report rendering is a themeable template layer (HTML → PDF) that reads the same Findings schema, allowing new formats or styles without touching evaluation logic.
+Transcrypt is designed to grow **by data, not by rewrite**. The central (Essential) engine treats frameworks, controls, and evidence definitions as portable **RulePacks**—signed JSON artefacts that the runtime loads by hash. Adding NIS2, DORA, or ISO 27001 in future, won’t change code paths: you publish a new RulePack with mapped controls, equivalence links, and test clauses; the evaluation service remains deterministic. Textual outputs (headings, rationales, actions) live as locale bundles, so jurisdictional expansion is translation work, not refactoring. Report rendering is a themeable template layer (HTML → PDF) that reads the same Findings schema, allowing new formats or styles without touching evaluation logic.
 
 Integration follows a **connector + event** model. Connectors are small, sandboxed pullers/posters that transform external proofs (IdP exports, backup configs, EDR posture, cloud config snapshots) into **EvidenceInventory** assertions or file artefacts. They run out-of-band via jobs/queues, publish to the evidence API, and never gain direct DB write access. Events from the core—`report.generated`, `finding.changed`, `evidence.added`—are emitted to webhooks with signed payloads, enabling MSP dashboards, insurer ingestion, or customer SIEM correlation. Post-MVP, a curated **Partner API** exposes read-scoped endpoints (tenant roll-ups, findings, reports) for contracted collaborators with strict RBAC, pagination, and approval workflows—an API-level integration surface for customers and approved partners only. Not in v1; see §9.2 Partner/Integrator API (v2.0). [[Post-MVP: §9.4.2 Partner Channel & Co-Branding]] Exports continue to use open, durable formats (JSON/JSON-LD) so downstream systems can store or rehydrate results without vendor lock-in.
 
@@ -1623,15 +1623,16 @@ Extensibility is governed by **versioned contracts** and forward-compat rules. E
 
 ### 3.5 Technical Stack and Dependencies
 
-**Frontend**
+**Marketing Site / Blog** Meets WCAG 2.1 AA for public pages.
 
-* **Framework:** Next.js (App Router) + React. **Styling:** Tailwind CSS for app and Marketing Site. Tokens are exposed as CSS variables and consumed by Tailwind (single source of truth). Tailwind theme reads the shared tokens—no duplicated hex values in source.
-* **Typography & Icons:** System UI stack for the app; one **self-hosted variable font** (marketing) via `next/font` with tight subsetting. **lucide-react** SVG icons. **No Bootstrap. No icon webfonts.** If Font Awesome is ever required, use tree-shaken SVG packages behind a feature flag.
+* **Framework:** Next.js (App Router) + React. Privacy-preserving analytics load only after consent; PII is excluded by design.
+* **Styling:** Tailwind CSS for app and Marketing Site. Tokens are exposed as CSS variables and consumed by Tailwind (single source of truth). Tailwind theme reads the shared tokens—no duplicated hex values in source. Tailwind CSS. Tokens are exposed as CSS variables and consumed by Tailwind; theme reads the shared tokens—no duplicated hex values. Shares the same token set as the App.
+* **Typography & Icons:** System UI stack for the app; one **self-hosted variable font** (marketing) via `next/font` with tight subsetting. No third-party font CDNs; fonts are subset and self-hosted. **lucide-react** SVG icons. **No Bootstrap. No icon webfonts.** If Font Awesome is ever required, use tree-shaken SVG packages behind a feature flag.
 * **Forms/validation:** Zod + React Hook Form. **State:** server actions + URL state; no global store unless needed.
 * **Rendering & content:** MDX/Markdown for marketing/legal/blog; ISR for `/blog` and docs; `next/image` + CDN for assets.
 * **Testing:** Playwright (E2E), Vitest/RTL (unit).
 * **Telemetry:** OpenTelemetry web SDK → OTEL collector; privacy-first analytics loaded **after consent**.
-* **Security headers:** CSP (nonces), HSTS (preload), Referrer-Policy `strict-origin-when-cross-origin`, XFO `DENY`, XCTO `nosniff`.
+* **Security headers:** CSP (nonces), HSTS (preload), Referrer-Policy `strict-origin-when-cross-origin`, XFO `DENY`, XCTO `nosniff`. CSP uses nonces from Next.js headers()/middleware; inline scripts are disallowed except nonce’d Next runtime. X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy: strict-origin-when-cross-origin.
 
 **Backend & Services**
 
