@@ -73,7 +73,7 @@ review_cycle: "Quarterly or upon major release"
       - [3.2.7 Admin Console (Internal)](#327-admin-console-internal)
       - [3.2.8 Data Stores \& Artefacts (Interface Contracts)](#328-data-stores--artefacts-interface-contracts)
       - [3.2.9 Observability \& Audit](#329-observability--audit)
-      - [3.2.10 Public Site \& Content (Marketing, Legal, Support)](#3210-public-site--content-marketing-legal-support)
+      - [3.2.10 Marketing Site \& Content (Marketing, Legal, Support)](#3210-marketing-site--content-marketing-legal-support)
       - [3.2.11 External Integrations (First-Party)](#3211-external-integrations-first-party)
       - [3.2.12 Non-Functional Interface Contracts](#3212-non-functional-interface-contracts)
     - [3.3 Security, Privacy, and Trust Model](#33-security-privacy-and-trust-model)
@@ -96,7 +96,7 @@ review_cycle: "Quarterly or upon major release"
     - [Priorities for the site (stack-ranked)](#priorities-for-the-site-stack-ranked)
     - [What to build first (site)](#what-to-build-first-site)
     - [4.1 User Journeys and Onboarding](#41-user-journeys-and-onboarding)
-      - [4.1.1 Public Site Journeys (credibility → correct door → app intent)](#411-public-site-journeys-credibility--correct-door--app-intent)
+      - [4.1.1 Marketing Site Journeys (credibility → correct door → app intent)](#411-marketing-site-journeys-credibility--correct-door--app-intent)
       - [4.1.2 App Onboarding Spine (four entry lanes, one shared flow)](#412-app-onboarding-spine-four-entry-lanes-one-shared-flow)
       - [4.1.3 Guardrails, Acceptance, and UX KPIs](#413-guardrails-acceptance-and-ux-kpis)
       - [4.1.4 Site↔App Handshake (routing \& truth alignment)](#414-siteapp-handshake-routing--truth-alignment)
@@ -739,7 +739,7 @@ Interfaces: `POST /api/reports` → report blob; `GET /api/reports/:id`.
 Responsibilities: Enforce mTLS east–west, apply per-service AuthN/Z (OPA sidecar), manage cert/key rotation.
 Interfaces: `/healthz`, `/metrics`, SDS/control-plane for certificate distribution.
 
-**3.1.2.8 Front-End Site / Blog**
+**3.1.2.8 Marketing Site / Blog**
 
 * Responsibilities: Marketing surface separate from the app; hosts the onboarding funnel (static content, product pages, CTA into the Web App).
 * Interfaces: Public GET endpoints (`/`, `/product`, `/pricing`, `/security`, `/blog/*`, `/contact`) and `POST /api/contact` (rate-limited with hCaptcha/Turnstile). 
@@ -1440,8 +1440,9 @@ These conventions define baseline implementation expectations for the MVP but do
 
 **Styling**  
 **App UI:** **TailwindCSS**.  
-**Brand tokens:** Single source of truth via **CSS variables** (colour, radius, shadow, spacing). Variables are consumed by Tailwind (through arbitrary `[...]` utilities and mapped theme entries) and by SCSS on the marketing site.  
-**Marketing site:** SCSS that reads the same CSS variables. **No Bootstrap. No icon webfonts.**
+**Brand tokens:** Single source of truth via **CSS variables** (colour, radius, shadow, spacing). Variables are consumed by Tailwind (through arbitrary `[...]` utilities and mapped theme entries).
+**Marketing Site:** Tailwind CSS reads the same CSS variables. **No Bootstrap. No icon webfonts.**
+Tailwind CSS is the single styling framework across app and Marketing Site. No SCSS or Sass pipeline remains.
 
 Rules:
 1) Utilities-first in components; use `@apply` only for tiny atoms (e.g., `.btn`, `.card`), not page layouts.  
@@ -1580,7 +1581,7 @@ Guardrails: JSON Schema validation; missing citations = build fail; human review
 * **Interfaces:** OpenTelemetry export (`/otel/v1/*`); structured logs include `tenant_id`, `rule_pack_hash`, `trace_id`; append-only `audit_events` via write-only API from gateway/services.
 * **User-visible:** `/app/settings/audit` — filterable per-tenant audit viewer.
 
-#### 3.2.10 Public Site & Content (Marketing, Legal, Support)
+#### 3.2.10 Marketing Site & Content (Marketing, Legal, Support)
 
 * **Primary public routes:**
 
@@ -1624,7 +1625,7 @@ Extensibility is governed by **versioned contracts** and forward-compat rules. E
 
 **Frontend**
 
-* **Framework:** Next.js (App Router) + React. **Styling:** TailwindCSS for app UI, **SCSS tokens** for brand theming/marketing (Dart Sass). Tokens exposed as CSS variables and consumed by Tailwind (single source of truth). Tailwind theme reads the shared tokens—no duplicated hex values in source.
+* **Framework:** Next.js (App Router) + React. **Styling:** Tailwind CSS for app and Marketing Site. Tokens are exposed as CSS variables and consumed by Tailwind (single source of truth). Tailwind theme reads the shared tokens—no duplicated hex values in source.
 * **Typography & Icons:** System UI stack for the app; one **self-hosted variable font** (marketing) via `next/font` with tight subsetting. **lucide-react** SVG icons. **No Bootstrap. No icon webfonts.** If Font Awesome is ever required, use tree-shaken SVG packages behind a feature flag.
 * **Forms/validation:** Zod + React Hook Form. **State:** server actions + URL state; no global store unless needed.
 * **Rendering & content:** MDX/Markdown for marketing/legal/blog; ISR for `/blog` and docs; `next/image` + CDN for assets.
@@ -1842,7 +1843,7 @@ Four top-level journeys, each with a minimum set of proof blocks and a single, o
 
 The onboarding flow is delivered through the Transcrypt web application.
 
-#### 4.1.1 Public Site Journeys (credibility → correct door → app intent)
+#### 4.1.1 Marketing Site Journeys (credibility → correct door → app intent)
 
 * **Cold SME owner (conversion path):** `/` → `/product` → `/pricing` → `/security` → **Start Free Trial**.
   **Promises shown:** “First defensible report in one sitting,” screenshots of **Quick Start / Findings / PDF**, plain-English “no runtime AI” badge, simple pricing.
