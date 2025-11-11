@@ -48,6 +48,10 @@ review_cycle: "Quarterly or upon major release"
     - [3.1.3 Data Model (Canonical Contracts)](#313-data-model-canonical-contracts)
     - [3.1.4 Storage and Artefacts](#314-storage-and-artefacts)
     - [3.1.5 Security, Privacy, and Trust Model](#315-security-privacy-and-trust-model)
+      - [Why this combo](#why-this-combo)
+      - [How the flow works](#how-the-flow-works)
+      - [What to implement](#what-to-implement)
+      - [Pitfalls to avoid](#pitfalls-to-avoid)
     - [3.1.6 Extensibility \& Integration Framework](#316-extensibility--integration-framework)
     - [3.1.7 DevEx, QA, and Delivery](#317-devex-qa-and-delivery)
     - [3.1.8 Minimal Viable Slice (MVP cut)](#318-minimal-viable-slice-mvp-cut)
@@ -905,11 +909,129 @@ The following canonical contracts define the minimum JSON structure for core Tra
 
 **3.1.5.1 Identity & Access**
 
-* OIDC login (MFA enforced), short-lived JWTs; service identities via mTLS; policy-as-code (OPA) for AuthZ.
+* **OIDC login (MFA enforced)**
+  Users sign in through a standard identity provider using OpenID Connect. Think Entra ID, Okta, Google. After username and password, they must pass a second step (app code, hardware key, or SMS) every time policy says so.
+
+* **Short-lived JWTs**
+  After login, the app issues a JSON Web Token that proves who the user is and what tenant they belong to. It expires quickly, e.g. 15–30 minutes, and is refreshed with a secure refresh flow. Short life limits damage if a token leaks.
+
+* **Service identities via mTLS**
+  Backend services do not use user tokens to talk to each other. Each service has its own identity proved by mutual TLS. Both client and server present certificates. Only named services with valid certs can connect.
+
+* **Policy-as-code (OPA) for AuthZ**
+  Authorisation decisions are not hardcoded in the app. They are written as Rego policies and evaluated by Open Policy Agent. Every request is checked against rules like “role X in tenant Y can read finding Z”.
+
+#### Why this combo
+
+* OIDC centralises user auth and MFA. Easy SSO, easy revocation.
+* Short-lived JWTs reduce blast radius and make session theft harder.
+* mTLS gives a strong, automatic trust boundary between services.
+* OPA gives consistent, auditable, testable permission checks.
+
+#### How the flow works
+
+1. User hits the app. Redirect to IdP. Complete MFA.
+2. App receives OIDC code, trades it for IdP tokens, then creates a short-lived app JWT with claims like `sub`, `tenant_id`, `roles`, `scopes`.
+3. Browser sends the JWT to the API Gateway. Gateway validates signature and expiry, adds audit headers.
+4. Gateway calls backend services over mTLS. No public ports on services.
+5. For each request, the service asks OPA, passing input like `{ method, path, user.roles, tenant_id, resource.owner }`.
+6. OPA returns allow or deny. If allow, the service proceeds. All steps are logged.
+
+#### What to implement
+
+* **IdP**: Configure an OIDC client. Enforce MFA at the IdP.
+* **JWT**: Sign with your own key pair. Set exp short. Issue refresh tokens with tight scope and rotation.
+* **Gateway**: Validate JWTs, inject `X-Tenant-Id` and `X-Request-Id`. Rate limit.
+* **mTLS**: Per-service certs, automatic rotation. Only allow-list known cert subjects.
+* **OPA**: Sidecar or local daemon. Define Rego for tenant isolation, roles, and resource ownership. Unit test policies.
+* **Audit**: Log `tenant_id`, `actor_id`, `timestamp`, decision, and trace ID for every request.
+
+#### Pitfalls to avoid
+
+* Long-lived tokens. Keep access tokens short and refresh tightly controlled.
+* Mixing user JWTs for service-to-service calls. Use mTLS service identities instead.
+* Ad-hoc permissions in code. Centralise in OPA or you will drift.
+* Skipping audience and issuer checks on JWTs. Validate `iss`, `aud`, `nbf`, `exp`, and signature every time.
+* No rotation. Rotate JWT signing keys and service certs on a schedule.
+
 
 **3.1.5.2 Crypto & Secrets**
 
-* TLS 1.3 everywhere, mTLS service-to-service; AES-256-GCM at rest; KMS-managed KEKs; Vault for secrets; automated rotation.
+**Goals:** Confidentiality, integrity, forward-secrecy, and verifiable provenance with boring, proven primitives.
+
+**In transit (everywhere):**
+
+* **TLS 1.3** with ECDHE for forward secrecy; restrict ciphers to modern AEAD suites.
+* **mTLS service-to-service** (Envoy or equivalent): each service presents a short-lived client cert; requests without a valid cert are dropped before app code.
+* **Strict transport:** HSTS (preload), TLS only; no plaintext ports open; HTTP→HTTPS redirect at the edge.
+
+**At rest (data, artefacts, backups):**
+
+* **Database (Postgres):** tablespace encryption using **AES-256-GCM** (disk or managed volume) plus **column-level encryption** for sensitive JSONB fields where feasible.
+* **Object storage (evidence, reports, RulePacks):** **envelope encryption**:
+
+  * Generate a per-object **DEK** (AES-256-GCM).
+  * Encrypt data with DEK client-side; store ciphertext + `aad` (tenant_id, object_id, hash).
+  * Wrap DEK with a tenant-scoped **KEK** from KMS; store wrapped DEK alongside the object.
+  * Persist **SHA-256** of plaintext as integrity tag in object metadata.
+* **Backups/WAL archives:** encrypted before leaving the host; KEKs never co-reside with backup files; verify restore with checksum on a schedule.
+
+**Keys & rotation model:**
+
+* **Hierarchy:** root key (KMS) → tenant **KEKs** → per-object **DEKs**.
+* **Rotation:** KEKs rotated **quarterly** or on suspicion/incident; DEKs are one-time per object (rotate by re-encrypt on replace).
+* **Separation of duties:** only the KMS/Transit service can unwrap KEKs; app never sees root keys.
+* **Deletion:** object delete = delete ciphertext + wrapped DEK; KEK rotation with old KEK destroyed enforces crypto-shred for any missed artefacts.
+
+**Secrets management (runtime):**
+
+* **Vault (or equivalent) as the source of truth**:
+
+  * App secrets (DB creds, API keys) are leased, **short-lived**, auto-rotated.
+  * **Dynamic secrets** for Postgres/Redis: per-service ephemeral DB users issued by Vault DB engine with TTLs.
+  * **Transit engine** (or cloud KMS) for sign/verify and encrypt/decrypt; app asks Transit to operate on blobs, keys never leave the boundary.
+* **Bootstrap:** one machine-identity token per node via cloud-init/user-data; everything else derived via authenticated join.
+* **No secrets in images, repos, or env files**; use tmpfs + file descriptors; redact in logs.
+
+**Hashing, signing, and provenance:**
+
+* **Content addressing:** all artefacts (RulePacks, reports, evidence bundles) carry a **SHA-256** content hash; the hash appears in audit events and report footers.
+* **Signatures:** release images, RulePacks, and PDFs are signed (sigstore/cosign for images; detached signatures for files). Verification is a gate before use.
+* **Audit linkage:** each evaluation stores `org_profile_hash`, `evidence_bundle_hash`, `rulepack_hash`, `llm_input_hash`, `llm_output_hash` (when used) + model/prompt/param versions.
+
+**Certificates & identities:**
+
+* **Service identity:** per-service SPIFFE-like IDs or mTLS SANs; certs issued by an internal CA with **24–72h** lifetimes; automated renewal via SDS/sidecar.
+* **User identity:** OIDC (Auth0/Entra/Google). **MFA enforced** on admin roles; step-up auth for sensitive actions (e.g., deleting evidence, rotating keys).
+
+**Operational rules (non-negotiable):**
+
+* **Least privilege everywhere:** RLS per tenant in Postgres; object store policies scoped to tenant prefixes; KMS policies scoped to tenant KEKs.
+* **No external egress from app zone** except: OIDC, billing webhooks, and (optionally) LLM inference endpoints listed in an allow-list.
+* **Key compromise playbook:** revoke certs, rotate KEKs, invalidate tokens, force re-login, re-sign RulePack manifest, re-issue report signatures; document as an RCA artefact.
+
+**DigitalOcean MVP specifics:**
+
+* **KMS:** DO has no native KMS. Use **Vault (Transit engine)** on the app host (or a small dedicated node) for KEKs and signing. Protect Vault unseal with **Shamir**; keep unseal keys off-box.
+* **Object storage:** DO Spaces; perform **client-side envelope encryption** as above; treat Spaces SSE as an extra layer, not the only control.
+* **DB volume:** encrypt the block device (e.g., LUKS) if you control the host; still encrypt sensitive columns in-app.
+* **Certs:** run Envoy or HAProxy with mTLS between services; automate cert issuance/rotation via small control plane or Vault PKI.
+
+**Parameters & defaults (sane, explicit):**
+
+* AES mode: **AES-256-GCM** only (no CBC).
+* Hash: **SHA-256** (no MD5/SHA-1).
+* TLS: TLSv1.3 only; disable TLSv1.2 unless a third-party absolutely requires it.
+* Token lifetime: access tokens ≤ **15 min**; refresh tokens with rotation; service certs ≤ **72 h**.
+* Vault lease TTLs: **60 min** default for dynamic DB creds; renewals handled by sidecars.
+
+**Testing & verification:**
+
+* **Crypto unit tests:** encrypt→decrypt round-trips with AAD; tamper tests must fail.
+* **Key rotation drills:** quarterly KEK rotation in staging with data intact; restore drills validate backup decryption.
+* **Supply chain:** signed builds, SBOMs generated; rejects unsigned images or modified artefacts at startup.
+
+---
 
 **3.1.5.3 Network & Isolation**
 
