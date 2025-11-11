@@ -30,9 +30,9 @@ review_cycle: "Quarterly or upon major release"
     - [2.4 Future Extensibility to Other Nations](#24-future-extensibility-to-other-nations)
     - [2.5 Regulatory and Assurance Environment](#25-regulatory-and-assurance-environment)
   - [Tenancy Model (Design Intention)](#tenancy-model-design-intention)
-  - [3. Product Architecture and Core Platform Design](#3-product-architecture-and-core-platform-design)
+  - [3. Product Architecture and Central Platform Design](#3-product-architecture-and-central-platform-design)
     - [Edge Layer](#edge-layer)
-    - [Core Layer](#core-layer)
+    - [Central Layer ()](#central-layer-)
     - [Security Model](#security-model)
       - [Audit event schema](#audit-event-schema)
     - [Extensibility Model](#extensibility-model)
@@ -530,7 +530,7 @@ The architecture is designed so that, when production readiness is achieved, bot
 
 This PRD defines the behavioural requirements—strict tenant isolation, verifiable segregation of structured and binary data, and portability of each storage layer—not the infrastructure method by which those requirements are implemented.
 
-## 3. Product Architecture and Core Platform Design
+## 3. Product Architecture and Central Platform Design
 
 Transcrypt’s platform is built for separation, assurance, and auditability. Its design is intentionally simple at the edges and tightly structured in the core.
 
@@ -541,9 +541,9 @@ The platform has two surface experiences that share a design system and analytic
 * **Public site** — the publication and community layer for articles, updates, and social engagement. It is publicly readable, cacheable, and instrumented for discoverability, but it has no path to tenant data.
 * **Tenant portal** — the authenticated workspace for customers to manage their assurance activities. It communicates through the API gateway using short-lived credentials and tenant-scoped routes. All user actions terminate at this gateway, which enforces authentication, rate limiting, and routing based on tenant context.
 
-### Core Layer
+### Central Layer ()
 
-Within the core, an **evaluation pipeline** processes tenant-scoped inputs from the gateway. The core is composed of discrete, bounded services:
+Within the heart of the Transcrypt system, an **evaluation pipeline**, known commercially as Transcrypt Essential, processes tenant-scoped inputs from the gateway. This heart is composed of discrete, bounded services:
 
 * **Evaluation (Rules + LLM)** — runs deterministic rule checks and a runtime LLM assessment against the current Cyber Essentials RulePack. Deterministic checks gate objective pass/fail items; the LLM provides reasoned judgements, gap explanations, and next-step guidance. All evaluations are version-pinned (RulePack ID + model/version + prompt template/hash) and emit audited findings tied to the OrgProfile and Evidence set.
 * **Evidence binding** — hashes and records artefacts (files, exports, assertions) and maps them to controls inside the tenant’s isolated namespace; issues short-lived, signed retrieval URLs; preserves integrity and provenance.
@@ -580,15 +580,17 @@ Network paths are segmented and verified—no implicit trust. East–west traffi
 
 Extensibility is a design property, not a roadmap item. Framework logic and evidence relationships exist as versioned data objects within the rulebase schema. Adding or updating a framework—whether an assurance scheme such as Cyber Essentials or a regulatory mapping introduced later—requires only new data definitions and metadata, not code modification. External connectors, collectors, or alternative LLMs integrate through defined APIs without altering core modules.
 
-The architecture is data-driven and jurisdiction-agnostic. It begins with the UK Cyber Essentials rulebase but can host any other framework as a dataset through configuration and localisation. Jurisdictional alignment occurs entirely in data, not in code.
+The architecture is data-driven and jurisdiction-agnostic. It begins with the UK Cyber Essentials rulebase but will be able to host any other framework as a dataset through configuration and localisation. Jurisdictional alignment occurs entirely in data, not in code.
 
 ### Architectural Summary
 
-Transcrypt is a graph of obligations, controls, and evidence objects bound by identity and policy. Its behaviour is defined by data and enforced by cryptography. The system’s two surfaces—the public content site and the tenant portal—operate independently yet share a consistent trust model and design language. Security, auditability, and portability are first-order properties. Growth—new frameworks, new regions, new delivery environments—requires only new data and configuration, never alteration of core logic.
+Transcrypt is a graph of obligations, controls, and evidence objects bound by identity and policy. Its behaviour is defined by data and enforced by cryptography. The system’s two surfaces—the public content site and the tenant portal—operate independently yet share a consistent trust model and design language. Security, auditability, and portability are first-order properties. Growth, new frameworks, new regions, new delivery environments, requires only new data and configuration, never alteration of core logic.
 
 ### Framework Modularity
 
-The compliance layer separates **control logic** from **application logic**. Controls, tests, and question sets are defined as **data-driven schemas**, versioned and loaded from signed configuration bundles known as **RulePacks**. This design allows the platform to:
+The compliance layer separates **control logic** from **application logic**. Controls, tests, and question sets are defined as **data-driven schemas**, versioned and loaded from signed configuration bundles known as **RulePacks**. 
+
+This design allows the platform to:
 
 * plug in new assurance or regulatory frameworks by adding schema bundles,
 * update existing control logic without redeploying the codebase, and
