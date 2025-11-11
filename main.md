@@ -34,6 +34,7 @@ review_cycle: "Quarterly or upon major release"
     - [Edge Layer](#edge-layer)
     - [Core Layer](#core-layer)
     - [Security Model](#security-model)
+      - [Audit event schema](#audit-event-schema)
     - [Extensibility Model](#extensibility-model)
     - [Architectural Summary](#architectural-summary)
     - [Framework Modularity](#framework-modularity)
@@ -410,6 +411,25 @@ Each service has its own identity, credentials, and token-scoped access policy. 
 ### Security Model
 
 Security is intrinsic to the design. Every human and machine actor authenticates through short-lived cryptographic credentials issued by the identity service. Authorisation is enforced by policy-as-code, evaluated per request, and scoped to a single tenant. All data in transit is encrypted; internal traffic is accepted only from verified service identities. Every request, job, and data mutation emits an immutable audit event containing timestamp, actor identity, tenant ID, and cryptographic hash of the action. These events form a complete, verifiable audit trail.
+
+#### Audit event schema
+
+Every security-relevant action emits an **Audit Event** recorded in an append-only log. Each event must include:
+
+- `tenant_id`
+- `actor_id` (human or service identity)
+- `timestamp` (ISO8601 Z)
+- `org_profile_hash`
+- `evidence_bundle_hash`
+- `rulepack_hash`
+- `model_version` (LLM or rules model identifier)
+- `prompt_version` (template/hash)
+- `param_set` (seed, temperature, top_p, max_tokens, etc.)
+- `llm_input_hash`
+- `llm_output_hash`
+- `finding_id` (when an evaluation creates or updates a finding)
+
+Events are immutable; corrections are new events that reference the original `event_id`.
 
 Network paths are segmented and verified—no implicit trust. East–west traffic is constrained, mutually authenticated, and encrypted so the topology itself functions as a living security control. This alignment between internal design and external assurance makes every control demonstrable: evidenceable controls, immutable audit events, and a verifiable security posture.
 
