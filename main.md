@@ -55,9 +55,14 @@ review_cycle: "Quarterly or upon major release"
     - [3.1.6 Extensibility \& Integration Framework](#316-extensibility--integration-framework)
     - [3.1.7 DevEx, QA, and Delivery](#317-devex-qa-and-delivery)
     - [3.1.8 Minimal Viable Slice (MVP cut)](#318-minimal-viable-slice-mvp-cut)
+    - [What you’re actually shipping in v1 (the smallest usable product)](#what-youre-actually-shipping-in-v1-the-smallest-usable-product)
+    - [What’s *not* in v1 (deliberately)](#whats-not-in-v1-deliberately)
+    - [“Stubbed” means](#stubbed-means)
+    - [Why this cut matters](#why-this-cut-matters)
+    - [Suggested MVP acceptance checks](#suggested-mvp-acceptance-checks)
     - [3.1.9 Technology Choices (initial)](#319-technology-choices-initial)
     - [3.1.10 Operational Runbooks (high level)](#3110-operational-runbooks-high-level)
-    - [3.x Technical Constraints \& Conventions (non-normative)](#3x-technical-constraints--conventions-non-normative)
+    - [3.1.11 Technical Constraints \& Conventions (non-normative)](#3111-technical-constraints--conventions-non-normative)
     - [3.2 Core Components and Interfaces](#32-core-components-and-interfaces)
       - [3.2.1 Web App (Next.js @ `https://transcrypt.xyz`)](#321-web-app-nextjs--httpstranscryptxyz)
       - [3.2.2 API Gateway \& Policy Enforcement {#API-Gateway-\&-Policy-Enforcement}](#322-api-gateway--policy-enforcement-api-gateway--policy-enforcement)
@@ -1328,12 +1333,25 @@ That is exactly what “segmented VPC/VNet: public, app, data; only proxy reache
 
 **3.1.6.1 Framework Packs**
 
-* Portable rule/evidence packs for Cyber Essentials v3.2, NIS2, ISO 27001; locale text separated; hot-swappable by `rule_pack_id`.
+* Portable rule/evidence packs for Cyber Essentials v3.2, NIS2, ISO 27001; locale text separated; hot-swappable by `rule_pack_id`. Only Cyber Essentials v3.2 exists in MVP.
 
 **3.1.6.2 Connectors**
 
-* Pullers for IdP (Entra/Okta), cloud config (AWS/Azure/GCP), EDR/backup. Sandbox SDK for partners.
+* Pullers for IdP (Entra/Okta), cloud config (AWS/Azure/GCP), EDR/backup. Sandbox SDK for partners. (see below)
+---
+**Pullers for IdP (Entra, Okta, Auth0, Keycloak) = read-only collectors that fetch identity facts and turn them into Evidence.**
 
+* **Purpose:** Prove access controls from the source of truth. They fetch MFA settings, password policies, admin roles, conditional access, and user status, then convert that into files and assertions our rules can test.
+* **How they run:** Background jobs on a schedule or on demand. They authenticate with a per-tenant service account, call the IdP APIs, normalise results, and post to the Evidence API. No direct DB writes.
+* **Inputs:** tenant_id, IdP type, scoped credentials, what to fetch, since timestamp or cursor.
+* **Outputs:**
+
+  * **Files**: raw JSON or CSV exports with SHA-256 and timestamps.
+  * **Assertions**: typed facts like `mfa.enforced.admins = true`, `password.min_length >= 12`, `admin_roles.count = 3`, `users_without_mfa = 0`.
+* **Security:** Least-privilege scopes, credentials in Vault or KMS only, redacted logs, per-run audit events with input and output hashes.
+* **Behaviour:** Idempotent, paginated, retries with backoff, rate-limited, time-boxed. Stale or failed pulls raise a finding such as “IdP evidence older than 30 days”.
+* **MVP scope:** Start with Entra or Okta. Fetch org settings, MFA and CA policy, privileged roles, and disabled accounts. Add Auth0 or Keycloak later if customers use them.
+---
 **3.1.6.3 Export/Interchange**
 
 * JSON/JSON-LD exports; webhooks; optional verifiable credentials for “proof of control” attestations.
@@ -1360,7 +1378,45 @@ That is exactly what “segmented VPC/VNet: public, app, data; only proxy reache
 
 * **Includes:** Essential Plan only; 15 Cyber Essentials v3.2 controls; OrgProfile/Evidence schemas; `/evaluate` + `/reports/generate`; Stripe billing; evidence uploads.
 * **Excludes (stubbed):** NIS2 pack, partner APIs, advanced connectors, VC attestations.
+---
+Here’s what that section is really saying, in plain terms:
 
+### What you’re actually shipping in v1 (the smallest usable product)
+
+* **One plan only (“Essential”).** No tiers, no add-ons.
+* **Scope: 15 CE v3.2 controls.** A tight subset you can implement end-to-end to prove the loop works.
+* **Data contracts in place.** `OrgProfile` and `Evidence` JSON schemas are defined and enforced.
+* **Two core endpoints live.**
+
+  * `POST /evaluate` runs the rule engine (+ runtime LLM if enabled) on the tenant’s profile/evidence.
+  * `POST /reports/generate` turns findings into an HTML/PDF report.
+* **Money flows.** Stripe checkout/subscriptions working (create, renew, cancel).
+* **Evidence upload works.** Users can attach files; they’re hashed, stored, and referenced by findings.
+
+### What’s *not* in v1 (deliberately)
+
+* **No NIS2 framework.** Only Cyber Essentials for now.
+* **No partner/auditor APIs.** No external integrator surface yet.
+* **No “advanced” connectors.** You won’t auto-pull from IdP/cloud/EDR in v1; users upload or enter facts manually.
+* **No verifiable credentials (VC) attestations.** Reports are signed/stamped, but not VC/crypto-issued.
+
+### “Stubbed” means
+
+* The shape is there (routes, types, maybe feature flags), but it returns a fixed “not available yet” response or a mock. It’s present to unblock wiring/tests, not to serve real users.
+
+### Why this cut matters
+
+* You can **demo the full loop**: intake → evidence → evaluate → report → bill — with real storage, real hashes, and auditable outputs.
+* Limits blast radius: fewer features to secure, observe, and support.
+* Sets crisp acceptance criteria.
+
+### Suggested MVP acceptance checks
+
+* **Evaluation:** Same inputs (profile/evidence/rulepack/model versions) → same findings; mismatches are rejected and audited.
+* **Report:** PDF footer shows input hashes and generation time; links resolve to stored evidence.
+* **Evidence:** Every file has SHA-256, retention class, and control refs; retrieval via short-lived signed URL.
+* **Billing:** New tenant can subscribe, downgrade/cancel, and still access their historical reports.
+* **Audit:** Each evaluate/report action emits an event with tenant_id, actor_id, timestamps, rulepack_hash, and (if LLM used) model/prompt/param metadata.
 ---
 
 ### 3.1.9 Technology Choices (initial)
@@ -1378,7 +1434,7 @@ That is exactly what “segmented VPC/VNet: public, app, data; only proxy reache
 * **Rotate keys:** trigger KMS rotation → restart sidecars → verify mTLS → attest.
 * **Incident:** declare → capture state → contain → RCA → publish improvement.
 
-### 3.x Technical Constraints & Conventions (non-normative)
+### 3.1.11 Technical Constraints & Conventions (non-normative)
 
 These conventions define baseline implementation expectations for the MVP but do not lock in deployment architecture.
 
