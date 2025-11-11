@@ -484,46 +484,43 @@ Each architectural choice serves one aim: **fewer steps, clearer guidance, faste
 |:----:|:-----|:-------------|:-----------------|
 | v1.0 | Transcrypt Essential | Full self-serve AI automation for SMEs | None |
 | v1.5 | Assisted Tier (β) | Optional human review of AI-generated reports via auditor portal | Limited |
-| v2.0 | Platform Tier | Integrated marketplace for auditors, consultants and partners | Extensive |
+| v2.0 | Platform Tier | Integrated marketplace for auditors, consultants, and partners (Not in v1; see §9.2 Partner/Integrator API (v2.0)) | Extensive |
 
 ---
 
 ### 3.1.2 Core Components and Interfaces
 
 **3.1.2.1 Web App (Intake & Console)**
-
-* Responsibilities: Guided intake, uploads, status, downloads, billing.
-* Interfaces: HTTPS → API Gateway (REST/JSON), OIDC for login.
+Responsibilities: Guided intake, evidence uploads, job/status views, report downloads, billing entry points.
+Interfaces: Browser → HTTPS → API Gateway (`/api/*`, REST/JSON). Login via OIDC.
 
 **3.1.2.2 API Gateway & Policy Enforcement**
+Responsibilities: Ingress for all client traffic; AuthN (OIDC), AuthZ (OPA/Rego), request signing, rate limiting, audit headers.
+Interfaces: `/api/auth/*`, `/api/tenants/*`, `/api/reports/*`, `/api/evidence/*` (REST/JSON).
 
-* Responsibilities: AuthN (OIDC), AuthZ (OPA/Rego), request signing, rate limiting, audit headers.
-* Interfaces: `/auth/*`, `/tenants/*`, `/reports/*`, `/evidence/*`.
+**3.1.2.3 Rule Evaluation Service (Deterministic)**
+Responsibilities: Load compiled rule artefacts; evaluate applicability/tests; emit findings with provenance.
+Interfaces: `POST /api/evaluations` (body: OrgProfile, EvidenceInventory, rule_pack_id) → Findings JSON; `GET /api/rules/:rule_id/explain`.
 
-**3.1.2.3 Rule Engine (Deterministic)**
-
-* Responsibilities: Load compiled rule artefacts; evaluate applicability/tests; produce findings with provenance.
-* Interfaces: `POST /evaluate` (OrgProfile, EvidenceInventory, rule_pack_id) → Findings JSON; `GET /explain/:rule_id`.
-
-**3.1.2.4 LLM Assist Pipeline (Build-time only)**
-
-* Responsibilities: Draft rules from clauses; suggest equivalences; summarise diffs; generate plain-English copy.
-* Interfaces: Offline CLI / worker queue; outputs JSON conforming to Rule Schema; never used at runtime.
+**3.1.2.4 Rule Authoring Pipeline (LLM Assist, Build-time only)**
+Responsibilities: Draft rules from clauses, suggest equivalences, summarise diffs, generate plain-English copy. Runs offline/asynchronously; never used at runtime.
+Interfaces: CLI/worker queue; outputs JSON conforming to Rule Schema (consumed by the rule build/compile step).
 
 **3.1.2.5 Evidence Services**
-
-* Responsibilities: File ingest, hashing, metadata, connector pulls (IdP exports, backups, EDR).
-* Interfaces: `POST /evidence/files`, `POST /evidence/assertions`, connector webhooks; stores to object storage with signed URLs.
+Responsibilities: File ingest, hashing, metadata capture, connector pulls (e.g., IdP exports, backups, EDR). Persistence and retrieval of evidence artefacts.
+Interfaces: `POST /api/evidence/files`, `POST /api/evidence/assertions`, connector webhooks; stores to object storage with short-lived signed URLs and Transcrypt-managed per-tenant KMS envelope encryption.
 
 **3.1.2.6 Report Service**
+Responsibilities: Assemble findings → prioritisation → PDF/HTML; embed citations and links to evidence.
+Interfaces: `POST /api/reports` → report blob; `GET /api/reports/:id`.
 
-* Responsibilities: Assemble findings → prioritisation → PDF/HTML; embed citations and evidence links.
-* Interfaces: `POST /reports/generate` → report blob; `GET /reports/:id`.
+**3.1.2.7 Service Identity Proxy**
+Responsibilities: Enforce mTLS east–west, apply per-service AuthN/Z (OPA sidecar), manage cert/key rotation.
+Interfaces: `/healthz`, `/metrics`, SDS/control-plane for certificate distribution.
 
-**3.1.2.7 Partner/Integrator API**
-
-* Responsibilities: Multi-tenant management (MSPs/insurers), read-only posture, webhooks.
-* Interfaces: `GET /partners/tenants`, `GET /partners/findings`, `POST /webhooks`.
+**3.1.2.8 Front-End Site / Blog**
+Responsibilities: Marketing surface separate from the app; hosts onboarding funnel (static content, product pages, CTA into the Web App).
+Interfaces: Public GET endpoints and form POST to `/api/contact`.
 
 ---
 
@@ -747,7 +744,7 @@ The following canonical contracts define the minimum JSON structure for core Tra
 
 ### 3.1.8 Minimal Viable Slice (MVP cut)
 
-* **Includes:** Essential Plan only; 15 Cyber Essentials v3.2 controls; OrgProfile/Evidence schemas; `/evaluate` + `/reports/generate`; Stripe billing; evidence uploads.
+* **Includes:** Essential Plan only; 15 Cyber Essentials v3.2 controls; OrgProfile/Evidence schemas; `/api/evaluations` + `/api/reports`; Stripe billing; evidence uploads.
 * **Excludes (stubbed):** NIS2 pack, partner APIs, advanced connectors, VC attestations.
 
 ---
@@ -772,7 +769,16 @@ The following canonical contracts define the minimum JSON structure for core Tra
 These conventions define baseline implementation expectations for the MVP but do not lock in deployment architecture.
 
 **Styling**  
-The UI uses **SCSS** with Transcrypt’s preset variables. No CSS framework (e.g., Tailwind, Bootstrap) is adopted for MVP. This preserves control of branding and reduces bundle complexity.
+**App UI:** **TailwindCSS**.  
+**Brand tokens:** Single source of truth via **CSS variables** (colour, radius, shadow, spacing). Variables are consumed by Tailwind (through arbitrary `[...]` utilities and mapped theme entries) and by SCSS on the marketing site.  
+**Marketing site:** SCSS that reads the same CSS variables. **No Bootstrap. No icon webfonts.**
+
+Rules:
+1) Utilities-first in components; use `@apply` only for tiny atoms (e.g., `.btn`, `.card`), not page layouts.  
+2) State via `group/peer/aria/data` variants; avoid deep selectors and descendant overrides.  
+3) Dark mode: `media` (prefers-color-scheme) for v1; tokens must be dual-mode.  
+4) Icons: lucide-react (SVG). If FA is ever required, use tree-shaken SVG, feature-flagged.  
+5) Component API: prefer composition (props) or a variants helper (e.g., `cva`) over custom CSS hierarchies.
 
 **Database Engine**  
 The product uses **PostgreSQL (v15 or higher)** as the primary datastore.  
@@ -811,11 +817,11 @@ All user interaction occurs through the Transcrypt web platform, which unifies p
 * **Purpose:** Evaluate controls for a tenant/profile against an **immutable, signed RulePack** while enforcing the automation thresholds and evidence schema defined in [§6.2 Cyber Essentials Alignment (v3.2)](#62-cyber-essentials-alignment-v32).
 * **Interfaces:**
 
-  * `POST /api/evaluate`
+  * `POST /api/evaluations`
 
     * **Request:** `{ "rule_pack": "CE-2025.3#sha256:...", "org_profile": {...}, "evidence": {...} }`
-    * **Response:** `{ "findings":[{ "rule_id":"...", "status":"pass|fail|partial", "reason":"...", "evidence":[...], "citations":[...] }], "artefact_hash":"..." }`
-  * `GET /api/evaluate/explain/:rule_id` → returns provenance (tests run, inputs, citations).
+    * **Response:** `{ "evaluation_id":"eval_...", "findings":[{ "rule_id":"...", "status":"pass|fail|partial", "reason":"...", "evidence":[...], "citations":[...] }], "artefact_hash":"..." }`
+  * `GET /api/rules/:rule_id/explain` → returns provenance (tests run, inputs, citations).
 * **Notes:** Stateless; loads RulePacks by hash; **no LLM** in runtime path; will emit findings decorated with `ce_ref` question identifiers and renewal flags aligned to the 14-day vulnerability, MFA, password, device lockout, and software-support rules mandated in [§6.2](#62-cyber-essentials-alignment-v32).
 
 #### 3.2.4 LLM Assist Pipeline (Build-Time Only)
@@ -835,28 +841,18 @@ All user interaction occurs through the Transcrypt web platform, which unifies p
   * `POST /api/evidence/files` (multipart) → `{ id, sha256, url }`.
   * `POST /api/evidence/assertions` → `{ key:"MFA.enforced.admins", value:true, source:"idp_policy.json" }`.
   * Connectors (optional webhooks): `/api/connectors/idp`, `/api/connectors/backup`, `/api/connectors/edr`.
-* **Storage contract:** S3-compatible object store `evidence/{tenant}/{uuid}` (server-side encryption, signed URLs) + Postgres metadata, which will preserve the `ce_ref` tags and scope annotations required for Cyber Essentials v3.2 exports described in [§6.2](#62-cyber-essentials-alignment-v32).
+* **Storage contract:** Client-side encrypted artefacts (app uses Transcrypt-managed per-tenant KMS keys) are double-wrapped with server-side encryption (SSE) in an S3-compatible store `evidence/{tenant}/{uuid}`; isolated workers decrypt via per-tenant KMS unwrap; signed URLs deliver the already-encrypted blobs. Postgres metadata preserves `ce_ref` tags and scope annotations required for Cyber Essentials v3.2 exports described in [§6.2](#62-cyber-essentials-alignment-v32).
 
 #### 3.2.6 Report Service
 
 * **Purpose:** Convert findings → prioritised actions → **HTML/PDF** with embedded citations and artefact hash.
 * **Interfaces:**
 
-  * `POST /api/reports/generate` → `{ report_id, download_url, summary }`.
+  * `POST /api/reports` → `{ report_id, download_url, summary }`.
   * `GET /api/reports/:id` → full envelope (exec summary, top actions, findings, citations).
 * **Rendering:** Jinja2 → HTML → WeasyPrint PDF; SHA-256 of inputs stamped in footer.
 
-#### 3.2.7 Partner / Integrator API
-
-* **Purpose:** MSPs/insurers manage many tenants, receive posture and events.
-* **Interfaces (token-scoped, read-majority):**
-
-  * `GET /api/partners/tenants` (list/paginate)
-  * `GET /api/partners/tenants/:id/posture` (roll-up posture)
-  * `POST /api/partners/webhooks` (subscribe to `report.generated`, `finding.changed`)
-* **Notes:** Strict RBAC; no cross-tenant writes; throttled exports.
-
-#### 3.2.8 Admin Console (Internal)
+#### 3.2.7 Admin Console (Internal)
 
 * **Purpose:** RulePack lifecycle, sandbox what-if evaluations, release approvals.
 * **Interfaces:**
@@ -864,19 +860,19 @@ All user interaction occurs through the Transcrypt web platform, which unifies p
   * `POST /api/admin/rulepacks/publish`, `GET /api/admin/rulepacks/:hash`.
   * `POST /api/admin/evaluate/simulate` with synthetic OrgProfile/Evidence.
 
-#### 3.2.9 Data Stores & Artefacts (Interface Contracts)
+#### 3.2.8 Data Stores & Artefacts (Interface Contracts)
 
 * **Postgres (RLS per tenant):** `tenants`, `users`, `org_profiles(jsonb)`, `evidence_index`, `findings(jsonb)`, `reports`, `audit_events`.
 * **Artefact Registry (immutable):** `rulepacks/{hash}.json`, `manifest.json`, `diffs/{from}-{to}.json`.
 * **Schemas:** All payloads carry `"schema": "OrgProfileV1" | "EvidenceV1" | "FindingsV1"` for fwd/back compat.
 
-#### 3.2.10 Observability & Audit
+#### 3.2.9 Observability & Audit
 
 * **Purpose:** End-to-end traceability for support and assurance.
 * **Interfaces:** OpenTelemetry export (`/otel/v1/*`); structured logs include `tenant_id`, `rule_pack_hash`, `trace_id`; append-only `audit_events` via write-only API from gateway/services.
 * **User-visible:** `/app/settings/audit` — filterable per-tenant audit viewer.
 
-#### 3.2.11 Public Site & Content (Marketing, Legal, Support)
+#### 3.2.10 Public Site & Content (Marketing, Legal, Support)
 
 * **Primary public routes:**
 
@@ -886,14 +882,14 @@ All user interaction occurs through the Transcrypt web platform, which unifies p
 * **Contact endpoint:** `POST /api/contact` → `{ name, email, subject, message, consent, meta }` (hCaptcha/Turnstile, rate-limited, ack with `ticket_id`).
 * **SEO/Discoverability:** `sitemap.xml`, `robots.txt`, JSON-LD, OG/Twitter cards, RSS for blog.
 
-#### 3.2.12 External Integrations (First-Party)
+#### 3.2.11 External Integrations (First-Party)
 
 * **Identity Providers:** OIDC flows at `/api/auth/*`.
 * **Billing:** Stripe Checkout; webhook `POST /api/billing/webhook` (subscription create/update/cancel).
 * **Email (later):** transactional mail; SPF/DKIM/DMARC configured for `transcrypt.xyz`.
 * **Well-known:** `/.well-known/security.txt`, `/.well-known/change-password`.
 
-#### 3.2.13 Non-Functional Interface Contracts
+#### 3.2.12 Non-Functional Interface Contracts
 
 * **Security headers:** CSP (nonce’d), HSTS (preload), Referrer-Policy `strict-origin-when-cross-origin`, X-Frame-Options `DENY`, X-Content-Type-Options `nosniff`.
 * **Auth requirements:** All `/api/*` require valid JWT with `sub`, `tenant_id`, `scopes`; machine calls use mTLS + token.
@@ -912,7 +908,7 @@ Trust is made observable through **transparent operations and verifiable assuran
 
 Transcrypt is designed to grow **by data, not by rewrite**. The core engine treats frameworks, controls, and evidence definitions as portable **RulePacks**—signed JSON artefacts that the runtime loads by hash. Adding NIS2, DORA, or ISO 27001 doesn’t change code paths: you publish a new RulePack with mapped controls, equivalence links, and test clauses; the evaluation service remains deterministic. Textual outputs (headings, rationales, actions) live as locale bundles, so jurisdictional expansion is translation work, not refactoring. Report rendering is a themeable template layer (HTML → PDF) that reads the same Findings schema, allowing new formats or styles without touching evaluation logic.
 
-Integration follows a **connector + event** model. Connectors are small, sandboxed pullers/posters that transform external proofs (IdP exports, backup configs, EDR posture, cloud config snapshots) into **EvidenceInventory** assertions or file artefacts. They run out-of-band via jobs/queues, publish to the evidence API, and never gain direct DB write access. Events from the core—`report.generated`, `finding.changed`, `evidence.added`—are emitted to webhooks with signed payloads, enabling MSP dashboards, insurer ingestion, or customer SIEM correlation. Post-MVP, a curated **Partner API** exposes read-scoped endpoints (tenant roll-ups, findings, reports) for contracted collaborators with strict RBAC, pagination, and approval workflows—an API-level integration surface for customers and approved partners only. [[Post-MVP: §9.4.2 Partner Channel & Co-Branding]] Exports continue to use open, durable formats (JSON/JSON-LD) so downstream systems can store or rehydrate results without vendor lock-in.
+Integration follows a **connector + event** model. Connectors are small, sandboxed pullers/posters that transform external proofs (IdP exports, backup configs, EDR posture, cloud config snapshots) into **EvidenceInventory** assertions or file artefacts. They run out-of-band via jobs/queues, publish to the evidence API, and never gain direct DB write access. Events from the core—`report.generated`, `finding.changed`, `evidence.added`—are emitted to webhooks with signed payloads, enabling MSP dashboards, insurer ingestion, or customer SIEM correlation. Post-MVP, a curated **Partner API** exposes read-scoped endpoints (tenant roll-ups, findings, reports) for contracted collaborators with strict RBAC, pagination, and approval workflows—an API-level integration surface for customers and approved partners only. Not in v1; see §9.2 Partner/Integrator API (v2.0). [[Post-MVP: §9.4.2 Partner Channel & Co-Branding]] Exports continue to use open, durable formats (JSON/JSON-LD) so downstream systems can store or rehydrate results without vendor lock-in.
 
 Extensibility is governed by **versioned contracts** and forward-compat rules. Every payload carries a `schema` tag (e.g., `OrgProfileV1`, `EvidenceV1`, `FindingsV1`); minor releases add optional fields, major releases ship with a migration manifest and deprecation window. RulePacks and templates are immutable by content hash; new revisions publish as new artefacts with a machine-readable `diff.json` so partners can pre-compute the impact of framework updates. SDKs (lightweight) provide typed models, request builders, webhook verifiers, and a connector scaffold (auth, polling, backoff, signing). LLM use remains a **build-time extension point** only—providers are pluggable, prompts redacted, outputs schema-validated—so runtime determinism and auditability never depend on a model vendor. In combination, RulePacks, connectors, events, and stable schemas make the platform easy to extend, safe to integrate, and boring to operate—the exact temperament you want in compliance infrastructure.
 
@@ -920,7 +916,7 @@ Extensibility is governed by **versioned contracts** and forward-compat rules. E
 
 **Frontend**
 
-* **Framework:** Next.js (App Router) + React. **Styling:** TailwindCSS for app UI, **SCSS tokens** for brand theming/marketing (Dart Sass). Tokens exposed as CSS variables and consumed by Tailwind (single source of truth).
+* **Framework:** Next.js (App Router) + React. **Styling:** TailwindCSS for app UI, **SCSS tokens** for brand theming/marketing (Dart Sass). Tokens exposed as CSS variables and consumed by Tailwind (single source of truth). Tailwind theme reads the shared tokens—no duplicated hex values in source.
 * **Typography & Icons:** System UI stack for the app; one **self-hosted variable font** (marketing) via `next/font` with tight subsetting. **lucide-react** SVG icons. **No Bootstrap. No icon webfonts.** If Font Awesome is ever required, use tree-shaken SVG packages behind a feature flag.
 * **Forms/validation:** Zod + React Hook Form. **State:** server actions + URL state; no global store unless needed.
 * **Rendering & content:** MDX/Markdown for marketing/legal/blog; ISR for `/blog` and docs; `next/image` + CDN for assets.
@@ -1041,7 +1037,7 @@ Plain English, short sentences, active verbs. Replace abstractions with concrete
 ### Where we will *not* compromise
 
 * **No runtime AI decisions.** LLMs help at build-time to draft text or mappings; the user-visible output is deterministic and traceable.
-* **No labyrinthine nav.** Five app areas maximum: Dashboard, Intake, Evidence, Reports, Settings. Partner view is separate.
+* **No labyrinthine nav.** Five app areas maximum: Dashboard, Intake, Evidence, Reports, Settings. Partner view is deferred (v2.0 – see §9.2 Partner/Integrator API) and stays separate.
 * **No vendor theatre.** Fewer animations, more receipts: hashes, timestamps, citations.
 
 ### Trade-offs we’ll manage deliberately
@@ -1066,7 +1062,7 @@ If we hold to these, Section 4 stops being a laundry list and becomes the spine 
 ### Why the site matters to UX (not just marketing)
 
 * **Trust before tasks.** No one starts an intake if they don’t believe we’re competent and safe. The site provides the proofs (security posture, legal clarity, transparency) that de-risk clicking “Start.”
-* **Correct routing.** Different visitors need different doors: Owner → trial, Tech helper → invite flow, Auditor/Insurer → verifier path, Partner → portfolio & API docs. The site’s IA should route them deliberately.
+* **Correct routing.** Different visitors need different doors: Owner → trial, Tech helper → invite flow, Auditor/Insurer → verifier path, Partner → portfolio & API docs (v2.0 – see §9.2 Partner/Integrator API). The site’s IA should route them deliberately.
 * **Expectation setting.** The site promises exactly what the app delivers: “one sitting to first report; deterministic results; evidence-bound findings.” That promise becomes the acceptance bar for onboarding.
 
 ### Site journeys (the “public” half of 4.1)
@@ -1087,7 +1083,7 @@ Four top-level journeys, each with a minimum set of proof blocks and a single, o
    * **CTA:** “View a Sample Report” (gated by email) or “Contact Security.”
    * **KPIs:** Time on /security > 90s; 60% reach at least one legal page link.
 
-3. **Partner/MSP (portfolio path)**
+3. **Partner/MSP (portfolio path)** *(Not in v1; see §9.2 Partner/Integrator API (v2.0))*
 
    * **Landing → Partners → Product (Multi-tenant) → API/Webhooks → Contact.**
    * **Proof blocks:** Multi-tenant dashboard screenshot; webhook catalogue; sample JSON export; reseller terms summary.
@@ -1105,7 +1101,7 @@ Four top-level journeys, each with a minimum set of proof blocks and a single, o
 
 * **/ (Home):** In 10 seconds: who it’s for, what it does, and a single promise (“From zero to defensible report in one sitting.”) One primary CTA + one secondary (“See how it works”).
 * **/product:** 3 anchored sections—Intake, Findings, Reports—each with a screenshot, a 2-line explanation, and one proof (trace, citation, or hash). End with a tiny FAQ about evidence, privacy, and runtime AI.
-* **/pricing:** Three plans (Essential/Pro/Partner) plus “What’s included” map to features the app really ships. No hidden fees. Annual toggle.
+* **/pricing:** Three plans (Essential/Pro/Partner). Partner is clearly marked as a roadmap preview (Not in v1; see §9.2 Partner/Integrator API). “What’s included” maps only to currently shipped features. No hidden fees. Annual toggle.
 * **/security:** Identity, encryption, zero trust, incident process, responsible disclosure, and links to status/changelog. Publish PGP and `/.well-known/security.txt`.
 * **/privacy, /terms, /cookies, /dpa, /subprocessors:** Versioned MDX; last-updated stamp; diff links.
 * **/changelog & /status:** Plain language, dates, and actions taken.
@@ -1148,7 +1144,7 @@ The onboarding flow is delivered through the Transcrypt web application.
   **Promises shown:** controls overview, responsible disclosure (`/.well-known/security.txt`), DPA/subprocessors, signed build/provenance note.
   **CTA:** `…/app/demo` (read-only sample) or `/contact`.
   **KPIs:** Time on `/security` > 90 s; ≥ 60% touch at least one legal page.
-* **Partner/MSP (portfolio path):** `/partners` → `/product#multi-tenant` → `/docs/api` → **Book Partner Call**. [[Post-MVP: §9.4.2 Partner Channel & Co-Branding]]
+* **Partner/MSP (portfolio path):** `/partners` → `/product#multi-tenant` → `/docs/api` → **Book Partner Call**. Not in v1; see §9.2 Partner/Integrator API (v2.0). [[Post-MVP: §9.4.2 Partner Channel & Co-Branding]]
   **Promises shown:** posture roll-up, webhook catalogue, JSON export sample.
   **CTA:** `/contact?topic=partner`.
   **KPIs:** Partner page→contact ≥ 8%; ≥2 API pages viewed.
@@ -1164,7 +1160,7 @@ The onboarding flow is delivered through the Transcrypt web application.
 
 1. **Direct signup (owner/admin):** Email → OIDC → MFA → Tenant name → lands in **Quick Start**.
 2. **Invite accept (tech helper):** Magic link carries `tenant` + `role=contributor`; skips billing; lands in **Evidence/Intake** with a checklist, e.g., “Upload IdP export, confirm backups.”
-3. **Partner referral (MSP/insurer):** Referral token sets `plan=partner` and `rulePack=CE-2025.3`; Quick Start copy tuned to insurer context.
+3. **Partner referral (MSP/insurer):** Referral token sets `plan=partner` and `rulePack=CE-2025.3`; Quick Start copy tuned to insurer context. Not in v1; see §9.2 Partner/Integrator API (v2.0).
 4. **Auditor view (read-only):** Time-boxed link → posture + latest report; same identity spine; no write paths.
 
 **Quick Start (same three cards for all)**
@@ -1176,7 +1172,7 @@ The onboarding flow is delivered through the Transcrypt web application.
 **Finding & report experience**
 
 * **Finding cards:** Pass/Fail/Partial chip; one-sentence “because…”, **Show trace** (inputs, test, citations), **Fix it** jumps to exact intake/evidence field. Right rail: **Top 5 actions** (effort × impact).
-* **Report:** Branded HTML/PDF with exec summary, citations, and artefact hash in footer; **Download PDF** and **Share read-only link** (time-boxed). From report: **Invite tech helper** and **Connect insurer/MSP**.
+* **Report:** Branded HTML/PDF with exec summary, citations, and artefact hash in footer; **Download PDF** and **Share read-only link** (time-boxed). From report: **Invite tech helper** and **Connect insurer/MSP** (Not in v1; see §9.2 Partner/Integrator API (v2.0)).
 
 ---
 
@@ -1195,14 +1191,9 @@ The onboarding flow is delivered through the Transcrypt web application.
 * **One origin, one session:** `transcrypt.xyz` serves site + app; OIDC cookies are first-party; no CORS friction.
 * **No surprise after click:** The first app screen mirrors the last site promise (e.g., the three Quick Start cards shown on `/product` are exactly what appears post-signup).
 
-This ties the **public credibility flow** to the **authenticated first-value flow** so visitors become confident users quickly, with proof baked in at every step.
+This ties the **public credibility flow** to the **authenticated first-value flow** so visitors become confident users quickly, with proof baked in at every step. All entry paths—direct signup, invite acceptance, (future) partner referral, and auditor read-only links—share the same handshake, pass intent/context through OIDC, and land in the Quick Start experience (partner referral remains Not in v1; see §9.2 Partner/Integrator API (v2.0)).
 
-1. **Direct signup (owner/admin):** Email → OIDC → MFA → Tenant name → lands in **Quick Start**.
-2. **Invite accept (tech helper):** Magic link pre-fills tenant + role; skips billing; lands straight in **Evidence/Intake** with a “Here’s what we need from you” checklist.
-3. **Partner referral (MSP/insurer):** Referral token pre-selects the RulePack and plan; lands in Quick Start with copy tuned to “get your posture for insurer X”.
-4. **Auditor view (read-only):** Time-boxed link to posture + latest report; no onboarding, but uses the same identity/magic link spine.
-
-Regardless of lane, everyone hits the same **three-card Quick Start**:
+Regardless of entry path, everyone hits the same **three-card Quick Start**:
 
 * **1. Tell us about your setup** (≤20 fields, autosave; company size, sector, IdP, endpoints count, backups yes/no, remote access yes/no, key policies yes/no).
 * **2. Add proof (optional now, later is fine)** (upload IdP export, backup config; or skip).
@@ -1214,7 +1205,7 @@ Regardless of lane, everyone hits the same **three-card Quick Start**:
 * **Signup & MFA (≤3 minutes):** OIDC, confirm email, show recovery codes, friendly “You’re done—let’s get your first report.”
 * **Quick Start (single page, three cards):** Progress bar + “Time left ~15 min.” Card 1 uses branching (e.g., selecting “Entra ID” unlocks a small panel: “Upload your Conditional Access export or tick ‘we’ll upload later’”). Card 2 is an **Evidence Tray** with drag-and-drop and instant SHA-256 display; duplicates are flagged, and each file must be bound to a control (“Bind to: MFA policy” dropdown). Card 3 is a big primary button: **Run assessment**; we show a 10–30s progress state with a line like “Evaluating 15 controls from CE-2025.3…”.
 * **Results (finding cards):** Pass/Fail/Partial chips; one-sentence “because…”, a “Show trace” link (inputs, test, citations), and a **Fix it** CTA that jumps to the exact intake/evidence field. A right-side panel lists the **Top 5 actions** with estimated effort and impact.
-* **Report (download/preview):** Branded HTML with exec summary, citations, and artefact hash in the footer; **Download PDF** and **Share read-only link (time-boxed)**. From here: “Invite your tech helper” (precomposed invite) and “Connect insurer/MSP” (partner flow).
+* **Report (download/preview):** Branded HTML with exec summary, citations, and artefact hash in the footer; **Download PDF** and **Share read-only link (time-boxed)**. From here: “Invite your tech helper” (precomposed invite) and “Connect insurer/MSP” (partner flow; Not in v1—see §9.2 Partner/Integrator API (v2.0)).
 * **Return experience (dashboard):** Posture badge, “time since last assessment,” and “What changed” diff if they’ve re-run.
 
 ### Guardrails, nudges, and acceptance
@@ -1401,9 +1392,9 @@ This gives you a boring-reliable PWA: complete the work anywhere, carry on acros
 
 This section covers how Transcrypt Essential collects, organises, and reuses **Cyber Essentials evidence**—the screenshots, logs, inventory exports, and policy documents that prove each control. The platform centres on predictable routines: guided forms capture structured answers, file uploads are immediately tagged to controls, and reminders close the loop when evidence goes stale. Runtime behaviour stays straightforward and reviewable so small teams can trust what the system is doing on their behalf.
 
-Automation focuses on chores that normally consume evenings before certification: gathering proof from devices, checking that required screenshots exist, and packaging everything into the IASME submission order. Background jobs handle PDF creation, evidence bundling, and reminder schedules while keeping the visible experience simple [↩ A3.2.6 – Report Service; A3.2.10 – Observability & Audit]. Offline/PWA support lets users capture photos or notes on-site and sync them later without losing context [↩ UX4.5 – Offline and Multi-Device Support; A3.2.9 – Data Stores & Artefacts]. Dashboards surface action lists, renewal countdowns, and evidence completeness in plain English so teams can act quickly.
+Automation focuses on chores that normally consume evenings before certification: gathering proof from devices, checking that required screenshots exist, and packaging everything into the IASME submission order. Background jobs handle PDF creation, evidence bundling, and reminder schedules while keeping the visible experience simple [↩ A3.2.6 – Report Service; A3.2.9 – Observability & Audit]. Offline/PWA support lets users capture photos or notes on-site and sync them later without losing context [↩ UX4.5 – Offline and Multi-Device Support; A3.2.8 – Data Stores & Artefacts]. Dashboards surface action lists, renewal countdowns, and evidence completeness in plain English so teams can act quickly.
 
-Transcrypt Essential keeps privacy practical: collect only what is needed for Cyber Essentials, isolate each tenant, and ensure users can export or delete their own records when required [↩ A3.2.5 – Evidence Services; A3.2.9 – Data Stores & Artefacts]. AI remains a build-time assistant that drafts policies or suggests missing artefacts, with humans confirming every output before it becomes part of the record [↩ A3.2.4 – LLM Assist Pipeline]. The goal is simple—clear data contracts, lightweight automation, and evidence that is always ready for the next renewal.
+Transcrypt Essential keeps privacy practical: collect only what is needed for Cyber Essentials, isolate each tenant, and ensure users can export or delete their own records when required [↩ A3.2.5 – Evidence Services; A3.2.8 – Data Stores & Artefacts]. AI remains a build-time assistant that drafts policies or suggests missing artefacts, with humans confirming every output before it becomes part of the record [↩ A3.2.4 – LLM Assist Pipeline]. The goal is simple—clear data contracts, lightweight automation, and evidence that is always ready for the next renewal.
 
 ### 5.1 Data Flow Architecture (v1)
 These components operate within the hosted Transcrypt platform integrated with the web app and evidence vault.
@@ -1412,8 +1403,8 @@ No cross-tenant processing. All AI calls are stateless inference with minimal PI
 Scope evaluation will honour the Cyber Essentials v3.2 Section C definitions listed in [§6.2](#62-cyber-essentials-alignment-v32): every device touching organisational data (corporate or BYOD) will be included, cloud/SaaS/remote assets will be auto-detected under shared responsibility, and explicit “sub-set” exclusions will be captured with justification inside `scope.manifest.json`.
 Although Transcrypt employs modern orchestration and automation patterns, these are invisible to the SME user. The only visible surface is the guided flow; all scaling, queueing, and AI orchestration run silently in the background.
 
-> **Tenant Isolation:** All evidence and report objects are encrypted client-side before upload.  
-> Processing occurs on ephemeral decrypted copies inside isolated containers that are destroyed after execution.  
+> **Tenant Isolation:** All evidence and report objects are encrypted client-side by the app using Transcrypt-managed per-tenant KMS keys before upload, and wrapped again with server-side encryption at rest.
+> Processing occurs on ephemeral decrypted copies inside isolated containers that are destroyed after execution.
 > Only encrypted artefacts persist; no plaintext is stored centrally.
 
 > **Framework Agnostic Design:**
@@ -1426,28 +1417,28 @@ Human oversight is not part of the MVP loop; instead the platform creates tracea
 AI assists the user rather than overwhelms them—its purpose is to *simplify judgement calls*, not introduce new interfaces or tuning [↩ A3.2.4 – LLM Assist Pipeline].
 - **Extraction:** classify uploads (policy vs invoice vs screenshot), extract dates/covers.
 - **Drafting:** first-pass policies/templates; user reviews before saving.
-- **Gap prompts:** suggest missing evidence based on the Cyber Essentials v3.2 (CE) checklist state [↩ A3.2.4 – LLM Assist Pipeline].
+- **Gap prompts:** deterministic heuristics suggest missing evidence based on the Cyber Essentials v3.2 (CE) checklist state (no LLM at runtime) [↩ A3.2.4 – LLM Assist Pipeline].
 _No training loops or fine-tuning in v1; models are managed centrally; outputs are user-confirmed._ [↩ A3.2.4 – LLM Assist Pipeline]
 
 > **Post-MVP:** External assessor API and auditor portal within the professional Assisted Tier. [[Post-MVP: §9.4.1 Assisted Tier & Collaboration]]
 
 ### 5.3 Reporting, Dashboards, and Insights (v1)
 - Cyber Essentials v3.2 readiness score, control-family breakdown, renewal countdown, and evidence completeness will be surfaced with pass/fail logic tied to the 14-day remediation, MFA, password, device lockout, and software-support thresholds in [§6.2](#62-cyber-essentials-alignment-v32) [↩ UX4.1 – User Journeys and Onboarding].
-- Exports: PDF summary, evidence index, and one-click IASME-ordered Self-Assessment bundles (CSV/JSON) will preserve each `ce_ref` emitted by the [Rule Evaluation Service](#323-rule-evaluation-service-deterministic) [↩ A3.2.6 – Report Service].
+- Exports: PDF summary, evidence index, and one-click IASME-ordered Self-Assessment bundles (CSV/JSON) will preserve each `ce_ref` emitted by the [Rule Evaluation Service](#323-rule-evaluation-service-deterministic) [↩ A3.2.3 – Rule Evaluation Service; A3.2.6 – Report Service].
 
 ### 5.4 Auditability and Data Provenance (v1)
 
-- **Version history for everything.** Evidence items, questionnaires, and generated reports maintain visible revision histories with author, timestamp, and reason-for-change notes [↩ A3.2.10 – Observability & Audit].
+- **Version history for everything.** Evidence items, questionnaires, and generated reports maintain visible revision histories with author, timestamp, and reason-for-change notes [↩ A3.2.9 – Observability & Audit].
 - **Searchable activity log.** Key actions (uploads, edits, submissions, exports) are recorded in chronological order so teams can replay who did what and when without specialist tooling [↩ A3.2.5 – Evidence Services].
 - **Downloadable change reports.** Users can export change logs alongside their evidence bundle to satisfy IASME follow-up questions without digging through the UI. [[Post-MVP: §9.4 Risk Register and Mitigation]]
 
 ### 5.5 Closed-Source Policy and Evidence Integrity
 
-Users retain contractual ownership of their data. Transcrypt Essential ensures data integrity through versioning, hashing, and audit trails rather than tenant-managed cryptography.
+Users retain contractual ownership of their data. Transcrypt Essential ensures data integrity through versioning, hashing, and audit trails; encryption uses Transcrypt-managed per-tenant KMS keys (not customer-supplied keys).
 
 **Implementation (v1):**
 - Core logic and AI models are closed-source binaries signed by Transcrypt Ltd. [↩ A3.2.3 – Rule Evaluation Service; A3.2.4 – LLM Assist Pipeline]
-- System artefacts—reports, evidence archives, audit logs—are hashed and timestamped so tampering attempts are detectable. [↩ A3.2.10 – Observability & Audit]
+- System artefacts—reports, evidence archives, audit logs—are hashed and timestamped so tampering attempts are detectable. [↩ A3.2.9 – Observability & Audit]
 - Integrity manifests and checksum algorithms are published so customers can validate exported packages independently. [↩ A3.2.6 – Report Service]
 - Managed encryption controls ensure data at rest follows the baseline described in §7.3. [↩ §7.3 – Data Security Basics]
 - Release documentation captures evidence-handling procedures and any changes to audit workflows.
@@ -1468,7 +1459,7 @@ Implementation topology choices are recorded as ADRs (see ADR-0007 for database 
 | SC-01 | Zero-trust security baseline | §2.5 Legislative Environment and Compliance Ecosystem | §7 Security and Infrastructure Requirements | §9.2 Phase Milestones and Timelines (Phase 1 – Foundation) | **v1.0 Transcrypt Essential (planned)** |
 | CG-01 | Internal governance & policy library | §2.5 Legislative Environment and Compliance Ecosystem | §6.1 Alignment with NIS, Cyber Essentials, ISO 27001, and IEC 62443; §6.4 Policy Library and Evidence Management | §9.2 Phase Milestones and Timelines (Phase 3 – Expansion) | **Phase 3 (planned)** |
 | RM-01 | Subscription tiers & monetisation metrics | §1.4 Success Criteria and Long-Term Impact | §8 Monetisation and Revenue Model | §9.2 Phase Milestones and Timelines (Phase 3 – Expansion) | **Phase 3 (planned)** |
-| RD-01 | Assisted Tier auditor workflow | §1 – Human Role Definition | §3.2.8 Admin Console (Internal); §5.2 Machine Learning and AI Components (Post-MVP notes) | §9.2 Phase Milestones and Timelines (v1.5 Assisted Tier β) | **Post-MVP (planned)** |
+| RD-01 | Assisted Tier auditor workflow | §1 – Human Role Definition | §3.2.7 Admin Console (Internal); §5.2 Machine Learning and AI Components (Post-MVP notes) | §9.2 Phase Milestones and Timelines (v1.5 Assisted Tier β) | **Post-MVP (planned)** |
 | COL-01 | Assisted Tier collaboration flows (auditor support) | §1 – Non-goals (MVP framing); §2.5 Legislative Environment and Compliance Ecosystem | §5.2 Machine Learning and AI Components (Post-MVP notes) | §9.4.1 Assisted Tier & Collaboration | **Post-MVP (planned)** |
 | CHN-01 | Partner channel: co-brand, license, revenue share | §1 – Non-goals (MVP framing); §8.3 Partner and Reseller Ecosystem | §3.4 Extensibility and Integration Framework; §8.3 Partner and Reseller Ecosystem | §9.4.2 Partner Channel & Co-Branding | **Future (planned)** |
 | RD-02 | Geo-sovereign nodes & regional deployment | §2.4 Future Extensibility to Other Nations; §10.1 Interoperability with Other National Frameworks | §7.2 Network Segmentation and Zero Trust Architecture; §7.5 Secure Software Supply Chain | §9.2 Phase Milestones and Timelines (v2.0 Geo-sovereign Nodes) | **Future (planned)** |
@@ -1664,6 +1655,10 @@ The split keeps the initial six months laser-focused on making Cyber Essentials 
 - Proof-of-Process Ledger to notarise audit hashes against an external distributed log. [[Post-MVP: Platform Phase]]
 - Independent auditor verification API for attestations without code exposure. [[Post-MVP: Platform Phase]]
 - Reproducibility review programme for components under NDA. [[Post-MVP: Platform Phase]]
+
+#### Partner/Integrator API (v2.0)
+
+Delegated, read-only posture for MSPs/insurers; outbound webhooks. Not in v1.
 
 ### 9.3 Resource and Budget Planning
 
