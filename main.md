@@ -1035,7 +1035,123 @@ The following canonical contracts define the minimum JSON structure for core Tra
 
 **3.1.5.3 Network & Isolation**
 
-* Segmented VPC/VNet: public (edge), app (services), data (DB/KMS). Only proxy reaches app; only app reaches data.
+* Segmented VPC/VNet: public (edge), app (services), data (DB/KMS). Only proxy reaches app; only app reaches data (explained below).
+
+**Goal:** hard separation between internet edge, application services, and data. Traffic flows in one direction only: Edge → App → Data. Nothing reaches across zones directly.
+
+**Zones and who can talk to what**
+
+* **Public zone (Edge):** CDN/WAF or Load Balancer plus the identity-aware proxy (the “gateway”).
+
+  * Accepts the internet.
+  * Can reach App zone on a small allowlist of ports.
+  * Cannot reach the Data zone at all.
+
+* **App zone (Services):** stateless API, evaluation, reporting, workers.
+
+  * Only accepts traffic from the Edge proxy.
+  * Can reach the Data zone for DB, object store, KMS, and Vault.
+  * Cannot initiate connections back to the Edge, except health checks.
+
+* **Data zone (DB/KMS/Secrets):** Postgres, object storage endpoint, Vault or KMS.
+
+  * Only accepts traffic from App zone service identities.
+  * Has no egress to the internet except package security updates if absolutely required, through a locked NAT.
+
+**DO MVP concrete layout**
+
+* Create one **VPC**. Carve three subnets by tag:
+
+  * `edge-*` for the load balancer and proxy.
+  * `app-*` for API, evaluation, report workers.
+  * `data-*` for Postgres and Vault. (Spaces is external but treat it as Data zone in policy.)
+* **DO Firewalls** by tag:
+
+  * **edge-fw**
+
+    * Inbound: 80/443 from 0.0.0.0/0 to the load balancer or proxy.
+    * Outbound: 443 to `app-*` only. No direct egress to `data-*`.
+  * **app-fw**
+
+    * Inbound: 443 from `edge-*` only.
+    * Outbound: 5432 to Postgres in `data-*`; 8200 to Vault; 443 to object storage endpoint; 443 to OIDC and Stripe; optional 443 to the LLM endpoint if used. Everything else denied.
+  * **data-fw**
+
+    * Inbound: 5432 from `app-*`; 8200 from `app-*`.
+    * Outbound: deny all, or allow 53 and a patch window via NAT if you must. No internet-routable IPs.
+
+**“Only proxy reaches app; only app reaches data” explained**
+
+* The **proxy** terminates TLS, checks identity, enforces policy, and forwards to the app. Nothing on the public internet can hit app services directly because the app firewall drops it and the services are on private addresses only.
+* The **app** can talk to **data** for exactly the services it needs: DB, secrets, storage. The Edge proxy has no path to Data, so a compromised edge cannot query the database.
+
+**Ports and protocols**
+
+* Edge → App: HTTPS 443 with mTLS between proxy and app services.
+* App → DB: 5432 Postgres, mTLS or SCRAM with per-service dynamic users.
+* App → Vault: 8200 HTTPS mTLS.
+* App → Spaces/S3: 443 HTTPS, client-side envelope encryption.
+* App → OIDC and Stripe: 443 HTTPS, allowlist by domain or IP ranges.
+* SSH: disabled on internet. Maintenance via Tailscale or a locked bastion in Edge, time-boxed and audited.
+
+**Identity at the network**
+
+* Use an identity-aware proxy at Edge (Envoy, oauth2-proxy in front of FastAPI).
+* Use **mTLS** for all east-west traffic. Each app service gets a short-lived client cert. Data zone rejects any request without a valid client cert and the right SAN.
+
+**Egress policy**
+
+* App zone egress is an allowlist: OIDC, billing webhooks, S3/Spaces, optional LLM endpoint. Block everything else.
+* Data zone has no general egress. If you must patch, open a scheduled NAT window and log it.
+
+**Observability and audit**
+
+* Tag every flow with `X-Request-Id` and `X-Tenant-Id` at the proxy.
+* Export OpenTelemetry from App zone only. Data zone does not push logs to external vendors. Pull via an internal collector.
+
+**Two deployment shapes**
+
+* **Single-host logical segmentation (ultra-MVP):** run Edge proxy, App services, and Postgres on one droplet. Enforce separation with Linux firewall chains:
+
+  * Edge binds to 0.0.0.0:443.
+  * App binds to 127.0.0.1:8443.
+  * DB binds to 127.0.0.1:5432.
+  * iptables or ufw rules deny any cross-binding. This keeps the external attack surface to the proxy only.
+* **Three-tier VPC (preferred once stable):** one or more droplets per zone as described above, behind the DO Load Balancer.
+
+**Example ufw rules for single-host**
+
+```
+# Default deny
+ufw default deny incoming
+ufw default allow outgoing
+
+# Edge: expose HTTPS
+ufw allow 443/tcp
+
+# App: listen only on loopback
+# no ufw rule needed if bound to 127.0.0.1
+
+# DB: listen only on loopback
+# no ufw rule needed if bound to 127.0.0.1
+
+# Drop SSH from internet, allow Tailscale only
+ufw deny in 22/tcp
+```
+
+**Health and admin**
+
+* Health endpoints are private. The proxy performs the health checks over the VPC, not the internet.
+* No direct DB admin from laptops. Use psql from an App node through mTLS, or a one-time bastion with short-lived access and an audit ticket.
+
+**Failure containment**
+
+* If Edge is breached: attacker still cannot reach DB because Data does not accept Edge source addresses or certs.
+* If an App service is breached: least-privilege DB role limits the blast radius. Vault policies prevent secrets exfil for other tenants.
+
+That is exactly what “segmented VPC/VNet: public, app, data; only proxy reaches app; only app reaches data” means, in a way you can wire up on DO today.
+
+---
 
 **3.1.5.4 Privacy**
 
