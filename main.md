@@ -140,7 +140,7 @@ review_cycle: "Quarterly or upon major release"
       - [Partner/Integrator API (v2.0)](#partnerintegrator-api-v20)
     - [9.3 Resource and Budget Planning](#93-resource-and-budget-planning)
     - [9.4 Risk Register and Mitigation](#94-risk-register-and-mitigation)
-      - [9.4.1 Assisted Tier \& Collaboration (Post-MVP)](#941-assisted-tier--collaboration-post-mvp)
+      - [9.4.1 Assisted Tier \& Collaboration (Post-MVP) {#assisted-tier}](#941-assisted-tier--collaboration-post-mvp-assisted-tier)
       - [9.4.2 Partner Channel \& Co-Branding (Post-MVP)](#942-partner-channel--co-branding-post-mvp)
     - [9.5 Quality Assurance and Acceptance Criteria](#95-quality-assurance-and-acceptance-criteria)
   - [10. Future Outlook and Strategic Extensions](#10-future-outlook-and-strategic-extensions)
@@ -625,7 +625,7 @@ This model delivers sovereignty through **accountable transparency**, not obscur
 
 Transcrypt is designed around an **automation-first** principle: routine, repeatable compliance work is performed by software, not by people. Data collection, control evaluation, and report generation are deterministic processes executed without human intervention, ensuring consistency, speed, and evidence integrity.
 
-Human expertise enters only where judgement or assurance adds value—such as certification review or independent validation. Those touchpoints will be introduced later through a controlled **Assisted Tier** that provides secure, auditable collaboration spaces between customers and accredited reviewers. [[Post-MVP: §9.4.1 Assisted Tier & Collaboration]]
+Human expertise enters only where judgement or assurance adds value—such as certification review or independent validation. Those touchpoints will be introduced later through a controlled **Assisted Tier** that provides secure, auditable collaboration spaces between customers and accredited reviewers. [Post-MVP: 9.4.1 Assisted Tier & Collaboration](#assisted-tier)
 
 Version 1 operates entirely self-serve: all evaluation, reporting, and evidence handling are automated end-to-end. The operating model treats human involvement as an exception pathway, not the default workflow.
 
@@ -1888,7 +1888,7 @@ Technical risks centre on platform security, AI reliability, and infrastructure 
 
 Financial and strategic risks revolve around cash flow volatility, customer acquisition pace, and competitive pressure. These are mitigated through a deliberately low burn rate, revenue diversification via partnerships, and maintaining full intellectual property ownership. Pricing agility ensures the ability to adjust quickly to market conditions without alienating early adopters. Reputational risk—central to a trust-based product—is addressed by embedding transparency into every process: changelogs, incident disclosures, and code provenance are publicly verifiable. Finally, a small number of regulatory risks—such as interpretation errors in compliance frameworks—are managed through continuous dialogue with advisors and the use of verifiable legislative sources. In essence, Transcrypt’s risk register doubles as a design compass: a living record of what could go wrong and the systematic measures ensuring it rarely does, and never without leaving a clear audit trail.
 
-#### 9.4.1 Assisted Tier & Collaboration (Post-MVP)
+#### 9.4.1 Assisted Tier & Collaboration (Post-MVP) {#assisted-tier}
 
 - **Milestone:** Targeted for v1.5 “Assisted Tier β” after Transcrypt Essential self-serve reliability is proven.
 - **Collaboration scope:** Invite-only auditor and consultant roles operating strictly within tenant boundaries; no cross-tenant visibility. [[Post-MVP: §5.2 Machine Learning and AI Components (v1)]]
