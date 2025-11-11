@@ -1442,7 +1442,7 @@ These conventions define baseline implementation expectations for the MVP but do
 **App UI:** **TailwindCSS**.  
 **Brand tokens:** Single source of truth via **CSS variables** (colour, radius, shadow, spacing). Variables are consumed by Tailwind (through arbitrary `[...]` utilities and mapped theme entries).
 **Marketing Site:** Tailwind CSS reads the same CSS variables. **No Bootstrap. No icon webfonts.**
-Tailwind CSS is the single styling framework across app and Marketing Site. No SCSS or Sass pipeline remains.
+Tailwind CSS is the single styling framework across app and Marketing Site.
 
 Rules:
 1) Utilities-first in components; use `@apply` only for tiny atoms (e.g., `.btn`, `.card`), not page layouts.  
