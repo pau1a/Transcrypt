@@ -398,11 +398,11 @@ The platform has two surface experiences that share a design system and analytic
 
 ### Core Layer
 
-Within the core, an evaluation engine processes all inputs received through the gateway. The core is composed of discrete, bounded services:
+Within the core, an **evaluation pipeline** processes tenant-scoped inputs from the gateway. The core is composed of discrete, bounded services:
 
-* **Rule and LLM evaluation** — interprets structured obligations, applies deterministic logic and model-based reasoning, and produces control guidance.
-* **Evidence binding** — associates each control with verified data sources and binary artefacts within the tenant’s isolated namespace.
-* **Report and export** — renders outputs in both human-readable and machine-readable formats suitable for auditors or automated ingestion.
+* **Evaluation (Rules + LLM)** — runs deterministic rule checks and a runtime LLM assessment against the current Cyber Essentials RulePack. Deterministic checks gate objective pass/fail items; the LLM provides reasoned judgements, gap explanations, and next-step guidance. All evaluations are version-pinned (RulePack ID + model/version + prompt template/hash) and emit audited findings tied to the OrgProfile and Evidence set.
+* **Evidence binding** — hashes and records artefacts (files, exports, assertions) and maps them to controls inside the tenant’s isolated namespace; issues short-lived, signed retrieval URLs; preserves integrity and provenance.
+* **Report and export** — assembles human-readable reports and machine-readable bundles (JSON/CSV/PDF) with control citations, evidence links, and evaluator notes suitable for assessors or automated ingestion.
 
 Each service has its own identity, credentials, and token-scoped access policy. Inter-service communication is mutually authenticated, signed, and logged so that a fault or compromise cannot propagate beyond its trust boundary.
 
