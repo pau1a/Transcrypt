@@ -1750,13 +1750,20 @@ Early-access users transition from curiosity to action.  They can create a tenan
 * **Tech helper (internal or MSP):** Wants precise asks and fast uploads. Care words: specificity, auditability, “show me where to fix.”
 * **Auditor/insurer (read-only):** Wants to verify provenance quickly. Care words: citations, hashes, versioning.
 
+---
+
 ### Minimal journeys we must nail (MVP)
+
+These journeys describe the **first usable release of the App**, following the early-access stage established through the Marketing Site / Blog.
+They define what “minimum viable” actually means for a user who has already learned about Transcrypt and joined the waitlist.
 
 * **Onboard → Quick Start (3 cards only):** “Tell us about your setup,” “Add evidence (or skip),” “Run assessment.” No more than ~20 core fields to start.
 * **Intake that feels like a conversation:** Sections with short explanations and examples; autosave; can leave and return.
 * **Findings that teach, not scold:** Pass/Fail/Partial with the *because* in one sentence and an expandable trace.
 * **Report that stands on its own:** Executive summary, top actions, citations, artefact hash in the footer, printable and shareable.
 * **Posture page that changes behaviour:** A small set of “next best actions” that link back to the exact input/evidence needed.
+
+---
 
 ### Copy & interaction tone
 
