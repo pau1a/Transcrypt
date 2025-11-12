@@ -96,9 +96,9 @@ review_cycle: "Quarterly or upon major release"
       - [2. Essentials journeys (post-launch App)](#2-essentials-journeys-post-launch-app)
     - [Summary](#summary)
     - [What each top page must guarantee (content promises)](#what-each-top-page-must-guarantee-content-promises)
-    - [How the site and app handshake (frictionless routing)](#how-the-site-and-app-handshake-frictionless-routing)
+    - [How the Marketing Site and Essentials handshake (frictionless routing)](#how-the-marketing-site-and-essentials-handshake-frictionless-routing)
     - [Priorities for the site (stack-ranked)](#priorities-for-the-site-stack-ranked)
-    - [What to build first (site)](#what-to-build-first-site)
+    - [What to build first (Marketing Site / Blog)](#what-to-build-first-marketing-site--blog)
     - [4.1 User Journeys and Onboarding](#41-user-journeys-and-onboarding)
       - [4.1.1 Marketing Site Journeys (credibility → correct door → app intent)](#411-marketing-site-journeys-credibility--correct-door--app-intent)
       - [4.1.2 App Onboarding Spine (four entry lanes, one shared flow)](#412-app-onboarding-spine-four-entry-lanes-one-shared-flow)
@@ -1914,36 +1914,83 @@ Each journey below describes a single intent, its supporting proof points, prima
 
 ### What each top page must guarantee (content promises)
 
-* **/ (Home):** In 10 seconds: who it’s for, what it does, and a single promise (“From zero to defensible report in one sitting.”) One primary CTA + one secondary (“See how it works”).
-* **/product:** 3 anchored sections—Intake, Findings, Reports—each with a screenshot, a 2-line explanation, and one proof (trace, citation, or hash). End with a tiny FAQ about evidence, privacy, and runtime AI.
-* **/pricing:** Three plans (Essential/Pro/Partner). Partner is clearly marked as a roadmap preview (Not in v1; see §9.2 Partner/Integrator API). “What’s included” maps only to currently shipped features. No hidden fees. Annual toggle.
-* **/security:** Identity, encryption, zero trust, incident process, responsible disclosure, and links to status/changelog. Publish PGP and `/.well-known/security.txt`.
-* **/privacy, /terms, /cookies, /dpa, /subprocessors:** Versioned MDX; last-updated stamp; diff links.
-* **/changelog & /status:** Plain language, dates, and actions taken.
-* **/contact:** Short form with consent, SLA (“we reply within one business day”), and an email address for the old-school.
-* **/about:** Why we exist and what we refuse to do (no runtime AI theatre, no lock-in), plus founder credibility signals.
+* **/ (Home):** In ten seconds: who it’s for, what it does, and a single promise — *“From zero to defensible report in one sitting.”*
+  Primary CTA: **Join the Early-Access List.**
+  Secondary CTA: **See how it works.**
+  Hero followed by three proof panels: Intake, Findings, Report.
 
-### How the site and app handshake (frictionless routing)
+* **/why-transcrypt:** Explains *why* the problem exists and *why* Transcrypt matters. Clear before-and-after story, simple diagram of “Old way → Transcrypt way.” Ends with Early-Access CTA.
 
-* **CTAs map to app intents**: “Start Free Trial” → `/app/signup` with `intent=trial`; “See a Sample Report” → `/app/demo` (preloaded read-only tenant); “Invite your tech helper” → prefilled `/app/settings/users/invite`.
-* **Deep links carry context:** If a visitor chooses “Cyber Essentials” on /product, pass `rulePack=CE-2025.3` into signup so Quick Start is preselected.
-* **One origin, one session:** Keeping site and app on `transcrypt.xyz` means OIDC cookies work across both; no CORS faff.
+* **/product:** Three anchored sections — Intake, Findings, Reports — each with a screenshot, a two-line explanation, and one proof (trace, citation, or hash). Ends with a short FAQ about evidence handling, privacy, and **how AI contributes at runtime (auditable, version-pinned, and logged).**
+
+* **/pricing:** Three plans (Essential / Pro / Partner). Partner marked **“Roadmap preview (v2.0 – see §9.2 Partner/Integrator API)”**. The table lists only currently shipped or public features. Annual toggle, no hidden fees.
+
+* **/security:** Identity, encryption, zero-trust principles, incident process, and responsible disclosure. Links to `/status` and `/changelog`. Publishes public PGP key and `/.well-known/security.txt`.
+
+* **/privacy**, **/terms**, **/cookies**, **/dpa**, **/subprocessors:** Versioned MDX with last-updated stamp and diff links.
+
+* **/frameworks:** Summary of Cyber Essentials, NIS2, ISO 27001, and IEC 62443; shows how each maps to Transcrypt’s rule packs.
+
+* **/changelog** & **/status:** Plain-language updates with dates, impact, and remediation; `/status` shows live and historical uptime.
+
+* **/roadmap:** Public progress tracker showing what’s shipped and what’s next.
+
+* **/newsletter:** Concise value statement (“practical SME-cyber updates, no fluff”), sample issue preview, double opt-in form, and privacy reassurance. Lists back issues for SEO.
+
+* **/waitlist:** Dedicated signup page for early-access users, with teaser screenshots and security proof points. Confirmation page after submission.
+
+* **/blog** and **/articles:** Long-form explainers on SME cybersecurity, legislation, and compliance. Each article ends with cross-links to related posts and the newsletter CTA.
+
+* **/resources:** Downloadable checklists and templates (risk register, evidence pack, sample policies) in exchange for verified email consent.
+
+* **/about:** Why Transcrypt exists and what it refuses to do (no lock-in, no dark patterns, no unlogged AI). Includes founder credibility and governance statements.
+
+* **/contact:** Short form with explicit consent checkbox, SLA (“We reply within one business day”), and a visible email address for direct contact.
+
+* **/press:** Logos, boilerplate text, and media contact details.
+
+* **/careers:** Culture statement and future-hiring notice.
+
+* **/accessibility:** WCAG 2.2 AA compliance statement and accessibility contact.
+
+---
+
+### How the Marketing Site and Essentials handshake (frictionless routing)
+
+* **CTAs map to Essentials intents:**
+  – “Start Free Trial” → `/app/signup?intent=trial`
+  – “See a Sample Report” → `/app/demo` (read-only tenant)
+  – “Invite your tech helper” → prefilled `/app/settings/users/invite`
+  – “Join the Early-Access List” → `/waitlist`
+* **Deep links carry context:** choosing “Cyber Essentials” on `/product` passes `rulePack=CE-2025.3` into signup so Quick Start is preselected.
+* **One origin, one session:** hosting both Marketing Site / Blog and Essentials under `transcrypt.xyz` allows OIDC cookies to persist across flows—no CORS friction.
+
+---
 
 ### Priorities for the site (stack-ranked)
 
-1. **Credibility in 30 seconds:** visible security/privacy links; screenshot of the report; one clear promise.
-2. **Single CTA per page:** don’t split attention—either trial, contact, or sample.
-3. **No surprise after signup:** the first screen in the app should match the last thing the site promised.
-4. **Performance & accessibility:** fast images, self-hosted fonts, WCAG 2.2 AA pattern library reused across site and app.
+1. **Credibility in 30 seconds.** Security and privacy links visible; report screenshot and single, testable promise above the fold.
+2. **One CTA per page.** Each page drives one action – signup, contact, trial, or sample – never both.
+3. **Continuity after signup.** The first Essentials screen mirrors the promise that triggered signup.
+4. **Performance and accessibility.** Fast images, self-hosted fonts, WCAG 2.2 AA compliance, shared Tailwind pattern library.
+5. **Transparency first.** Each claim links to a verifiable proof block (hashes, timestamps, citations).
+6. **Privacy and consent clarity.** Analytics and cookies load only after consent; newsletter and waitlist forms show explicit data-use terms.
 
-### What to build first (site)
+---
 
-* **Home hero** with the core promise + CTA, and a three-panel strip (Intake, Findings, Report).
-* **Security** page skeleton (responsible disclosure + headline controls).
-* **Pricing** (even if simple), because it’s a credibility page.
-* **Product** with one short looped demo (GIF/WebM) of Quick Start → Findings → PDF.
-  Then wire the CTAs to the app’s **Quick Start** so the promise and the first task are perfectly aligned.
+### What to build first (Marketing Site / Blog)
 
+1. **Home hero** with the core promise + CTA and a three-panel strip (Intake, Findings, Report).
+2. **Security** page skeleton (responsible disclosure + headline controls).
+3. **Pricing** page – early credibility anchor.
+4. **Product** page with short looped demo (GIF / WebM) showing Quick Start → Findings → PDF.
+5. **Waitlist** and **Newsletter** forms with confirmed opt-in and visible confirmation page.
+6. **Changelog** and **Status** stubs to demonstrate transparency from day one.
+7. **About** and **Frameworks** pages for trust and SEO depth.
+
+Each of these pages must load fast, cache predictably via ISR + CDN, and reflect the calm-speed, no-theatre aesthetic that will continue into the Essentials product.
+
+---
 
 ### 4.1 User Journeys and Onboarding
 
