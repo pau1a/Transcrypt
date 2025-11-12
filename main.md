@@ -91,7 +91,10 @@ review_cycle: "Quarterly or upon major release"
     - [Instrumentation that keeps us honest](#instrumentation-that-keeps-us-honest)
     - [What this means for design \& build right now](#what-this-means-for-design--build-right-now)
     - [Why the site matters to UX (not just marketing)](#why-the-site-matters-to-ux-not-just-marketing)
-    - [Site journeys (the “public” half of 4.1)](#site-journeys-the-public-half-of-41)
+    - [Site journeys (Marketing Site / Blog → Essentials)](#site-journeys-marketing-site--blog--essentials)
+      - [1. Marketing Site / Blog journeys](#1-marketing-site--blog-journeys)
+      - [2. Essentials journeys (post-launch App)](#2-essentials-journeys-post-launch-app)
+    - [Summary](#summary)
     - [What each top page must guarantee (content promises)](#what-each-top-page-must-guarantee-content-promises)
     - [How the site and app handshake (frictionless routing)](#how-the-site-and-app-handshake-frictionless-routing)
     - [Priorities for the site (stack-ranked)](#priorities-for-the-site-stack-ranked)
@@ -1804,39 +1807,110 @@ If we hold to these, Section 4 stops being a laundry list and becomes the spine 
 * **Correct routing.** Different visitors need different doors: Owner → trial, Tech helper → invite flow, Auditor/Insurer → verifier path, Partner → portfolio & API docs (v2.0 – see §9.2 Partner/Integrator API). The site’s IA should route them deliberately.
 * **Expectation setting.** The site promises exactly what the app delivers: “one sitting to first report; deterministic results; evidence-bound findings.” That promise becomes the acceptance bar for onboarding.
 
-WEREHERE
+### Site journeys (Marketing Site / Blog → Essentials)
 
-### Site journeys (the “public” half of 4.1)
+Transcrypt’s user experience unfolds in two halves:
 
-Four top-level journeys, each with a minimum set of proof blocks and a single, obvious CTA.
+1. **Marketing Site / Blog (pre-launch and early-access period)** – the public, content-driven web presence that builds trust, explains the mission, and gathers interest.
+2. **Essentials (post-launch App)** – the authenticated environment where users create tenants, upload evidence, and generate reports.
 
-1. **Cold SME owner (conversion path)**
+Each journey below describes a single intent, its supporting proof points, primary call-to-action (CTA), and success measure.
 
-   * **Landing → Product → Pricing → Security → Trial.**
-   * **Proof blocks:** 60-minute first report; screenshots of Quick Start, Findings, and PDF; “No runtime AI” badge; simple pricing; short testimonial or insurer quote; security highlights (MFA, encryption, auditability).
-   * **CTA:** “Start Free Trial” (OIDC sign-up).
-   * **KPIs:** CTR from hero to Product ≥ 35%; visit→signup ≥ 6–10%; <30s to reach a proof block.
+---
 
-2. **Researcher/validator (credibility path)**
+#### 1. Marketing Site / Blog journeys
 
-   * **Landing → Security → Privacy/Legal → Changelog/Status → Trial or Contact.**
-   * **Proof blocks:** CE/ISO/NIS2 mapping table; /security with responsible disclosure and `security.txt`; /privacy with DPA and subprocessors; changelog & incident history; signed build/provenance note.
-   * **CTA:** “View a Sample Report” (gated by email) or “Contact Security.”
-   * **KPIs:** Time on /security > 90s; 60% reach at least one legal page link.
+**1.1 Curiosity → Credibility (owner or manager)**
+*Purpose:* turn a first-time visitor into someone who trusts the brand enough to register interest.
+*Path:* `Landing → About → Product Overview → Blog/Articles → Waitlist`
+*Proof blocks:* plain-language explainer of Cyber Essentials / NIS2; “how Transcrypt helps” diagram; short testimonial; *Why trust us?* block linking to `/security` and `/privacy`.
+*CTA:* **Join the Early-Access List**
+*KPIs:* ≥ 40 % scroll depth on Landing; visit→signup ≥ 8 %; dwell time > 60 s on About.
 
-3. **Partner/MSP (portfolio path)** *(Not in v1; see §9.2 Partner/Integrator API (v2.0))*
+---
 
-   * **Landing → Partners → Product (Multi-tenant) → API/Webhooks → Contact.**
-   * **Proof blocks:** Multi-tenant dashboard screenshot; webhook catalogue; sample JSON export; reseller terms summary.
-   * **CTA:** “Book a 20-min Partner Call.”
-   * **KPIs:** Partner page → contact ≥ 8%; doc engagement (≥2 API pages viewed).
+**1.2 Education & Thought Leadership (researcher, journalist, policy watcher)**
+*Purpose:* establish Transcrypt as a credible voice in SME cybersecurity compliance.
+*Path:* `Landing → Blog → Article → Related → Newsletter signup`
+*Proof blocks:* consistent author bios; citations to official frameworks; readable examples and diagrams; PDF download option.
+*CTA:* **Subscribe for Updates** or **Read Next Article**
+*KPIs:* avg session > 2 pages; 30 % repeat visitors; newsletter CTR > 10 %.
 
-4. **Auditor/Insurer (assurance path)**
+---
 
-   * **Landing → For Insurers → Sample Attestations → Security/Privacy → Contact.**
-   * **Proof blocks:** How findings tie to citations and hashes; export bundle manifest; read-only share link model.
-   * **CTA:** “Request a Sample Pack.”
-   * **KPIs:** Sample pack requests; follow-on calls booked.
+**1.3 Trust Validation (security-minded visitor or insurer)**
+*Purpose:* show operational transparency before any product access.
+*Path:* `Landing → Security → Privacy/Legal → Changelog/Status → Contact`
+*Proof blocks:* CE/ISO/NIS2 mapping table; `/security.txt`; signed-build note; DPA & subprocessors list; uptime graph.
+*CTA:* **Request a Security Brief**
+*KPIs:* 70 % reach at least one legal link; time on /security > 90 s; form submissions ≥ 5 %.
+
+---
+
+**1.4 Community & Feedback Loop (industry professionals)**
+*Purpose:* collect insights and case studies that shape the early product.
+*Path:* `Landing → Blog → Comment/Feedback → Contact`
+*Proof blocks:* “Contribute a case study” prompt; small feedback form at article end; visible response promise (“We reply within 48 h”).
+*CTA:* **Share Your Experience**
+*KPIs:* ≥ 10 % of blog readers leave feedback; < 48 h avg response time.
+
+---
+
+**1.5 Mailing List / Newsletter (relationship path)**
+*Purpose:* convert interested but not-yet-ready visitors into a continuing audience.
+*Path:* `Landing → Blog → Newsletter → Confirm`
+*Proof blocks:* concise value statement (“practical updates on SME cybersecurity and regulation, no fluff”); privacy reassurance; sample issue screenshot; link to Privacy Policy.
+*CTA:* **Join the Mailing List** (double opt-in)
+*KPIs:* form completion ≥ 25 %; confirmation-click ≥ 70 %; unsubscribe < 2 %.
+*Operational notes:* subscription handled server-side; confirmation email includes branding, legal footer, and unsubscribe link; minimal metadata (email + timestamp + consent); newsletters archived on `/newsletter`; `Cache-Control: public, s-maxage=600, stale-while-revalidate=86400`.
+
+---
+
+#### 2. Essentials journeys (post-launch App)
+
+**2.1 Quick Start → First Report (SME owner or IT helper)**
+*Purpose:* let a new user reach a credible first report within one sitting.
+*Path:* `Signup → Intake → Evidence → Run Assessment → Report`
+*Proof blocks:* 60-minute “first report” claim; progress bar; preview of Findings.
+*CTA:* **Generate My Report**
+*KPIs:* median time-to-report ≤ 60 min; task-completion ≥ 80 %; first-session dropout < 15 %.
+
+---
+
+**2.2 Explain and Improve (user exploring findings)**
+*Purpose:* help users understand and act on results instead of feeling judged.
+*Path:* `Report → Findings → Suggested Fixes → Evidence Upload`
+*Proof blocks:* expandable “because” traces; direct link to relevant control text; one-click rescan.
+*CTA:* **Fix and Re-check**
+*KPIs:* 70 % of users revisit at least one failed control; repeat scan success ≥ 60 %.
+
+---
+
+**2.3 Audit and Assurance (auditor or insurer)**
+*Purpose:* allow third parties to verify provenance and integrity without editing anything.
+*Path:* `Shared Report Link → View Attestations → Export Bundle`
+*Proof blocks:* hash manifest; signature footer; versioned citations.
+*CTA:* **Download Signed Bundle**
+*KPIs:* 100 % bundle downloads cryptographically valid; 0 unauthorised edits detected.
+
+---
+
+**2.4 Partner / MSP (future v2.0)**
+*Purpose:* manage multiple tenants and integrate evidence flows.
+*Path:* `Dashboard → Tenants → API/Webhooks → Reports`
+*Proof blocks:* multi-tenant dashboard screenshot; webhook catalogue; JSON export.
+*CTA:* **Book a Partner Demo**
+*KPIs:* partner contact ≥ 8 %; avg session > 3 API pages viewed.
+
+---
+
+### Summary
+
+* Journeys **1.1 – 1.5** belong to the **Marketing Site / Blog** and operate before the product launch.
+* Journeys **2.1 – 2.4** define the early **Essentials** experience once access opens.
+* The Marketing Site builds awareness and trust; Essentials converts that trust into measurable outcomes—reports, findings, and verified artefacts.
+
+---
 
 ### What each top page must guarantee (content promises)
 
