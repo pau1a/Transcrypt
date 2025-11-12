@@ -100,13 +100,15 @@ review_cycle: "Quarterly or upon major release"
     - [Priorities for the site (stack-ranked)](#priorities-for-the-site-stack-ranked)
     - [What to build first (Marketing Site / Blog)](#what-to-build-first-marketing-site--blog)
     - [4.1 User Journeys and Onboarding](#41-user-journeys-and-onboarding)
-      - [4.1.1 Marketing Site Journeys (credibility → correct door → app intent)](#411-marketing-site-journeys-credibility--correct-door--app-intent)
-      - [4.1.2 App Onboarding Spine (four entry lanes, one shared flow)](#412-app-onboarding-spine-four-entry-lanes-one-shared-flow)
-      - [4.1.3 Guardrails, Acceptance, and UX KPIs](#413-guardrails-acceptance-and-ux-kpis)
-      - [4.1.4 Site↔App Handshake (routing \& truth alignment)](#414-siteapp-handshake-routing--truth-alignment)
-    - [Screen-by-screen: what good looks like](#screen-by-screen-what-good-looks-like)
-    - [Guardrails, nudges, and acceptance](#guardrails-nudges-and-acceptance)
-    - [4.2 Interface Philosophy](#42-interface-philosophy)
+      - [**4.1.1 Marketing Site Journeys (credibility → correct door → Essentials intent)**](#411-marketing-site-journeys-credibility--correct-door--essentials-intent)
+      - [**4.1.2 Essentials Onboarding Spine (three entry lanes, one shared flow)**](#412-essentials-onboarding-spine-three-entry-lanes-one-shared-flow)
+      - [**4.1.3 Guardrails, Acceptance, and UX KPIs**](#413-guardrails-acceptance-and-ux-kpis)
+      - [**4.1.4 Site↔Essentials Handshake (routing \& truth alignment)**](#414-siteessentials-handshake-routing--truth-alignment)
+    - [**4.2 Interface Philosophy**](#42-interface-philosophy)
+      - [**Design tenets (non-negotiable, testable)**](#design-tenets-non-negotiable-testable)
+      - [**Tone, components, and content grammar**](#tone-components-and-content-grammar)
+      - [**Constraints we refuse to break (and why)**](#constraints-we-refuse-to-break-and-why)
+      - [**How we prove we’re living it (practical tests)**](#how-we-prove-were-living-it-practical-tests)
     - [4.3 Key User Stories](#43-key-user-stories)
     - [4.4 Accessibility and Usability Standards](#44-accessibility-and-usability-standards)
       - [What this section is for](#what-this-section-is-for-1)
@@ -1970,7 +1972,7 @@ Each journey below describes a single intent, its supporting proof points, prima
 ### Priorities for the site (stack-ranked)
 
 1. **Credibility in 30 seconds.** Security and privacy links visible; report screenshot and single, testable promise above the fold.
-2. **One CTA per page.** Each page drives one action – signup, contact, trial, or sample – never both.
+2. **One CTA per page.** Each page has a single dominant action — choose one of signup, contact, trial, or sample — and design the layout so every visual cue reinforces that choice. Every page should exist to drive one clear action, not a mix. Pick one and commit.
 3. **Continuity after signup.** The first Essentials screen mirrors the promise that triggered signup.
 4. **Performance and accessibility.** Fast images, self-hosted fonts, WCAG 2.2 AA compliance, shared Tailwind pattern library.
 5. **Transparency first.** Each claim links to a verifiable proof block (hashes, timestamps, citations).
@@ -1994,126 +1996,300 @@ Each of these pages must load fast, cache predictably via ISR + CDN, and reflect
 
 ### 4.1 User Journeys and Onboarding
 
-The onboarding flow is delivered through the Transcrypt web application.
+The onboarding flow is delivered through the Transcrypt marketing site.
 
-#### 4.1.1 Marketing Site Journeys (credibility → correct door → app intent)
+#### **4.1.1 Marketing Site Journeys (credibility → correct door → Essentials intent)**
 
-* **Cold SME owner (conversion path):** `/` → `/product` → `/pricing` → `/security` → **Start Free Trial**.
-  **Promises shown:** “First defensible report in one sitting,” screenshots of **Quick Start / Findings / PDF**, plain-English “no runtime AI” badge, simple pricing.
-  **CTA:** `https://transcrypt.xyz/app/signup?intent=trial&rulePack=CE-2025.3`.
-  **Acceptance/KPIs:** Hero→Product CTR ≥ 35%; visit→signup ≥ 6–10%; first proof block visible < 30 s.
-* **Researcher/validator (assurance path):** `/` → `/security` → `/privacy` (`/legal/privacy`) → `/changelog` → **Request Sample** or **Contact**.
-  **Promises shown:** controls overview, responsible disclosure (`/.well-known/security.txt`), DPA/subprocessors, signed build/provenance note.
-  **CTA:** `…/app/demo` (read-only sample) or `/contact`.
-  **KPIs:** Time on `/security` > 90 s; ≥ 60% touch at least one legal page.
-* **Partner/MSP (portfolio path):** `/partners` → `/product#multi-tenant` → `/docs/api` → **Book Partner Call**. Not in v1; see §9.2 Partner/Integrator API (v2.0). [[Post-MVP: §9.4.2 Partner Channel & Co-Branding]]
-  **Promises shown:** posture roll-up, webhook catalogue, JSON export sample.
-  **CTA:** `/contact?topic=partner`.
-  **KPIs:** Partner page→contact ≥ 8%; ≥2 API pages viewed.
-* **Auditor/insurer (verification path):** `/insurers` → sample attestations → `/security` → **Request Sample Pack**.
-  **Promises shown:** citations + hashes + export manifest.
-  **CTA:** `/contact?topic=insurer`.
-
-> **Rule of one CTA:** Each page has one primary CTA (trial, contact, or sample). Copy on the site must exactly match what the app does next.
+The Marketing Site / Blog operates as Transcrypt’s credibility engine. Its job is to attract, educate, and direct visitors toward the correct next step — joining the early-access list now, and later beginning their first Essentials assessment. Every path leads to proof before pitch.
 
 ---
 
-#### 4.1.2 App Onboarding Spine (four entry lanes, one shared flow)
+**SME owner (conversion path)**
+*Route:* `/` → `/why-transcrypt` → `/product` → `/pricing` → `/security` → **Join Waitlist** *(pre-launch)* → **Start Free Trial** *(post-launch)*.
+*Promises shown:* “First defensible report in one sitting”; screenshots of **Quick Start / Findings / PDF**; clear statement that **AI assists at runtime** but is **auditable, version-pinned, and logged**; simple transparent pricing.
+*CTAs:* `/waitlist` during Marketing phase → `/app/signup?intent=trial&rulePack=CE-2025.3` once Essentials opens.
+*Acceptance / KPIs:*
 
-1. **Direct signup (owner/admin):** Email → OIDC → MFA → Tenant name → lands in **Quick Start**.
-2. **Invite accept (tech helper):** Magic link carries `tenant` + `role=contributor`; skips billing; lands in **Evidence/Intake** with a checklist, e.g., “Upload IdP export, confirm backups.”
-3. **Partner referral (MSP/insurer):** Referral token sets `plan=partner` and `rulePack=CE-2025.3`; Quick Start copy tuned to insurer context. Not in v1; see §9.2 Partner/Integrator API (v2.0).
-4. **Auditor view (read-only):** Time-boxed link → posture + latest report; same identity spine; no write paths.
+* Hero→Product CTR ≥ 35 %
+* Visit→Waitlist (pre-launch) ≥ 8 %
+* Visit→Signup (post-launch) ≥ 6–10 %
+* First proof block visible < 30 s
 
-**Quick Start (same three cards for all)**
-
-* **Card 1 — Tell us about your setup** (≤ 20 required fields, autosave): company size, sector, IdP (Entra/Okta/Google), email platform (M365/Google), endpoints (rough count), backups (y/n + immutable y/n), remote access (VPN y/n), key policies present (password/incident/access control y/n), report contact email.
-* **Card 2 — Add proof (optional now, later is fine):** drag-drop **Evidence Tray** (IdP export, backup config). Each file shows SHA-256, duplicate flagging, and **must bind** to a control/citation. Assertions supported (e.g., `MFA.enforced.admins=true`).
-* **Card 3 — Run assessment:** choose **RulePack = Cyber Essentials**, show version + effective date, press **Run**. Progress shows “Evaluating 15 controls from CE-2025.3…”.
-
-**Finding & report experience**
-
-* **Finding cards:** Pass/Fail/Partial chip; one-sentence “because…”, **Show trace** (inputs, test, citations), **Fix it** jumps to exact intake/evidence field. Right rail: **Top 5 actions** (effort × impact).
-* **Report:** Branded HTML/PDF with exec summary, citations, and artefact hash in footer; **Download PDF** and **Share read-only link** (time-boxed). From report: **Invite tech helper** and **Connect insurer/MSP** (Not in v1; see §9.2 Partner/Integrator API (v2.0)).
+This is the canonical “credibility to commitment” path. It must feel as short, calm, and evidence-led as the product itself.
 
 ---
 
-#### 4.1.3 Guardrails, Acceptance, and UX KPIs
+**Researcher / validator (assurance path)**
+*Route:* `/` → `/security` → `/privacy` → `/changelog` → **Request Sample** or **Contact**.
+*Promises shown:* controls overview; responsible disclosure (`/.well-known/security.txt`); DPA and subprocessors; signed-build and provenance notes; versioned privacy statement.
+*CTAs:*
 
-* **Guardrails:** Autosave every 3 s; inline + server validation with concrete fixes; long actions idempotent with Request-ID; Problem+JSON errors surface `trace_id`; resume-where-you-left-off works.
-* **Acceptance (from a fresh browser):** signup + MFA ≤ 3 min; intake ≤ 20 required fields; first evaluation < 2 min; PDF < 10 s; every finding links to rule, trace, and bound evidence (if present).
-* **Nudges:** If evidence skipped, send a gentle prompt at 24–72 h: “Attach these two items to convert 3 partials to passes.” Banner for RulePack updates with one-click re-run.
-* **KPIs:** Time-to-first-report ≤ 60 min; intake completion ≥ 90% without support; report regeneration within 90 days ≥ 75%; support load ≤ 0.2 tickets/user/month; ≥ 80% of failing/partial findings have evidence attached within 14 days.
+* `/resources/sample-report` *(static sample PDF during Marketing phase)*
+* `/contact` *(direct assurance queries)*
+  *Acceptance / KPIs:*
+* Time on `/security` > 90 s
+* ≥ 60 % reach at least one legal or assurance link
+* Contact conversion ≥ 5 %
+
+This path builds institutional trust. It exists to prove transparency before any contract or integration.
 
 ---
 
-#### 4.1.4 Site↔App Handshake (routing & truth alignment)
+**Industry professional / educator (insight path)**
+*Route:* `/blog` → `/article` → `/newsletter` → `/resources`.
+*Promises shown:* authored explainers on Cyber Essentials, NIS2, and SME security; citations to frameworks; readable examples; downloadable templates.
+*CTAs:* **Subscribe** (newsletter) or **Download Resource Pack** (gated).
+*Acceptance / KPIs:*
 
-* **CTAs carry intent:** Site buttons pass `intent`, `rulePack`, and (when known) `plan` params into `/app/signup`.
-* **One origin, one session:** `transcrypt.xyz` serves site + app; OIDC cookies are first-party; no CORS friction.
-* **No surprise after click:** The first app screen mirrors the last site promise (e.g., the three Quick Start cards shown on `/product` are exactly what appears post-signup).
+* Average session > 2 pages
+* Repeat visitors ≥ 30 %
+* Newsletter confirmation ≥ 70 %
+* Unsubscribe rate < 2 %
 
-This ties the **public credibility flow** to the **authenticated first-value flow** so visitors become confident users quickly, with proof baked in at every step. All entry paths—direct signup, invite acceptance, (future) partner referral, and auditor read-only links—share the same handshake, pass intent/context through OIDC, and land in the Quick Start experience (partner referral remains Not in v1; see §9.2 Partner/Integrator API (v2.0)).
+This path deepens audience trust and sustains engagement between product releases.
 
-Regardless of entry path, everyone hits the same **three-card Quick Start**:
+---
 
-* **1. Tell us about your setup** (≤20 fields, autosave; company size, sector, IdP, endpoints count, backups yes/no, remote access yes/no, key policies yes/no).
-* **2. Add proof (optional now, later is fine)** (upload IdP export, backup config; or skip).
-* **3. Run assessment** (choose RulePack = Cyber Essentials, show version and effective date, press Go).
-  Copy is short, specific, and explains *why* each answer matters. Every required field has a one-line rationale: “This helps us test AC.1.1 (MFA on admin accounts).” No long forms. No jargon soup. If a user leaves, they can resume exactly where they were.
+**Auditor / insurer (verification path)**
+*Route:* `/resources/sample-reports` → `/security` → `/contact?topic=insurer`.
+*Promises shown:* citations, hashes, and export-manifest examples; outline of verification and signature model; how auditors validate provenance without full data access.
+*CTAs:* **Request Sample Pack** (form-gated PDF) or **Contact Security**.
+*Acceptance / KPIs:*
 
-### Screen-by-screen: what good looks like
+* Sample pack requests per month ≥ 25
+* Time on `/security` > 120 s
+* Follow-on contact conversion ≥ 10 %
 
-* **Signup & MFA (≤3 minutes):** OIDC, confirm email, show recovery codes, friendly “You’re done—let’s get your first report.”
-* **Quick Start (single page, three cards):** Progress bar + “Time left ~15 min.” Card 1 uses branching (e.g., selecting “Entra ID” unlocks a small panel: “Upload your Conditional Access export or tick ‘we’ll upload later’”). Card 2 is an **Evidence Tray** with drag-and-drop and instant SHA-256 display; duplicates are flagged, and each file must be bound to a control (“Bind to: MFA policy” dropdown). Card 3 is a big primary button: **Run assessment**; we show a 10–30s progress state with a line like “Evaluating 15 controls from CE-2025.3…”.
-* **Results (finding cards):** Pass/Fail/Partial chips; one-sentence “because…”, a “Show trace” link (inputs, test, citations), and a **Fix it** CTA that jumps to the exact intake/evidence field. A right-side panel lists the **Top 5 actions** with estimated effort and impact.
-* **Report (download/preview):** Branded HTML with exec summary, citations, and artefact hash in the footer; **Download PDF** and **Share read-only link (time-boxed)**. From here: “Invite your tech helper” (precomposed invite) and “Connect insurer/MSP” (partner flow; Not in v1—see §9.2 Partner/Integrator API (v2.0)).
-* **Return experience (dashboard):** Posture badge, “time since last assessment,” and “What changed” diff if they’ve re-run.
+This path underpins assurance relationships — proof first, sales later.
 
-### Guardrails, nudges, and acceptance
+---
 
-* **Guardrails:** Autosave every 3 seconds; client + server validation (tell user *what* broke + *how to fix*); all long actions idempotent with Request-ID; Problem+JSON errors bubble a friendly message and surface a **trace_id** for support.
-* **Nudges:** If a user skips evidence, we schedule a gentle nudge (24–72h): “Attach these two items to turn 3 partials into passes.” If a RulePack updates, a banner explains the change and offers a 1-click re-run.
-* **Acceptance criteria:** From a fresh browser, **signup→MFA→first report in ≤60 minutes** without docs. Intake ≤20 required fields; first evaluation <2 minutes; PDF in <10s; every finding links to rule, trace, and evidence (if any). Support load target: ≤0.2 tickets/user/month for onboarding.
-* **Fields we’ll start with (tight list):** company name/sector/size, IdP (Entra/Okta/Google) + admin MFA yes/no, email platform (M365/Google), endpoints count (rough), backups (y/n + immutable y/n), remote access (VPN y/n), key policies present (password, incident, access control y/n), contact email for reports. That’s it.
+> **Rule of one CTA:**
+> Every page drives a single dominant action — **waitlist**, **signup**, **sample**, **contact**, or **subscribe** — and the first Essentials screen after click must deliver exactly what was promised on that page.
 
-If you’re happy with this spine, the next tangible step is to sketch the **Quick Start** and **Finding Card** as wireframes in your doc—the rest of the UX hangs from those two artefacts.
+---
 
+#### **4.1.2 Essentials Onboarding Spine (three entry lanes, one shared flow)**
 
-### 4.2 Interface Philosophy
+The onboarding spine defines how every user first encounters Essentials — whether they arrive alone, via an invite, or through a verification link. All entry paths share the same authentication backbone and land in the Quick Start experience.
+
+---
+
+**1. Direct signup (owner / admin)**
+Email → OIDC login → MFA → Tenant name → lands in **Quick Start**.
+Applies to new SMEs joining from the **Start Free Trial** or **Join Waitlist** CTA. Billing defaults to the Essential plan.
+
+**2. Invite accept (tech helper)**
+Magic link carries `tenant` + `role=contributor`; skips billing; lands directly in **Evidence / Intake** with a short checklist, e.g. “Upload IdP export, confirm backups.”
+The invite enforces one-time use and 72 h expiry.
+
+**3. Auditor / verifier (read-only)**
+Time-boxed signed link → posture summary + latest report; identical OIDC identity spine but **no write or upload rights**.
+Used for insurers, auditors, or internal reviewers needing to verify provenance.
+*(Partner / Integrator referrals remain deferred — see § 9.2 Partner / Integrator API (v2.0)).*
+
+---
+
+**Quick Start — shared across all lanes**
+
+Every new tenant or invitee lands in the same three-card flow, designed to reach a first defensible report within one sitting.
+
+* **Card 1 — Tell us about your setup** (≤ 20 required fields, autosave): company size, sector, IdP (Entra / Okta / Google), email platform (M365 / Google), approx endpoint count, backups (y/n + immutable y/n), remote access (VPN y/n), key policies (password / incident / access-control y/n), and report contact email.
+* **Card 2 — Add proof (optional now, later is fine):** drag-drop **Evidence Tray** for IdP exports, backup configs, or screenshots. Each file shows SHA-256, duplicate flag, and must bind to a control / citation. Assertions (e.g. `MFA.enforced.admins=true`) supported.
+* **Card 3 — Run assessment:** select **RulePack = Cyber Essentials**, display version + effective date, then **Run**. Progress reads “Evaluating 15 controls from CE-2025.3 …”.
+
+---
+
+**Findings & Report Experience**
+
+* **Finding cards:** Pass / Fail / Partial chips; one-sentence “because …”; **Show trace** (inputs, tests, citations); **Fix it** links back to the exact Intake or Evidence field. A right-rail shows **Top 5 actions** (effort × impact).
+* **Report:** Branded HTML / PDF with executive summary, citations, and artefact hash in the footer. Primary actions: **Download PDF** and **Share read-only link** (time-boxed). From here the user can **Invite tech helper** (pre-composed invite). Partner connections remain post-v1 features (see § 9.2).
+
+---
+
+**Key Principles**
+
+* All lanes share the same identity and validation guardrails (autosave every 3 s, idempotent actions with Request-ID, resume state preserved).
+* The Quick Start flow is deterministic — every control and result is reproducible and auditable with model and prompt versions logged.
+* First-report goal: ≤ 60 minutes from signup to PDF download.
+
+---
+
+#### **4.1.3 Guardrails, Acceptance, and UX KPIs**
+
+**Guardrails**
+
+*Marketing Site / Blog (public):*
+
+* **Single-purpose pages:** one dominant CTA per page (waitlist, signup, sample, contact, or subscribe).
+* **Privacy-first loading:** analytics/cookies only after consent; forms are server-posted with CSRF protection.
+* **Performance budget:** LCP ≤ 2.0 s on normal 4G; font files self-hosted; images `next/image` with responsive sizes.
+* **Integrity & trust:** security and privacy links visible; changelog/status stubs live from day one.
+
+*Essentials (authenticated):*
+
+* **Autosave & resume:** autosave every **3 s**; full state restore on refresh or re-login.
+* **Deterministic validation:** client + server rules; errors return **Problem+JSON** with human fix text; responses include a **`trace_id`**.
+* **Idempotency:** all long or repeatable actions carry a **Request-ID** and are safe to retry.
+* **Runtime AI accountability:** every inference logs **model ID, prompt, parameters, and content hash**; results are reproducible from the same inputs.
+* **No cross-tenant bleed:** tenant context enforced end-to-end (RLS + object-store prefixes).
+* **Safe sharing:** read-only links are signed and time-boxed; no write paths exposed.
+
+---
+
+**Acceptance**
+
+*Marketing Site / Blog (from a fresh browser):*
+
+* **Clarity test:** in ≤ **10 s**, users can tell who it’s for and what it does.
+* **Proof test:** a genuine proof block (screenshot or hash/citation example) appears in ≤ **30 s** of normal scrolling.
+* **Consent test:** cookie banner defers trackers until accepted; newsletter/waitlist forms show explicit data-use text and double opt-in confirmation.
+
+*Essentials (from a fresh browser):*
+
+* **Signup spine:** OIDC + MFA ≤ **3 min**; lands in **Quick Start**.
+* **Quick Start scope:** ≤ **20** required fields, with autosave and inline help.
+* **Evaluation speed:** first evaluation < **2 min**; **PDF** render < **10 s**.
+* **Explainability:** every finding links to the rule, the trace (inputs/tests/citations), and any bound evidence.
+
+---
+
+**Nudges**
+
+* **Evidence follow-up (email):** if evidence is skipped, send at **24–72 h** a short message: *“Attach these two items to convert 3 partials to passes.”*
+* **In-product prompts:** right-rail **Top 5 actions** (effort × impact) with direct jumps to the exact field/evidence drop.
+* **RulePack updates:** banner with concise change note and **1-click re-run** using the pinned version.
+
+---
+
+**KPIs**
+
+*Marketing Site / Blog:*
+
+* **Credibility:** ≥ **40%** scroll depth on Home; time on `/security` > **90 s**.
+* **Conversion (pre-launch):** visit → **waitlist** ≥ **8%**; newsletter confirm ≥ **70%**; unsubscribe < **2%**.
+* **Conversion (post-launch):** visit → **signup** ≥ **6–10%** (when Essentials opens).
+
+*Essentials:*
+
+* **Time-to-first-report:** ≤ **60 min** (signup → PDF).
+* **Intake completion:** ≥ **90%** without support.
+* **Re-run health:** report regeneration within **90 days** for ≥ **75%** of tenants.
+* **Support load:** ≤ **0.2** tickets/user/month during onboarding.
+* **Evidence follow-through:** ≥ **80%** of failing/partial findings get evidence attached within **14 days**.
+
+---
+
+#### **4.1.4 Site↔Essentials Handshake (routing & truth alignment)**
+
+The handshake defines how the **Marketing Site / Blog** (public) and **Essentials** (authenticated) behave as a single continuum. The aim is to make the transition from curiosity to first-value frictionless, with intent preserved and promises honoured exactly.
+
+---
+
+**Routing & context passing**
+
+* **CTAs carry intent:** Buttons on the Marketing Site pass structured query parameters — `intent`, `rulePack`, and (if relevant) `plan` — into the Essentials signup endpoint once live. During the pre-launch period, these CTAs route to `/waitlist` or `/newsletter`.
+  *Example:* selecting “Cyber Essentials” on `/product` sets `rulePack=CE-2025.3` so the Quick Start form opens with that version preselected when the app launches.
+* **One origin, one session:** Both the Marketing Site and Essentials operate under `transcrypt.xyz`. OIDC cookies are first-party, meaning a user moving from marketing to product doesn’t re-authenticate or hit CORS barriers.
+* **No surprise after click:** The first Essentials screen must mirror the promise that triggered the click — for example, the same three Quick Start cards previewed on `/product` are what the user actually sees post-signup.
+
+---
+
+**Public-to-private flow**
+
+The handshake binds the **credibility phase** (public proof, blog content, waitlist) to the **first-value phase** (Quick Start). Regardless of entry path — direct signup, invite acceptance, or auditor read-only link — every authenticated session lands in the same structured Quick Start experience.
+
+---
+
+**Three-card Quick Start**
+
+All routes converge here. The goal: reach a defensible first report within an hour.
+
+1. **Tell us about your setup** (≤ 20 required fields, autosave): company name, size, sector; IdP (Entra / Okta / Google); email platform (M365 / Google); approximate endpoint count; backups (y/n + immutable y/n); remote access (VPN y/n); key policies (password, incident, access control y/n); and report contact email.
+2. **Add proof (optional now, later is fine):** drag-drop **Evidence Tray** (IdP export, backup config). Each file shows its SHA-256 hash, flags duplicates, and must bind to a control or citation. Assertions (e.g. `MFA.enforced.admins=true`) supported.
+3. **Run assessment:** select **RulePack = Cyber Essentials**, show version + effective date, then **Run**. Display progress: *“Evaluating 15 controls from CE-2025.3 …”*
+
+Every field explains *why it’s asked*: *“This confirms AC.1.1 – MFA enforced on admin accounts.”* No long forms, no jargon. Users who leave can resume exactly where they were.
+
+---
+
+**Screen-by-screen: what good looks like**
+
+* **Signup & MFA (≤ 3 min):** OIDC login, verify email, show recovery codes, finish with friendly “You’re done — let’s get your first report.”
+* **Quick Start (three cards):** progress bar + “Time left ≈ 15 min.” Conditional branching (e.g., choosing “Entra ID” opens a small panel to upload Conditional Access export or mark *upload later*).
+* **Evidence Tray:** drag-drop area shows hashes instantly, prevents duplicates, and binds each file to its relevant control.
+* **Run Assessment:** large primary button; visible progress state 10–30 s.
+* **Results (Finding cards):** Pass / Fail / Partial chip; one-sentence “because …”, **Show trace** (inputs / tests / citations); **Fix it** jumps back to the relevant field. Right rail lists **Top 5 actions** ranked by effort × impact.
+* **Report (download / preview):** Branded HTML / PDF with executive summary, citations, and artefact hash footer. Actions: **Download PDF**, **Share read-only link** (time-boxed), and **Invite tech helper** (pre-filled invite).
+  Partner integrations (insurer / MSP) remain deferred — see § 9.2 Partner / Integrator API (v2.0).
+* **Return experience (dashboard):** Posture badge, “time since last assessment,” and “what changed” diff if re-run.
+
+---
+
+**Guardrails, nudges, and acceptance**
+
+* **Guardrails:** Autosave every 3 s; deterministic validation client + server; long actions idempotent with **Request-ID**; all error responses follow **Problem+JSON** and include a **`trace_id`** for support.
+* **Nudges:** If evidence skipped, trigger a 24–72 h email: *“Attach these two items to convert 3 partials to passes.”* RulePack updates surface as banners with one-click re-runs.
+* **Acceptance criteria:** From a clean browser, **signup → MFA → first report ≤ 60 min** without docs. Intake ≤ 20 fields; first evaluation < 2 min; PDF < 10 s; every finding links to rule, trace, and any bound evidence. Support load target ≤ 0.2 tickets / user / month during onboarding.
+* **Initial field set:** company name / sector / size; IdP (Entra / Okta / Google) + admin MFA y/n; email platform (M365 / Google); endpoints count (rough); backups y/n + immutable y/n; remote access (VPN y/n); key policies (password, incident, access control y/n); contact email for reports.
+
+---
+
+### **4.2 Interface Philosophy**
 
 **It’s the contract for how the product talks and behaves.**
-Interface philosophy is our house style for truth-telling: the rules that decide wording, layout, pacing, and how much the product asks of a person at any moment. It turns vague goals (“be clear,” “be trustworthy”) into operational constraints. For Transcrypt that means: every screen answers three questions in this order—**what is this**, **why it matters**, **what to do next**—and every status must be **explainable** with a visible link to the rule, test, input, and evidence. No mysteries, no hand-waving, no “AI says so.” When people feel oriented and in control, they move faster and trust the output.
+Interface philosophy is our house style for truth-telling—the rules that define tone, structure, and pacing so the product never feels ambiguous. It translates values like “be clear” or “be trustworthy” into *operational constraints.*
 
-**Design tenets (non-negotiable, testable).**
+For Transcrypt, every screen must answer three questions, in this order:
+**What is this?** **Why does it matter?** **What do I do next?**
+Every state is *explainable* with visible links to its rule, test, input, and evidence.
+No mysteries, no hand-waving, no “AI says so.” When users feel oriented and in control, they trust the output and move faster.
 
-* **Plain first, precise second.** Lead with simple phrasing; keep the formal clause in a fold-out. Example: “MFA not enforced for admins” (plain) with “CE AC.1.1, test: ASSERT.MFA.enforced.admins=false” (precise).
-* **One decision per view.** If a page asks for more than one meaningful choice, it’s two pages. Primary action is obvious; secondary actions look secondary.
-* **Evidence never loose.** Uploads and assertions always bind to a control and citation before the user can continue.
-* **Progress over pages.** Show where you are (“Step 2 of 3”) and the impact of finishing (“This will unlock 3 controls”).
-* **Determinism on display.** “Show trace” exists everywhere a result appears. Identical inputs → identical outputs; the UI lets users verify that.
-* **Calm speed.** Sub-2s perceived loads, subtle motion only when it reduces cognitive load (e.g., focus a just-failed field).
-* **Accessibility as default, not garnish.** WCAG 2.2 AA, keyboard-only flows, real contrast, reduced-motion respected.
+---
 
-**Tone, components, and content grammar.**
-Tone is **quietly competent**: short sentences, active verbs, no fear-mongering. Components embody that tone: cards with a strong sentence up top, a concise reason, and one primary button. Error messages say what broke **and** how to fix it. Tables have first columns that explain the row in human terms; badges are for state (Pass/Fail/Partial), not decoration. When jargon is unavoidable, define it inline. (You can be technical without being theatrical.)
+#### **Design tenets (non-negotiable, testable)**
 
-**Constraints we refuse to break (and why).**
+* **Plain first, precise second.** Lead with clear phrasing; keep the formal clause accessible but secondary. Example: “MFA not enforced for admins” (plain) with “CE AC.1.1  test: ASSERT.MFA.enforced.admins=false” (precise).
+* **One decision per view.** If a screen asks for more than one meaningful choice, it’s two screens. Primary action is unmistakable; secondary actions look secondary.
+* **Evidence never loose.** Uploads and assertions must bind to a control and citation before a user can continue.
+* **Progress over pages.** Always show where you are (“Step 2 of 3”) and what completing it unlocks (“This will verify 3 controls”).
+* **Determinism on display.** “Show trace” exists everywhere a result appears. Identical inputs yield identical outputs; the interface makes that verifiable.
+* **Calm speed.** Sub-2 s perceived loads. Motion only when it reduces cognitive load (e.g., focusing a failed field).
+* **Accessibility as default.** WCAG 2.2 AA, keyboard-only flows, true colour contrast, honour reduced-motion settings.
 
-* **No runtime AI decisions.** If it affects a finding, the logic is deterministic and inspectable. This preserves auditability and user agency.
-* **No modal labyrinths.** Modals are for small confirmations. If the content needs scrolling or multiple decisions, it’s a page.
-* **No invisible requirements.** If you need data, say exactly why and where it will show up in the report. Hidden asks destroy trust.
-* **No dead-end states.** Every error offers a forward path—retry, download trace, or jump to the field that fixes it.
+---
 
-**How we prove we’re living it (practical tests).**
+#### **Tone, components, and content grammar**
+
+Tone is **quietly competent**: short sentences, active verbs, no fear-mongering.
+Components express that tone—cards with a declarative sentence on top, a reason beneath, and one clear button.
+Errors say what broke *and* how to fix it.
+Tables lead with a human-readable first column; badges convey state (Pass / Fail / Partial), never decoration.
+When jargon is unavoidable, define it inline. Technical ≠ theatrical.
+
+---
+
+#### **Constraints we refuse to break (and why)**
+
+* **No untraceable AI outcomes.** AI runs at runtime to analyse inputs and craft findings, but each inference records its model, prompt, parameters, and content hash. Outputs are reproducible and auditable, never opaque.
+* **No modal labyrinths.** Modals are for small confirmations. If it scrolls or asks for multiple decisions, it becomes a full page.
+* **No invisible requirements.** When data is needed, the interface explains *why* and where it will appear in the report. Hidden asks destroy trust.
+* **No dead-end states.** Every error offers a way forward—retry, download trace, or jump directly to the field that fixes it.
+
+---
+
+#### **How we prove we’re living it (practical tests)**
 
 * **Five-second scan:** Can a new user tell what the page is about and what to do without scrolling?
-* **Breadcrumb of proof:** From any finding, can you reach rule text, test, inputs, and evidence in ≤ 3 clicks?
-* **Red-pen edit:** Can legal/compliance folks tighten copy without touching code (strings externalised)?
-* **Accessibility pass:** Does the page pass axe/Pa11y and keyboard-only use?
-* **Time-to-action:** Does a primary task (upload evidence, re-run assessment) take ≤ 2 obvious clicks from the dashboard?
+* **Breadcrumb of proof:** From any finding, can a user reach rule text, test, inputs, and evidence in ≤ 3 clicks?
+* **Red-pen edit:** Can legal or compliance edit copy without touching code (all strings externalised)?
+* **Accessibility pass:** Does the page clear axe / Pa11y tests and full keyboard-only navigation?
+* **Time-to-action:** From the dashboard, can a user perform a primary task (upload evidence, re-run assessment) in ≤ 2 obvious clicks?
 
-That’s what “Interface Philosophy” means here: a disciplined, humane protocol for turning regulation into action. It keeps the product boring in the right ways (predictable, verifiable) and sharp where it matters (specific next steps, fast feedback). Next step is to codify this into a tiny UI playbook—component do/don’ts, copy patterns, and acceptance checks—so every new screen inherits the same spine.
+That’s what **Interface Philosophy** means here: a disciplined, humane protocol for turning regulation into action.
+It keeps the product *boringly predictable* where it should be—deterministic, auditable—and *sharp where it counts*: fast feedback, clear next steps, and a visible chain of proof.
+
+---
 
 ### 4.3 Key User Stories
 
