@@ -110,18 +110,23 @@ review_cycle: "Quarterly or upon major release"
       - [**Constraints we refuse to break (and why)**](#constraints-we-refuse-to-break-and-why)
       - [**How we prove we’re living it (practical tests)**](#how-we-prove-were-living-it-practical-tests)
     - [**4.3 Key User Stories**](#43-key-user-stories)
-    - [4.4 Accessibility and Usability Standards](#44-accessibility-and-usability-standards)
-      - [What this section is for](#what-this-section-is-for-1)
-      - [Priorities (stack-ranked)](#priorities-stack-ranked)
-      - [Non-negotiable standards (what we target)](#non-negotiable-standards-what-we-target)
-      - [Design \& content rules (operationalised)](#design--content-rules-operationalised)
-      - [Interaction \& structure patterns](#interaction--structure-patterns)
-      - [Reports (HTML \& PDF) accessibility](#reports-html--pdf-accessibility)
-      - [Mobile \& low-bandwidth](#mobile--low-bandwidth)
-      - [Cognitive load \& clarity](#cognitive-load--clarity)
-      - [Testing \& enforcement (make it routine)](#testing--enforcement-make-it-routine)
-      - [Acceptance criteria (task-level)](#acceptance-criteria-task-level)
-    - [4.5 Offline and Multi-Device Support](#45-offline-and-multi-device-support)
+    - [**4.4 Accessibility and Usability Standards**](#44-accessibility-and-usability-standards)
+      - [**What this section is for**](#what-this-section-is-for-1)
+      - [**Priorities (stack-ranked)**](#priorities-stack-ranked)
+      - [**Non-negotiable standards (targets)**](#non-negotiable-standards-targets)
+      - [**Design and content rules (operationalised)**](#design-and-content-rules-operationalised)
+      - [**Interaction and structural patterns**](#interaction-and-structural-patterns)
+      - [**Report accessibility (HTML \& PDF)**](#report-accessibility-html--pdf)
+      - [**Mobile \& low-bandwidth operation**](#mobile--low-bandwidth-operation)
+      - [**Cognitive load \& clarity**](#cognitive-load--clarity)
+      - [**Testing \& enforcement**](#testing--enforcement)
+      - [**Acceptance criteria (task-level)**](#acceptance-criteria-task-level)
+    - [**4.5 Offline and Multi-Device Support**](#45-offline-and-multi-device-support)
+      - [**What we’re solving**](#what-were-solving)
+      - [**Architecture and behaviour**](#architecture-and-behaviour)
+      - [**What’s supported, what’s not, and how we prove it**](#whats-supported-whats-not-and-how-we-prove-it)
+      - [**Device and layout specifics**](#device-and-layout-specifics)
+      - [**Constraints and hygiene**](#constraints-and-hygiene)
   - [5. Data, Intelligence, and Automation](#5-data-intelligence-and-automation)
     - [5.1 Data Flow Architecture (v1)](#51-data-flow-architecture-v1)
     - [5.2 Machine Learning and AI Components (v1)](#52-machine-learning-and-ai-components-v1)
@@ -2363,118 +2368,235 @@ Every path must preserve auditability, short time-to-value, and the same determi
 
 ---
 
-### 4.4 Accessibility and Usability Standards
+### **4.4 Accessibility and Usability Standards**
 
-#### What this section is for
+#### **What this section is for**
 
-It’s the contract that every visitor and user—regardless of device, bandwidth, motor control, eyesight, hearing, or cognitive load—can complete core tasks. For Transcrypt, that means: anyone can get from landing page → signup → first report, can understand findings, and can download/hand to an auditor, **without assistance**. No exceptions.
+This section sets the baseline that every visitor and user — regardless of device, bandwidth, motor control, eyesight, hearing, or cognitive load — must be able to complete the core Transcrypt journey **without assistance**.
+That journey: **landing page → signup → first report → readable output.**
+If someone cannot do that unaided, we have failed.
 
-#### Priorities (stack-ranked)
+---
 
-1. **Keyboard-first**: everything works without a mouse, with visible focus and logical order.
-2. **Readable by default**: real contrast, scalable text, plain language first, precise clause second.
-3. **Predictable & recoverable**: errors say what broke and how to fix; no timeouts that eat work.
-4. **Assistive-tech compatible**: correct landmarks, roles, names, and states so screen readers and voice control can operate the app.
-5. **Accessible reports**: the generated **PDF/HTML reports** are tagged, navigable, and readable by screen readers.
+#### **Priorities (stack-ranked)**
 
-#### Non-negotiable standards (what we target)
+1. **Keyboard-first.** Every function works without a mouse, with visible focus and logical order.
+2. **Readable by default.** Real contrast, scalable text, plain phrasing first, precise clause second.
+3. **Predictable and recoverable.** Errors explain what broke and how to fix it; no silent losses or unannounced timeouts.
+4. **Assistive-tech compatible.** Correct landmarks, roles, names, and states so screen readers and voice control operate normally.
+5. **Accessible reports.** Generated HTML and PDF reports are tagged, navigable, and intelligible through assistive technologies.
 
-* **WCAG 2.2 AA** across site and app (including PDFs).
-* **BSI/EN 301 549** alignment where relevant (maps closely to WCAG, useful for EU/UK buyers).
-* **UK Equality Act 2010** spirit: reasonable adjustments baked in.
-* **PDF/UA** principles for reports: semantic structure, tagged tables, alt text for figures.
+---
 
-#### Design & content rules (operationalised)
+#### **Non-negotiable standards (targets)**
 
-* **Colour & contrast**: 4.5:1 for body text, 3:1 for large text/icons; tokens pre-checked so designers can’t pick non-compliant colours.
-* **Typography**: respect OS font scaling; never lock line-height < 1.4; avoid justified text; keep measure ≈ 60–80 chars.
-* **Motion**: honour `prefers-reduced-motion`; no essential info conveyed by motion alone; avoid parallax/looped distractions.
-* **Language**: short sentences, active verbs; define jargon inline; reading level ≈ secondary school for all user-facing copy.
-* **Target sizes**: ≥ 44×44 px hit areas on touch; generous spacing between actions.
-* **Timing**: no session timeouts during intake without warning and extend option; autosave on every edit.
+* **WCAG 2.2 AA** across the Marketing Site and Essentials (including reports).
+* **BSI EN 301 549** alignment where applicable — useful for EU / UK procurement contexts.
+* **UK Equality Act 2010** spirit: reasonable adjustments designed-in, not patched later.
+* **PDF/UA** compliance principles: semantic tagging, table structure, alt text for all figures.
 
-#### Interaction & structure patterns
+---
 
-* **Keyboard**: Tab sequence matches visual order; roving tabindex for composite widgets; **skip to content** link; Esc closes non-modal popovers.
-* **Focus management**: put focus where the user expects after route change or dialog open; never trap focus; always return focus sensibly on close.
-* **Semantics**: use native elements first; ARIA only when necessary. Landmark regions (`header`, `nav`, `main`, `aside`, `footer`) present on every page.
-* **Forms**: each input has a **visible label**, programmatic association, helpful hint, and an example; errors are inline, specific, and read by screen readers; don’t rely on colour alone.
-* **Tables & charts**: tables have headers (`<th scope>`), captions, and summaries; charts must include data tables or alt text summarising the finding and trend.
+#### **Design and content rules (operationalised)**
 
-#### Reports (HTML & PDF) accessibility
+* **Colour & contrast:** 4.5 : 1 minimum for body text, 3 : 1 for large text / icons. Token palette pre-validated; designers can’t pick non-compliant colours.
+* **Typography:** honour OS text scaling; line-height ≥ 1.4; no justified text; measure ≈ 60–80 chars per line.
+* **Motion:** respect `prefers-reduced-motion`; never convey meaning solely through animation; avoid parallax or looping distractions.
+* **Language:** short sentences, active verbs, inline definitions for jargon; reading level ≈ secondary school.
+* **Target sizes:** ≥ 44 × 44 px hit areas on touch; generous spacing between interactive elements.
+* **Timing:** no session expiry during intake without clear warning and extend option; autosave on every edit.
 
-* HTML report uses proper headings, lists, and table semantics; link text is meaningful (“View MFA policy evidence”), not “click here”.
-* PDF export preserves tags/structure from HTML; figures have alt text; the artefact hash and citations are text, not images; doc language set; reading order verified.
+---
 
-#### Mobile & low-bandwidth
+#### **Interaction and structural patterns**
 
-* First meaningful paint fast on 3G/4G; no third-party font/CDN blockers; images responsive; forms resilient to spotty connections (autosave + retry with backoff).
+* **Keyboard:** Tab order mirrors visual order; roving tabindex for composite widgets; “Skip to content” present; Esc closes transient popovers.
+* **Focus management:** Move focus predictably after route changes or dialog opens; never trap focus; return it sensibly on close.
+* **Semantics:** Prefer native elements; use ARIA only where necessary. Landmark regions (`header`, `nav`, `main`, `aside`, `footer`) present on every page.
+* **Forms:** Every input has a visible label, programmatic association, helpful hint, and example. Errors are inline, specific, and announced to screen readers; colour never carries meaning alone.
+* **Tables & charts:** Tables include headers (`<th scope>`), captions, and summaries; charts provide data tables or alt text describing the finding and trend.
 
-#### Cognitive load & clarity
+---
 
-* One decision per view; progressive disclosure; show *why* each field is needed (“This helps us test AC.1.1”).
-* Provide summaries and “what changed” diffs; avoid modal stacks; always give a safe next step.
+#### **Report accessibility (HTML & PDF)**
 
-#### Testing & enforcement (make it routine)
+* HTML reports use true headings, lists, and table semantics. Link text is meaningful (“View MFA policy evidence”), never “click here.”
+* PDF exports preserve HTML tags and structure. Figures have alt text; artefact hash and citations are selectable text, not images. Document language and reading order explicitly set.
 
-* **Design-time**: contrast plugin on the token palette; component library examples include keyboard/AT notes.
-* **Build-time**: axe/Pa11y CI checks on key routes (home, product, signup, intake, findings, report preview).
-* **Manual**: quarterly screen-reader sweeps (NVDA + VoiceOver), keyboard-only task run (signup→report), reduced-motion pass.
-* **PDF**: run a tagging validator on sample reports each release.
-* **Telemetry**: log “keyboard only” session ratio (heuristic) and error recovery rates; track time-to-first-action for users with larger font settings.
+---
 
-#### Acceptance criteria (task-level)
+#### **Mobile & low-bandwidth operation**
 
-* From keyboard only, a new user can:
-  a) sign up + set MFA,
-  b) complete intake,
-  c) upload two evidences,
-  d) run assessment,
-  e) download an accessible PDF—**without touching a mouse**.
-* All interactive controls have programmatic names/states; tab order matches visual order; focus is always visible.
-* No blocking WCAG 2.2 AA violations on top routes; automated a11y score (axe) ≥ 95 on those pages.
-* Report PDFs pass a tag/structure check and a manual NVDA read-through of headings, tables, and citations.
+* First meaningful paint must remain fast on 3G / 4G.
+* No blocking third-party fonts or CDN dependencies; all critical assets self-hosted.
+* Images are responsive; forms persist through intermittent connectivity (autosave + retry with exponential back-off).
 
-### 4.5 Offline and Multi-Device Support
+---
 
-**What we’re solving.** Users are on flaky Wi-Fi, 4G in a car park, or rural broadband. The product must be usable without a perfect connection and it must “hand off” cleanly between laptop, phone, and tablet. We will ship an **installable PWA** (Progressive Web App) that precaches the app shell and lets people complete intake, queue evidence, and view the most recent report offline—then sync safely when they’re back online. No magical thinking: *evaluation and billing require a network*, but everything leading up to “Run assessment” should work in airplane mode.
+#### **Cognitive load & clarity**
 
-**How it works (architecture & behaviour).**
+* One decision per view; progressive disclosure for complexity.
+* Explain *why* each field is needed (“This helps us test AC.1.1”).
+* Provide summaries and “what changed” diffs.
+* Avoid modal stacking; always offer a safe next step or return path.
 
-* **PWA & caching:** Web App Manifest + Service Worker (Workbox). Precache: app shell, fonts, icons, and core routes (`/app`, `/app/intake`, `/app/reports`). Runtime cache with stale-while-revalidate for lightweight JSON (feature flags, RulePack metadata). **Never cache secrets** or authenticated API responses longer than the session TTL.
-* **Offline data store:** **IndexedDB** (via a tiny helper, e.g., `idb-keyval`) caches *intake form state*, *evidence metadata*, and the **most recent HTML/PDF report**. Every local record carries a UUIDv7, timestamp, and a “sync state” (`pending|synced|conflict`).
-* **Queued mutations:** All writes are recorded as idempotent “commands” (e.g., `INTAKE.UPDATE(field,value)`, `EVIDENCE.ADD(meta,sha256,blobRef)`). A Background Sync job (or foreground retry with backoff on iOS) replays them server-side. Conflicts resolve at **field level, last-writer-wins** with a server truth timestamp; conflicts surface a “Review changes” banner and an audit entry.
-* **Evidence files offline:** Blobs are stored temporarily in IndexedDB, **SHA-256 computed client-side**, and chunk-uploaded on reconnect with resume support. Size caps: **50 MB/file (MVP)**, total offline cache **200 MB**; users see a usage meter and can clear cache from Settings. Evidence must be explicitly **bound to a control** even offline; binding syncs as metadata before the binary upload.
-* **Multi-device handoff:** Session is first-party (one origin), short-lived with silent refresh. “Continue where you left off” loads the last saved intake checkpoint from server if newer than local; otherwise offers “Use local draft” vs “Discard draft”. Device list in Settings shows active sessions; owners can revoke a device.
-* **Security of local cache:** By default, we rely on OS user separation. For higher assurance, a **“Secure Device Mode”** encrypts the local cache using WebCrypto (AES-GCM) with a key wrapped by a per-device secret; unlocking requires re-auth (step-up MFA) after 15 minutes of inactivity. Evidence blobs are purged from local storage **immediately after successful upload**.
+---
 
-**What’s in/out, and how we prove it.**
+#### **Testing & enforcement**
 
-* **Offline supported:** intake edits, evidence **queuing**, report **viewing** (last copy), user invites (queued), and audit entries for local actions (synced later).
-* **Online-only:** running evaluations, generating *new* reports, billing changes, connector imports.
+* **Design-time:** contrast-checker on design tokens; component library includes keyboard / AT usage notes.
+* **Build-time:** automated **axe-core / Pa11y / Playwright** checks for key routes (Home, Product, Signup, Intake, Findings, Report Preview).
+* **Manual:** quarterly screen-reader sweeps (NVDA + VoiceOver), keyboard-only run (signup → report), reduced-motion test.
+* **PDF:** tag and structure validator on sample reports each release.
+* **Telemetry:** log keyboard-only sessions (heuristic) and recovery rates for form errors; monitor time-to-first-action for users with large font or reduced-motion preferences.
+
+---
+
+#### **Acceptance criteria (task-level)**
+
+From keyboard only, a new user can:
+a) sign up + set MFA, b) complete intake, c) upload two evidences, d) run assessment, e) download an accessible PDF — **without touching a mouse**.
+
+Additional verifications:
+
+* All interactive controls expose programmatic names / states; tab order matches visual order; focus is always visible.
+* No blocking **WCAG 2.2 AA** issues on top routes; automated accessibility score ≥ 95 %.
+* Report PDFs pass tag / structure validation and a manual NVDA read-through covering headings, tables, and citations.
+
+---
+
+Accessibility is not decoration — it’s part of the product’s integrity.
+A system that fails to serve the full range of human ability cannot claim to be secure or complete.
+
+---
+
+### **4.5 Offline and Multi-Device Support**
+
+#### **What we’re solving**
+
+Users work in the real world — unstable Wi-Fi, 4G dead zones, rural broadband.
+The system must remain usable under those conditions and hand off seamlessly between laptop, tablet, and phone.
+
+Transcrypt Essentials ships as an **installable Progressive Web App (PWA)** that precaches the shell and allows users to complete intake, queue evidence, and view their most recent report offline.
+No fantasy: evaluation, model inference, and billing still require a live network.
+Everything leading up to **Run assessment** must be possible in airplane mode.
+
+---
+
+#### **Architecture and behaviour**
+
+* **PWA and caching:**
+
+  * Web App Manifest + Service Worker (Workbox).
+  * Precache the app shell, fonts, icons, and core routes (`/app`, `/app/intake`, `/app/reports`).
+  * Runtime cache: *stale-while-revalidate* for small JSON objects (feature flags, rule-pack metadata).
+  * **Never cache secrets**, credentials, or authenticated API responses beyond session TTL.
+
+* **Offline data store:**
+
+  * Use **IndexedDB** (via a lightweight wrapper such as `idb-keyval`) to cache:
+
+    * intake form state
+    * evidence metadata
+    * the most recent HTML/PDF report
+  * Each record carries a **UUIDv7**, timestamp, and `sync_state` = (`pending | synced | conflict`).
+
+* **Queued mutations:**
+
+  * All writes are stored as idempotent commands, e.g. `INTAKE.UPDATE(field,value)` or `EVIDENCE.ADD(meta,sha256,blobRef)`.
+  * Background Sync (where supported) or foreground retry (iOS) replays them to the server.
+  * Conflict resolution: field-level, **last-writer-wins** using server timestamps; surfaced via a “Review changes” banner and logged in audit.
+
+* **Evidence handling offline:**
+
+  * Evidence files stored temporarily in IndexedDB.
+  * **SHA-256** computed client-side; chunk-upload resumes after reconnect.
+  * Caps: **50 MB per file**, **200 MB total offline cache**.
+  * Users see a usage meter and can clear cache from **Settings**.
+  * Each evidence file must still be **bound to a control**, even offline; binding metadata syncs before binary upload.
+
+* **Multi-device hand-off:**
+
+  * Sessions are first-party and short-lived with silent refresh.
+  * On new device open, the app compares server vs local checkpoint → offers “Use latest server version” or “Use local draft.”
+  * Device list in **Settings** shows active sessions; owners can revoke access.
+
+* **Security of local cache:**
+
+  * Default: rely on OS-level user separation.
+  * **Secure Device Mode:** optional encryption of local cache using WebCrypto (AES-GCM) with per-device key; requires step-up MFA after 15 min idle.
+  * Evidence blobs purged immediately after successful upload.
+
+---
+
+#### **What’s supported, what’s not, and how we prove it**
+
+* **Works offline:**
+
+  * intake editing and saving
+  * evidence queuing
+  * report viewing (last version)
+  * user invite creation (queued)
+  * local audit of offline actions (synced later)
+
+* **Online-only:**
+
+  * evaluations and new report generation
+  * billing or plan changes
+  * connector imports and third-party API calls
+
 * **Acceptance tests:**
 
-  1. **Airplane-mode run:** From a fresh install, user completes all required intake fields, attaches two evidence files (queued), and closes the app. On reconnect, sync completes automatically; user taps **Run assessment**.
-  2. **Conflict case:** Field `endpoints.count` edited on phone offline and on desktop online; on reconnect, desktop wins (newer server timestamp). Phone shows non-blocking “Review changes” with a one-click “Apply local edit” (creates a new server write).
-  3. **Report offline:** After generating a report online, user can open the same report offline and print it; artefact hash remains visible and selectable text (not an image).
-  4. **iOS fallback:** Background Sync unavailable—foreground retry with exponential backoff works; user gets a persistent “X items waiting to upload” indicator.
-* **KPIs:** ≥ 95% sync success within 2 minutes of reconnect; ≤ 1% conflicts per 100 edits; < 1 support ticket per 500 offline sessions; median time from reconnect→all uploads complete ≤ 30 s on 4G.
+  1. **Airplane-mode run:** User completes intake, attaches two evidence files (queued), closes app. On reconnect, sync auto-completes; user taps **Run assessment**.
+  2. **Conflict test:** Field `endpoints.count` edited offline (phone) and online (desktop). On reconnect, newer server value wins; device shows “Review changes” with one-click reapply.
+  3. **Report offline:** After generating a report online, user opens it offline and prints; artefact hash remains selectable text.
+  4. **iOS fallback:** Background Sync unavailable; foreground retry with exponential back-off shows persistent “3 items waiting to upload.”
 
-**Device and layout specifics.**
+* **KPIs:**
 
-* **Responsive breakpoints:** phone (≤480px), tablet (481–1024px), desktop (≥1025px). Intake and findings adapt to single-column on phone; primary actions stay thumb-reachable; touch targets ≥ 44×44 px.
-* **File picker UX:** camera/document sources on mobile; show per-file progress and a checksum tick when complete. **Never** silently retry more than 5 times; surface “Resume upload” clearly.
-* **Accessibility in offline mode:** all controls keyboard-operable; offline banners are role=`status` with clear language (“You’re offline. We’ll sync 3 items when you reconnect.”).
+  * ≥ 95 % sync success within 2 min of reconnect
+  * ≤ 1 % conflicts per 100 edits
+  * < 1 support ticket per 500 offline sessions
+  * Median reconnect → upload complete ≤ 30 s on 4G
 
-**Constraints & hygiene.**
+---
 
-* We do **not** persist access tokens in IndexedDB; only ephemeral session info in memory + cookies.
-* We **do not** cache partner/auditor data unless a report was explicitly opened.
-* Clearing cache deletes local drafts and queued evidence (with a confirmation). A redaction setting prevents any evidence bytes from being stored locally on shared machines.
+#### **Device and layout specifics**
 
-This gives you a boring-reliable PWA: complete the work anywhere, carry on across devices, and never lose a byte—even when the network gremlins are doing parkour.
+* **Responsive breakpoints:**
+
+  * phone ≤ 480 px • tablet 481–1024 px • desktop ≥ 1025 px
+  * Intake and Findings collapse to single-column on phone; primary actions remain thumb-reachable; touch targets ≥ 44 × 44 px.
+
+* **File picker UX:**
+
+  * Mobile can select camera or file source.
+  * Per-file progress bar + checksum tick on completion.
+  * Never retry silently more than five times; clear “Resume upload” CTA if needed.
+
+* **Accessibility offline:**
+
+  * All controls keyboard-operable.
+  * Offline banners use `role="status"` with explicit text: “You’re offline. We’ll sync 3 items when you reconnect.”
+
+---
+
+#### **Constraints and hygiene**
+
+* Access tokens never persisted in IndexedDB — only transient session context in memory and cookies.
+* Partner/auditor data cached only if a report was explicitly opened.
+* Clearing cache deletes drafts and queued evidence (with confirmation).
+* Optional **Redaction Mode** prevents local evidence caching on shared or public machines.
+
+---
+
+A PWA that behaves like this doesn’t need to impress; it just never loses work.
+Users can complete the job anywhere, pick up on another device, and trust that no byte or proof ever vanishes — even when the network’s gone feral.
+
+---
 
 <!-- specification -->
+
 ## 5. Data, Intelligence, and Automation
 
 This section covers how Transcrypt Essential collects, organises, and reuses **Cyber Essentials evidence**—the screenshots, logs, inventory exports, and policy documents that prove each control. The platform centres on predictable routines: guided forms capture structured answers, file uploads are immediately tagged to controls, and reminders close the loop when evidence goes stale. Runtime behaviour stays straightforward and reviewable so small teams can trust what the system is doing on their behalf.
