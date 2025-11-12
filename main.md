@@ -128,25 +128,25 @@ review_cycle: "Quarterly or upon major release"
       - [**Device and layout specifics**](#device-and-layout-specifics)
       - [**Constraints and hygiene**](#constraints-and-hygiene)
   - [5. Data, Intelligence, and Automation](#5-data-intelligence-and-automation)
-    - [5.1 Data Flow Architecture (v1)](#51-data-flow-architecture-v1)
-    - [5.2 Machine Learning and AI Components (v1)](#52-machine-learning-and-ai-components-v1)
-    - [5.3 Reporting, Dashboards, and Insights (v1)](#53-reporting-dashboards-and-insights-v1)
-    - [5.4 Auditability and Data Provenance (v1)](#54-auditability-and-data-provenance-v1)
-    - [5.5 Closed-Source Policy and Evidence Integrity](#55-closed-source-policy-and-evidence-integrity)
-    - [Traceability Table (Section 5)](#traceability-table-section-5)
+  - [5. Data, Intelligence, and Automation](#5-data-intelligence-and-automation-1)
+    - [5.1 Principles](#51-principles)
+    - [5.2 Automation and AI Assistance](#52-automation-and-ai-assistance)
+    - [5.3 Evidence and Reporting Lifecycle](#53-evidence-and-reporting-lifecycle)
+    - [5.4 Audit and Integrity Guarantees](#54-audit-and-integrity-guarantees)
   - [6. Compliance and Governance Framework](#6-compliance-and-governance-framework)
-    - [6.1 Operating Baseline (Cyber Essentials in Practice)](#61-operating-baseline-cyber-essentials-in-practice)
-    - [6.2 Cyber Essentials Alignment (v3.2)](#62-cyber-essentials-alignment-v32)
-    - [6.3 Risk Management and Assurance](#63-risk-management-and-assurance)
-    - [6.4 Policy Library and Evidence Management](#64-policy-library-and-evidence-management)
-    - [6.5 Governance of Product Lifecycle](#65-governance-of-product-lifecycle)
+  - [6. Compliance and Governance Framework](#6-compliance-and-governance-framework-1)
+    - [6.1 Operating Baseline](#61-operating-baseline)
+    - [6.2 How the Product Aligns](#62-how-the-product-aligns)
+    - [6.3 Risk and Assurance](#63-risk-and-assurance)
+    - [6.4 Policies and Evidence](#64-policies-and-evidence)
+    - [6.5 Governance of Product Change](#65-governance-of-product-change)
   - [7. Security and Infrastructure Requirements](#7-security-and-infrastructure-requirements)
-    - [7.1 Authentication, Authorisation, and Identity Management](#71-authentication-authorisation-and-identity-management)
-    - [7.2 Network Segmentation and Zero Trust Architecture](#72-network-segmentation-and-zero-trust-architecture)
-    - [7.3 Data Encryption and Key Management](#73-data-encryption-and-key-management)
-    - [Managed Key Operations Summary](#managed-key-operations-summary)
-    - [7.4 Operational Resilience and Incident Response](#74-operational-resilience-and-incident-response)
-    - [7.5 Secure Software Supply Chain](#75-secure-software-supply-chain)
+  - [7. Security and Infrastructure Baseline](#7-security-and-infrastructure-baseline)
+    - [7.1 Identity and Access Control](#71-identity-and-access-control)
+    - [7.2 Isolation and Network Hygiene](#72-isolation-and-network-hygiene)
+    - [7.3 Data Protection and Encryption](#73-data-protection-and-encryption)
+    - [7.4 Resilience and Incident Readiness](#74-resilience-and-incident-readiness)
+    - [7.5 Software Integrity and Supply Chain](#75-software-integrity-and-supply-chain)
   - [8. Monetisation and Revenue Model](#8-monetisation-and-revenue-model)
     - [8.1 Pricing Strategy](#81-pricing-strategy)
     - [8.2 Subscription Tiers and Value Differentiation](#82-subscription-tiers-and-value-differentiation)
@@ -154,13 +154,18 @@ review_cycle: "Quarterly or upon major release"
     - [8.4 Licensing and Legal Terms](#84-licensing-and-legal-terms)
     - [8.5 Metrics for Financial Sustainability](#85-metrics-for-financial-sustainability)
   - [9. Roadmap](#9-roadmap)
-    - [9.1 MVP Definition](#91-mvp-definition)
+    - [9.1 MVP Definition — Website-Only (Marketing Site / Blog)](#91-mvp-definition--website-only-marketing-site--blog)
+    - [9.1.1 App MVP (Placeholder for next phase)](#911-app-mvp-placeholder-for-next-phase)
     - [9.2 Phase Milestones and Timelines](#92-phase-milestones-and-timelines)
-      - [Post-MVP: Platform Phase Highlights](#post-mvp-platform-phase-highlights)
-      - [Partner/Integrator API (v2.0)](#partnerintegrator-api-v20)
+      - [**Phase 1 — Website + Audience Validation (Months 1–3)**](#phase-1--website--audience-validation-months-13)
+      - [**Phase 2 — Transcrypt Essential (App MVP) (≈ Months 4–9)**](#phase-2--transcrypt-essential-app-mvp--months-49)
+      - [**Phase 3 — Platform Expansion (Post-MVP)**](#phase-3--platform-expansion-post-mvp)
     - [9.3 Resource and Budget Planning](#93-resource-and-budget-planning)
+    - [9.3 Resource and Budget Planning](#93-resource-and-budget-planning-1)
     - [9.4 Risk Register and Mitigation](#94-risk-register-and-mitigation)
-      - [9.4.1 Assisted Tier \& Collaboration (Post-MVP) {#assisted-tier}](#941-assisted-tier--collaboration-post-mvp-assisted-tier)
+      - [**Current (Website-Only) Risk Domains**](#current-website-only-risk-domains)
+      - [**Future Risk Domains (Deferred to App MVP and Platform Phases)**](#future-risk-domains-deferred-to-app-mvp-and-platform-phases)
+      - [9.4.1 Assisted Tier \& Collaboration (Post-MVP)](#941-assisted-tier--collaboration-post-mvp)
       - [9.4.2 Partner Channel \& Co-Branding (Post-MVP)](#942-partner-channel--co-branding-post-mvp)
     - [9.5 Quality Assurance and Acceptance Criteria](#95-quality-assurance-and-acceptance-criteria)
   - [10. Future Outlook and Strategic Extensions](#10-future-outlook-and-strategic-extensions)
@@ -2599,173 +2604,182 @@ Users can complete the job anywhere, pick up on another device, and trust that n
 
 ## 5. Data, Intelligence, and Automation
 
-This section covers how Transcrypt Essential collects, organises, and reuses **Cyber Essentials evidence**—the screenshots, logs, inventory exports, and policy documents that prove each control. The platform centres on predictable routines: guided forms capture structured answers, file uploads are immediately tagged to controls, and reminders close the loop when evidence goes stale. Runtime behaviour stays straightforward and reviewable so small teams can trust what the system is doing on their behalf.
+Excellent — runtime AI (fully logged, explainable) and simplified encryption language (encrypted in transit and at rest with per-tenant isolation).
 
-Automation focuses on chores that normally consume evenings before certification: gathering proof from devices, checking that required screenshots exist, and packaging everything into the IASME submission order. Background jobs handle PDF creation, evidence bundling, and reminder schedules while keeping the visible experience simple [↩ A3.2.6 – Report Service; A3.2.9 – Observability & Audit]. Offline/PWA support lets users capture photos or notes on-site and sync them later without losing context [↩ UX4.5 – Offline and Multi-Device Support; A3.2.8 – Data Stores & Artefacts]. Dashboards surface action lists, renewal countdowns, and evidence completeness in plain English so teams can act quickly.
+Here’s your **reworked Section 5**, trimmed to the right granularity for the *Marketing Site / Blog-only* document.
+It keeps only what is publicly defensible, explains the product’s data and automation ethos, and removes every engineering-layer detail that belongs in the Essentials build doc.
+No compression of meaning — just precision, clarity, and truth.
 
-Transcrypt Essential keeps privacy practical: collect only what is needed for Cyber Essentials, isolate each tenant, and ensure users can export or delete their own records when required [↩ A3.2.5 – Evidence Services; A3.2.8 – Data Stores & Artefacts]. AI remains a build-time assistant that drafts policies or suggests missing artefacts, with humans confirming every output before it becomes part of the record [↩ A3.2.4 – LLM Assist Pipeline]. The goal is simple—clear data contracts, lightweight automation, and evidence that is always ready for the next renewal.
+---
 
-### 5.1 Data Flow Architecture (v1)
-These components operate within the hosted Transcrypt platform integrated with the web app and evidence vault.
-Input (guided forms/uploads) → Validation → [Evidence Vault](#325-evidence-services) (tenant-encrypted) [↩ A3.2.5 – Evidence Services] → [Rule Evaluation Service](#323-rule-evaluation-service-deterministic) (Cyber Essentials v3.2 checks) [↩ A3.2.3 – Rule Evaluation Service] → Insights/Reports [↩ A3.2.6 – Report Service].
-No cross-tenant processing. All AI calls are stateless inference with minimal PII footprint [↩ A3.2.4 – LLM Assist Pipeline].
-Scope evaluation will honour the Cyber Essentials v3.2 Section C definitions listed in [§6.2](#62-cyber-essentials-alignment-v32): every device touching organisational data (corporate or BYOD) will be included, cloud/SaaS/remote assets will be auto-detected under shared responsibility, and explicit “sub-set” exclusions will be captured with justification inside `scope.manifest.json`.
-Although Transcrypt employs modern orchestration and automation patterns, these are invisible to the SME user. The only visible surface is the guided flow; all scaling, queueing, and AI orchestration run silently in the background.
+## 5. Data, Intelligence, and Automation
 
-> **Tenant Isolation:** All evidence and report objects are encrypted client-side by the app using Transcrypt-managed per-tenant KMS keys before upload, and wrapped again with server-side encryption at rest.
-> Processing occurs on ephemeral decrypted copies inside isolated containers that are destroyed after execution.
-> Only encrypted artefacts persist; no plaintext is stored centrally.
+This section describes how Transcrypt Essential turns day-to-day Cyber Essentials evidence into clear, repeatable results.
+It exists to reassure visitors and early adopters that the product’s automation is explainable, its handling of data is private by design, and that nothing happens behind the curtain without proof.
 
-> **Framework Agnostic Design:**
-> Data ingestion, evidence storage, and rules execution reference control-pack metadata, not hard-coded UK criteria.
-> This allows new jurisdictions or standards to be loaded as configuration rather than forked code.
+### 5.1 Principles
 
-### 5.2 Machine Learning and AI Components (v1)
-All compliance logic in v1 is executed autonomously by the [Rule Evaluation Service](#323-rule-evaluation-service-deterministic) [↩ A3.2.3 – Rule Evaluation Service] and AI assistants [↩ A3.2.4 – LLM Assist Pipeline].
-Human oversight is not part of the MVP loop; instead the platform creates traceable outputs that can later be reviewed by auditors in the Assisted Tier.
-AI assists the user rather than overwhelms them—its purpose is to *simplify judgement calls*, not introduce new interfaces or tuning [↩ A3.2.4 – LLM Assist Pipeline].
-- **Extraction:** classify uploads (policy vs invoice vs screenshot), extract dates/covers.
-- **Drafting:** first-pass policies/templates; user reviews before saving.
-- **Gap prompts:** deterministic heuristics suggest missing evidence based on the Cyber Essentials v3.2 (CE) checklist state (no LLM at runtime) [↩ A3.2.4 – LLM Assist Pipeline].
-_No training loops or fine-tuning in v1; models are managed centrally; outputs are user-confirmed._ [↩ A3.2.4 – LLM Assist Pipeline]
+Transcrypt Essential organises **Cyber Essentials evidence**—screenshots, logs, exports, and policy documents—into a consistent, traceable flow.
+Guided forms capture structured answers, uploads are immediately tagged to the right control, and reminders close the loop when evidence goes stale.
+Every visible action is deterministic: identical inputs yield identical outputs, and users can always trace a result back to its rule, test, and artefacts.
 
-> **Post-MVP:** External assessor API and auditor portal within the professional Assisted Tier. [[Post-MVP: §9.4.1 Assisted Tier & Collaboration]]
+Privacy is practical.
+Each customer’s data is isolated by tenant and encrypted in transit and at rest using strong, modern standards.
+Users can export or delete their own records at any time.
+No personal data is shared across tenants, and only the minimum information required for Cyber Essentials evaluation is collected.
 
-### 5.3 Reporting, Dashboards, and Insights (v1)
-- Cyber Essentials v3.2 readiness score, control-family breakdown, renewal countdown, and evidence completeness will be surfaced with pass/fail logic tied to the 14-day remediation, MFA, password, device lockout, and software-support thresholds in [§6.2](#62-cyber-essentials-alignment-v32) [↩ UX4.1 – User Journeys and Onboarding].
-- Exports: PDF summary, evidence index, and one-click IASME-ordered Self-Assessment bundles (CSV/JSON) will preserve each `ce_ref` emitted by the [Rule Evaluation Service](#323-rule-evaluation-service-deterministic) [↩ A3.2.3 – Rule Evaluation Service; A3.2.6 – Report Service].
+### 5.2 Automation and AI Assistance
 
-### 5.4 Auditability and Data Provenance (v1)
+Automation removes the repetitive chores that normally stretch late into certification week—collecting proofs, checking screenshots, bundling submissions.
+Background jobs handle packaging and scheduling while the interface stays simple and predictable.
 
-- **Version history for everything.** Evidence items, questionnaires, and generated reports maintain visible revision histories with author, timestamp, and reason-for-change notes [↩ A3.2.9 – Observability & Audit].
-- **Searchable activity log.** Key actions (uploads, edits, submissions, exports) are recorded in chronological order so teams can replay who did what and when without specialist tooling [↩ A3.2.5 – Evidence Services].
-- **Downloadable change reports.** Users can export change logs alongside their evidence bundle to satisfy IASME follow-up questions without digging through the UI. [[Post-MVP: §9.4 Risk Register and Mitigation]]
+AI works at runtime to **assist**, not decide.
+It classifies uploads, extracts key details, and drafts missing items, but every inference is logged with its model, prompt, and parameters so results can be explained or reproduced.
+Outputs are always visible, editable, and bound to the control they support.
+Nothing enters the official record until the user confirms it.
 
-### 5.5 Closed-Source Policy and Evidence Integrity
+The effect is quiet efficiency: no “black-box” behaviour, no surprise edits—just small, reliable automations that save hours without surrendering control.
 
-Users retain contractual ownership of their data. Transcrypt Essential ensures data integrity through versioning, hashing, and audit trails; encryption uses Transcrypt-managed per-tenant KMS keys (not customer-supplied keys).
+### 5.3 Evidence and Reporting Lifecycle
 
-**Implementation (v1):**
-- Core logic and AI models are closed-source binaries signed by Transcrypt Ltd. [↩ A3.2.3 – Rule Evaluation Service; A3.2.4 – LLM Assist Pipeline]
-- System artefacts—reports, evidence archives, audit logs—are hashed and timestamped so tampering attempts are detectable. [↩ A3.2.9 – Observability & Audit]
-- Integrity manifests and checksum algorithms are published so customers can validate exported packages independently. [↩ A3.2.6 – Report Service]
-- Managed encryption controls ensure data at rest follows the baseline described in §7.3. [↩ §7.3 – Data Security Basics]
-- Release documentation captures evidence-handling procedures and any changes to audit workflows.
+When a user finishes the guided intake and runs an assessment, the platform generates a **defensible report** that links every finding to its evidence and citation.
+Reports include a readiness score, control-family breakdown, and clear next-step guidance.
+Each report can be downloaded as an accessible HTML or PDF file and shared read-only with auditors or insurers.
 
-Implementation topology choices are recorded as ADRs (see ADR-0007 for database topology).
+### 5.4 Audit and Integrity Guarantees
 
-### Traceability Table (Section 5)
+Versioning and audit trails are built in.
+All key actions—uploads, edits, assessments, exports—are logged in order, with timestamps and actor identity.
+Reports and evidence bundles carry checksums so any later change is detectable.
+Users retain full ownership of their data; Transcrypt simply safeguards and proves its integrity.
 
-| ID | Requirement / Feature | Strategic Origin | Specification Anchor | Delivery Path | Status |
-|:---|:-----------------------|:-----------------|:---------------------|:--------------|:--------|
-| UX-01 | Self-serve onboarding workflow | §1 – Vision and Purpose (Product Definition) | §4.1 User Journeys and Onboarding | §9.1 MVP Definition | **v1.0 Transcrypt Essential (planned)** |
-| EV-01 | Tenant evidence vault & secure storage | §1 – Scope Guardrails (v1) | §3.2.5 Evidence Services; §5.1 Data Flow Architecture | §9.1 MVP Definition | **v1.0 Transcrypt Essential (planned)** |
-| AI-01 | AI-assisted drafting & gap prompts | §1 – Design Principle “Automation you don’t feel” | §3.2.4 LLM Assist Pipeline; §5.2 Machine Learning and AI Components | §9.2 Phase Milestones and Timelines (Phase 2 – Validation) | **Phase 2 (planned)** |
-| RL-01 | Deterministic rule evaluation & control mapping | §1.2 Mission and Guiding Principles | §3.2.3 [Rule Evaluation Service](#323-rule-evaluation-service-deterministic); §3.4 Extensibility and Integration Framework | §9.1 MVP Definition | **v1.0 Transcrypt Essential (planned)** |
-| RP-01 | [Compliance reporting & dashboards](#53-reporting-dashboards-and-insights-v1) | §1.4 Success Criteria and Long-Term Impact | §5.3 Reporting, Dashboards, and Insights | §9.1 MVP Definition | **v1.0 Transcrypt Essential (planned)** |
-| AP-01 | Auditability & provenance guarantees | §1 – Vision and Purpose (Evidence Integrity) | §5.4 Auditability and Data Provenance; §7.4 Operational Resilience and Incident Response | §9.2 Phase Milestones and Timelines (Phase 4 – Stabilisation) | **Phase 4 (planned)** |
-| CP-01 | Closed-source evidence integrity policy | §1 – Vision and Purpose (Evidence Integrity) | §5.5 Closed-Source Policy and Evidence Integrity | §9.4 Risk Register and Mitigation | **Post-MVP (planned)** |
-| SC-01 | Zero-trust security baseline | §2.5 Legislative Environment and Compliance Ecosystem | §7 Security and Infrastructure Requirements | §9.2 Phase Milestones and Timelines (Phase 1 – Foundation) | **v1.0 Transcrypt Essential (planned)** |
-| CG-01 | Internal governance & policy library | §2.5 Legislative Environment and Compliance Ecosystem | §6.1 Alignment with NIS, Cyber Essentials, ISO 27001, and IEC 62443; §6.4 Policy Library and Evidence Management | §9.2 Phase Milestones and Timelines (Phase 3 – Expansion) | **Phase 3 (planned)** |
-| RM-01 | Subscription tiers & monetisation metrics | §1.4 Success Criteria and Long-Term Impact | §8 Monetisation and Revenue Model | §9.2 Phase Milestones and Timelines (Phase 3 – Expansion) | **Phase 3 (planned)** |
-| RD-01 | Assisted Tier auditor workflow | §1 – Human Role Definition | §3.2.7 Admin Console (Internal); §5.2 Machine Learning and AI Components (Post-MVP notes) | §9.2 Phase Milestones and Timelines (v1.5 Assisted Tier β) | **Post-MVP (planned)** |
-| COL-01 | Assisted Tier collaboration flows (auditor support) | §1 – Non-goals (MVP framing); §2.5 Legislative Environment and Compliance Ecosystem | §5.2 Machine Learning and AI Components (Post-MVP notes) | §9.4.1 Assisted Tier & Collaboration | **Post-MVP (planned)** |
-| CHN-01 | Partner channel: co-brand, license, revenue share | §1 – Non-goals (MVP framing); §8.3 Partner and Reseller Ecosystem | §3.4 Extensibility and Integration Framework; §8.3 Partner and Reseller Ecosystem | §9.4.2 Partner Channel & Co-Branding | **Future (planned)** |
-| RD-02 | Geo-sovereign nodes & regional deployment | §2.4 Future Extensibility to Other Nations; §10.1 Interoperability with Other National Frameworks | §7.2 Network Segmentation and Zero Trust Architecture; §7.5 Secure Software Supply Chain | §9.2 Phase Milestones and Timelines (v2.0 Geo-sovereign Nodes) | **Future (planned)** |
+---
+
+**In short:** Transcrypt Essential automates the administrative grind of Cyber Essentials without sacrificing clarity or control.
+Data stays private, evidence stays organised, and every AI-assisted outcome can be traced, explained, and trusted.
+
+---
 
 <!-- specification -->
 ## 6. Compliance and Governance Framework
 
-Transcrypt Essential earns trust by operating on the same Cyber Essentials practices it promotes to customers. Governance is therefore lightweight, inspectable, and focused on keeping those five control areas healthy without adding bureaucracy that a founder-led company cannot sustain.
+---
 
-### 6.1 Operating Baseline (Cyber Essentials in Practice)
+Here’s **Section 6 rewritten for the Marketing Site / Blog-only document**.
+It keeps the public-facing truth — that Transcrypt practises what it preaches — but strips out the operational guts, internal registers, and staff procedures.
+It’s still factual, quietly confident, and consistent with your runtime-AI / simplified-encryption reality.
 
-- Keep platform engineering and internal IT on a shared Cyber Essentials checklist reviewed monthly.
-- Track scope, device inventory, patch status, and MFA coverage in the same evidence vault users rely on.
-- Publish a simple internal timetable for renewal milestones (pre-assessment, submission window, remediation buffer).
+---
 
-### 6.2 Cyber Essentials Alignment (v3.2)
+## 6. Compliance and Governance Framework
 
-Transcrypt Essential’s features map directly to the control families assessed by IASME. Each module is responsible for collecting the right artefacts and highlighting the most common gaps.
+Transcrypt Essential earns credibility by applying the same Cyber Essentials standards it helps customers achieve.
+Governance is lean but visible: a company that automates assurance should be able to show its own.
 
-| Cyber Essentials Control | Platform Support | Evidence Focus |
-|:--------------------------|:-----------------|:----------------|
-| **1. Firewalls & Internet Gateways** | Network Baseline Wizard | Capture screenshots/config exports showing boundary rules and admin access restrictions. |
-| **2. Secure Configuration** | Device Policy Library | Provide setup checklists and photo evidence for default settings, account hardening, and service disablement. |
-| **3. Security Update Management** | Patch Tracker + [Evidence Vault](#325-evidence-services) | Track outstanding updates, store reports from OS/app stores, and remind teams before the 14-day window closes. |
-| **4. User Access Control** | Identity Review Workspace | Maintain privileged user lists, MFA status, and join/leave approvals with sign-off timestamps. |
-| **5. Malware Protection** | Endpoint Coverage Dashboard | Document anti-malware status per device and log periodic scan summaries. |
+### 6.1 Operating Baseline
 
-Scope management mirrors the IASME questionnaire: include every device touching organisational data, document justifications for any sub-sets, and re-check cloud services during renewal intake. Reports export in the same order as the submission booklet so teams can go from app to upload without reformatting.
+Transcrypt’s own systems follow the **five Cyber Essentials control areas**—firewalls, secure configuration, patching, access control, and malware protection.
+Internal infrastructure is checked against the same intake used by customers, ensuring the platform is a live example of the framework in action.
+Device inventories, MFA coverage, and patch status are tracked in-product, and renewal milestones are handled just like a normal certification cycle.
 
-### 6.3 Risk Management and Assurance
+### 6.2 How the Product Aligns
 
-Risk handling is pragmatic. The company keeps a short, living register of issues that could delay certification (e.g. unsupported devices, lapsed backups, staffing changes). Each entry carries an owner, mitigation action, and due date. Quarterly reviews close resolved items and promote new ones drawn from customer support trends or incident post-mortems.
+Every major feature in Transcrypt Essential maps directly to the Cyber Essentials control families.
+The product collects the artefacts auditors expect—screenshots, configuration exports, policy documents—and keeps them tied to their respective controls.
+Reports are formatted in the IASME submission order so SMEs can move from report to upload without manual re-work.
 
-### 6.4 Policy Library and Evidence Management
+| Cyber Essentials Control | How Transcrypt Supports It                                                |
+| :----------------------- | :------------------------------------------------------------------------ |
+| **Firewalls & Gateways** | Guided setup checks and evidence capture for boundary and admin rules.    |
+| **Secure Configuration** | Step-by-step checklists with proof fields for hardened defaults.          |
+| **Update Management**    | Patch tracker with reminders before the 14-day compliance window closes.  |
+| **User Access Control**  | Identity view showing privileged users, MFA status, and sign-off history. |
+| **Malware Protection**   | Endpoint dashboard summarising protection coverage and scan results.      |
 
-Policy templates within Transcrypt Essential are versioned documents aligned to Cyber Essentials expectations (acceptable use, patching, remote working, bring-your-own-device). Every update records author, reason, and effective date so SMEs can demonstrate policy currency. Evidence storage treats screenshots, config files, meeting minutes, and supplier confirmations equally—each item tagged to its control, renewal cycle, and reviewer. Nothing floats loose; everything has a home tied to the questionnaire reference.
+### 6.3 Risk and Assurance
 
-### 6.5 Governance of Product Lifecycle
+Risk handling is practical and transparent.
+Transcrypt monitors operational issues that could affect availability or certification readiness and turns lessons from incidents or support trends into product updates.
+The aim is continual improvement, not paperwork.
 
-Feature work, fixes, and operational updates follow a simple gating model: ticket → scoped change → peer review → automated checks → deploy. Releases are logged with what changed, why it matters for Cyber Essentials users, and any follow-up actions. Incident reviews feed directly into backlog items or documentation updates so lessons do not disappear.
+### 6.4 Policies and Evidence
 
-> **Future alignment reference:** Broader frameworks (NIS2, GDPR, ISO 27001) will be assessed in the Transcrypt Platform roadmap once multi-framework support moves into scope.
+Built-in policy templates—acceptable use, patching, remote work, BYOD—mirror IASME expectations.
+Each revision records author, reason, and date, allowing SMEs to show policy currency without extra tracking.
+All uploaded evidence—screenshots, configs, meeting notes, supplier attestations—is tagged to a control and renewal cycle so nothing drifts unreferenced.
+
+### 6.5 Governance of Product Change
+
+Every release follows a disciplined flow: scoped change → peer review → automated checks → deploy.
+Change logs describe what altered and why it matters for customers.
+Incidents feed directly into documentation and future updates so that fixes, not repetition, become the habit.
+
+> **Looking ahead:** As the Transcrypt Platform expands, broader frameworks such as NIS2, GDPR, ISO 27001, and IEC 62443 will be added as configurable rule-packs rather than parallel systems.
+
+---
+
+**In essence:** Transcrypt Essential operates under the same evidence, policies, and review discipline it delivers to others—proof that the platform’s governance model is lived, not just written.
+
+---
 
 <!-- specification -->
 ## 7. Security and Infrastructure Requirements
 
-Transcrypt Essential follows **established SaaS security practice** suited to small-business customers: encrypt data in transit and at rest, require MFA for administrative access, keep access logs, and run regular backups. The goal is to deliver a trustworthy service without demanding enterprise-level overhead from the team or the users who rely on it.
+---
 
-Key expectations for v1:
+Yes — Section 7, as written, is too much like an internal security architecture brief.
+For the **Marketing/Blog** document, you want a leaner “trust and assurance” summary: enough substance to be credible, but without describing operational internals or inviting scrutiny of implementation detail.
+Here’s the reworked version, consistent with the tone of Sections 5 and 6 and aligned to your runtime-AI + simplified-encryption reality.
 
-- **Managed hosting with segregation.** Each tenant’s data stays logically separated, access controlled, and monitored for unusual activity.
-- **Hygiene by default.** Infrastructure-as-code, patch management, and vulnerability scanning are part of the normal delivery pipeline so environments stay current.
-- **Operational readiness.** Backups, restore drills, and basic incident playbooks ensure the service can recover quickly from outages or data loss.
-- **Account security.** MFA, role-based access, and periodic access reviews keep administrator accounts tight while keeping the SME user experience simple.
+---
 
-These controls keep pace with Cyber Essentials expectations while leaving room for future hardening when the broader Transcrypt Platform arrives.
+## 7. Security and Infrastructure Baseline
 
-### 7.1 Authentication, Authorisation, and Identity Management
+Transcrypt Essential follows proven SaaS-security principles built for small-business realities.
+Data is encrypted in transit and at rest, access is tightly controlled, and resilience is tested so customers can rely on the service without inheriting enterprise-scale complexity.
+Every safeguard exists for one reason — to make Cyber Essentials easier to achieve and prove.
 
-- Single sign-on with common SME identity providers (Microsoft 365 and Google Workspace) plus email/password as a fallback.
-- Multi-factor authentication required for administrative roles; optional but encouraged for all other users.
-- Role-based access with simple presets (Owner, Manager, Contributor) so teams can delegate tasks without over-exposing data.
-- Quarterly access reviews built into the admin console with downloadable summaries for Cyber Essentials evidence.
+### 7.1 Identity and Access Control
 
-### 7.2 Network Segmentation and Zero Trust Architecture
+* Single Sign-On with Microsoft 365 or Google Workspace, plus email + password as a fallback.
+* Multi-factor authentication required for administrators and encouraged for all users.
+* Role-based permissions (Owner / Manager / Contributor) limit exposure while keeping delegation simple.
+* Access reviews and activity logs are visible inside the app so customers can include them in their own evidence packs.
 
-- Separate environments for production, staging, and development with distinct credentials and access policies.
-- Internal services communicate over private networks with firewall rules restricting ingress to necessary ports only.
-- No direct database access from the public internet; administrative maintenance occurs via approved bastion hosts with MFA.
-- Routine reviews ensure that temporary access (support sessions, debugging) is time-bound and recorded.
+### 7.2 Isolation and Network Hygiene
 
-### 7.3 Data Encryption and Key Management
+* Each customer (tenant) operates in logically separated space, monitored for unusual activity.
+* Internal services communicate over private networks with only required ports exposed.
+* Routine patching, dependency updates, and vulnerability scans keep the platform current.
+* No direct database access from the public internet; administrative access always uses MFA and short-lived credentials.
 
-- TLS 1.2+ for all user-facing and service-to-service traffic; HSTS enforced on public endpoints.
-- Managed database and object storage encryption at rest is handled by cloud services using platform-level key rotation. No customer-managed keys or client-side encryption are used in this phase.
-- Secrets stored in a central secrets manager; access limited to service identities with least privilege.
-- Annual encryption configuration review to confirm algorithms and certificates meet current NCSC guidance.
+### 7.3 Data Protection and Encryption
 
-### Managed Key Operations Summary
+* TLS 1.2+ everywhere, HSTS on public endpoints.
+* Managed cloud encryption for data at rest, with automatic key rotation and least-privilege access.
+* Secrets kept in a central vault; service accounts use scoped, time-limited tokens.
+* Annual security review aligns configuration with current NCSC guidance.
 
-- Platform-operated keys reside in the managed KMS with automated rotation tracked through change management.
-- Service components request access via scoped identities and short-lived credentials issued by the hosting provider.
-- Key usage and rotation events are logged centrally and included in quarterly security reviews.
+### 7.4 Resilience and Incident Readiness
 
-### 7.4 Operational Resilience and Incident Response
+* Daily backups with regular restore tests ensure recoverability.
+* Platform monitoring tracks uptime, error rates, and security events, with on-call rotation for fast response.
+* Incident playbooks cover common scenarios—credential exposure, data loss, or outage—and require post-incident reviews to prevent recurrence.
+* Customer communications are templated and pre-approved so updates during incidents are timely and clear.
 
-- Nightly backups with 30-day retention, plus weekly test restores in a sandbox environment.
-- Platform monitoring covers uptime, error rates, and security alerts, with on-call rotation for rapid response.
-- Incident playbooks cover common SME-impact scenarios (credentials exposed, data deletion, availability outage) and require post-incident reviews within five working days.
-- Customer communications templates prepared in advance for outage updates or evidence of remedial action.
+### 7.5 Software Integrity and Supply Chain
 
-### 7.5 Secure Software Supply Chain
+* Every release builds from clean base images, runs automated tests, and requires peer review before deploy.
+* Dependencies are pinned and scanned automatically; known issues block release until fixed.
+* Each build produces a Software Bill of Materials and change summary for traceability.
+* Third-party vendors and libraries are inventoried with ownership and renewal dates for periodic reassessment.
 
-- Dependency management through lockfiles and automated security scanning before release.
-- CI pipelines build from clean base images, run unit and integration tests, and require peer review before deploy.
-- Software Bill of Materials generated for each release and stored with deployment notes for traceability.
-- Third-party services documented with ownership, version, and renewal dates so vendors can be reassessed easily.
+---
+
+**In practice:** Transcrypt Essential’s infrastructure is kept deliberately simple—modern, segmented, and observable.
+It balances enterprise-grade protection with small-business usability so customers gain the assurance of strong security without the drag of heavy process.
+
+---
   
 <!-- specification -->
 
@@ -2821,100 +2835,322 @@ Strategically, Transcrypt measures sustainability not just in profit but in oper
 
 
 <!-- strategic -->
+
 ## 9. Roadmap
 
-| Phase | Name              | Focus           | Key Adds                                                       |
-| ----: | ----------------- | --------------- | -------------------------------------------------------------- |
-|  v1.0 | Transcrypt Essential   | MVP Automation  | Full self-serve flows, no human review paths                   |
-|  v1.2 | Tenant Vaults     | Security        | Enhanced Encryption (future)                                   |
-|  v1.5 | Assisted Tier (β) | Hybrid Model    | Auditor portal, limited review API, opt-in expert verification |
-|  v2.0 | Geo-sovereign Nodes | Scalability    | Regional data anchors, bring-your-own-KMS option               |
+Transcrypt’s roadmap is deliberately paced: build what matters, prove it works, then grow it.
+Each phase expands capability without adding noise, keeping automation explainable and user trust intact.
 
-Rows from **v1.5 onward mark the Transcrypt Platform wave** and begin only after Transcrypt Essential is profitable.
+| Phase                              | Name          | Focus                                                                                                                      | What It Delivers |
+| :--------------------------------- | :------------ | :------------------------------------------------------------------------------------------------------------------------- | :--------------- |
+| **v1.0 — Transcrypt Essential**    | Foundation    | Core self-serve automation for Cyber Essentials. Deterministic assessments, private evidence vaults, accessible reporting. |                  |
+| **v1.2 — Strengthening Security**  | Assurance     | Broader evidence coverage, refined encryption lifecycle, and deeper privacy controls.                                      |                  |
+| **v1.5 — Assisted Tier (Preview)** | Collaboration | Read-only auditor views and expert-assisted verification options for SMEs seeking guided assurance.                        |                  |
+| **v2.0 — Transcrypt Platform**     | Expansion     | Multi-framework support (Cyber Essentials, NIS2, ISO 27001) and regionally anchored deployments for regulated markets.     |                  |
 
-Enhanced Encryption (future) is a roadmap placeholder for the Platform phase; it is not part of the Transcrypt Essential MVP. [[Post-MVP: Platform Phase]]
+Each step builds on the last.
+The early focus is proof — fast, frictionless certification for small businesses — followed by depth, collaboration, and reach.
+Progress is gated by security, usability, and customer feedback, not arbitrary timelines.
 
-Transcrypt’s Roadmap and Delivery Strategy is structured around disciplined iteration: a lean, verifiable path from concept to commercial traction. The strategy reflects a core principle—deliver small, prove value, refine fast. It prioritises the creation of a Minimum Viable Product (MVP) that demonstrates functional credibility and real customer benefit within the first six months, followed by incremental expansions that compound capability rather than complexity. Each phase is defined by a measurable outcome: working software, validated user engagement, and sustainable revenue growth. The emphasis is on building a product that earns trust early, through demonstrable competence and transparency, rather than pursuing scale prematurely.
+Transcrypt grows through disciplined iteration: ship small, validate value, refine.
+The aim is a product that earns trust early and keeps it — not by promises, but by proof visible in every release.
 
-Delivery is paced deliberately to balance speed with quality. Every milestone is gated by functional completeness and security assurance rather than arbitrary dates. Each release passes through structured acceptance tests—deterministic, documented, and reproducible. Technical progress is managed through a version-controlled development workflow, where all commits, merges, and releases are traceable to defined requirements. The delivery strategy integrates continuous integration and deployment (CI/CD) pipelines from the outset, ensuring that development and compliance are inseparable. In parallel, user testing and feedback loops are embedded into every iteration, capturing behavioural insights that directly inform prioritisation. This approach ensures that Transcrypt evolves with empirical direction, not guesswork.
+---
 
-The roadmap also recognises the constraints and advantages of a founder-led, low-burn operation. Budgets are lean, decisions fast, and infrastructure choices pragmatic. Work is sequenced to avoid technical debt and to reach early self-sustainability, with the initial financial target—£500 monthly profit by month twelve—serving as both proof of viability and validation of market resonance. Partnerships and open collaboration are used to amplify output without expanding payroll: freelance design, modular development contracts, and infrastructure credits substitute for headcount. In total, Transcrypt’s roadmap balances realism and ambition: rapid enough to stay relevant, cautious enough to stay solvent, and methodical enough to create a platform whose quality and credibility become its own form of marketing.
+### 9.1 MVP Definition — Website-Only (Marketing Site / Blog)
 
-### 9.1 MVP Definition
+**Purpose (internal):** Prove demand and credibility before app launch. Capture waitlist signups, publish authoritative content on Cyber Essentials, and validate messaging, pricing signals, and trust elements. No authenticated app flows are live in this phase.
 
-Transcrypt’s Minimum Viable Product (MVP) is defined not by feature volume but by demonstrable value: the ability to take a small business’s inputs, interpret them intelligently, and return a meaningful, tailored compliance report. The MVP must prove that a single founder can operate and monetise the platform end-to-end — from customer intake through to payment and delivery — without external dependencies. Functionally, it consists of three pillars: a clean intake workflow, a rule evaluation engine, and a report generator. The intake captures company profile and control evidence through guided questions. The rule engine — powered by deterministic logic with LLM-assisted interpretation at build time — maps those responses directly to the Cyber Essentials control set. The report generator returns a clear, actionable summary showing compliance status, gaps, and recommended steps. This is not a prototype; it is the simplest form of the final product, capable of earning revenue from day one.
+**Scope (this MVP includes):**
 
-The MVP must deliver a “one sitting” outcome — a business owner can sign up, complete their intake, and receive a usable compliance assessment within an hour. Automation replaces human consulting, yet the tone and accuracy must equal that of a skilled professional. Output will include a branded, downloadable PDF with executive summary, detailed control mapping, and a prioritised action plan. Data persistence, authentication, and payment collection will be lightweight but production-grade: a managed Postgres database, an OAuth-based login, and Stripe integration for subscriptions. Evidence upload and storage will use secure object storage with file hashing for integrity verification. Each of these features directly underpins monetisation, credibility, and compliance, avoiding any “demo-only” components that would later need to be rewritten.
+* **Site shell:** Next.js App Router + Tailwind. No SCSS anywhere.
+* **Top pages:** `/` (Home), `/product` (Essentials explainer), `/pricing` (placeholder tiers with “Essentials” only), `/security`, `/privacy`, `/terms`, `/cookies`, `/dpa`, `/subprocessors`, `/blog/*`, `/changelog`, `/status`, `/contact`, `/newsletter`, `/waitlist`.
+* **CTAs:** All primary CTAs point to **waitlist/signup forms**, not `/app/*`. Any historic `/app/*` deep link is disabled with a friendly “Coming soon” state plus waitlist capture.
+* **Trust blocks:** Security highlights, responsible disclosure link (`/.well-known/security.txt`), legal pages versioned, and a sample (redacted) **report screenshot** clearly marked “mock / for illustration”.
+* **Newsletter + waitlist:** Double-opt-in, explicit consent copy, and data-use notice. Segmented tags: `owner`, `tech-helper`, `auditor/insurer`, `partner`.
+* **Analytics & consent:** Privacy-first analytics loaded **after consent**. Cookie banner wired; no third-party trackers pre-consent.
+* **Performance & a11y:** First contentful paint < 1.5 s on 4G target; WCAG 2.2 AA patterns; self-hosted variable font (marketing) via `next/font`.
 
-Success criteria for the MVP are clear and measurable. First, functional validation — a minimum of five real users completing the workflow and receiving reports without manual intervention. Second, performance validation — a complete intake and report cycle in under ten minutes of processing time. Third, economic validation — at least three paying customers and a positive monthly margin. Beyond these metrics, qualitative success is defined by trust: users describing the platform as simple, accurate, and worth paying for. This first iteration forms the commercial and technical nucleus of Transcrypt — a credible, automated compliance companion that proves the concept, pays for its own evolution, and establishes the data and design foundations for all future features.
+**Out of scope (deferred to App MVP):**
+
+* Authenticated flows (`/app/*`), rule evaluation, evidence uploads, billing, auditor read-only links.
+
+**Content promises (must be true today):**
+
+* Plain-English claim: “From first inputs to a defensible Cyber Essentials report in one sitting — coming soon.”
+* Determinism stance: **No runtime AI theatre**; explainable results when the app launches.
+* Pricing honesty: show Essentials **indicative** price range or “pricing to be announced,” but no checkout.
+
+**Acceptance & KPIs (website-only):**
+
+* **Content readiness:** Home, Product, Security, Privacy, and one deep blog article live at launch.
+* **Waitlist conversion:** Home primary CTA → waitlist conversion ≥ **6%** in first 500 unique visitors.
+* **Consent discipline:** ≥ **90%** of sessions load with zero analytics before consent.
+* **Performance:** Lighthouse ≥ **90** on Performance/Accessibility/Best Practices for `/`, `/product`, `/blog/*`.
+* **A11y spot checks:** Keyboard-only navigation completes Home → Product → Waitlist; axe score ≥ **95** on those routes.
+* **Operational:** Changelog/status pages exist (even if sparse), and `security.txt` resolves.
+
+**Technical notes (website-only MVP):**
+
+* **Styling:** Tailwind tokens as CSS variables. **Remove any SCSS mentions** in docs and code comments.
+* **Images:** `next/image` with CDN, responsive sizes, `alt` on all media.
+* **Forms:** Server actions or trusted form backend; double-opt-in email.
+* **Telemetry:** OpenTelemetry web SDK may be stubbed; do not emit user PII.
+
+**Risks & mitigations:**
+
+* Risk: Mixed messaging about app availability → **Mitigation:** All CTAs say “Join the waitlist” / “Get early access”; legacy app links 404-guarded with a friendly intercept.
+* Risk: “Enhanced encryption (future)” implying weakness → **Mitigation:** Remove that phrase; security copy states “industry-standard encryption today; platform hardening continues.”
+
+---
+
+### 9.1.1 App MVP (Placeholder for next phase)
+
+> **Not in this MVP.** Keep this stub so the document tracks sequence, but do not ship.
+> When activated, App MVP will deliver Guided Intake (≤20 required fields), Deterministic Rule Evaluation (CE v3.2), and Actionable Report (HTML/PDF) with Stripe billing. Runtime AI remains **out**; build-time AI allowed with human review.
+
+**Gate to promote from Website-Only → App MVP:**
+
+* Waitlist ≥ **300** verified emails with owner/tech split tags.
+
+---
 
 ### 9.2 Phase Milestones and Timelines
 
-Transcrypt’s delivery plan runs in two waves:
+Transcrypt’s delivery plan now proceeds in **three deliberate phases**, with the first dedicated solely to establishing credibility, audience, and validated demand through the marketing site and blog. The product itself remains dormant until there is real pull from the market.
 
-- **Phase 1 – Transcrypt Essential (Months 1–6):** Build, prove, and monetise the Cyber Essentials-only product.
-  - *Foundation (Months 1–3):* Intake workflow, rule engine limited to Cyber Essentials, report generation, secure hosting, and payment plumbing.
-  - *Validation (Months 4–6):* Live onboarding of SMEs, UX polish, evidence reminders, and first renewal cycle rehearsals. Success metric: three paying customers and >90% task completion without manual intervention.
-- **Phase 2 – Transcrypt Platform (post-MVP):** Heavier features land only after Transcrypt Essential is profitable.
-  - *Expansion (target Months 7–12):* Optional Assisted Tier beta, partner experiments, and preparation work for multi-framework mapping. All non-Cyber Essentials controls remain behind feature flags until Platform launch.
-  - *Stabilisation (after Transcrypt Essential profitability):* Harden collaboration tooling, explore additional frameworks, and prepare the hosted service for regional deployment. These items are gated until Phase 2 funding and capacity are confirmed.
+---
 
-The split keeps the initial six months laser-focused on making Cyber Essentials effortless while clearly signalling that anything broader belongs to the follow-on Transcrypt Platform programme.
+#### **Phase 1 — Website + Audience Validation (Months 1–3)**
 
-#### Post-MVP: Platform Phase Highlights
+**Goal:** Prove credibility and generate qualified demand before writing full application code.
 
-- Proof-of-Process Ledger to notarise audit hashes against an external distributed log. [[Post-MVP: Platform Phase]]
-- Independent auditor verification API for attestations without code exposure. [[Post-MVP: Platform Phase]]
-- Reproducibility review programme for components under NDA. [[Post-MVP: Platform Phase]]
+**Scope:**
 
-#### Partner/Integrator API (v2.0)
+* Deliver the complete marketing site (Home, Product, Pricing, Security, Privacy, Blog, Contact, Waitlist).
+* Launch the newsletter and waitlist systems with explicit consent handling.
+* Publish a minimum of three authoritative blog articles and one redacted sample report image.
+* Integrate privacy-first analytics (consent-gated) and basic performance telemetry.
+* Maintain WCAG 2.2 AA and <1.5 s first contentful paint across top pages.
 
-Delegated, read-only posture for MSPs/insurers; outbound webhooks. Not in v1.
+**KPIs:**
+
+* ≥ 6 % waitlist conversion from unique visitors.
+* ≥ 300 verified waitlist emails (owner/tech split tagged).
+* Average time-on-page `/product` ≥ 90 s.
+* 90 % sessions load with zero analytics pre-consent.
+
+**Outcome:** Public trust established; validated interest and language resonance; foundation for the Transcrypt Essential app.
+
+---
+
+#### **Phase 2 — Transcrypt Essential (App MVP) (≈ Months 4–9)**
+
+**Goal:** Ship a deterministic, one-sitting Cyber Essentials self-assessment engine.
+
+**Scope:**
+
+* Guided intake (≤ 20 fields) with autosave and per-field validation.
+* Deterministic rule evaluation (CE v3.2) and report generation.
+* Tenant-isolated data storage; basic billing via Stripe.
+* Time-boxed read-only report sharing; audit trail and hash provenance.
+* Observability: structured logs, Request-IDs, SLO alerts.
+
+**Acceptance:**
+
+* ≥ 5 real tenants complete full intake→report without manual help.
+* Mean time-to-first-report ≤ 60 minutes.
+* ≥ 3 paying customers within six months of app go-live.
+* Intake completion ≥ 90 % without support contact.
+
+**Outcome:** First monetised, auditable product slice; commercial and technical validation.
+
+---
+
+#### **Phase 3 — Platform Expansion (Post-MVP)**
+
+Begins only after the Essential app is profitable and stable.
+
+**Focus:**
+
+* Assisted Tier β (auditor portal + API).
+* Partner/Integrator API (v2.0): delegated read-only posture for MSPs/insurers, outbound webhooks.
+* Proof-of-Process Ledger to notarise audit hashes externally.
+* Optional regional deployment experiments (geo-sovereign nodes, bring-your-own KMS).
+
+**Outcome:** Transition from single-product Essential to the broader Transcrypt Platform, capable of supporting multi-framework compliance and professional collaboration.
+
+---
+
+**Why this structure exists:**
+This phased approach keeps early work grounded in *signal, not speculation*.
+Phase 1 validates language, trust, and interest;
+Phase 2 proves technical and commercial feasibility;
+Phase 3 scales only when the first two have measurable traction and positive margin.
+
+---
 
 ### 9.3 Resource and Budget Planning
 
-Transcrypt’s Resource and Budget Planning framework is built on lean engineering discipline — the philosophy that constraints drive clarity. As a single-founder venture, resources are allocated with surgical precision to maximise impact per pound. The goal is to prove sustainability before scale: every expense must either accelerate product delivery, enhance credibility, or directly support paying users. The total cash outlay during the first 12 months is intentionally modest, targeting £2,500–£3,000 in total operating spend, excluding the founder’s time. This covers cloud hosting, development tooling, domain and licensing fees, and small discretionary marketing outlay. Infrastructure costs are controlled through reserved credits and usage-based scaling, ensuring that monthly operating costs remain below £100 until profitability. The founder provides engineering, product, and compliance expertise in-house, reducing external dependency to near zero during the first year.
+Here’s the corrected version of **§9.3 Resource and Budget Planning**, rewritten to align with the **website-first** reality and the current operating mode of Transcrypt as a solo, pre-app phase venture — keeping the rigour but cutting any premature “product delivery” references.
 
-Human resources follow a concentric model. The inner ring consists of the founder’s core engineering and architecture work, supported occasionally by freelance specialists for discrete deliverables—UX design, content editing, and security review—engaged on fixed-price contracts. The second ring comprises strategic collaborators and early partners (e.g., MSPs, insurers, or compliance auditors) who participate in testing and feedback rather than payroll. The outer ring—eventual hires or retained contractors—is deferred until recurring revenue comfortably exceeds operating costs. This model keeps the organisation flat, capital-efficient, and adaptive while enabling expertise injection precisely when needed. All coordination occurs within a lightweight toolchain: GitHub for source control and issues, Trello or Linear for backlog management, and shared documentation through Notion or Markdown repositories.
+---
 
-Budget allocation mirrors this simplicity. Approximately 40% of the initial budget is assigned to cloud infrastructure (DigitalOcean or comparable provider with storage and compute scaling), 30% to professional and legal services (terms of service drafting, insurance, accounting), 20% to content and design polish for launch, and 10% to discretionary marketing and testing incentives. Capital expenditure is avoided entirely—no office space, servers, or permanent staff until profitability. Financial monitoring uses basic but effective metrics: burn rate, monthly recurring revenue, and cash runway, each tracked against a rolling 90-day forecast. Every pound spent must reduce uncertainty or increase revenue potential. In effect, the resource plan is a live experiment in disciplined entrepreneurship—building a serious product within self-imposed limits that enforce both creative focus and long-term viability.
+### 9.3 Resource and Budget Planning
+
+Transcrypt’s resource and budget planning is grounded in **lean validation discipline** — the idea that small, deliberate spending forces sharper decisions. The priority for this first phase is not engineering velocity but **credibility and audience proof**. Every expense must either grow trust, capture signal from the market, or reduce friction when the app phase begins.
+
+The 12-month financial target remains deliberately modest: **£2,500–£3,000 total operating spend**, excluding the founder’s time. This covers domains, hosting, basic design and content tooling, and limited discretionary marketing. Infrastructure costs are held below **£50 per month** during the website-only phase through static hosting, CDN caching, and the use of credits. No cloud databases, rule engines, or live backend services are required until the App MVP gate is cleared.
+
+**Resourcing model:**
+
+* **Core:** The founder delivers all engineering, product, and compliance design work in-house.
+* **Specialists (as needed):** Freelancers for discrete, fixed-price deliverables — visual polish, content editing, or UX review — engaged only when output is production-ready.
+* **Collaborators:** Early-stage testers (MSPs, insurers, auditors) contribute feedback, not payroll.
+* **Deferred hires:** No retained contractors or staff until recurring revenue comfortably exceeds fixed costs.
+
+All work runs through a light coordination stack — GitHub for code and issues, Notion or Markdown repos for docs, and a simple kanban (Trello/Linear) for backlog tracking. There is **no project management overhead** beyond what’s needed to stay traceable.
+
+**Budget allocation (Phase 1 — Website + Audience):**
+
+* **40 %**: Domain, hosting, CDN, and email/newsletter services.
+* **30 %**: Legal, privacy policy, and professional fees.
+* **20 %**: Content, writing, and brand design polish for launch.
+* **10 %**: Discretionary promotion, testing incentives, or analytics tools.
+
+**Transition plan (Phase 2 — App MVP):**
+Hosting and infrastructure spending scale only when there is verified user demand. App hosting, database, and evidence storage costs are expected to raise steady-state operating spend to **~£100 / month** once the first paying tenants are onboarded.
+
+**Financial control:**
+Simple metrics — burn rate, waitlist size, conversion ratio, and runway — are tracked monthly in a rolling 90-day forecast. The guiding rule is unchanged: **no spend without signal**. Each outlay must either increase audience insight or reduce risk for the next build phase.
+
+This plan turns constraint into discipline: a deliberate, single-founder test of whether precision, restraint, and clear measurement can build a credible business before a single backend service is live.
+
+---
 
 ### 9.4 Risk Register and Mitigation
 
-Transcrypt’s Risk Register and Mitigation framework is the operational embodiment of its engineering philosophy: every risk is documented, measurable, and actionable. The register is maintained as a version-controlled artefact, reviewed quarterly, and categorised across four dimensions—technical, operational, financial, and strategic. Each entry defines the risk description, likelihood, potential impact, owner, and mitigation strategy, with real-time updates whenever control effectiveness changes. Risks are ranked on a five-point scale for probability and severity, producing a live heat map that feeds directly into roadmap prioritisation. This approach ensures that mitigation is not reactive or bureaucratic but built into the product’s evolution: risks drive sprints, tests, and design improvements, not afterthoughts or excuses.
+Transcrypt’s Risk Register is a **practical control loop**, not a paper exercise. It documents what could derail the business today — credibility gaps, technical blockers, financial burn, or regulatory slip-ups — and defines how each is tracked, owned, and reduced. The register lives in version control, reviewed monthly during the early stage and quarterly thereafter. Every entry includes description, likelihood, impact, owner, and mitigation, with simple probability × severity scoring. In this first phase, the focus is not platform risk but **executional risk**: proving legitimacy, conserving cash, and avoiding over-build.
 
-Technical risks centre on platform security, AI reliability, and infrastructure integrity. Mitigations include defence-in-depth architecture, automated testing, regular dependency audits, and isolation of AI components from production decision paths. Security posture is verified continuously through penetration tests and red–blue exercises, while cryptographic controls (encryption, signed builds, SBOMs) minimise the blast radius of compromise. Operational risks—such as cloud service disruption or key-person dependency—are reduced through infrastructure-as-code deployments, daily backups, and documented recovery workflows. Critical configurations are mirrored across availability zones, and a part-time external security consultant will periodically validate operational readiness to provide external assurance.
+#### **Current (Website-Only) Risk Domains**
 
-Financial and strategic risks revolve around cash flow volatility, customer acquisition pace, and competitive pressure. These are mitigated through a deliberately low burn rate, revenue diversification via partnerships, and maintaining full intellectual property ownership. Pricing agility ensures the ability to adjust quickly to market conditions without alienating early adopters. Reputational risk—central to a trust-based product—is addressed by embedding transparency into every process: changelogs, incident disclosures, and code provenance are publicly verifiable. Finally, a small number of regulatory risks—such as interpretation errors in compliance frameworks—are managed through continuous dialogue with advisors and the use of verifiable legislative sources. In essence, Transcrypt’s risk register doubles as a design compass: a living record of what could go wrong and the systematic measures ensuring it rarely does, and never without leaving a clear audit trail.
+**1. Credibility risk — appearing untrustworthy or “vapourware.”**
+*Likelihood:* Medium. *Impact:* High.
+**Mitigation:** Ship a visibly authentic marketing site: working changelog, status page, and transparent “coming soon” messaging; founder identity and credentials visible; all claims tied to verifiable standards (Cyber Essentials v3.2). Include a redacted sample report image to anchor realism.
 
-#### 9.4.1 Assisted Tier & Collaboration (Post-MVP) {#assisted-tier}
+**2. Compliance/Legal accuracy risk.**
+*Likelihood:* Medium. *Impact:* High.
+**Mitigation:** Use current IASME and NCSC references only. All blog and marketing content reviewed for factual alignment before publication. Terms, privacy, and DPA pages templated from verified sources; diff-tracked with last-updated stamp.
 
-- **Milestone:** Targeted for v1.5 “Assisted Tier β” after Transcrypt Essential self-serve reliability is proven.
-- **Collaboration scope:** Invite-only auditor and consultant roles operating strictly within tenant boundaries; no cross-tenant visibility. [[Post-MVP: §5.2 Machine Learning and AI Components (v1)]]
-- **Workflow additions:** Assignment queues, escalation paths, and reviewer hand-offs that keep ownership clear while preserving audit trails.
-- **Shared workspaces:** Controlled comment threads, attest/reject loops, and evidence request prompts surfaced to both SME owners and approved professionals.
-- **Access controls:** Time-boxed links, granular permissions, and enforced NDAs with logging to prevent accidental data leakage.
-- **Evidence hygiene:** Reviewer uploads and annotations are hashed, versioned, and bound to the originating control—no parallel storage or off-platform exchange.
-- **Non-goals:** No open marketplace listings, no unsolicited reviewer access, and no revenue-share matchmaking—participation is contractual and curated.
+**3. Cash-flow and runway risk.**
+*Likelihood:* Low. *Impact:* High.
+**Mitigation:** Keep spend under £50/month in the website phase; avoid SaaS dependencies; operate on credits and static hosting. Gate all new spending behind verified audience signal (waitlist, newsletter conversions).
+
+**4. Technical execution risk (site build quality).**
+*Likelihood:* Low. *Impact:* Medium.
+**Mitigation:** Use stable frameworks only (Next.js, Tailwind). CI checks on build, accessibility, and Lighthouse performance; publish site uptime via `/status`.
+
+**5. Security and privacy risk.**
+*Likelihood:* Low. *Impact:* High.
+**Mitigation:** Minimal data collection; waitlist and newsletter data handled by a compliant mail provider; privacy policy explicit about data retention and usage. No analytics load before consent. Publish `/.well-known/security.txt` and contact email.
+
+**6. Strategic focus drift.**
+*Likelihood:* Medium. *Impact:* Medium.
+**Mitigation:** Keep roadmap anchored to audience metrics (waitlist size, engagement, conversion). Defer app build until 300 verified signups and qualitative demand confirmed.
+
+**7. Reputational risk (content tone, founder visibility).**
+*Likelihood:* Medium. *Impact:* Medium.
+**Mitigation:** Maintain consistent tone across blog, product copy, and social channels; post under real names; show founder accountability. Correct errors publicly rather than silently editing.
+
+Each of these risks maps directly to a measurable control — uptime, cost, signup rate, content accuracy, or transparency marker. The risk register therefore acts as the **operational conscience** of the project: if a risk can’t be measured or mitigated, it’s not tracked.
+
+---
+
+#### **Future Risk Domains (Deferred to App MVP and Platform Phases)**
+
+Once the product moves beyond static marketing pages into live data handling, the following categories will enter scope:
+
+* **Platform security and data isolation:** mitigated via tenant-level encryption, ephemeral processing containers, and cryptographic manifests.
+* **Operational resilience:** mitigated by automated backups, IaC redeploys, and recovery drills.
+* **AI reliability and explainability:** mitigated by deterministic rule paths and transparent traces.
+* **Third-party dependency and supply-chain risk:** mitigated by SBOMs and dependency scanning.
+
+These items remain dormant until the **App MVP gate** is reached.
+
+---
+
+#### 9.4.1 Assisted Tier & Collaboration (Post-MVP)
+
+*Placeholder for v1.5 “Assisted Tier β” — not active during Website or App MVP phases.*
+
+* **Purpose:** Auditor and consultant collaboration within tenant boundaries only; invite-only pilot.
+* **Workflow (future):** Assignment queues, attestation loops, controlled comment threads; no cross-tenant visibility.
+* **Controls:** Time-boxed links, granular permissions, enforced NDAs, and complete audit trails.
+* **Non-goals:** No open marketplace or freelance reviewer pool; participation contractual and curated.
+
+---
 
 #### 9.4.2 Partner Channel & Co-Branding (Post-MVP)
 
-- **Milestone:** Planned for v2.0 “Partner Channel GA” once Assisted Tier usage validates collaborative flows.
-- **Channel objective:** Enable managed service providers, insurers, and associations to distribute Transcrypt through co-branded experiences without exposing an open marketplace.
-- **Provisioning model:** License keys and tenant bundles issued per partner contract, with centralised billing, revoke controls, and audit logs for every activation.
-- **Brand controls:** Theme packs and co-branded templates configurable within guardrails—core UX, security posture, and messaging remain consistent.
-- **Operational tooling:** Partner portal surfaces aggregated analytics, delegated support tickets, and curated knowledge bases; APIs expose read-only posture data with throttling. [[Post-MVP: §3.4 Extensibility and Integration Framework]]
-- **Revenue mechanics:** Transparent revenue-share or referral credits settled monthly, documented in the traceability table and partner agreements.
-- **Enablement:** Sandbox environments, certification paths, and launch playbooks provided before go-live to ensure partners uphold compliance standards.
-- **Non-goals:** No public app store, no self-signup resellers, and no uncontrolled tier creation—every channel participant is vetted and governed.
+*Placeholder for v2.0 “Partner Channel GA.”*
+
+* **Goal:** Allow vetted MSPs, insurers, and associations to distribute Transcrypt via co-branded tenants under contract.
+* **Controls:** License keys, revokeable tenant bundles, and centralised billing.
+* **Brand guardrails:** Theme packs configurable within strict UX and security bounds.
+* **Non-goals:** No public marketplace, no self-signup resellers, and no unverified tier creation.
+
+---
+
+**Summary:**
+The active risk landscape today is small but existential: trust, accuracy, cash, and focus. Everything else — infrastructure, AI, partner channels — is deferred until real users exist. By writing risks into version control and tying them to measurable outcomes, Transcrypt maintains the same principle that underpins its design: **if it can’t be traced, it can’t be trusted.**
+
 
 ### 9.5 Quality Assurance and Acceptance Criteria
 
-Transcrypt’s Quality Assurance and Acceptance Criteria are designed to ensure that every release—no matter how small—meets the same standards of precision, stability, and integrity that define its compliance ethos. Quality is not treated as a final gate but as a continuous state, achieved through automation, version control, and human review. The QA framework spans the entire lifecycle: requirement definition, code implementation, testing, deployment, and post-release validation. Every requirement is expressed as a verifiable condition—“what done looks like”—and mapped to acceptance tests that run automatically within the CI/CD pipeline. This deterministic approach ensures that compliance, security, and functionality are tested in one integrated process, not as separate afterthoughts. No feature can be released unless it satisfies its acceptance criteria, passes all regression and security tests, and generates reproducible results in staging.
+Transcrypt’s Quality Assurance approach mirrors its current stage of maturity: rigorous where it matters, lightweight where it must be. At this point, quality assurance applies to the **marketing site, blog, and early audience systems** — not yet to a live application stack. The purpose is to make credibility measurable: every page, interaction, and claim must load fast, read cleanly, and align precisely with the company’s compliance ethos. The process enforces two principles: **no broken promises** and **no unverified statements.**
 
-The testing framework combines static and dynamic validation. Unit tests verify logic consistency in the rule engine and evidence mapping; integration tests confirm that authentication, API, and report generation components behave correctly across boundaries. End-to-end tests simulate real customer workflows—from intake to report delivery—executed through scripted environments to ensure predictable behaviour under load. Automated security scans, dependency vulnerability checks, and licence audits run on every build, with failures blocking deployment until resolved. For AI-assisted components, deterministic outputs are compared against stored “golden files” to prevent drift or hallucination. Every build produces a signed test report artefact stored in the project’s audit ledger, creating permanent evidence of compliance with the defined acceptance criteria.
+Quality is built into creation, not tacked on at launch. Pages, components, and copy are version-controlled; each commit must build cleanly, meet accessibility and performance thresholds, and pass manual content review. For this first phase, QA covers four domains:
 
-Acceptance criteria themselves follow a simple triad: functional, security, and user validation. Functionally, the product must deliver accurate and complete results under defined inputs; security-wise, all data must remain encrypted, access-controlled, and free from known vulnerabilities; from a user perspective, the experience must remain clear, intuitive, and error-free within a standard use session. Releases are not accepted by date but by evidence—passing tests, verified results, and documented peer review. Post-release telemetry further validates performance, latency, and reliability against service-level targets (e.g., 99.9% uptime, sub-second API response). Any regression automatically reopens its related requirement for correction, closing the loop between QA and roadmap. This framework turns assurance into a living discipline: every accepted release is not only functional but provably compliant with the same rigour Transcrypt will one day automate for its customers.
+1. **Functional quality:**
+
+   * Every link, form, and CTA resolves correctly.
+   * Forms (waitlist, newsletter, contact) submit successfully, show explicit consent options, and return confirmation messages.
+   * No broken anchors, images, or markdown rendering issues.
+
+2. **Performance quality:**
+
+   * Lighthouse performance ≥ 90 on all top routes.
+   * First contentful paint < 1.5 s on broadband and < 3 s on 4G.
+   * Fonts and assets are self-hosted; caching verified; no third-party bloat.
+
+3. **Accessibility and usability:**
+
+   * WCAG 2.2 AA compliance verified with automated (axe/Pa11y) and manual passes.
+   * All interactive elements reachable and operable by keyboard; focus states visible.
+   * Alt text on all media; logical heading order and semantic HTML.
+
+4. **Content and compliance accuracy:**
+
+   * Every claim on the site references a verifiable Cyber Essentials or IASME source.
+   * Privacy, terms, and cookie pages diff-tracked with timestamps.
+   * Blog posts reviewed for factual correctness, plain language, and reading level ≤ secondary education.
+
+Each change follows the same **acceptance flow:**
+
+1. **Draft → review → verify → publish.**
+2. Builds must pass linting, accessibility, and performance checks before merge.
+3. A manual “content proof” step ensures tone and factual accuracy.
+4. Published pages are re-checked via scheduled Lighthouse CI runs weekly.
+
+Post-launch monitoring replaces full CI/CD: uptime and response-time telemetry, consent ratios, and error logs are reviewed monthly. Any regression (accessibility violation, broken form, or failed consent flow) re-opens its originating task until verified fixed.
+
+Future QA phases will evolve naturally with the product:
+
+* **Phase 2 (App MVP):** add automated unit, integration, and end-to-end tests; deterministic rule-engine validation; dependency scanning; and signed build artefacts.
+* **Phase 3 (Platform):** add regression harnesses, SBOM verification, and reproducibility testing for AI outputs.
+
+For now, “done” means this: **the website and content deliver a fast, accessible, and honest experience, where every statement can be defended and every interaction works the first time.** This forms the quality culture Transcrypt will carry forward when automation begins.
+
 
 
 <!-- strategic -->
