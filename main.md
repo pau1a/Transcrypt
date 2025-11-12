@@ -109,7 +109,7 @@ review_cycle: "Quarterly or upon major release"
       - [**Tone, components, and content grammar**](#tone-components-and-content-grammar)
       - [**Constraints we refuse to break (and why)**](#constraints-we-refuse-to-break-and-why)
       - [**How we prove we’re living it (practical tests)**](#how-we-prove-were-living-it-practical-tests)
-    - [4.3 Key User Stories](#43-key-user-stories)
+    - [**4.3 Key User Stories**](#43-key-user-stories)
     - [4.4 Accessibility and Usability Standards](#44-accessibility-and-usability-standards)
       - [What this section is for](#what-this-section-is-for-1)
       - [Priorities (stack-ranked)](#priorities-stack-ranked)
@@ -2291,28 +2291,77 @@ It keeps the product *boringly predictable* where it should be—deterministic, 
 
 ---
 
-### 4.3 Key User Stories
+### **4.3 Key User Stories**
 
-**1) SME Owner/Admin (decision-maker)**
+These user stories define the core personas and the specific value each one must realise within the **Essentials** product. Each story includes functional intent, context, and measurable acceptance criteria to anchor UX, technical, and operational design.
+
+---
+
+**1) SME Owner / Admin (decision-maker)**
 
 * **As a** small business owner
-* **I want** to sign up, answer a short guided intake, upload a couple of key docs, and get a defensible Cyber Essentials assessment with a prioritised action list in one sitting
-* **So that** I know exactly what to fix, how urgent it is, and can show progress to my board/insurer.
-* **Acceptance:** account+MFA in <3 minutes; intake ≤20 required fields with autosave; first evaluation <2 minutes; report renders HTML/PDF with citations and artefact hash; dashboard shows “Top 5 actions” linking back to precise inputs; billing works via Stripe; audit trail records major actions.
 
-**2) Tech Helper / IT Contributor (in-house or MSP)**
+* **I want** to sign up, complete a short guided intake, optionally upload a few key documents, and generate a defensible Cyber Essentials report with a prioritised action list in a single sitting
+
+* **So that** I understand my organisation’s security gaps, can act on clear priorities, and demonstrate progress to management or insurers.
+
+* **Acceptance:**
+
+  * Account creation + MFA ≤ **3 min** via OIDC.
+  * Intake ≤ **20 required fields** with autosave and inline help.
+  * First evaluation completes < **2 min**.
+  * Report renders in both HTML and PDF with citations and artefact hash.
+  * Dashboard shows a **Top 5 Actions** panel linking back to precise inputs.
+  * Audit trail records signup, intake, evidence uploads, and report generation.
+  * Billing and plan upgrades handled by in-app Stripe integration *(post-MVP)*.
+
+---
+
+**2) Tech Helper / IT Contributor (internal or MSP)**
 
 * **As a** technical helper invited by the owner
-* **I want** to add precise evidence (IdP export, backup config, endpoint counts), correct intake details, and re-run the assessment
-* **So that** findings move from “partial/fail” to “pass” with clear proof.
-* **Acceptance:** invite via signed link; role = Contributor (no billing access); upload returns SHA-256 + de-dup; assertions (e.g., `MFA.enforced.admins=true`) are bound to the right control; re-run produces a diff (“what improved”); every finding card shows rule, test trace, and linked evidence; activity log records uploads and edits.
+
+* **I want** to provide or correct evidence — such as IdP exports, backup configs, or endpoint counts — and re-run the assessment
+
+* **So that** failing or partial findings move to *pass* with clear proof and traceable rationale.
+
+* **Acceptance:**
+
+  * Invite via signed, single-use link; role = **Contributor**, no billing or admin rights.
+  * Uploads display SHA-256 checksum, detect duplicates, and bind to the correct control.
+  * Assertions supported (e.g., `MFA.enforced.admins=true`) and validated on re-run.
+  * Re-run shows a **diff view** (“what improved”).
+  * Each finding card displays rule, test trace, and linked evidence.
+  * Activity log captures uploads, assertions, and edits with timestamp and actor ID.
+  * Contributors can resume work seamlessly (autosave, resume-state).
+
+---
 
 **3) Auditor / Insurer (read-only verifier)**
 
 * **As an** external reviewer
-* **I want** time-boxed, read-only access to posture, reports, and referenced evidence with citations
-* **So that** I can verify provenance quickly without back-and-forth.
-* **Acceptance:** magic link scoped to a tenant and expiry; posture roll-up view + latest report; evidence previews/downloads where permitted; no write paths; Problem+JSON errors with `trace_id`; export bundle (JSON + PDFs + manifest with hashes) available on request.
+
+* **I want** time-boxed, read-only access to a tenant’s posture summary, reports, and referenced evidence
+
+* **So that** I can verify provenance and control coverage without contacting the client.
+
+* **Acceptance:**
+
+  * Secure **magic link** scoped to tenant, expiry ≤ **7 days**.
+  * Read-only posture overview and latest report viewable in-browser.
+  * Evidence previews/downloads permitted where explicitly shared.
+  * No write paths or state changes possible.
+  * All endpoints return structured **Problem+JSON** errors with `trace_id` for debugging.
+  * Export bundle (JSON + PDFs + manifest with hashes + signature) downloadable for assurance.
+
+---
+
+**Summary:**
+These three personas constitute the full interaction model for Essentials v1.
+Additional roles — *Partner / Integrator* and *Multi-tenant MSP admin* — are deferred to § 9.2 Partner / Integrator API (v2.0).
+Every path must preserve auditability, short time-to-value, and the same deterministic chain of evidence across roles.
+
+---
 
 ### 4.4 Accessibility and Usability Standards
 
