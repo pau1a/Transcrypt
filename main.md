@@ -1804,6 +1804,8 @@ If we hold to these, Section 4 stops being a laundry list and becomes the spine 
 * **Correct routing.** Different visitors need different doors: Owner → trial, Tech helper → invite flow, Auditor/Insurer → verifier path, Partner → portfolio & API docs (v2.0 – see §9.2 Partner/Integrator API). The site’s IA should route them deliberately.
 * **Expectation setting.** The site promises exactly what the app delivers: “one sitting to first report; deterministic results; evidence-bound findings.” That promise becomes the acceptance bar for onboarding.
 
+WEREHERE
+
 ### Site journeys (the “public” half of 4.1)
 
 Four top-level journeys, each with a minimum set of proof blocks and a single, obvious CTA.
