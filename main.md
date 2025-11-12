@@ -2766,7 +2766,9 @@ These controls keep pace with Cyber Essentials expectations while leaving room f
 - CI pipelines build from clean base images, run unit and integration tests, and require peer review before deploy.
 - Software Bill of Materials generated for each release and stored with deployment notes for traceability.
 - Third-party services documented with ownership, version, and renewal dates so vendors can be reassessed easily.
+  
 <!-- specification -->
+
 ## 8. Monetisation and Revenue Model
 
 Transcrypt’s Monetisation and Revenue Model is designed to sustain a founder-led business that grows through credibility, not scale at any cost. The model balances accessibility for small businesses with predictability for the company, using a subscription-first approach anchored in recurring monthly revenue. The goal is to create a compounding utility product—one that earns retention through genuine operational value, not lock-in. Pricing is transparent, all-inclusive, and proportionate to the size and complexity of the customer’s organisation. No hidden consultancy, no per-seat penalties, no punitive renewal clauses. The platform’s automation and clarity deliver cost efficiency at scale, allowing Transcrypt to compete effectively against both low-cost certification brokers and high-end compliance consultancies while maintaining healthy margins.
