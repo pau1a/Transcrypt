@@ -757,7 +757,7 @@ Interfaces: `/healthz`, `/metrics`, SDS/control-plane for certificate distributi
 
 **3.1.2.8 Marketing Site / Blog**
 
-* Responsibilities: Marketing surface separate from the app; hosts the onboarding funnel (static content, product pages, CTA into the Web App).
+* Responsibilities: Marketing surface separate from the app; runs the onboarding funnel (marketing content rendered via Next.js SSR/ISR, product pages, CTA into the Web App).
 * Interfaces: Public GET endpoints (`/`, `/product`, `/pricing`, `/security`, `/blog/*`, `/contact`) and `POST /api/contact` (rate-limited with hCaptcha/Turnstile). 
 * SEO/Discoverability: `sitemap.xml`, `robots.txt`, JSON-LD/OG tags; status and changelog are linked but live in their own sections.
 
@@ -1388,6 +1388,8 @@ That is exactly what “segmented VPC/VNet: public, app, data; only proxy reache
 
 * `dev` (ephemeral PR envs), `staging` (prod-like), `prod` (IaC controlled). No direct human access to prod DB.
 
+The Marketing/Blog site will be treated as a first-class runtime service across all environments. It will follow the same environment parity principles as the Essentials App: identical configuration by name, consistent secrets handling, and alignment with CI/CD promotion gates. Even though it serves marketing content, it will operate as a deployed service using Next.js SSR/ISR, and will therefore participate in observability, routing, and security controls alongside the other platform components.
+
 ---
 
 ### 3.1.8 Minimal Viable Slice (MVP cut)
@@ -1480,6 +1482,8 @@ All user interaction occurs through the Transcrypt web platform, which unifies p
 #### 3.2.1 Marketing Site / Blog (Next.js @ `https://transcrypt.xyz`)
 
 * **Purpose:** General front end site and blog. Attract members and tease benefits.
+
+The Marketing and Blog site will run as a Next.js application and will operate as a compute-bearing surface rather than a static content host. It will perform server-side rendering (SSR) and incremental static regeneration (ISR), handle routing and content shaping, participate in the Marketing → Essentials identity handshake, and emit telemetry consistent with the rest of the platform. Although it presents as a public-facing content surface, it is architecturally a runtime service within the platform.
 * **Key routes:**
 
   * **Marketing:** `/`, `/product`, `/pricing`, `/about`, `/contact`, `/blog/*`, `/changelog`, `/status`, `/roadmap` (optional).
@@ -2255,6 +2259,8 @@ For Transcrypt, every screen must answer three questions, in this order:
 Every state is *explainable* with visible links to its rule, test, input, and evidence.
 No mysteries, no hand-waving, no “AI says so.” When users feel oriented and in control, they trust the output and move faster.
 
+The Marketing/Blog site will adhere to the same interface philosophy as the Essentials App. Its routing, API calls, and identity transitions will follow the explicit interfaces defined in this document, ensuring that no client-side workflow depends on implicit platform behaviour.
+
 ---
 
 #### **Design tenets (non-negotiable, testable)**
@@ -3000,7 +3006,7 @@ Here’s the corrected version of **§9.3 Resource and Budget Planning**, rewrit
 
 Transcrypt’s resource and budget planning is grounded in **lean validation discipline** — the idea that small, deliberate spending forces sharper decisions. The priority for this first phase is not engineering velocity but **credibility and audience proof**. Every expense must either grow trust, capture signal from the market, or reduce friction when the app phase begins.
 
-The 12-month financial target remains deliberately modest: **£2,500–£3,000 total operating spend**, excluding the founder’s time. This covers domains, hosting, basic design and content tooling, and limited discretionary marketing. Infrastructure costs are held below **£50 per month** during the website-only phase through static hosting, CDN caching, and the use of credits. No cloud databases, rule engines, or live backend services are required until the App MVP gate is cleared.
+The 12-month financial target remains deliberately modest: **£2,500–£3,000 total operating spend**, excluding the founder’s time. This covers domains, hosting, basic design and content tooling, and limited discretionary marketing. Infrastructure costs are held below **£50 per month** during the website-only phase by running the Next.js SSR/ISR marketing runtime on low-cost edge compute with CDN caching and by using credits. No cloud databases, rule engines, or live backend services are required until the App MVP gate is cleared.
 
 **Resourcing model:**
 
@@ -3044,7 +3050,7 @@ Transcrypt’s Risk Register is a **practical control loop**, not a paper exerci
 
 **3. Cash-flow and runway risk.**
 *Likelihood:* Low. *Impact:* High.
-**Mitigation:** Keep spend under £50/month in the website phase; avoid SaaS dependencies; operate on credits and static hosting. Gate all new spending behind verified audience signal (waitlist, newsletter conversions).
+**Mitigation:** Keep spend under £50/month in the website phase; avoid SaaS dependencies; operate on credits and the managed Next.js runtime. Gate all new spending behind verified audience signal (waitlist, newsletter conversions).
 
 **4. Technical execution risk (site build quality).**
 *Likelihood:* Low. *Impact:* Medium.
@@ -3068,7 +3074,7 @@ Each of these risks maps directly to a measurable control — uptime, cost, sign
 
 #### **Future Risk Domains (Deferred to App MVP and Platform Phases)**
 
-Once the product moves beyond static marketing pages into live data handling, the following categories will enter scope:
+Once the product extends beyond the marketing runtime into live data handling, the following categories will enter scope:
 
 * **Platform security and data isolation:** mitigated via tenant-level encryption, ephemeral processing containers, and cryptographic manifests.
 * **Operational resilience:** mitigated by automated backups, IaC redeploys, and recovery drills.
