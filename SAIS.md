@@ -261,32 +261,428 @@ These TODOs do **not** block SAIS progress but must be resolved before the early
 
 ## 3. Component Architecture
 
-Outlines every subsystem — services, clients, SDKs, external integrations — with clear boundaries, roles, and dependencies. Define each subsystem: boundaries, roles, dependencies, and whether they’re internal, external, or partner-facing.
+This section defines the complete set of components that make up the Transcrypt MVP. It describes each subsystem in terms of its boundary, purpose, and dependencies, and classifies every element as internal, external, or partner-facing. The scope reflects the PRD: a deterministic, multi-tenant compliance platform composed of two Next.js runtimes, a single API gateway, a small set of stateless evaluation and reporting services, and a limited number of external integrations.
+
+The architecture treats every component as a replaceable unit with a single responsibility. Internal components handle intake, evidence, rule evaluation, reporting, billing state, and auditability. External components provide identity, billing, object storage, email delivery, and CDN hosting for the marketing runtime. Partner-facing surfaces are explicitly out of scope for the MVP and appear only as placeholders. Component boundaries are defined so that no service shares responsibilities, no implicit communication paths exist, and all data exchange happens through typed, versioned contracts.
+
+This section establishes the authoritative inventory and classification of all services, runtimes, SDKs, and integrations, forming the basis for the interfaces, contracts, and resilience patterns described later in the SAIS.
 
 ---
 
 ### 3.1 Component Map and Classification
 
-Presents the definitive inventory of all components in the MVP release.
-Categorise each as *internal*, *external*, or *partner-facing*.
-Use a table or diagram to show their grouping under the major architectural layers (Edge, Control / Rule, Data / Evidence, Integration, Observability).
+The MVP consists of a small, tightly scoped set of components grouped under the platform’s major architectural layers. Each component is classified as **internal**, **external**, or **partner-facing** (none of which are active in the MVP). Only components explicitly described in the PRD appear here.
+
+### **3.1.1 Component Inventory Table**
+
+| Component                                                 | Layer              | Classification | Purpose / Boundary                                                                                                            |
+| --------------------------------------------------------- | ------------------ | -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Marketing/Blog Runtime (Next.js SSR/ISR)**              | Edge               | Internal       | Public-facing site; marketing content, onboarding paths, Marketing→Essentials identity handoff. No tenant data stored.        |
+| **Essentials App Runtime (Next.js)**                      | Edge               | Internal       | Authenticated tenant UI for intake, evidence upload, evaluation requests, reports, and billing.                               |
+| **API Gateway & Policy Enforcer**                         | Edge / Integration | Internal       | Single ingress for all API calls; validates OIDC, attaches audit metadata, enforces rate limits, routes to internal services. |
+| **Rule Evaluation Service (Deterministic + Runtime LLM)** | Control / Rule     | Internal       | Evaluates OrgProfile + Evidence against a signed RulePack; produces Findings. Stateless; ephemeral execution.                 |
+| **Report Service**                                        | Control            | Internal       | Assembles findings, metadata, and evidence links into branded HTML/PDF reports. Stateless.                                    |
+| **Evidence Service**                                      | Data / Evidence    | Internal       | Handles evidence upload, hashing, metadata extraction, and storage into tenant-isolated S3-compatible bucket.                 |
+| **Primary Database (PostgreSQL ≥15)**                     | Data               | Internal       | Stores tenant metadata, org profiles, evaluations, findings, audit events, and Stripe subscription state.                     |
+| **Object Store (S3-compatible)**                          | Data / Evidence    | External       | Stores all evidence artefacts, reports, and hashed objects using tenant prefixes and envelope encryption.                     |
+| **OIDC Identity Providers (Entra ID / Okta / Google)**    | Integration        | External       | Provide authentication for Marketing and Essentials surfaces via OIDC. No SCIM or enterprise features in MVP.                 |
+| **Stripe Billing**                                        | Integration        | External       | Subscription creation, renewal, cancellation, and webhook events for billing state.                                           |
+| **Email Delivery Provider**                               | Integration        | External       | Sends onboarding and follow-up notifications; not tied to core control evaluation flow.                                       |
+| **CDN / Edge Delivery Layer**                             | Edge               | External       | Provides caching, static asset delivery, and consistent routing for the Marketing/Blog runtime.                               |
+| **Telemetry / Observability Endpoint (OTel Compatible)**  | Observability      | Internal       | Receives structured logs, request traces, and metrics from all components. (Vendor-agnostic in PRD.)                          |
+| **Partner / Auditor API Surfaces**                        | Integration        | Partner-Facing | Stub only; no partner-facing functionality in the MVP. Reserved for post-MVP phases (1.5 / 2.0).                              |
+
+---
+
+### **3.1.2 Classification Summary**
+
+* **Internal components** form the backbone of the MVP: both Next.js runtimes, API gateway, evaluation, reporting, evidence services, database, and observability.
+* **External components** are identity, billing, object storage, CDN, and email delivery — all accessed through narrow, replaceable interfaces as required by the PRD.
+* **Partner-facing components** exist only as stubs; the MVP contains no external API surfaces for MSPs, auditors, or integrators.
+
+This classification reflects the MVP’s minimal, deterministic architecture: a very small set of services with clear boundaries, zero hidden compute paths, and no cross-service ambiguity.
 
 ### 3.2 Component Responsibilities
 
-For each module, state its single purpose, its owning team, and what contracts it must honour.
-Include short “inputs → outputs → side-effects” triplets for clarity.
+Each component in the Transcrypt MVP has one clearly defined responsibility. All components honour typed, versioned contracts. Ownership for every internal module sits with the founder-engineer; external services adhere to their vendor specifications.
+
+---
+
+#### **Marketing/Blog Runtime (Next.js SSR/ISR)**
+
+**Purpose:** Public-facing site delivering marketing content, onboarding funnels, and the Marketing → Essentials identity transition.
+**Contracts honoured:** OIDC redirect URLs; API Gateway public routes; telemetry emission.
+
+**Inputs → Outputs → Side-effects**
+
+* **Inputs:** HTTP GET requests; OIDC session cookie (if present).
+* **Outputs:** Rendered SSR/ISR pages; calls to API Gateway; OIDC callback redirects.
+* **Side-effects:** Emits telemetry; caches pages at CDN; no persistent data.
+
+---
+
+#### **Essentials App Runtime (Next.js)**
+
+**Purpose:** Authenticated tenant UI for intake, evidence uploads, evaluations, reports, and billing.
+**Contracts honoured:** All public API Gateway contracts; evidence upload schema; report generation schema.
+
+**Inputs → Outputs → Side-effects**
+
+* **Inputs:** Authenticated HTTP requests; user-provided profiles and evidence.
+* **Outputs:** API calls for evaluation, uploads, billing; rendered application pages.
+* **Side-effects:** Emits telemetry; stores no data locally.
+
+---
+
+#### **API Gateway & Policy Enforcer**
+
+**Purpose:** Single ingress; validates identity; enforces rate limits; shapes requests; injects audit metadata; routes to internal services.
+**Contracts honoured:** OIDC token validation; structured log/trace contracts; versioned internal API contracts.
+
+**Inputs → Outputs → Side-effects**
+
+* **Inputs:** All inbound HTTP requests (public + authenticated).
+* **Outputs:** Routed internal requests; denial responses for failed auth; enriched logs/traces.
+* **Side-effects:** Attaches tenant ID, request ID, version stamps; logs all activity.
+
+---
+
+#### **Rule Evaluation Service**
+
+**Purpose:** Evaluate OrgProfile + Evidence using a signed RulePack; produce deterministic Findings; optionally call runtime LLM path.
+**Contracts honoured:** RulePack schema; OrgProfile schema; Evidence schema; Finding schema; provenance-hash rules.
+
+**Inputs → Outputs → Side-effects**
+
+* **Inputs:** `POST /evaluate` payload: OrgProfile, Evidence refs, RulePack ID, version metadata.
+* **Outputs:** Findings JSON with trace IDs and provenance.
+* **Side-effects:** Emits audit events; no data persisted.
+
+---
+
+#### **Report Service**
+
+**Purpose:** Assemble findings, metadata, and evidence citations into branded HTML/PDF reports.
+**Contracts honoured:** Findings schema; Report schema; object storage contract for upload.
+
+**Inputs → Outputs → Side-effects**
+
+* **Inputs:** Findings JSON; OrgProfile; evidence references; template versions.
+* **Outputs:** HTML/PDF report blob; report metadata.
+* **Side-effects:** Uploads report to object storage; emits telemetry.
+
+---
+
+#### **Evidence Service**
+
+**Purpose:** Accept, validate, hash, and store evidence artefacts; bind them to findings.
+**Contracts honoured:** Evidence upload schema; integrity hashing rules; S3-compatible API contract.
+
+**Inputs → Outputs → Side-effects**
+
+* **Inputs:** File streams; metadata; tenant ID; control binding information.
+* **Outputs:** Stored object with deterministic hash; evidence metadata JSON.
+* **Side-effects:** Writes to object storage; emits audit log for each stored artefact.
+
+---
+
+#### **Primary Database (PostgreSQL ≥15)**
+
+**Purpose:** Persist tenant metadata, OrgProfiles, Findings summaries, audit trails, and Stripe subscription state.
+**Contracts honoured:** Internal DB schema; migration/versioning protocol.
+
+**Inputs → Outputs → Side-effects**
+
+* **Inputs:** Writes from API Gateway, Evaluation Service, and billing handlers.
+* **Outputs:** Query results to internal services.
+* **Side-effects:** Encrypted backups; retention policy enforcement.
+
+---
+
+#### **Object Store (S3-Compatible)**
+
+**Purpose:** Store evidence artefacts, reports, and hashed objects using strict tenant isolation.
+**Contracts honoured:** S3 API; encryption envelope rules; signed URL contract.
+
+**Inputs → Outputs → Side-effects**
+
+* **Inputs:** Object PUT requests (evidence, reports).
+* **Outputs:** Signed URLs; object GET requests.
+* **Side-effects:** Maintains immutability and encryption as defined; no internal compute.
+
+---
+
+#### **OIDC Identity Providers (Entra / Okta / Google)**
+
+**Purpose:** Provide authentication flows for Marketing and Essentials surfaces.
+**Contracts honoured:** OIDC discovery, token issuance, JWKS.
+
+**Inputs → Outputs → Side-effects**
+
+* **Inputs:** Auth requests; redirect URIs.
+* **Outputs:** ID tokens; access tokens; refresh behaviour (provider-specific).
+* **Side-effects:** None inside Transcrypt; failure handled at API Gateway/UI layers.
+
+---
+
+#### **Stripe Billing**
+
+**Purpose:** Subscription creation, renewal, cancellation, and subscription-state signalling via webhook.
+**Contracts honoured:** Stripe Checkout, Billing Portal, webhook schema.
+
+**Inputs → Outputs → Side-effects**
+
+* **Inputs:** Checkout events; webhook events.
+* **Outputs:** Subscription state updates in DB; billing redirects.
+* **Side-effects:** Emits signed webhooks; no internal state.
+
+---
+
+#### **Email Delivery Provider**
+
+**Purpose:** Send transactional emails (onboarding, nudges).
+**Contracts honoured:** SMTP or vendor API; privacy/minimal-data rule.
+
+**Inputs → Outputs → Side-effects**
+
+* **Inputs:** Email payload with template, address, metadata.
+* **Outputs:** Delivery attempt; provider response.
+* **Side-effects:** Logs success/failure; does not block core workflows.
+
+---
+
+#### **CDN / Edge Delivery Layer**
+
+**Purpose:** Provide caching, asset delivery, and stable routing for Marketing/Blog runtime.
+**Contracts honoured:** Standard CDN cache rules; SSR/ISR invalidation rules defined later in SAIS.
+
+**Inputs → Outputs → Side-effects**
+
+* **Inputs:** GET requests for marketing pages and assets.
+* **Outputs:** Cached responses; fallback to origin SSR/ISR rendering if needed.
+* **Side-effects:** Cache population; telemetry for edge hits/misses.
+
+---
+
+#### **Telemetry / Observability Endpoint (OTel-Compatible)**
+
+**Purpose:** Collect logs, traces, metrics from all components.
+**Contracts honoured:** OpenTelemetry standards; structured-log schema.
+
+**Inputs → Outputs → Side-effects**
+
+* **Inputs:** Logs, spans, metrics from all internal services.
+* **Outputs:** Stored/forwarded telemetry data.
+* **Side-effects:** If unreachable, failures logged locally as per SAIS requirements.
 
 ### 3.3 Internal Services
 
-Defines core platform services and how they communicate:
+The Transcrypt MVP consists of a small set of internal services that communicate exclusively through typed HTTP/JSON interfaces. All components are stateless except for the database. Each service exposes only the minimum endpoints required for the evaluation→report pipeline.
 
-* API Gateway and Policy Enforcer
-* Rule Evaluation Service (deterministic)
-* Evidence Service
-* Report Service
-* Auth Service / Identity Adapter
+No internal service communicates implicitly.
+No service shares responsibility.
+Every call is authenticated, versioned, logged, and trace-linked.
 
-Document dependencies, ports, message formats, and error boundaries.
+---
+
+#### **3.3.1 API Gateway & Policy Enforcer**
+
+**Purpose**
+Single ingress for all internal and external API calls.
+Auth validation, request shaping, routing, and audit-header injection.
+
+**Ports**
+
+* `443/tcp` (public HTTPS ingress)
+* `internal-http` (cluster-only routing to internal services; number is infra-dependent)
+
+**Dependencies**
+
+* OIDC providers (Entra / Okta / Google) for token validation
+* PostgreSQL (for tenant/session metadata)
+* Telemetry endpoint
+* Stripe (webhooks)
+* Internal services: Evaluation, Evidence, Report
+
+**Message Formats**
+
+* JSON over HTTPS
+* All inbound requests require `X-Request-ID`
+* All responses include `trace_id` and `version` fields
+* Authentication via Bearer token (OIDC ID token or session token)
+
+**Error Boundaries**
+
+* Rejects invalid/missing tokens (401)
+* Rejects requests missing required fields (422)
+* On internal service errors, surfaces deterministic `Problem+JSON` errors
+* Never forwards partial or unvalidated requests to downstream services
+
+---
+
+#### **3.3.2 Rule Evaluation Service (Deterministic + Runtime LLM)**
+
+**Purpose**
+Execute deterministic checks against the signed RulePack and, where enabled, call runtime LLM inference for interpretive checks.
+Produces the single source of truth for Findings.
+
+**Ports**
+
+* `internal-eval` (HTTPS or mTLS internal channel)
+
+**Dependencies**
+
+* RulePack store (read-only)
+* Telemetry endpoint
+* API Gateway (caller)
+* Optional: LLM runtime (inference only, no training)
+
+**Message Formats**
+**Input (JSON):**
+
+```json
+{
+  "org_profile": {...},
+  "evidence": [...],
+  "rulepack_id": "RP-2024-CE-v1",
+  "version": "1.0.0",
+  "options": { "use_ai": false }
+}
+```
+
+**Output (JSON):**
+
+```json
+{
+  "findings": [...],
+  "trace_id": "abc-123",
+  "rulepack_version": "1.0.0"
+}
+```
+
+**Error Boundaries**
+
+* Rejects malformed OrgProfile/Evidence schemas
+* Rejects unsigned or unverified RulePack versions
+* Fails closed on LLM inference errors (AI is optional)
+* No internal state kept; failure cannot corrupt system state
+
+---
+
+#### **3.3.3 Evidence Service**
+
+**Purpose**
+Accept, validate, hash, and store evidence artefacts.
+Bind artefacts to controls, maintain deterministic integrity metadata.
+
+**Ports**
+
+* `internal-evidence` (HTTPS)
+
+**Dependencies**
+
+* S3-compatible object store
+* Telemetry endpoint
+* API Gateway (caller)
+
+**Message Formats**
+
+* File upload: multipart form-data
+* Metadata: JSON (control_id, filename, mime_type, hash)
+* Responses include deterministic SHA-256 hash and storage path
+
+**Error Boundaries**
+
+* Rejects files that fail integrity check
+* Rejects artefacts missing control binding
+* Fails atomically: no partial writes
+* Logs failed uploads but never blocks evaluation flow
+
+---
+
+#### **3.3.4 Report Service**
+
+**Purpose**
+Assemble Findings → Metadata → Report Template → Rendered HTML/PDF.
+Upload report to object storage.
+
+**Ports**
+
+* `internal-report` (HTTPS)
+
+**Dependencies**
+
+* Object store
+* Telemetry endpoint
+* Evaluation Service (input provider)
+* API Gateway (caller)
+
+**Message Formats**
+**Input:**
+
+```json
+{
+  "findings": [...],
+  "org_profile": {...},
+  "evidence_map": {...},
+  "template_version": "1.0.0"
+}
+```
+
+**Output:**
+
+* PDF/HTML blob
+* JSON metadata with report_id, hash, storage path
+
+**Error Boundaries**
+
+* Rejects missing or malformed Findings
+* Rejects template-version mismatches
+* Fails cleanly on PDF render errors with no partial artefacts
+
+---
+
+#### **3.3.5 Auth Service / Identity Adapter**
+
+*Note: This is not a standalone service in the MVP; the logic lives inside the API Gateway and the two Next.js runtimes. SAIS still treats it as a component for clarity.*
+
+**Purpose**
+Normalise OIDC interaction across supported providers; validate tokens; perform session shaping.
+
+**Ports**
+
+* None (embedded in API Gateway and the two runtimes)
+
+**Dependencies**
+
+* OIDC discovery endpoints
+* JWKS keys
+* API Gateway (primary consumer)
+* Telemetry endpoint
+
+**Message Formats**
+
+* Standard OIDC ID token
+* JWT with required claims: `sub`, `email`, `iss`, `exp`
+
+**Error Boundaries**
+
+* Rejects expired, unsigned, or untrusted tokens
+* Rejects mismatched issuer/audience
+* Does not degrade silently; failure always surfaces to user-facing layer
+
+---
+
+#### **3.3.6 Internal Services Summary**
+
+| Service            | Source of Truth   | Stateless | Stores Data | Failure Mode                         |
+| ------------------ | ----------------- | --------- | ----------- | ------------------------------------ |
+| API Gateway        | Routing + Auth    | Yes       | No          | Reject + Problem+JSON                |
+| Evaluation Service | Findings          | Yes       | No          | Fail closed, no partial findings     |
+| Evidence Service   | Evidence Metadata | Yes       | No          | Atomic failure, no partial artefacts |
+| Report Service     | Report output     | Yes       | No          | Clean failure, no partial artefacts  |
+| Auth Adapter       | OIDC              | Yes       | No          | Visible login failure                |
+
 
 ### 3.4 External Integrations
 
