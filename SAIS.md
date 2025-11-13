@@ -683,6 +683,71 @@ Normalise OIDC interaction across supported providers; validate tokens; perform 
 | Report Service     | Report output     | Yes       | No          | Clean failure, no partial artefacts  |
 | Auth Adapter       | OIDC              | Yes       | No          | Visible login failure                |
 
+---
+
+# ✅ **TODO 1 — Evidence Upload Format & Limits (Product-Level Requirement)**
+
+**Where it lands in 3.3:** Evidence Service
+
+**Why it’s needed:**
+Your PRD defines hashing, immutability, artefact binding, and S3 prefixes — but *not* evidence constraints such as file types, max size, or concurrency.
+
+This directly affects:
+
+* behaviour of the **Evidence Service**
+* what the API Gateway is allowed to accept
+* user experience
+* report consistency
+* security posture
+
+Without this, 3.3 cannot fully define:
+
+* allowed MIME types
+* rejection rules
+* side-effects
+* maximum upload size
+* edge-case handling (e.g., ZIPs, large archives)
+
+**TODO-SAIS-EVID-01:**
+“Specify allowable evidence file types, maximum file size, and whether multi-file bundles (ZIP) are supported. These are product-level constraints missing from the PRD and required before finalising Evidence Service contracts.”
+
+---
+
+# ✅ **TODO 2 — Session Semantics (Product-Level Requirement)**
+
+**Where it lands in 3.3:** API Gateway + Auth Adapter
+
+**Why it’s needed:**
+The PRD talks extensively about trust, predictability, explainability, and frictionless onboarding, but it *never* states:
+
+* session lifetime
+* refresh-token strategy
+* whether users stay logged in overnight
+* whether admin actions need step-up MFA
+* whether Marketing pages show authenticated state
+* how the Marketing↔Essentials identity handoff persists
+
+This isn’t “implementation detail” — it’s **user-facing behaviour**.
+
+It governs everything from:
+
+* user frustration
+* onboarding drop-off
+* support load
+* perceived stability
+* compliance traceability
+* how the API Gateway handles tokens
+
+Without a product-level decision, the SAIS can’t finalise:
+
+* token expiry rules
+* session-refresh behaviour
+* what happens mid-flow
+* handoff behaviour across surfaces
+
+**TODO-SAIS-AUTH-02:**
+“Define session lifetime, refresh behaviour, cross-surface session visibility, and MFA escalation requirements. These are product truths missing from the PRD and required to close the API Gateway + Auth Adapter behaviour model.”
+
 
 ### 3.4 External Integrations
 
