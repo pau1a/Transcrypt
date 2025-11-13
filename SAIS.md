@@ -94,39 +94,170 @@ Each layer is designed to be independently testable, independently deployable, a
 
 ### 2.3 Runtime Context
 
-Describes how these layers interact at runtime within a multi-tenant SaaS topology.
-Highlights stateless compute nodes behind a load balancer, data isolation per tenant, and use of ephemeral storage for processing evidence.
-Notes dependency on external services (Stripe, Entra/Okta, S3-compatible storage) and the asynchronous report-generation queue.
+At runtime, the system operates as a multi-tenant SaaS platform in which all user traffic enters through stateless compute surfaces — the Marketing/Blog runtime, the Essentials App, and the API Gateway. Each request is routed to the appropriate downstream service, with tenant context attached at the edge to enforce isolation and traceability.
+
+All compute nodes run without tenant-specific state. Rendering (SSR/ISR), rule evaluation, evidence processing, and report assembly occur in ephemeral execution environments, ensuring that no local data persists beyond the lifetime of the request. Any artefact produced — findings, traces, hashes, profiles, or reports — is stored only in the platform’s canonical datastores defined in the PRD.
+
+Tenant isolation is enforced consistently across the stack. The Postgres datastore scopes all records by tenant, object storage segregates artefacts under per-tenant prefixes, and audit logs record state transitions with monotonic timestamps and request identifiers. No cross-tenant queries or shared artefact paths exist at runtime.
+
+The system relies on a minimal set of external services during operation: identity providers through OIDC (Entra, Okta, Google), Stripe for billing, and an S3-compatible object store for evidence artefacts and report binaries. Email delivery supports onboarding and notifications. Every external dependency is accessed through a tightly defined interface so it can be replaced without impacting internal behaviour.
+
+Report generation is synchronous within the deterministic pipeline: rule evaluation completes, findings are assembled, and the report is produced as a single, traceable operation. All steps emit audit-relevant metadata to ensure outcomes can be explained or reproduced later.
 
 ### 2.4 Guiding Design Principles
 
-Summarises operational tenets inherited from the PRD:
+Transcrypt’s design principles are not abstract slogans; they are behaviours demanded explicitly throughout the PRD. They apply equally to the Essentials App, the API boundary, the internal evaluation workflow, and the Marketing/Blog runtime, which the PRD defines as a compute-bearing Next.js surface participating in routing, identity, telemetry, and content delivery.
 
-* **Automation First:** every repeatable process must be machine-driven before manual intervention.
-* **Invisible Infrastructure:** operational complexity hidden from both customer and developer through templated pipelines.
-* **Security by Default:** encryption, least privilege, immutable logging applied globally, not per-feature.
-* **Observability Everywhere:** nothing deployed without metrics, traces, and structured logs.
-* **Fail Closed, Recover Predictably:** resilience prioritises safe degradation and deterministic rollback.
+**Clarity Over Complexity**
+The PRD makes it clear that users must always understand what a screen, state, or result means. Every surface — including the Marketing/Blog site — must present information in a calm, direct, and unfussy manner. No hidden states, no ambiguity, and no “figure it out yourself” UI. Explanations, next steps, and reasons are always visible.
+
+**Deterministic Outcomes**
+The PRD insists that identical inputs must lead to identical outputs. This principle governs rule evaluation, evidence binding, report creation, and even UI behaviour. Nothing in the system may behave probabilistically without being paired with a deterministic control path. Every outcome must be reproducible and traceable.
+
+**Explainable State**
+Every result in the PRD — whether a finding, a partial, a pass, or a failure — must be backed by visible reasoning. Users must be able to open any result and see which rule triggered it, which input influenced it, which evidence was bound to it, and which version of the rulepack produced it. Nothing is allowed to “just happen.”
+
+**Security Everywhere, Not in Pockets**
+Isolation, least privilege, encryption, and mutual authentication are defined in the PRD as baseline behaviours, not feature flags. Evidence artefacts are hashed, stored immutably, and never shared across tenants. The Marketing/Blog runtime follows the same rules: session handling, identity transitions, telemetry, and routing must all honour the same security posture as the authenticated app.
+
+**Unified Behaviour Across All Surfaces**
+Your PRD explicitly requires that the Marketing/Blog runtime follow the same interface rules, tone, and behavioural constraints as the Essentials App. This includes SSR/ISR rendering, routing decisions, identity handoff, and telemetry. Surfaces may differ in purpose, but never in architectural discipline.
+
+**Auditable From End to End**
+The PRD defines structured logs, traces, request IDs, tenant IDs, evidence hashes, provenance markers, and state transitions as required outputs. Nothing in the system — including content rendering, routing events, identity handoff, evaluation, evidence upload, or report creation — may occur without leaving an audit-consumable trail.
+
+**Safe Failure**
+The PRD repeatedly rejects ambiguity, silent fallbacks, or implicit decisions. When something goes wrong — a rule fails, evidence is invalid, an identity transition breaks, or a rendering path collapses — the system must fail in a visible and controlled way. No half-states, no lost work, and no misleading success signals.
 
 ### 2.5 MVP Boundary of Delivery
 
-Defines what the MVP includes:
+The MVP is precisely defined in the PRD as the smallest complete loop that allows a tenant to sign up, provide basic organisational details and evidence, run an evaluation against a limited Cyber Essentials v3.2 rulepack, and receive a branded report. The boundary is narrow on purpose: it delivers value, proves feasibility, and avoids premature expansion into later-phase features.
 
-* Essentials app with Org Profile, Evidence Upload, Evaluate, and Report Generate flows.
-* Marketing ↔ Essentials SSO handshake.
-* Billing via Stripe.
-  Excludes: partner APIs, advanced connectors, NIS2 extensions, and assisted-tier collaboration tools.
+The MVP includes:
+
+**Marketing/Blog Runtime (Next.js)**
+The public-facing marketing and blog site, operating as a compute-bearing Next.js surface with SSR/ISR. It acts as the platform entry point, delivers content, and handles the Marketing → Essentials identity and routing handoff.
+
+**Essentials Application**
+The authenticated app that allows a tenant to create an Org Profile, provide evidence, run evaluations, view findings, and download a report. Intake fields, validation rules, evidence binding, and the user experience for evaluation are all scoped tightly to Cyber Essentials v3.2.
+
+**Deterministic Evaluation Loop**
+The rule engine defined in the PRD, running the 15 Cyber Essentials controls selected for v1. Org Profile and Evidence data are processed through a deterministic pipeline that produces findings with provenance and clear rationale.
+
+**Evidence Handling**
+File uploads, hashing, metadata capture, storage in object storage under tenant isolation, and binding of artefacts to findings. Assertions and system pulls are supported only to the extent defined in the MVP.
+
+**Report Generation**
+HTML/PDF report creation with citations, evidence references, and hash footers. The evaluation and report are produced synchronously as a single deterministic operation.
+
+**Billing (Stripe)**
+Subscription and checkout through Stripe. The MVP supports basic subscription creation, renewal, and cancellation. No multi-plan structure, discounts, or enterprise options.
+
+The MVP excludes:
+
+**Partner / Integrator APIs**
+No collaboration surfaces, auditor flows, or shared workspaces. All multi-party features are deferred.
+
+**NIS2 and Additional Frameworks**
+Only Cyber Essentials v3.2 is supported. No cross-framework evaluation, mapping, or rulepacks.
+
+**Advanced Connectors**
+Only Entra or Okta identity pulls are considered for the MVP, and even these may be stubbed or limited. Backup systems, EDR, and cloud posture scanners are explicitly out of scope.
+
+**Assisted Tier or Collaboration Tools**
+No shared dashboards, comment threads, review queues, or advisor interactions. The user journey is strictly self-serve.
+
+This boundary ensures the MVP remains feasible, coherent, and aligned with the PRD’s requirement to ship a complete, deterministic, end-to-end loop before any expansion into multi-framework or collaborative functionality.
 
 ### 2.6 External Dependencies and Integrations
 
-Lists external systems the MVP touches: Stripe API, SMTP relay, Entra ID/Okta auth, CDN edge caching, and telemetry endpoint.
-Specifies expected SLAs and fallback behaviour if an integration fails.
+The MVP interacts with a narrow set of external systems defined in the PRD. Each integration exists only to support a core user journey and is accessed through a tightly controlled interface to preserve determinism and prevent vendor-specific behaviour from leaking into the platform.
+
+**Identity Providers (OIDC)**
+Authentication for both the Marketing/Blog runtime and the Essentials App will be handled through standard OIDC flows. Supported providers in the MVP are Entra ID, Okta, and Google, or maybe Keycloak. These services supply primary authentication only; no synchronisation, SCIM provisioning, or directory management is part of this phase.
+
+**Stripe (Billing)**
+The MVP uses Stripe Checkout and the Stripe Customer Portal for subscription creation, renewal, and cancellation. Only a single plan is exposed at launch. Webhooks are used to reflect subscription state inside the platform. No enterprise billing features, usage metering, or multi-plan structures are included.
+
+**S3-Compatible Object Storage**
+Evidence artefacts, report binaries, and hashed objects will be stored in a tenant-isolated S3-compatible bucket. The PRD requires envelope encryption, immutability constraints, short-lived signed URLs, and strict separation between tenants. No computation occurs within storage; it functions as an integrity-preserving artefact store only.
+
+**Email Delivery**
+The platform will send transactional messages through a compliant mail provider for onboarding and follow-up communication. The PRD does not commit to a specific vendor. Email is not tied to core evaluation flow and must not block user progress.
+
+**CDN and Runtime Hosting**
+The Marketing/Blog site will run as a Next.js SSR/ISR runtime positioned in front of a CDN that provides caching, asset distribution, and edge routing. The PRD defines required behaviour—consistent content delivery, stable routing, and clean separation of authenticated and unauthenticated flows—but does not mandate a provider.
+
+**Telemetry and Observability Endpoint**
+All runtime surfaces emit structured logs and OpenTelemetry-style traces that capture gateway → evaluation → evidence → report flows. Tenant IDs, request IDs, version markers, and provenance hashes must appear in every event. No component is permitted to run without observability hooks.
+
+#### **Failure Behaviour**
+
+Fallback expectations derive directly from the PRD’s principles of determinism, explainability, and controlled degradation:
+
+* **Identity provider failure:** Auth attempts must fail cleanly and visibly. No implicit fallback to another provider, no partial sessions.
+* **Stripe failure:** Subscription state must remain consistent. Transient billing errors do not corrupt access or block evaluation.
+* **Object storage failure:** Evidence uploads must fail atomically. No partial artefacts, no ambiguous integrity state.
+* **Email delivery failure:** Email outages are logged but do not block intake, evaluation, or reporting.
+* **Telemetry failure:** Loss of observability data is itself observable. The system continues to operate but must note the failure locally.
+
+---
+
+**TODO-SAIS-EXT-01:** Define explicit runtime limits for email, IdP, and Stripe retries (counts, backoff rules, and log thresholds).
 
 ### 2.7 Deployment Topography Summary
 
-Provides a high-level description (and reference diagram) of where each layer runs — front-end (Next.js), API gateway (FastAPI / Go), background workers (Celery / RQ), and storage back-ends (PostgreSQL + object store).
-States that environments (dev/staging/prod) remain configuration-identical except for secrets and scaling parameters.
+The MVP is deployed as a small, deterministic collection of services whose boundaries mirror the PRD’s requirement for simplicity, explainability, and environment parity. No background workers, message queues, or orchestration frameworks form part of the MVP; only the minimum viable set of services required to run the evaluation–report loop.
 
+**Marketing/Blog Runtime (Next.js SSR/ISR)**
+The public-facing site runs as a compute-bearing Next.js service behind a CDN. It performs SSR/ISR rendering, Marketing→Essentials identity transitions, content routing, and telemetry emission. It stores no tenant data and interacts with the system exclusively via the public API.
+
+**Essentials App (Next.js Runtime)**
+The authenticated application is served as a separate Next.js runtime. All user actions—intake, evidence upload, evaluation, reporting, billing—flow through the API Gateway. The Essentials app holds no persistent data.
+
+**API Gateway (FastAPI/Go; language-agnostic in PRD)**
+This is the single ingress point for all authenticated and unauthenticated API calls. Responsibilities include OIDC validation, request shaping, rate limiting (defined elsewhere in SAIS), audit header injection, version marking, and routing to internal services.
+
+**Rule Evaluation Service**
+A stateless service responsible for evaluating an OrgProfile and Evidence bundle against a signed RulePack. It performs deterministic checks and may invoke the runtime LLM inference path where allowed. All processing uses ephemeral memory and produces deterministic findings.
+
+**Evidence & Artefact Storage (S3-Compatible)**
+All evidence artefacts, report binaries, and hashed objects are stored in an S3-compatible bucket. The PRD requires envelope encryption, immutability controls, short-lived signed URLs, and strict tenant prefix isolation. Storage performs no compute; its role is integrity and retention.
+
+**Primary Database (PostgreSQL ≥ v15)**
+Stores tenant metadata, OrgProfile records, evaluation histories, findings, audit events, and Stripe linkage metadata. Backups must meet the PRD’s encryption, retention, and recovery objectives.
+
+---
+
+### **Environments**
+
+Transcrypt defines three runtime environments:
+
+* **dev** — developer iteration and ephemeral preview environments.
+* **staging** — production-like environment for release validation.
+* **prod** — tenant-facing environment.
+
+The PRD requires that all environments remain **configuration-identical**, differing only in:
+
+* secrets
+* environment URLs
+* horizontal/vertical scaling
+
+No differences in behaviour, routing, dependency versions, or infrastructure topology are permitted, ensuring deterministic runtime behaviour across the deployment pipeline.
+
+---
+
+### **TODO-SAIS-TOPO-02 (PRD Boundary Checkpoint)**
+
+Two product-level behaviours, implied by user-facing expectations but not yet declared in the PRD, must be defined before the SAIS can lock final deployment behaviour:
+
+1. **Evidence Upload Constraints (Product Behaviour)**
+   The PRD must eventually specify user-facing limits: allowed MIME types, maximum file size, concurrent uploads, number of artefacts per control, and whether compressed bundles (ZIP) are permitted. These constraints directly affect user experience, support load, and compliance expectations, and therefore belong in the PRD rather than only in system architecture.
+
+2. **Session Semantics (User Experience)**
+   Session lifetime, refresh behaviour, handoff state between Marketing↔Essentials, and whether admin actions require step-up MFA must be declared as product truths. These behaviours define how the user experiences continuity, trust, and flow across the platform. Once PRD statements exist, the SAIS will encode the exact architectural implementation.
+
+These TODOs do **not** block SAIS progress but must be resolved before the early implementation phase begins, to prevent divergent assumptions across gateways, runtimes, and client behaviour.
 
 ## 3. Component Architecture
 
