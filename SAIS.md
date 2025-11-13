@@ -1112,7 +1112,7 @@ The UI displays the result and allows download.
 
 ---
 
-## **3.6.4 Guarantees Provided by the Pipeline**
+#### **3.6.4 Guarantees Provided by the Pipeline**
 
 * **Deterministic outputs:** Identical inputs → identical findings.
 * **Traceability:** Every hop carries a `trace_id`.
