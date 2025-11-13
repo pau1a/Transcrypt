@@ -1120,15 +1120,72 @@ The UI displays the result and allows download.
 * **Schema enforcement:** No “best-effort” parsing; strict schema validation at each boundary.
 * **No partial state:** Every write is atomic; failures surface, never hidden.
 
----
-
-If you’re ready, next is **3.7 Component Dependency Matrix**, which will be crisp and mechanical — no invention, just a truthful dependency map of the components defined so far.
-
-
 ### 3.7 Component Dependency Matrix
 
-Tabular summary of all inter-component dependencies (runtime and build-time).
-Include stability classification (core, optional, stubbed) and whether each dependency is synchronous or asynchronous.
+#### **3.7.1 Dependency Matrix (Runtime)**
+
+| Component                   | Depends On             | Sync/Async                               | Stability (Core / Optional / Stubbed) | Notes                                                        |
+| --------------------------- | ---------------------- | ---------------------------------------- | ------------------------------------- | ------------------------------------------------------------ |
+| **Marketing/Blog Runtime**  | API Gateway            | Sync                                     | Core                                  | Public pages cached; authenticated calls routed via Gateway. |
+|                             | OIDC Providers         | Sync                                     | Core                                  | For login redirects and callback flows.                      |
+|                             | CDN                    | Sync                                     | Core                                  | Edge caching and SSR/ISR fallback.                           |
+| **Essentials App Runtime**  | API Gateway            | Sync                                     | Core                                  | All state pulled via typed API calls.                        |
+|                             | OIDC Providers         | Sync                                     | Core                                  | Same identity path as Marketing.                             |
+| **API Gateway**             | OIDC Providers         | Sync                                     | Core                                  | Token validation using JWKS.                                 |
+|                             | PostgreSQL             | Sync                                     | Core                                  | Tenant/session metadata and subscription state lookups.      |
+|                             | Evaluation Service     | Sync                                     | Core                                  | For findings generation.                                     |
+|                             | Evidence Service       | Sync                                     | Core                                  | For file ingest and metadata flow.                           |
+|                             | Report Service         | Sync                                     | Core                                  | For report assembly.                                         |
+|                             | Stripe                 | Async (webhook), Sync (portal redirects) | Core                                  | Billing state reflection.                                    |
+|                             | Telemetry Endpoint     | Async                                    | Core                                  | Emits logs, traces, metrics.                                 |
+| **Rule Evaluation Service** | None (stateless)       | Sync                                     | Core                                  | Only inbound calls; no outbound writes except telemetry.     |
+|                             | LLM Runtime (optional) | Sync                                     | Optional                              | Inference-only; can be disabled.                             |
+|                             | Telemetry Endpoint     | Async                                    | Core                                  | Full trace required.                                         |
+| **Evidence Service**        | S3-Compatible Storage  | Sync                                     | Core                                  | PUT/GET for artefacts.                                       |
+|                             | Telemetry Endpoint     | Async                                    | Core                                  | Logs evidence ingest events.                                 |
+| **Report Service**          | S3-Compatible Storage  | Sync                                     | Core                                  | Uploads final report artefact.                               |
+|                             | Telemetry Endpoint     | Async                                    | Core                                  | Logs render events.                                          |
+| **PostgreSQL**              | None                   | N/A                                      | Core                                  | Data store only.                                             |
+| **S3-Compatible Storage**   | None                   | N/A                                      | Core                                  | Artefact store only.                                         |
+| **Stripe**                  | None                   | N/A                                      | External                              | Provider-driven retries.                                     |
+| **Email Provider**          | None                   | N/A                                      | External                              | Notification only; non-blocking.                             |
+| **CDN / Edge Layer**        | Marketing Runtime      | Sync                                     | External                              | Caches SSR/ISR output.                                       |
+| **Telemetry Endpoint**      | None                   | N/A                                      | Core                                  | Internal or external depending on final vendor.              |
+
+---
+
+#### **3.7.2 Build-Time Dependencies**
+
+| Component              | Build-Time Dependencies                                                    | Stability |
+| ---------------------- | -------------------------------------------------------------------------- | --------- |
+| Marketing/Blog Runtime | Shared schema package, API client SDK, telemetry client                    | Core      |
+| Essentials App Runtime | Shared schema package, API client SDK, telemetry client                    | Core      |
+| API Gateway            | Shared schema package, telemetry client, error contracts                   | Core      |
+| Evaluation Service     | Schema package (OrgProfile, Evidence, Finding, RulePack), telemetry client | Core      |
+| Evidence Service       | Schema package (Evidence), telemetry client                                | Core      |
+| Report Service         | Schema package (Findings, Report), telemetry client                        | Core      |
+| Shared Libraries       | None                                                                       | Core      |
+
+---
+
+#### **3.7.3 Stability Classification Definitions**
+
+* **Core:** Required for MVP operation; cannot be removed without breaking the evaluation or reporting flow.
+* **Optional:** Used when enabled but has a fallback or can be disabled without breaking the system (e.g., LLM inference).
+* **Stubbed:** Present as placeholders for future phases; unused in MVP.
+  *(None of these exist in 3.7 because stubs are documented in Section 3.1 only.)*
+
+---
+
+#### **3.7.4 Notes on Asynchronous Behaviour**
+
+The MVP is primarily synchronous by design.
+Only two integrations exhibit true asynchronous behaviour:
+
+1. **Stripe Webhooks** – Stripe retries delivery; system treats webhook arrival as an external state signal.
+2. **Telemetry Emission** – Logs/traces/metrics are fire-and-forget; failures recorded locally but do not block flows.
+
+Everything else is strictly request/response, deterministic, and controlled.
 
 ### 3.8 Resilience and Failure Boundaries
 
