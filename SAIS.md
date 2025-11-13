@@ -1189,10 +1189,92 @@ Everything else is strictly request/response, deterministic, and controlled.
 
 ### 3.8 Resilience and Failure Boundaries
 
-Defines what happens when a component fails: isolation scope, retry policy, timeout, and circuit-breaker strategy.
-This closes the loop with the later “Resilience” section but keeps the context local to architecture.
+This section defines how each internal service behaves under failure conditions. The PRD mandates deterministic behaviour, controlled degradation, and full traceability, so no component is allowed to fail ambiguously or partially. All failure boundaries are strictly local: a fault in one service must not cascade across the system.
 
----
+#### **3.8.1 Isolation Scope**
+
+All internal services are isolated by default:
+
+* **Evaluation Service** is stateless; failure affects only the current request.
+* **Evidence Service** uses atomic writes; evidence cannot enter a “partial” state.
+* **Report Service** never produces half-rendered outputs; failures surface cleanly.
+* **API Gateway** contains all failure signals—no downstream errors leak raw.
+* **Next.js runtimes** (Marketing + Essentials) never store state locally; refresh recovers cleanly.
+
+There is no shared in-memory state between services.
+No service may write to another’s datastore.
+
+#### **3.8.2 Retry Policy**
+
+The MVP applies a conservative retry model:
+
+* **Internal service-to-service calls**
+  No automatic retries. A failure returns an explicit error up the chain.
+  Reason: avoids non-idempotent double-writes and preserves determinism.
+
+* **Evidence uploads**
+  No retry inside the Evidence Service; user retries via UI.
+  Prevents duplicate artefacts.
+
+* **Stripe webhooks**
+  Retries are delegated to Stripe (provider-driven).
+  Gateway verifies signature and applies update exactly once.
+
+* **OIDC token validation**
+  No retry. Invalid/expired → fail closed.
+
+* **Telemetry emission**
+  Fire-and-forget with optional local error log.
+  Failures do not impact user flows.
+
+#### **3.8.3 Timeout Strategy**
+
+Each internal API call has a strict timeout:
+
+* **Rule Evaluation Service**
+  Short timeout (2–5 seconds) because compute is local and deterministic.
+* **Evidence Service**
+  Timeout bound by file upload window; metadata validation is immediate.
+* **Report Service**
+  Timeout bound by render cost (HTML/PDF generation).
+* **API Gateway**
+  Enforces global request timeout for all inbound traffic.
+
+Timeouts propagate errors cleanly back to the user through the Problem+JSON contract.
+
+#### **3.8.4 Circuit-Breaker Behaviour**
+
+The MVP includes light circuit-breaker logic only where it affects stability:
+
+* **Evaluation Service**
+  If repeated failures occur, Gateway marks the service as unhealthy for a short period and surfaces a stable error instead of hammering the backend.
+
+* **Report Service**
+  Similar short-lived circuit-breaker prevents repeated render attempts during template or storage outage.
+
+* **External Providers (OIDC / Stripe / Object Storage)**
+  Gateway will not circuit-break external providers; instead, it returns clean, visible failures.
+
+There are no complex cascading breaker chains.
+Circuit-breakers are local, shallow, and designed to protect user experience, not attempt heroic recovery.
+
+#### **3.8.5 Clean Failure Guarantees**
+
+For every internal service, the following rules apply:
+
+* **No partial writes**
+  Evidence, reports, and DB records must either succeed fully or not at all.
+* **No silent retries**
+  Every retry must be user-driven or provider-driven.
+* **No ambiguous state**
+  Evaluation cannot proceed with missing artefacts; report generation cannot use incomplete findings.
+* **Errors are always surfaced**
+  API Gateway converts all failure states into Problem+JSON with `trace_id`.
+* **Deterministic recovery**
+  Refreshing the page or repeating the request from a clean state restores flow.
+
+This section defines the architectural resilience boundaries.
+The broader operational and infrastructure-level resilience model is expanded later in the SAIS under the dedicated Resilience section.
 
 ## 4. Data and Storage Model
 
