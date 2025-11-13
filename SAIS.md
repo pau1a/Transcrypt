@@ -45,22 +45,158 @@ Lists audiences and their expectations:
 Indicates that all edits are recorded in Appendix 15, Change Log.
 Each commit references a PRD section ID in its Git message for bidirectional traceability.
 
----
-
-This makes Section 1 both authoritative and auditable — the anchor for the rest of the SAIS.
-
 
 ## 2. System Overview
 
 Summarises the full system: philosophy, major layers, and the MVP boundary of delivery. Summarise the full system at a bird’s-eye level — major layers, runtime context, and guiding design principles (automation-first, invisible infrastructure, etc.).
 
+---
+
+### 2.1 System Philosophy
+
+Defines the engineering mindset behind Transcrypt’s architecture: automation-first, measurement-led, and invisibly resilient.
+Explains that infrastructure, orchestration, and compliance logic are abstracted away from the user, surfacing only clear outcomes (“compliant / not-yet-compliant”) rather than internal complexity.
+Notes that every component must serve three goals: determinism, auditability, and user trust.
+
+### 2.2 Major Architectural Layers
+
+Outlines the platform’s structural strata:
+
+* **Edge Layer (UI + API Gateway):** entry point for users and integrations; performs authentication, routing, and request shaping.
+* **Control and Rule Layer:** evaluates evidence against framework rules; deterministic and stateless by design.
+* **Data and Evidence Layer:** persists artefacts, schemas, and audit trails; implements encryption, retention, and hashing.
+* **Services and Integration Layer:** connects to payment, identity, and third-party connectors (stubbed where out of scope).
+* **Observability and Automation Layer:** handles logging, telemetry, SLO enforcement, and CI/CD feedback loops.
+
+Each layer must be independently testable, deployable, and replaceable.
+
+### 2.3 Runtime Context
+
+Describes how these layers interact at runtime within a multi-tenant SaaS topology.
+Highlights stateless compute nodes behind a load balancer, data isolation per tenant, and use of ephemeral storage for processing evidence.
+Notes dependency on external services (Stripe, Entra/Okta, S3-compatible storage) and the asynchronous report-generation queue.
+
+### 2.4 Guiding Design Principles
+
+Summarises operational tenets inherited from the PRD:
+
+* **Automation First:** every repeatable process must be machine-driven before manual intervention.
+* **Invisible Infrastructure:** operational complexity hidden from both customer and developer through templated pipelines.
+* **Security by Default:** encryption, least privilege, immutable logging applied globally, not per-feature.
+* **Observability Everywhere:** nothing deployed without metrics, traces, and structured logs.
+* **Fail Closed, Recover Predictably:** resilience prioritises safe degradation and deterministic rollback.
+
+### 2.5 MVP Boundary of Delivery
+
+Defines what the MVP includes:
+
+* Essentials app with Org Profile, Evidence Upload, Evaluate, and Report Generate flows.
+* Marketing ↔ Essentials SSO handshake.
+* Billing via Stripe.
+  Excludes: partner APIs, advanced connectors, NIS2 extensions, and assisted-tier collaboration tools.
+
+### 2.6 External Dependencies and Integrations
+
+Lists external systems the MVP touches: Stripe API, SMTP relay, Entra ID/Okta auth, CDN edge caching, and telemetry endpoint.
+Specifies expected SLAs and fallback behaviour if an integration fails.
+
+### 2.7 Deployment Topography Summary
+
+Provides a high-level description (and reference diagram) of where each layer runs — front-end (Next.js), API gateway (FastAPI / Go), background workers (Celery / RQ), and storage back-ends (PostgreSQL + object store).
+States that environments (dev/staging/prod) remain configuration-identical except for secrets and scaling parameters.
+
+
 ## 3. Component Architecture
 
 Outlines every subsystem — services, clients, SDKs, external integrations — with clear boundaries, roles, and dependencies. Define each subsystem: boundaries, roles, dependencies, and whether they’re internal, external, or partner-facing.
 
+---
+
+### 3.1 Component Map and Classification
+
+Presents the definitive inventory of all components in the MVP release.
+Categorise each as *internal*, *external*, or *partner-facing*.
+Use a table or diagram to show their grouping under the major architectural layers (Edge, Control / Rule, Data / Evidence, Integration, Observability).
+
+### 3.2 Component Responsibilities
+
+For each module, state its single purpose, its owning team, and what contracts it must honour.
+Include short “inputs → outputs → side-effects” triplets for clarity.
+
+### 3.3 Internal Services
+
+Defines core platform services and how they communicate:
+
+* API Gateway and Policy Enforcer
+* Rule Evaluation Service (deterministic)
+* Evidence Service
+* Report Service
+* Auth Service / Identity Adapter
+
+Document dependencies, ports, message formats, and error boundaries.
+
+### 3.4 External Integrations
+
+Lists all outward dependencies: Entra ID / Okta for auth, Stripe for billing, S3-compatible object store for artefacts, SMTP relay for notifications, CDN for static content.
+For each, specify connection method, authentication model, and fallback behaviour.
+
+### 3.5 Shared Libraries and SDKs
+
+Describes common code assets: schema validation package, telemetry client, and API client SDK.
+States versioning policy and where they live in the repo.
+
+### 3.6 Data Flow and Contracts
+
+Summarises how data moves between components.
+Provide at least one canonical diagram showing ingestion → evaluation → report → storage.
+Link each data hand-off to its schema definition in Section 4.
+
+### 3.7 Component Dependency Matrix
+
+Tabular summary of all inter-component dependencies (runtime and build-time).
+Include stability classification (core, optional, stubbed) and whether each dependency is synchronous or asynchronous.
+
+### 3.8 Resilience and Failure Boundaries
+
+Defines what happens when a component fails: isolation scope, retry policy, timeout, and circuit-breaker strategy.
+This closes the loop with the later “Resilience” section but keeps the context local to architecture.
+
+---
+
 ## 4. Data and Storage Model
 
 Canonical schemas, entity relationships, encryption, retention, and provenance. Includes schema versioning and ownership.
+
+Fair. You’re right — when I start calibrating counts, I’m optimising for optics, not substance. The correct approach is to treat subsection count as an *outcome* of coverage, not a design variable.
+
+---
+
+### 4.1 Data Model Overview
+
+Summarise what data exists, why it exists, and the distinction between operational data (used by the platform) and evidential data (submitted for compliance). Clarify that evidential data is immutable once accepted.
+
+### 4.2 Canonical Entities
+
+Define the core objects and their identifiers: Organisation, User, Control, Evidence, Report, and BillingRecord. Provide an ER or class diagram showing their relationships and ownership boundaries.
+
+### 4.3 Schema and Versioning
+
+Explain schema sources, how changes are versioned and migrated, and how validation is enforced in CI. Include the naming and branching convention for schema updates.
+
+### 4.4 Storage Architecture
+
+Describe physical stores—PostgreSQL for structured data, object storage for artefacts, Redis for ephemeral state—and how encryption, indexing, and region replication work.
+
+### 4.5 Provenance, Retention, and Deletion
+
+Combine integrity and lifecycle here: how hashes, timestamps, and audit IDs are generated; how retention differs by data class; and how redaction or deletion is proven.
+
+### 4.6 Access Control and Recovery
+
+Define ownership and permissions, IAM roles, and read/write restrictions.
+Add the recovery path: snapshot frequency, restore validation, and off-site replication.
+
+---
 
 ## 5. Interface Specifications
 
@@ -75,43 +211,918 @@ Error semantics and versioning
 
 Example requests/responses
 
+---
+
+### 5.1 Interface Overview
+
+Summarises the scope: which APIs, webhooks, and events exist in the MVP; their purpose; and the protocols used (HTTPS REST, JSON, optional GraphQL/event bus).
+Defines naming and versioning conventions such as `/v1/` in URLs and semantic version headers.
+
+### 5.2 Authentication and Authorisation
+
+Explains how clients obtain and present credentials.
+Covers:
+
+* OAuth 2.1 / OIDC token flows for users (Entra ID / Okta)
+* API-key or signed-JWT approach for service-to-service calls
+* Token lifetime, refresh behaviour, and scopes
+* Multi-tenant isolation enforcement at token-validation stage
+
+### 5.3 Public APIs
+
+Documents externally callable endpoints that belong to the Essentials App and Marketing ↔ Essentials handshake.
+For each, show:
+
+* Endpoint URI and method
+* Request/response schema
+* Success / error codes
+* Example payloads
+* Rate limits and idempotency rules
+
+(Example)
+
+```http
+POST /api/v1/evidence
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "control_id": "CE3.2-1",
+  "file_ref": "obj_78f...",
+  "metadata": { "hash": "..." }
+}
+```
+
+**Response 201 Created**
+
+```json
+{ "evidence_id": "EV-2411", "status": "accepted" }
+```
+
+### 5.4 Internal Service Interfaces
+
+Defines calls between internal modules (Rule Engine ↔ Evidence Service, Report ↔ Storage).
+Include payload shapes, message queues or RPC patterns, and retry/timeout policy.
+
+### 5.5 Webhooks and Event Topics
+
+Lists outbound notifications the system emits (e.g., `report.generated`, `billing.payment_succeeded`).
+For each: event name, schema, delivery mechanism, retries, signature verification, and replay window.
+
+### 5.6 Error Handling and Response Semantics
+
+Standardises error format across all interfaces:
+
+```json
+{ "error": { "code": "E400_INVALID_FIELD", "message": "sector is required" } }
+```
+
+Defines HTTP-to-application-error mapping, correlation ID propagation, and localisation rules for user-facing messages.
+
+### 5.7 Interface Versioning and Deprecation
+
+Describes how backward compatibility is managed, how breaking changes are signalled, and the expected support horizon for each API version.
+
+### 5.8 Testing and Validation
+
+Specifies contract-test tooling (Postman collections, pytest fixtures, OpenAPI validator) and the acceptance requirement that every public endpoint has at least one automated contract test.
+
+---
+
 ## 6. User Experience and Wireframes
 
 Functional UI definition — navigation spine, screen-by-screen wireframes, UX–API bindings, accessibility guarantees, and responsive behaviour.
 Wireframes embedded (Mermaid/Figma links) and tied to acceptance criteria. 
 
+---
+
+### 6.1 UX Philosophy and Objectives
+
+Defines the purpose of the UX layer: to make compliance workflows self-evident, error-resistant, and measurable.
+Explains the alignment with PRD §4 Interface Philosophy — clarity over aesthetics, automation over manual entry, evidence over opinion.
+States that every user action must be traceable to a single API call or state change.
+
+### 6.2 Navigation Spine and Information Architecture
+
+Shows how users move through the Essentials app:
+
+* Primary nav: Dashboard · Controls · Evidence · Reports · Billing · Settings
+* Secondary nav: Profile, Support, Logout
+* Routing rules for Marketing ↔ Essentials handshake
+  Provide a Mermaid or site-map diagram illustrating the hierarchy and deep-link behaviour.
+
+### 6.3 Screen Flows and Wireframes
+
+Defines the canonical screens that constitute the MVP:
+
+1. Landing / Sign-in
+2. Onboarding – Organisation Profile
+3. Controls Overview
+4. Evidence Upload
+5. Evaluation / Results
+6. Report Generation
+7. Billing & Checkout
+   Each screen must:
+
+* Identify its purpose and success criteria
+* Reference its API endpoints (from §5)
+* Show a low-fidelity wireframe (embedded or linked to Figma)
+* Note any conditional states, modals, or errors
+
+Example (Mermaid):
+
+```mermaid
+flowchart TD
+  A[Sign-in] --> B[Onboarding]
+  B --> C[Controls Overview]
+  C --> D[Evidence Upload]
+  D --> E[Evaluate]
+  E --> F[Report Generate]
+  F --> G[Billing]
+```
+
+### 6.4 UX → API Bindings
+
+Maps UI actions to backend endpoints and response expectations.
+Document in a table: *Screen → API → Payload → Success/Error → Next State.*
+This ensures determinism between UI flow and backend behaviour.
+
+### 6.5 Accessibility and Responsiveness
+
+Lists compliance targets: WCAG 2.2 AA contrast ratios, keyboard-first operation, ARIA landmarks, focus traps.
+Defines responsive breakpoints and expected layout behaviour for mobile, tablet, and desktop.
+Include validation scripts for accessibility testing.
+
+### 6.6 UX Instrumentation and Feedback
+
+Specifies telemetry events (screen_loaded, form_submitted, error_shown) and how they’re logged with tenant and session IDs.
+Links back to §10 Observability for metric definitions.
+Defines qualitative feedback hooks (survey, bug report) for future usability analysis.
+
+---
+
 ## 7. Sequence and Runtime Behaviour
 
 System-level and user-journey diagrams showing how components, APIs, and UI interact at runtime. Includes async/event patterns.
+
+---
+
+### 7.1 Runtime Context and Assumptions
+
+Document baseline assumptions: stateless services behind a load balancer, per-tenant isolation, eventual consistency only in async paths, and strict idempotency for all POST/PUT endpoints. Note clock source (e.g., UTC via NTP) and correlation-ID format used end-to-end.
+
+### 7.2 Primary User Journeys (Happy Paths)
+
+Sequence the MVP flows with explicit actors, calls, and returns.
+
+**7.2.1 Sign-in → Onboarding (Org Profile)**
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor User
+  participant UI
+  participant Gateway
+  participant Auth
+  participant OrgSvc as Org Service
+  User->>UI: Submit credentials (OIDC)
+  UI->>Auth: Auth code exchange
+  Auth-->>UI: ID/Access token (tenant claims)
+  UI->>Gateway: POST /org (payload)
+  Gateway->>OrgSvc: Create org (idempotency-key)
+  OrgSvc-->>Gateway: 201 {org_id}
+  Gateway-->>UI: 201 {org_id}
+```
+
+**7.2.2 Evidence Upload → Evaluation → Report Generate**
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor User
+  participant UI
+  participant Gateway
+  participant Evidence as Evidence Svc
+  participant Store as Object Store
+  participant Rule as Rule Engine
+  participant Queue
+  participant Report as Report Svc
+  User->>UI: Upload file + metadata
+  UI->>Gateway: POST /evidence (refs object URI)
+  Gateway->>Evidence: Validate & persist record
+  Evidence->>Store: PUT artefact (hash, tags)
+  Evidence-->>Gateway: 201 {evidence_id}
+  Gateway-->>UI: 201
+  UI->>Gateway: POST /evaluate?framework=CEv3_2
+  Gateway->>Rule: Evaluate(tenant, controls, evidence_refs)
+  Rule-->>Gateway: 200 {results, score}
+  UI->>Gateway: POST /reports/generate
+  Gateway->>Queue: publish report.requested
+  Queue->>Report: deliver message
+  Report->>Store: read evidence, templates
+  Report-->>Store: write PDF/HTML
+  Report-->>Queue: publish report.generated
+  Report-->>Gateway: 202 {report_id}
+  Gateway-->>UI: 202
+```
+
+### 7.3 Asynchronous/Event Patterns
+
+Define topics/queues, publishers, and consumers. Include delivery guarantees (at-least-once), back-off, DLQ policy, and replay rules. List canonical events (e.g., `report.requested`, `report.generated`, `billing.payment_succeeded`) with payload schemas (link to §5.5).
+
+### 7.4 Concurrency, Idempotency, and Ordering
+
+State idempotency-key rules for mutating endpoints; describe how keys are scoped (tenant+endpoint+hash). Define where strict ordering is required (per-report job chain) and how it’s enforced (FIFO queue or per-key partitioning). Mention optimistic concurrency (ETags/version fields) on mutable resources.
+
+### 7.5 Timeouts, Retries, and Circuit Breaking
+
+Specify default client/gateway/service timeouts, retry counts/back-off for transient failures, and circuit-breaker thresholds. Clarify which errors are retryable vs terminal. Provide a small matrix for GET/POST/PUT/DELETE behaviours.
+
+### 7.6 Failure Scenarios and Degradation Paths
+
+Document how each journey behaves under failure: object store down (accept record, queue retry; UI shows “processing”), rule engine degraded (queue evaluation, notify), webhook target unreachable (retry→DLQ→admin alert). Define user-visible states and recovery actions.
+
+### 7.7 Workflow State Machines (Authoritative)
+
+Define state diagrams for long-running processes.
+
+**7.7.1 Report Lifecycle**
+
+```mermaid
+stateDiagram-v2
+  [*] --> REQUESTED
+  REQUESTED --> RENDERING
+  RENDERING --> STORED: success
+  RENDERING --> RETRYING: transient error
+  RETRYING --> RENDERING: backoff window
+  RENDERING --> FAILED: terminal error
+  STORED --> PUBLISHED
+  PUBLISHED --> [*]
+```
+
+**7.7.2 Evidence Ingestion**
+
+```mermaid
+stateDiagram-v2
+  [*] --> REGISTERED
+  REGISTERED --> VERIFIED: hash & size check
+  VERIFIED --> SEALED: immutability enforced
+  VERIFIED --> REJECTED: integrity mismatch
+  SEALED --> [*]
+```
+
+### 7.8 Performance Budgets and SLO Paths
+
+Declare target latencies and throughput for each path (e.g., p95: sign-in ≤ 400 ms, evidence POST ≤ 800 ms, evaluate ≤ 1.5 s synchronous, report async ≤ 2 min). Map each SLO to metrics in §10 and acceptance checks in §13.
+
+### 7.9 Observability Hooks and Correlation
+
+Define mandatory headers/attributes (`X-Request-ID`, `X-Tenant-ID`, `X-Idempotency-Key`) and how they propagate across UI → gateway → services → queue. List log events and trace spans required per step, with namespacing conventions.
+
+---
 
 ## 8. Deployment and Environment Architecture
 
 Describes environments (dev, staging, prod), configuration, secrets handling, and network topology. Defines IaC linkage and environment parity rules.
 
+---
+
+### 8.1 Environments and Parity Rules
+
+Define `dev`, `staging`, `prod` (and any ephemeral preview envs).
+State strict parity principles: same images, same configs-by-name, differences limited to scale and secrets. List environment-specific toggles.
+
+### 8.2 Infrastructure as Code (IaC)
+
+Name the IaC stack (e.g., Terraform + Terragrunt).
+Describe state management, module layout, and promotion workflow (plan → apply via CI with approvals). Reference repo paths for infra modules.
+
+### 8.3 Runtime Topology
+
+High-level diagram and description of components per environment: CDN/Edge, Web (Next.js), API Gateway, Services (Rule, Evidence, Report), Queue/Workers, PostgreSQL, Object Store, Redis. Include port bindings and health-check endpoints.
+
+### 8.4 Networking and Segmentation
+
+VPCs/VNets, subnets, security groups/NSGs, private endpoints, peering.
+Public vs private ingress, egress allow-lists, NAT gateways, WAF, rate limiting, DDoS protections. Document outbound DNS and restricted IP ranges.
+
+### 8.5 Secrets and Configuration Management
+
+Source of truth (e.g., AWS Secrets Manager/Azure Key Vault), rotation cadence, envelope encryption, and secret injection at runtime.
+Config hierarchy (base, env, instance), precedence rules, and validation on boot.
+
+### 8.6 Build Artifacts, Signing, and Supply Chain
+
+Container registry, image tags, SBOM generation, signature and provenance (Cosign/Sigstore; SLSA level target).
+Policy at admission (only signed, non-vulnerable images run; CVE budget and gate).
+
+### 8.7 Deployment Strategies
+
+Blue/green vs canary, rollout steps, health and rollback criteria, and how database migrations are coordinated (pre-deploy checks, backward-compatible migrations, post-deploy clean-ups).
+
+### 8.8 Database, Storage, and Data Paths
+
+PostgreSQL sizing, HA/replicas, connection pooling; object storage buckets (namespacing per tenant), lifecycle rules; Redis persistence mode and eviction policy. Link to §4 for retention/provenance.
+
+### 8.9 Observability Plumbing
+
+Agents/collectors, log drains, metrics endpoints, trace sampling.
+Env-specific SLO targets and alert routes. Cross-env dashboard parity.
+
+### 8.10 Access Control and Operational Safety
+
+Who can do what, where: break-glass accounts, just-in-time elevation, bastion hosts, MFA/SSO, command logging.
+Change windows and freeze policies.
+
+### 8.11 Edge, CDN, and TLS
+
+Domains/DNS, TLS cert issuance/renewal (ACME), HSTS, origin shields, cache keys/invalidation strategies, and static asset hardening headers.
+
+### 8.12 Feature Flags and Kill Switches
+
+Flag provider, naming conventions, default-off for risky features, per-tenant targeting, and immediate disable paths for downstream failures.
+
+### 8.13 Cost and Capacity Guardrails
+
+Instance classes, autoscaling policies, quota limits, and cost alerts.
+Load/capacity assumptions for MVP with headroom targets.
+
+### 8.14 Third-Party Integrations in Runtime
+
+Network routes and credentials for Stripe, IdP (Entra/Okta), SMTP, etc.
+Timeouts, retries, circuit breaker thresholds, and sandbox vs live separation.
+
+### 8.15 Environment Bootstrap and Data Seeding
+
+Minimal boot scripts, seed data for staging (sanitised), fixture packs for E2E tests, and scrubbing rules for any prod snapshots used in non-prod.
+
+### 8.16 Disaster Readiness Hooks
+
+Where backups land, cross-region replication toggles, RPO/RTO targets, and runbook pointers to §12 for restore drills.
+
+---
+
 ## 9. Security, Privacy, and Compliance Alignment
 
 Maps architecture to controls in IEC 62443, NIS2, and Cyber Essentials. Details key management, isolation, audit logging, and redaction pipelines.
+
+---
+
+### 9.1 Security Philosophy and Objectives
+
+Defines the overarching intent: defence in depth, least privilege, isolation by default, and full traceability.
+Connects these principles directly to Transcrypt’s mission of “measurable security and invisible complexity.”
+States that every control maps to a verifiable artefact — no “policy-only” items.
+
+### 9.2 Control-Framework Mapping
+
+Summarises how the architecture satisfies mandatory frameworks:
+
+* **Cyber Essentials v3.2** – device protection, boundary firewalls, access control, malware, patch management.
+* **IEC 62443** – zones & conduits, security levels, change control, audit, account management.
+* **NIS2** – incident reporting, supply-chain governance, resilience, data integrity.
+  Provide a cross-reference table: *Framework → Control → Section(s)/Component(s) → Evidence Artefact.*
+
+### 9.3 Identity, Access, and Segregation
+
+Detail how authentication and authorisation are enforced across layers:
+OIDC for users, IAM roles for services, policy-based routing per tenant, and attribute-based access for admin tooling.
+Include session lifetime, MFA enforcement, and revocation workflow.
+
+### 9.4 Data Protection and Key Management
+
+Describe encryption models:
+
+* At rest: AES-256 with envelope keys in KMS.
+* In transit: TLS 1.3 only.
+* Key lifecycle: rotation, audit, destruction, and escrow.
+  Note which services hold plaintext transiently and how memory zeroisation is handled.
+
+### 9.5 Audit and Logging Architecture
+
+Define immutable audit-log flow:
+structured JSON logs → append-only store → periodic hash → object-store replication.
+Include tenant/request correlation, tamper-detection, and retention policy.
+Clarify what is *not* logged (sensitive fields, credentials, tokens).
+
+### 9.6 Redaction, Anonymisation, and DSR Handling
+
+Explain the redaction pipeline for AI prompts or logs, the anonymisation of test data, and how Data Subject Requests are executed and verified.
+Reference data schemas affected (from §4) and retention limits (from §4.5).
+
+### 9.7 Network and Runtime Hardening
+
+List baseline controls: locked-down inbound rules, egress allow-lists, minimal images, CIS-benchmarked OS profiles, container sandboxing, and runtime policy (seccomp/AppArmor).
+Document vulnerability scanning cadence and patch SLAs.
+
+### 9.8 Secure Development and Supply Chain
+
+Specify dependency scanning, SBOM generation, commit-signing, and build pipeline attestation.
+Describe how third-party libraries are approved, updated, and revoked.
+Link to §8.6 (Build Artifacts and Signing).
+
+### 9.9 Incident Detection and Response Readiness
+
+Summarise monitoring sources (IDS/WAF alerts, anomaly logs), escalation flow, severity classification, and 24 h notification target for NIS2 incidents.
+Point to detailed procedures in §12 (Operational Runbooks).
+
+### 9.10 Compliance Evidence and Verification
+
+Define how control compliance is proven automatically: scheduled checks, stored artefacts, signed reports.
+Include evidence export format (JSON / PDF), reviewer sign-off workflow, and hash-anchoring of reports for integrity.
+
+### 9.11 Residual Risk and Exception Register
+
+Describe process for tracking deviations or compensating controls — who approves, how expiry is enforced, and where exceptions are logged for audit.
+
+---
 
 ## 10. Observability and Telemetry
 
 Defines metrics, traces, structured logs, and SLOs. Specifies tenant/request correlation IDs and alert thresholds.
 
+---
+
+### 10.1 Objectives and Scope
+
+Define why we instrument: verify SLOs, shorten MTTR, and prove compliance evidence. Clarify scope (apps, workers, gateway, jobs, CDN/edge).
+
+### 10.2 Telemetry Standards and Context Propagation
+
+Adopt OpenTelemetry for metrics, traces, and logs.
+W3C Trace Context headers (`traceparent`, `tracestate`) are mandatory end-to-end.
+Correlation keys carried on every event:
+
+* `tenant_id` (opaque UUID)
+* `request_id` (`X-Request-ID`)
+* `user_id` (if authenticated)
+* `component` / `version` / `region`
+
+### 10.3 Metrics (SLIs) and SLOs
+
+Define the canonical SLIs and targets; namespaced `transcrypt.<domain>.<metric>` with labels `{tenant, region, version}`.
+
+| Domain | Metric (SLI)                                             | Target SLO  | Notes                     |
+| ------ | -------------------------------------------------------- | ----------- | ------------------------- |
+| API    | `transcrypt.api.req_latency_ms{route,verb}` p95 ≤ 400 ms | Monthly     | Excluding async endpoints |
+| API    | `transcrypt.api.error_rate{route,verb}` ≤ 1%             | Rolling 28d | 5xx + policy 4xx          |
+| Jobs   | `transcrypt.job.runtime_ms{job}` p95 ≤ 120000            | Monthly     | Report generation         |
+| Queue  | `transcrypt.queue.lag_seconds{topic}` ≤ 10               | Daily       | Back-pressure signal      |
+| DB     | `transcrypt.db.slow_queries_total` = 0                   | Daily       | > 500 ms threshold        |
+| Uptime | `transcrypt.service.availability` ≥ 99.9%                | Monthly     | Per critical component    |
+
+Error budget policy: 0.1% monthly. Burn-rate alerts defined in §10.7.
+
+### 10.4 Tracing Requirements
+
+Spans for UI→Gateway→Service→DB/Queue with consistent names:
+`svc:<component>.<operation>` (e.g., `svc:rule.evaluate`).
+Span attributes (must-have): `tenant_id`, `request_id`, `http.route`, `db.statement_hash`, `retry_count`.
+Sampling: head-based 10% in prod; tail-based for top-latency and error outliers.
+Store exemplar traces for all SLO breaches.
+
+### 10.5 Structured Logging Schema
+
+JSON logs only; one event per line. Required fields:
+
+```json
+{
+  "ts":"2025-11-13T21:02:11Z",
+  "level":"INFO",
+  "component":"api-gateway",
+  "version":"1.0.0",
+  "tenant_id":"t_9f3…",
+  "request_id":"r_12ab…",
+  "event":"evidence.accepted",
+  "msg":"Evidence stored",
+  "dur_ms":142,
+  "http":{"route":"/api/v1/evidence","status":201},
+  "err":null
+}
+```
+
+PII/secret scrubbing: token/secret patterns redacted at source; logs rejected by schema if unsanitised.
+
+### 10.6 Dashboards and Reporting
+
+Minimum dashboards:
+
+* **Golden Signals** (latency, errors, traffic, saturation) per service
+* **Jobs & Queues** (lag, retries, DLQ depth)
+* **DB Health** (connections, slow queries, locks)
+* **SLO Overview** with budget remaining and breach history
+  Export weekly PDF snapshots for audit evidence (hash stored per §4.5).
+
+### 10.7 Alerting Policy and Burn-Rate Rules
+
+Alerts must be actionable and route to on-call with runbook link. Multi-window/multi-burn-rate examples:
+
+* API latency SLO (p95): fire at 14× burn (5 min) and 6× (1 h)
+* Error rate: fire at 2× (12 h) and 4× (1 h)
+* Queue lag: threshold > 30 s for 10 min
+  Channels: PagerDuty (P1/P2), Slack (P3), email digest (P4). Silence windows require change ticket.
+
+### 10.8 Health and Readiness Endpoints
+
+Every service exposes:
+
+* `/healthz` (process up, deps optional)
+* `/readyz` (deps OK: DB, queue, object store)
+* `/metrics` (Prometheus/OpenMetrics)
+  Readiness gates deployments; health feeds uptime checks.
+
+### 10.9 Data Retention, Cost, and Privacy
+
+Retention: traces 7 days (hot), 30 days (cold, sampled); logs 90 days; metrics 13 months (roll-ups).
+Cost caps per tenant; drop non-key labels if cardinality explodes.
+Privacy: no raw PII in telemetry; hashed IDs only. Telemetry exports are in scope for DSR discovery but not deletion unless they contain PII.
+
+### 10.10 Testability and CI Hooks
+
+Contract tests assert: required spans emitted, logs conform to schema, key metrics increment on actions.
+Synthetic checks (login, upload, evaluate, report) run continuously and feed SLO dashboards.
+Pre-merge CI fails on: missing `request_id` propagation, unbound metrics, or log schema violations.
+
+---
+
 ## 11. Build and Delivery Pipeline
 
 CI/CD architecture — linting, test suites, security scans, release gating, artefact signing, and promotion between environments.
+
+---
+
+### 11.1 Pipeline Objectives and Scope
+
+What the pipeline must guarantee: reproducible builds, policy enforcement, traceability to PRD/SAIS, and fast, safe releases across `dev → staging → prod`.
+
+### 11.2 Branching, Versioning, and Tags
+
+Workflow (e.g., trunk-based with short-lived feature branches), tag format (`v1.x.y` for app, `v1.x.y-sais` for docs), and how tags map to releases and migrations.
+
+### 11.3 Build Stages (Canonical)
+
+Stage graph with inputs/outputs:
+
+1. **Source fetch & cache** →
+2. **Lint & static checks** (code + schemas) →
+3. **Unit tests** →
+4. **Build artefacts** (containers, wheels) →
+5. **SBOM + sign** →
+6. **Integration tests (ephemeral env)** →
+7. **Publish to registry** →
+8. **Deploy to staging** →
+9. **E2E + perf smoke** →
+10. **Manual/auto gate** →
+11. **Prod canary → full rollout**.
+
+### 11.4 Testing Pyramid and Coverage Bars
+
+Minimum bars: unit ≥ 80% critical paths, component/integration on every merge, E2E for MVP flows (login, org create, evidence upload, evaluate, report). Contract tests for every public endpoint (§5). Fail CI if bars regress.
+
+### 11.5 Security and Compliance Scans
+
+SAST/linters (per language), dependency scanning (allowlist/denylist), container scan (critical CVEs = gate), IaC scan (CIS), secrets detection (pre-receive + CI). All findings must link to tickets with SLAs.
+
+### 11.6 SBOM, Provenance, and Signing
+
+Generate SBOM (SPDX/CycloneDX). Sign build provenance (Sigstore/Cosign). Admission policy: only signed images with zero critical CVEs run in staging/prod. Store attestations with the release record.
+
+### 11.7 Artefact Management
+
+Registries, retention, and immutability. Naming: `svc-name:1.2.3+gitsha`. Keep last N builds; purge policy documented. Provenance and SBOM stored alongside.
+
+### 11.8 Database Migrations and Backward Compatibility
+
+Rule: migrations are forward-compatible for one release; apply pre-deploy; roll back without data loss. Automate: lint DDL, dry-run in ephemeral env, block deploy if unsafe ops detected.
+
+### 11.9 Release Gating and Promotions
+
+Automated gates: tests green, scans clean, error budget healthy (§10), change freeze respected, approvals present. Promotions are pull-only (staging pulls from registry), never push.
+
+### 11.10 Deployment Strategies and Rollback
+
+Default: canary (5% → 25% → 100%) with health checks; blue/green for risky changes. One-click rollback pinned to last known-good tag; DB rollback plan documented per release.
+
+### 11.11 Feature Flags and Config Drift
+
+Flags default-off, scoped per tenant. Config is code; drift detectors in CI block deploys if env deviates from repo defaults. Kill switch playbooks referenced.
+
+### 11.12 Pipeline Observability and SLAs
+
+Metrics: pipeline duration, queue time, pass rate, flake rate, MTTR for failed builds. Alerts when median build > target, or flake rate > threshold. Logs and traces for each job with `request_id`/`commit_sha`.
+
+### 11.13 Access Control and Approvals
+
+Who can: merge, tag, approve prod deploys, override gates. Mandatory two-person review for prod, with audited rationale. Break-glass path time-boxed and logged.
+
+### 11.14 Audit Trail and Release Notes
+
+Each release produces: changelog (commits/issues), diffs to infrastructure modules, SBOM, scan summaries, test report, and links to PRD/SAIS requirement IDs touched (traceability table in §14).
+
+### 11.15 Ephemeral Environments and Test Data
+
+On PR open, spin an isolated stack with seeded, sanitised data. Auto-destroy on merge/close. Test data packs live in repo; no prod data outside prod.
+
+---
 
 ## 12. Operational Runbooks
 
 Day-two procedures: monitoring, backup cadence, rotation, incident response, recovery validation, and change windows.
 
+---
+
+### 12.1 Purpose and Scope
+
+Defines “day-two” coverage — everything required to operate Transcrypt safely after deployment.
+Outlines which systems are in scope (API, workers, database, storage, queue, CI/CD, observability) and which are delegated to hosting provider SLAs.
+
+### 12.2 Monitoring and On-Call Responsibilities
+
+Identifies who monitors what, escalation levels, and coverage hours.
+Specifies on-call rotation, hand-off cadence, and paging policy tiers (P1-P4).
+Links alerts (§10.7) to owners and runbooks.
+
+### 12.3 Backup and Snapshot Cadence
+
+Defines schedules per store:
+
+* **PostgreSQL:** full daily snapshot, 5-minute WAL shipping.
+* **Object Store:** versioning + weekly lifecycle archive.
+* **Redis:** hourly RDB snapshot.
+  Include validation job verifying restore integrity every 7 days.
+  Describe cross-region replication, encryption, and retention windows.
+
+### 12.4 Key, Secret, and Credential Rotation
+
+Rotation intervals (API keys 90 days, access tokens 24 h, KMS keys 1 year).
+Explain automation (CI/CD hooks or vault-driven renewal) and audit log entries required.
+Emergency-revoke procedure and blast-radius expectations.
+
+### 12.5 Incident Detection and Response
+
+Defines the detection sources (alerts, anomaly logs, user reports).
+Incident lifecycle: *Detect → Triage → Contain → Eradicate → Recover → Review.*
+Include severity matrix, SLA to first response, communication templates, and NIS2 / ICO notification paths.
+Each incident must produce a post-mortem within 5 working days.
+
+### 12.6 Recovery and Validation Procedures
+
+Step-by-step restore guides: database, object store, queue.
+Checklist: validate hash → restore snapshot → repoint service → verify health → record verification hash in audit log.
+State RPO / RTO targets (e.g., RPO ≤ 15 min, RTO ≤ 60 min) and test cadence (quarterly full DR drill).
+
+### 12.7 Change Management and Maintenance Windows
+
+Define how changes are proposed, approved, and executed.
+Maintenance window timing, communication requirements, rollback plan, and mandatory pre-change backups.
+All changes tracked via issue ID and signed commit.
+
+### 12.8 Service Health Reviews and Continuous Improvement
+
+Monthly service review: incident metrics, alert fatigue analysis, backup reliability, patch compliance.
+Track actions via backlog items.
+Feed recurring findings into pipeline gates (§11) and PRD revisions.
+
+### 12.9 Compliance and Audit Evidence
+
+Every runbook action generates an immutable audit record (operator ID, timestamp, outcome).
+Export quarterly as evidence pack for Cyber Essentials / NIS2 audits.
+Store hash in evidence repository (§4.5).
+
+### 12.10 Tooling and Automation Interfaces
+
+List operational tooling (runbook executor, pager platform, metrics dashboard, chat-ops commands).
+Define minimal manual steps; everything else automated.
+State fallback manual paths if automation fails.
+
+---
+
 ## 13. Non-Functional Requirements
 
 Quantitative targets: performance, scalability, reliability, and resource budgets. Links directly to observability metrics.
+
+---
+
+### 13.1 Purpose and Scope
+
+Define which cross-cutting qualities are considered non-functional for the MVP and how they are verified (test, telemetry, or audit).
+Explain that these metrics are **release-blocking** and traceable through §10 (Observability) and §11 (Pipeline).
+
+### 13.2 Performance Targets
+
+Quantitative latency and throughput budgets per critical path:
+
+| Path                                                            | p95 Latency | Throughput  | Notes         |
+| :-------------------------------------------------------------- | :---------- | :---------- | :------------ |
+| API Gateway → Rule Eval                                         | ≤ 400 ms    | > 200 req/s | sync requests |
+| Evidence Upload                                                 | ≤ 800 ms    | I/O-bound   | streamed      |
+| Report Generation (async)                                       | ≤ 2 min     | n/a         | batch         |
+| All limits measured under 80 % nominal load with 20 % headroom. |             |             |               |
+
+### 13.3 Scalability and Capacity
+
+State horizontal-scaling behaviour: stateless services autoscale on CPU > 70 % / queue lag > 10 s.
+Database scaling via read-replicas; object store unlimited.
+Document maximum tested tenant count and evidence volume per tenant before degradation.
+Define cost ceilings per environment (links to §8.13).
+
+### 13.4 Reliability and Availability
+
+Availability ≥ 99.9 % monthly for all customer-facing endpoints.
+Planned maintenance ≤ 1 h / month.
+Mean Time To Recovery (MTTR) ≤ 30 min for P1 incidents (§12).
+List dependency SLAs (auth 99.9 %, storage 99.95 %) and composite uptime math.
+
+### 13.5 Resilience and Fault Tolerance
+
+Describe retry, back-off, and circuit-breaker defaults.
+Each service must degrade gracefully (queue → process later, UI → show “processing”).
+Document chaos-test cadence and pass criteria (no data loss, ≤ 2× latency spike).
+
+### 13.6 Security and Privacy Benchmarks
+
+All network traffic TLS 1.3+; encryption-at-rest AES-256.
+Secrets rotation verified ≤ 90 days (§12.4).
+Zero critical CVEs allowed at deploy (§11.5).
+Data leak probability = 0 tolerated events; monitor redaction success rate ≥ 99.99 %.
+
+### 13.7 Maintainability and Operability
+
+CI cycle ≤ 10 min median; pipeline success ≥ 95 %.
+Static-analysis debt < 5 critical findings.
+All services observable (§10); logs parseable 100 %.
+Define target time for new engineer to deploy = ≤ 1 day (full environment setup scripted).
+
+### 13.8 Accessibility and UX Responsiveness
+
+WCAG 2.2 AA compliance.
+UI interaction response ≤ 200 ms for click-to-feedback on broadband, ≤ 500 ms on 3G.
+Critical flows must be operable with keyboard only.
+
+### 13.9 Sustainability and Resource Efficiency
+
+CPU utilisation ≤ 70 % average; memory ≤ 80 %.
+Idle instance auto-scale to zero after 30 min no traffic.
+CI/CD runners powered by shared compute where possible.
+Track CO₂-equivalent cost per build in observability dashboard (optional metric).
+
+### 13.10 Verification and Acceptance Methods
+
+Specify how each target is validated:
+
+* Automated load tests in CI (staging).
+* Synthetic monitors for p95 latency.
+* Chaos drills for resilience.
+* Accessibility scanner reports.
+  A release may not proceed unless all “critical” NFRs are green or formally waived in §9.11 (Exception Register).
+
+---
 
 ## 14. Traceability and Acceptance Mapping
 
 Table mapping PRD requirements and acceptance criteria to implementing components, APIs, and tests.
 
+---
+
+### 14.1 Purpose and Method
+
+Explain that this section provides a two-way mapping between **requirements (from PRD)** and their **implementation artefacts (in SAIS, code, and tests)**.
+Define the traceability model: each PRD item has a unique `REQ-ID`, mirrored in commits, code annotations, and CI test metadata.
+State that the table is regenerated automatically during release tagging to ensure coverage completeness.
+
+### 14.2 Traceability Table Structure
+
+Introduce the canonical columns:
+
+| REQ-ID | PRD Section | Requirement Summary | Implementing Component(s) | API / Interface | Test / Evidence | Acceptance Status |
+| :----- | :---------- | :------------------ | :------------------------ | :-------------- | :-------------- | :---------------- |
+
+Define statuses:
+
+* **Planned** – defined in PRD, not yet implemented.
+* **Implemented** – code merged and test exists.
+* **Verified** – passed automated and manual acceptance.
+* **Deferred** – explicitly postponed or superseded.
+
+### 14.3 Example Entries (MVP Slice)
+
+Provide a representative sample for the MVP:
+
+| REQ-ID | PRD Section | Requirement Summary                    | Implementing Component(s)     | API / Interface              | Test / Evidence                   | Acceptance Status |
+| :----- | :---------- | :------------------------------------- | :---------------------------- | :--------------------------- | :-------------------------------- | :---------------- |
+| CE-001 | 3.1.5.4     | Data minimisation + GDPR DSR endpoints | API Gateway, Evidence Service | `/dsr/export`, `/dsr/delete` | `test_dsr_endpoints.py`           | Verified          |
+| CE-002 | 4.1.2       | Essentials onboarding flow             | UI, Org Service               | `/org`                       | `test_onboarding_flow.py`         | Verified          |
+| CE-003 | 5.1         | Rule engine deterministic evaluation   | Rule Service                  | `/evaluate`                  | `test_rule_engine_determinism.py` | Implemented       |
+| CE-004 | 7.3         | Encryption at rest/in transit          | Storage, DB                   | n/a                          | `vault_rotation_test.yaml`        | Verified          |
+| CE-005 | 9.5         | Immutable audit trail                  | Audit Service, Object Store   | n/a                          | `audit_append_only_test.py`       | Verified          |
+| CE-006 | 8.7         | Blue/green deployment with rollback    | CI/CD, Infra                  | n/a                          | `pipeline_e2e_test.yaml`          | Implemented       |
+
+### 14.4 Coverage Analysis
+
+Summarise percentage of PRD requirements covered by implemented and verified artefacts.
+List any **unmapped** or **out-of-scope** PRD items with rationale.
+Include a short bar chart or Markdown table:
+`Total: 180 | Implemented: 163 | Verified: 155 | Deferred: 17 | Coverage: 91.6 %`.
+
+### 14.5 Acceptance Workflow
+
+Describe who reviews and approves each requirement’s acceptance: Product Lead, QA Lead, Security Lead.
+Acceptance triggered automatically after passing CI tests, but final sign-off requires linked Jira ticket closure or Git tag annotation.
+
+### 14.6 Evidence Storage and Audit Trail
+
+All acceptance results stored as JSON in the evidence repository (`/evidence/traceability/`).
+Each entry contains hash of commit + test log.
+Auditors can verify by recomputing hash chain (linked to §9.5 Audit and Logging).
+
+### 14.7 Continuous Verification Hooks
+
+Pipeline step (`verify-traceability`) validates that:
+
+* Every `REQ-ID` in PRD appears in this table.
+* Every implemented requirement has a corresponding test.
+* No orphan tests reference non-existent REQ-IDs.
+  Pipeline fails if coverage < threshold (default 90%).
+
+### 14.8 Change and Version History
+
+Each release tag appends a new table snapshot to `/docs/traceability/vX.Y.Z.md`.
+Changes between versions tracked by diff, signed and timestamped.
+Ensures auditors can trace the lineage of every requirement from conception to verification.
+
+---
+
 ## 15. Appendices and Change Log
 
 Supporting material — schema dumps, diagram sources, glossary, environment variables, revision history.
+
+Here’s the complete, final structure for **Section 15 – Appendices and Change Log**. It closes the SAIS cleanly — everything supplemental, auditable, and reproducible lives here without cluttering the main sections.
+
+---
+
+### 15.1 Purpose
+
+Explain that this section stores supporting material required to reproduce or audit the system design: diagrams, schema references, term definitions, and the version history of this document.
+
+### 15.2 Reference Schemas and Data Models
+
+Embed or link to canonical schemas from §4 (e.g., JSON Schema, SQL DDL, Pydantic models).
+Note source paths in the repo (`/schemas/`), the toolchain used for generation, and validation status in CI.
+Where possible, include hash of each exported schema for integrity checking.
+
+### 15.3 Diagram Source Files
+
+Provide locations and formats for all diagrams: Mermaid, PlantUML, Figma, or Draw.io.
+List their file paths, last update timestamp, and SHA digest.
+Clarify that only diagrams stored in Git (not screenshots) are authoritative for architecture reviews.
+
+### 15.4 Environment Variables and Configuration Keys
+
+Table of all environment variables consumed by the system, with classification and source of truth.
+
+| Variable            | Description                  | Scope        | Default                      | Secrets Store   |
+| :------------------ | :--------------------------- | :----------- | :--------------------------- | :-------------- |
+| `DB_URL`            | PostgreSQL connection string | All services | —                            | Secrets Manager |
+| `STRIPE_API_KEY`    | Stripe integration           | Billing      | —                            | Secrets Manager |
+| `LOG_LEVEL`         | Logging verbosity            | All          | `INFO`                       | ConfigMap       |
+| `OTEL_EXPORTER_URL` | OpenTelemetry endpoint       | All          | `https://otel.transcrypt.io` | ConfigMap       |
+
+### 15.5 Glossary of Terms and Abbreviations
+
+Define all recurring terms, abbreviations, and acronyms used throughout the SAIS — e.g., *MVP, CEv3.2, IAM, SLO, DSR, DLQ, IaC.*
+Keep definitions concise and cross-linked to the first appearance in the document.
+
+### 15.6 External References
+
+List all external specifications, standards, and libraries referenced in this document:
+
+* IEC 62443-3-3 (Industrial Communication Networks — Security Levels)
+* Cyber Essentials v3.2
+* NIS2 Directive (EU 2022/2555)
+* OpenTelemetry Specification v1.28
+* Sigstore / Cosign documentation
+* WCAG 2.2 AA Accessibility Guidelines
+
+### 15.7 Document Change Log
+
+Maintain a chronological record of all edits to this document, in reverse order (newest first).
+
+| Date       | Version     | Author         | Summary of Changes                              | Commit / Tag |
+| :--------- | :---------- | :------------- | :---------------------------------------------- | :----------- |
+| 2025-11-13 | v1.0.0-sais | P. Livingstone | Initial full draft aligned with PRD v0.3.0      | `abc1234`    |
+| 2025-12-01 | v1.1.0-sais | G. McSneggle   | Added observability metrics and SBOM references | `def5678`    |
+| 2026-01-10 | v1.1.1-sais | P. Livingstone | Corrected schema links and traceability matrix  | `ghi9012`    |
+
+All entries are commit-linked and signed.
+For long-term audit, every minor revision must retain backward traceability to the PRD milestone it supports.
+
+### 15.8 Document Integrity and Verification
+
+State the hash of the full Markdown file (`sha256sum`) and any exported PDF to ensure authenticity.
+Include command example for re-verification:
+
+```bash
+sha256sum system-architecture-and-interface-spec.md
+```
+
+---
