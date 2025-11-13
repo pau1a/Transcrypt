@@ -2,14 +2,16 @@
 
 ## 1. Purpose and Scope
 
-Defines the intent, relationship to PRD `v0.3.0-prd-complete`, document ownership, and version control. Clarify what this document covers (v1 / MVP only), its relationship to the PRD, and what’s out of scope.
+This document defines the architectural intent and boundaries for Transcrypt’s v1 / MVP implementation. It exists to specify, at a system level, what will be built, how components relate, and which interfaces are exposed. It inherits its direction exclusively from the Product Requirements Document (`v0.3.0-prd-complete`) and does not override or extend that specification.
 
----
+The SAIS covers only the MVP scope defined in the PRD, including the essential feature set, minimum architectural components, and mandatory interfaces required for a functioning release. Any feature, integration, or behavioural pattern not explicitly included in the PRD’s MVP cut is out of scope for this document.
+
+Document ownership sits with the engineering function. Changes follow the same version-control process as the PRD: tracked in Git, reviewed on change, and updated only when underlying implementation or requirements shift.
 
 ### 1.1 Document Intent
 
-Establishes that this specification translates the Transcrypt PRD (v0.3.0-prd-complete) into implementable architectural artefacts.
-Defines the SAIS as the single authoritative source for component boundaries, data contracts, and runtime behaviour for the MVP release.
+This specification converts the Transcrypt PRD (`v0.3.0-prd-complete`) into concrete, implementable architectural artefacts. It defines how the product’s stated requirements manifest as system components, boundaries, interfaces, and data structures. For the MVP release, this document serves as the authoritative reference for runtime behaviour, integration points, and technical constraints. No component, interface, or behaviour outside what is expressed here is considered part of the v1 system.
+
 
 ### 1.2 Relationship to PRD
 
