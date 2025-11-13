@@ -751,8 +751,130 @@ Without a product-level decision, the SAIS can’t finalise:
 
 ### 3.4 External Integrations
 
-Lists all outward dependencies: Entra ID / Okta for auth, Stripe for billing, S3-compatible object store for artefacts, SMTP relay for notifications, CDN for static content.
-For each, specify connection method, authentication model, and fallback behaviour.
+The MVP interacts with a minimal set of external systems. Each integration exists solely to support identity, billing, artefact storage, email delivery, and CDN-backed rendering of the Marketing/Blog runtime. All integrations are accessed through narrow, replaceable interfaces to preserve determinism and isolate failure domains.
+
+Each subsection describes the **connection method**, **authentication model**, and **fallback behaviour**, based strictly on PRD commitments.
+
+---
+
+#### **3.4.1 OIDC Identity Providers (Entra ID / Okta / Google)**
+
+**Connection Method**
+
+* Standard OIDC Authorization Code flow with PKCE.
+* Redirects initiated from both the Marketing runtime and Essentials runtime.
+* API Gateway validates tokens using provider JWKS endpoints.
+
+**Authentication Model**
+
+* Bearer tokens (JWT) carried in session cookie or header.
+* Required claims: `sub`, `email`, `iss`, `exp`.
+* No SCIM, directory sync, or enterprise policies in the MVP.
+
+**Fallback Behaviour**
+
+* If token cannot be validated → fail closed, visible to user.
+* No implicit provider fallback.
+* No partial or degraded sessions.
+
+---
+
+#### **3.4.2 Stripe (Billing)**
+
+**Connection Method**
+
+* HTTPS to Stripe Checkout and Billing Portal URLs.
+* Stripe webhooks POST back into API Gateway for subscription state reflection.
+
+**Authentication Model**
+
+* Signed webhook events using Stripe’s signing secret.
+* Checkout initiated with ephemeral session IDs.
+* No custom products, coupons, or usage metering in the MVP.
+
+**Fallback Behaviour**
+
+* If webhook delivery fails → retry handled by Stripe.
+* If Stripe API is unreachable:
+
+  * No destructive action.
+  * Tenant retains last known subscription state.
+  * Evaluation and reporting remain available unless subscription marked inactive in DB.
+
+---
+
+#### **3.4.3 S3-Compatible Object Store**
+
+**Connection Method**
+
+* HTTPS using S3-compatible API (PUT/GET/HEAD).
+* Evidence uploaded via signed URLs or direct gateway-mediated writes.
+* Per-tenant prefixes enforce storage isolation.
+
+**Authentication Model**
+
+* Access keys stored in secrets manager.
+* Envelope encryption applied at upload.
+* Signed URLs time-boxed for downloads.
+
+**Fallback Behaviour**
+
+* If object write fails → atomic failure (no partial evidence).
+* Evaluation does not proceed with missing artefacts.
+* If object retrieval fails → report generation fails cleanly with clear diagnostic.
+
+---
+
+#### **3.4.4 Email Delivery Provider**
+
+**Connection Method**
+
+* SMTP or vendor HTTPS API (PRD does not specify a preference).
+* Used for onboarding, nudges, and notification messages.
+
+**Authentication Model**
+
+* SMTP credentials or API token stored in secrets manager.
+* No PII beyond email addresses and minimal metadata.
+
+**Fallback Behaviour**
+
+* Email failure never blocks evaluation or reporting.
+* Failure logged and surfaced through telemetry.
+* No retry logic mandated in PRD — left to provider or SAIS-layer policy.
+
+---
+
+#### **3.4.5 CDN / Edge Delivery Layer**
+
+**Connection Method**
+
+* CDN sits in front of the Marketing/Blog Next.js runtime.
+* Handles asset delivery, SSR/ISR caching, and geographic routing.
+
+**Authentication Model**
+
+* No tenant-level authentication at CDN layer.
+* Authenticated flows bypass cache and route to origin.
+
+**Fallback Behaviour**
+
+* Cache miss → origin render.
+* Origin unavailable → CDN serves stale-if-available; if none, explicit failure.
+* CDN never caches authenticated Essentials content.
+
+---
+
+#### **3.4.6 External Integrations Summary**
+
+| Integration           | Type     | Purpose               | Auth Model                        | Fallback Behaviour                             |
+| --------------------- | -------- | --------------------- | --------------------------------- | ---------------------------------------------- |
+| Entra/Okta/Google     | External | User authentication   | OIDC + JWT                        | Fail closed; no fallback                       |
+| Stripe                | External | Billing               | Stripe secrets + signed webhooks  | No destructive state; retry by Stripe          |
+| S3-Compatible Storage | External | Artefact storage      | Access keys + envelope encryption | Atomic failure; clear diagnostics              |
+| Email Provider        | External | Notification delivery | SMTP or API token                 | Logged failure; non-blocking                   |
+| CDN/Edge Layer        | External | Content delivery      | None (public)                     | Stale-if-available; no caching of auth content |
+
 
 ### 3.5 Shared Libraries and SDKs
 
