@@ -46,27 +46,51 @@ All updates to this document are tracked directly within the SAIS change log at 
 
 ## 2. System Overview
 
-Summarises the full system: philosophy, major layers, and the MVP boundary of delivery. Summarise the full system at a bird’s-eye level — major layers, runtime context, and guiding design principles (automation-first, invisible infrastructure, etc.).
+This section describes the system at a high level, reflecting the architectural intent defined in the PRD. Transcrypt consists of two user-facing surfaces: the public Marketing & Blog site, which operates as a Next.js runtime providing SSR/ISR-rendered content, routing, telemetry, and the Marketing→Essentials onboarding and identity handshake; and the authenticated Essentials App, which performs compliance evaluation and reporting. Both surfaces consume the same public API, and both form part of the MVP delivery defined in the PRD.
+
+The platform is a multi-tenant, deterministic compliance automation system built around three core ideas: automation-first workflows, invisible infrastructure, and strict auditability. All internal behaviour follows the deterministic, measurement-led model described in the PRD, and no internal complexity is exposed to the user.
+
+The system is divided into clear architectural layers that separate request handling, rule evaluation, evidence processing, report generation, and data storage. Runtime behaviour is simple by design: every action produces a predictable outcome, every state change is auditable, and users see only clear, binary outcomes (“compliant” / “not yet compliant”).
+
+The MVP boundary defined in the PRD restricts the platform to the Essentials feature set, CE v3.2 rule evaluation, evidence intake, report generation, billing, the public Marketing/Blog runtime, and the associated onboarding integrations.
 
 ---
 
 ### 2.1 System Philosophy
 
-Defines the engineering mindset behind Transcrypt’s architecture: automation-first, measurement-led, and invisibly resilient.
-Explains that infrastructure, orchestration, and compliance logic are abstracted away from the user, surfacing only clear outcomes (“compliant / not-yet-compliant”) rather than internal complexity.
-Notes that every component must serve three goals: determinism, auditability, and user trust.
+Transcrypt’s architecture is grounded in the principles set out in the PRD: automation-first operation, deterministic behaviour, and invisibly managed infrastructure. The system will minimise user exposure to internal mechanics — orchestration, rule evaluation, evidence binding, and rendering — and will surface only the outcomes that matter: whether a control is satisfied, why, and how it can be improved. Internal complexity, including routing, SSR/ISR rendering, identity flow, evidence processing, and rule execution, will remain hidden behind predictable interfaces.
+
+The engineering mindset is measurement-led: every significant action will emit audit-ready traces, deterministic hashes, or reproducible artefacts. Identical inputs will always yield identical results, and every outcome will be explainable through visible links to evidence, rule logic, or system state. This ensures that users can trust findings without having to trust the internal machinery.
+
+Every component — from the Marketing/Blog runtime to the Essentials App, API boundary, evaluation workflow, evidence pipeline, and report generator — will serve three goals: determinism, auditability, and user trust. The system will avoid ambiguity, implicit behaviour, or “magic” at runtime. Instead, it will prioritise clarity, traceability, and predictable transitions between states, making the platform feel calm, competent, and reliable whether the user is reading content, completing intake, uploading evidence, or generating a report.
 
 ### 2.2 Major Architectural Layers
 
-Outlines the platform’s structural strata:
+Transcrypt’s architecture is organised into a small number of clear layers, each reflecting the structural boundaries defined in the PRD. These layers separate ingress, evaluation, evidence handling, rendering, storage, and observability so that each can evolve independently while maintaining deterministic behaviour and tenant isolation.
 
-* **Edge Layer (UI + API Gateway):** entry point for users and integrations; performs authentication, routing, and request shaping.
-* **Control and Rule Layer:** evaluates evidence against framework rules; deterministic and stateless by design.
-* **Data and Evidence Layer:** persists artefacts, schemas, and audit trails; implements encryption, retention, and hashing.
-* **Services and Integration Layer:** connects to payment, identity, and third-party connectors (stubbed where out of scope).
-* **Observability and Automation Layer:** handles logging, telemetry, SLO enforcement, and CI/CD feedback loops.
+#### **Edge Layer (Marketing Runtime, Essentials UI, API Gateway)**
 
-Each layer must be independently testable, deployable, and replaceable.
+This layer will receive all user traffic across the Marketing/Blog site and the Essentials App. It will handle SSR/ISR rendering, session establishment, identity transitions, and API request termination. The gateway will shape incoming requests, attach tenant context, enforce authentication, and apply rate limits and basic policy guards. No business logic or evaluation occurs here; the edge simply provides controlled and auditable entry into the system.
+
+#### **Control and Rule Layer**
+
+This layer will evaluate tenant input against Cyber Essentials v3.2 controls using the deterministic rule engine defined in the PRD. It will consume OrgProfile and Evidence metadata, execute rule tests, and emit findings with provenance. The layer is stateless and versioned, ensuring identical inputs always map to identical outputs. It will be replaceable as future rulepacks or frameworks are introduced.
+
+#### **Data and Evidence Layer**
+
+This layer will persist structured profile and evaluation data in Postgres and will store evidence artefacts in object storage with hashing, metadata, and immutability guarantees. Audit trails, state transitions, and integrity events will be recorded here. Retention, encryption, and isolation follow the PRD’s data-handling constraints, and no component will bypass the layer or share cross-tenant data paths.
+
+#### **Services and Integration Layer**
+
+This layer will interface with external systems required for MVP operation: identity providers (OIDC through next-auth), Stripe billing, email delivery, and basic connector scaffolding (with out-of-scope connectors stubbed). All integrations will be explicitly versioned and accessed through well-defined, replaceable interfaces.
+
+#### **Observability and Automation Layer**
+
+This layer will collect logs, traces, and metrics from all surfaces — including the Marketing/Blog runtime — and will enforce SLO signals and deployment gates. It provides the measurement backbone for deterministic behaviour, supports CI/CD promotion decisions, and ensures that failures, slow paths, or unexpected behaviours are visible and auditable.
+
+---
+
+Each layer is designed to be independently testable, independently deployable, and replaceable without altering the surrounding system, ensuring architectural stability as the product evolves.
 
 ### 2.3 Runtime Context
 
