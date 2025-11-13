@@ -878,14 +878,252 @@ Each subsection describes the **connection method**, **authentication model**, a
 
 ### 3.5 Shared Libraries and SDKs
 
-Describes common code assets: schema validation package, telemetry client, and API client SDK.
-States versioning policy and where they live in the repo.
+The MVP uses a small set of shared code assets to enforce consistency across all runtimes and internal services. These libraries exist to prevent drift in schemas, request formats, telemetry, and error handling. All shared libraries live inside the main repository and are versioned alongside the platform to guarantee compatibility.
+
+#### **Schema Validation Package**
+
+**Purpose:**
+Single source of truth for JSON schema definitions used by the Essentials App, API Gateway, Evaluation Service, Report Service, and Evidence Service.
+
+**Content:**
+
+* OrgProfile schema
+* Evidence metadata schema
+* Finding schema
+* Report request schema
+* RulePack identity and signature rules
+
+**Location:**
+`/packages/schemas/`
+
+**Versioning:**
+Semantic versioning tied to platform releases.
+Breaking schema changes increment the **major** version and require coordinated updates across all services.
+
+---
+
+#### **Telemetry Client**
+
+**Purpose:**
+Unified tracing, logging, and metrics wrapper used by all internal services and both Next.js runtimes.
+
+**Content:**
+
+* OpenTelemetry initialisation
+* Trace propagation (gateway → evaluation → report)
+* Structured logging format
+* Request ID and tenant ID injectors
+* Version stamping for releases
+
+**Location:**
+`/packages/telemetry/`
+
+**Versioning:**
+Minor version increments permitted as long as log fields remain backward-compatible.
+Any removal or renaming of fields mandates a major version bump.
+
+---
+
+#### **API Client SDK**
+
+**Purpose:**
+Typed client used by the Essentials App and Marketing Runtime to call the API Gateway with consistent request/response shapes. Prevents divergence between UI behaviour and backend expectations.
+
+**Content:**
+
+* Typed functions for `/evaluate`, `/reports/generate`, `/evidence/upload`, billing endpoints, and basic tenant endpoints
+* Error-wrapper returning `Problem+JSON` structures
+* Built-in trace propagation and version tagging
+
+**Location:**
+`/packages/api-client/`
+
+**Versioning:**
+Locked to API contract versions defined in the SAIS.
+No breaking changes allowed in patch or minor versions.
+
+---
+
+#### **Common Error and Problem Contracts**
+
+**Purpose:**
+Consistent `Problem+JSON` error formats across all internal and external surfaces.
+
+**Content:**
+
+* Standardised fields: `type`, `title`, `detail`, `status`, `trace_id`, `instance`
+* Optional operational context: `rule_id`, `evidence_id`
+
+**Location:**
+`/packages/errors/`
+
+**Versioning:**
+Extending the schema is minor; altering base fields is major.
+
+---
+
+#### **Inclusion Policy**
+
+All shared libraries must meet three rules:
+
+1. **No runtime dependencies on external services** — libraries cannot query storage, evaluation, or billing.
+2. **No business logic** — shared packages shape structure, not behaviour.
+3. **Services must not fork or locally override schemas** — any change to a shared contract must happen centrally and versioned.
+
 
 ### 3.6 Data Flow and Contracts
 
-Summarises how data moves between components.
-Provide at least one canonical diagram showing ingestion → evaluation → report → storage.
-Link each data hand-off to its schema definition in Section 4.
+#### **3.6.1 Canonical Data Flow (Textual Diagram)**
+
+```
+User (Essentials App)
+      │
+      │ 1. Intake submission
+      ▼
+API Gateway
+      │  Validates identity
+      │  Shapes request (adds tenant_id, request_id, trace_id)
+      ▼
+Essentials → OrgProfile Schema (Section 4.x)
+      │
+      │ 2. Evidence upload (files + metadata)
+      ▼
+Evidence Service
+      │  Hashes artefacts
+      │  Validates control binding
+      │  Writes to S3 (tenant prefix, envelope encryption)
+      ▼
+Evidence Schema (Section 4.x)
+      │
+      │ 3. Evaluation request
+      ▼
+Rule Evaluation Service
+      │  Loads signed RulePack
+      │  Runs deterministic checks
+      │  (Optional) Calls runtime LLM inference path
+      ▼
+Findings Schema (Section 4.x)
+      │
+      │ 4. Report generation
+      ▼
+Report Service
+      │  Combines: Findings + Profile + Evidence refs
+      │  Renders HTML/PDF
+      │  Uploads final report to S3
+      ▼
+Report Schema (Section 4.x)
+      │
+      │ 5. Surfacing back to user
+      ▼
+Essentials App (via API Gateway)
+```
+
+---
+
+#### **3.6.2 Step-by-Step Explanation (Bound to Schemas)**
+
+##### **1. Intake → OrgProfile**
+
+The Essentials App submits a completed OrgProfile via the API Gateway.
+Schema: **OrgProfile (Section 4.x)**
+
+* Required fields only
+* Version-tagged
+* No null-padding
+
+This object is stored in PostgreSQL and becomes the anchor for all subsequent evaluation.
+
+---
+
+##### **2. Evidence Upload → Evidence Artefact**
+
+User uploads files through the Essentials App.
+Evidence Service:
+
+* hashes the artefact (SHA-256)
+* validates control binding
+* stores file in S3 under `/tenants/{id}/evidence/{hash}`
+* emits metadata back to Gateway
+
+Schema: **EvidenceObject (Section 4.x)**
+Includes: filename, MIME, hash, control_id, storage path.
+
+---
+
+##### **3. Evaluation → Findings**
+
+Gateway sends OrgProfile + Evidence metadata + RulePack ID to the Rule Evaluation Service.
+
+Evaluation Service:
+
+* loads signed RulePack
+* verifies RulePack hash
+* performs deterministic checks
+* runs optional runtime LLM inference path
+* returns Findings[]
+
+Schema: **Finding (Section 4.x)**
+Fields include: control_id, status, rationale, evidence_refs[], trace_id.
+
+No data is stored by the Evaluation Service; all state persists through DB or S3.
+
+---
+
+##### **4. Report Generation → Report Artefact**
+
+Report Service assembles:
+
+* Findings
+* OrgProfile
+* Evidence refs
+* Report template
+
+Into a complete HTML/PDF.
+Uploads to S3.
+
+Schema: **Report (Section 4.x)**.
+
+---
+
+##### **5. Delivery → Essentials App**
+
+Gateway returns:
+
+* report metadata
+* signed URL (time-boxed)
+* report hash
+* status indicators
+
+The UI displays the result and allows download.
+
+---
+
+#### **3.6.3 Contract Overview (Hop-by-Hop)**
+
+| Hop                  | Component → Component        | Schema         | Notes                                         |
+| -------------------- | ---------------------------- | -------------- | --------------------------------------------- |
+| Intake → Gateway     | Essentials → API Gateway     | OrgProfile     | Must validate version; rejects unknown fields |
+| Gateway → Evidence   | Gateway → Evidence Service   | EvidenceObject | Multipart file + JSON metadata                |
+| Gateway → Evaluation | Gateway → Evaluation Service | EvalRequest    | Contains profile, evidence refs, rulepack_id  |
+| Evaluation → Gateway | Evaluation Service → Gateway | Findings[]     | Must include trace_id and version             |
+| Gateway → Report     | Gateway → Report Service     | ReportRequest  | All inputs version-aligned                    |
+| Report → Storage     | Report Service → S3          | ReportBlob     | Immutable; hash generated                     |
+| Gateway → Essentials | Gateway → Essentials App     | ReportMetadata | Includes secure download URL                  |
+
+---
+
+## **3.6.4 Guarantees Provided by the Pipeline**
+
+* **Deterministic outputs:** Identical inputs → identical findings.
+* **Traceability:** Every hop carries a `trace_id`.
+* **Immutable artefacts:** Evidence and reports stored with hash + envelope encryption.
+* **Schema enforcement:** No “best-effort” parsing; strict schema validation at each boundary.
+* **No partial state:** Every write is atomic; failures surface, never hidden.
+
+---
+
+If you’re ready, next is **3.7 Component Dependency Matrix**, which will be crisp and mechanical — no invention, just a truthful dependency map of the components defined so far.
+
 
 ### 3.7 Component Dependency Matrix
 
