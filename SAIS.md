@@ -12,41 +12,37 @@ Document ownership sits with the engineering function. Changes follow the same v
 
 This specification converts the Transcrypt PRD (`v0.3.0-prd-complete`) into concrete, implementable architectural artefacts. It defines how the product’s stated requirements manifest as system components, boundaries, interfaces, and data structures. For the MVP release, this document serves as the authoritative reference for runtime behaviour, integration points, and technical constraints. No component, interface, or behaviour outside what is expressed here is considered part of the v1 system.
 
-
 ### 1.2 Relationship to PRD
 
-Explains traceability between PRD requirement IDs and this document’s sections.
-States that every functional, non-functional, and security requirement in the PRD must map to one or more technical elements here.
+This document maintains direct traceability to the PRD by referencing the specific PRD sections from which each architectural element originates. Every functional, non-functional, and security requirement described in the PRD must map to one or more technical elements defined here. No architectural element in this specification exists without an originating PRD section, and no PRD requirement is considered satisfied unless it appears here in an implementable form.
 
 ### 1.3 Version and Control Mechanism
 
-Specifies version tag format (`v1.x.y-sais`), branch naming conventions, and Git repository location.
-Notes how milestone tags align with PRD versions and CI/CD promotion gates.
+This document is versioned using the same Git-based workflow defined for the PRD. All changes are tracked in the Transcrypt repository, with updates made only through reviewed commits. The SAIS uses a dedicated semantic tag format:
+**`v1.x.y-sais`**,
+where `x` increments for architectural changes affecting component boundaries or interfaces, and `y` increments for clarifications that do not alter behaviour.
+
+Branches follow the repository’s existing convention (e.g. `codex/<task>`, `feature/<component>`), and SAIS updates must accompany or follow the corresponding PRD commits. Milestone tags align with PRD releases so that a given PRD version and SAIS version can be resolved unambiguously. CI/CD promotion gates reference these tags to ensure that only architectures backed by a corresponding SAIS version progress to implementation or release.
 
 ### 1.4 Ownership and Maintenance
 
-Identifies the accountable owner (Product Lead), responsible maintainers (Engineering Lead + Security Lead), and review cadence (quarterly or upon major release).
-Defines approval and sign-off workflow for any structural change.
+The Product Lead is the accountable owner of this document and is responsible for ensuring that it reflects the current architectural direction defined in the PRD. Day-to-day maintenance is jointly handled by the Engineering Lead and the Security Lead, who update the specification when components, interfaces, or constraints change.
+
+This document follows the same review cadence as the PRD: quarterly, or immediately upon any major release that alters platform behaviour or boundaries. Structural changes require explicit approval from all three roles — Product Lead, Engineering Lead, and Security Lead — and updates must be committed through the standard Git review workflow before becoming authoritative.
 
 ### 1.5 Scope of Coverage
 
-Declares what is in scope for MVP: Transcrypt Essentials App, Evidence Services, Report Generation, Billing, and Marketing↔Essentials handshake.
-States explicitly what is out of scope: partner APIs, NIS2 Pack, advanced connectors, and assisted-tier collaboration.
+This specification covers all components required for the MVP release as defined in the PRD. In scope are: the public Marketing and Blog site, the Marketing↔Essentials handshake, the Transcrypt Essentials App, deterministic rule evaluation, evidence intake and management, report generation, billing, and all onboarding flows described in the PRD.
+
+Explicitly out of scope for this version are: partner and integrator APIs, the NIS2 control pack, advanced connectors, assisted-tier collaboration features, and any enterprise or post-MVP extensibility defined in later PRD phases.
 
 ### 1.6 Intended Audience
 
-Lists audiences and their expectations:
-
-* Engineering and DevOps teams → implementation reference
-* Product and UX teams → design and acceptance alignment
-* Compliance and Security → control verification
-* External partners → interface boundaries only
+This document is written for the people directly involved in building and maintaining Transcrypt. Primarily, it serves as an implementation reference for development work and as a precise description of the system’s boundaries, behaviours, and interfaces. It also provides a clear architectural baseline for anyone contributing to product direction or verifying security and compliance aspects of the platform. If external collaborators or integrators become involved in future phases, they may use this document solely to understand the public API surface and integration constraints.
 
 ### 1.7 Document Change Log Linkage
 
-Indicates that all edits are recorded in Appendix 15, Change Log.
-Each commit references a PRD section ID in its Git message for bidirectional traceability.
-
+All updates to this document are tracked directly within the SAIS change log at the end of the file, and in Git commit history. Changes may optionally reference the associated PRD section number when the edit reflects a modification or clarification to the product definition. No additional appendix structure or external identifier system is used.
 
 ## 2. System Overview
 
