@@ -1284,12 +1284,21 @@ The broader operational and infrastructure-level resilience model is expanded la
 ## 4. Data and Storage Model
 
 Canonical schemas, entity relationships, encryption, retention, and provenance. Includes schema versioning and ownership.
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 ---
 
 ### 4.1 Data Model Overview
 
-Summarise what data exists, why it exists, and the distinction between operational data (used by the platform) and evidential data (submitted for compliance). Clarify that evidential data is immutable once accepted.
+Transcrypt’s data model covers **three main classes of data** across both runtime surfaces: operational platform data, evidential artefacts, and product content for the Marketing/Blog site. All of them must be versioned, recoverable, and kept consistent across environments, but they serve different purposes and live in different stores.
+
+**Operational data** is the structured state the platform needs to function: tenants, OrgProfile snapshots, findings, report metadata, billing state, audit events, and RulePack metadata. This data is held in a **local PostgreSQL database** under the app’s control. It changes over time, is queried by the Essentials App and internal services, and is subject to strict tenant isolation and audit logging.
+
+**Evidential data** consists of artefacts submitted or derived as proof during compliance evaluation – file uploads, exports from third-party systems, and generated report binaries. These are stored as immutable blobs in **DigitalOcean Spaces (S3-compatible object storage with CDN)** under tenant-scoped prefixes, with metadata and hashes recorded in the database. Once an evidential artefact is accepted and bound to a finding or report, it is treated as **append-only and immutable**; any correction or replacement creates a new artefact with its own identity and hash, rather than modifying the original.
+
+**Product content data** powers the Marketing/Blog runtime: blog posts, marketing pages, legal pages, changelog entries, and associated metadata. For the MVP, this content lives alongside the Next.js Marketing site in the repository as version-controlled files, compiled at build time and served via SSG/ISR and the CDN. This keeps the marketing surface cheap, deterministic, and fully traceable: content changes are Git-versioned, deployable across environments, and included in the same backup and rollback story as the code that renders them.
+
+Across all three classes, the model follows the same principles: each object has a clear owner (tenant vs platform), a defined storage class (Postgres, DO Spaces, or repo content), and a lifecycle that can be explained, audited, and recovered. Operational data may be updated under strict rules; evidential data is immutable once accepted; product content is mutable but always versioned.
 
 ### 4.2 Canonical Entities
 
