@@ -753,127 +753,132 @@ Without a product-level decision, the SAIS can’t finalise:
 
 The MVP interacts with a minimal set of external systems. Each integration exists solely to support identity, billing, artefact storage, email delivery, and CDN-backed rendering of the Marketing/Blog runtime. All integrations are accessed through narrow, replaceable interfaces to preserve determinism and isolate failure domains.
 
-Each subsection describes the **connection method**, **authentication model**, and **fallback behaviour**, based strictly on PRD commitments.
+Each subsection describes the **connection method**, **authentication model**, and **fallback behaviour**, based on current PRD commitments plus explicitly agreed implementation choices (Keycloak, MXroute, DigitalOcean Spaces).
 
 ---
 
-#### **3.4.1 OIDC Identity Providers (Entra ID / Okta / Google)**
+#### 3.4.1 OIDC Identity Providers (Entra ID / Okta / Google / Keycloak)
 
 **Connection Method**
 
 * Standard OIDC Authorization Code flow with PKCE.
-* Redirects initiated from both the Marketing runtime and Essentials runtime.
+* Redirects can be initiated from both the Marketing runtime and Essentials runtime.
 * API Gateway validates tokens using provider JWKS endpoints.
+* Keycloak may be self-hosted or managed, but must expose a standard OIDC discovery document.
 
 **Authentication Model**
 
 * Bearer tokens (JWT) carried in session cookie or header.
 * Required claims: `sub`, `email`, `iss`, `exp`.
-* No SCIM, directory sync, or enterprise policies in the MVP.
+* No SCIM, directory sync, or enterprise policy integration in the MVP.
 
 **Fallback Behaviour**
 
-* If token cannot be validated → fail closed, visible to user.
-* No implicit provider fallback.
-* No partial or degraded sessions.
+* If a token cannot be validated → **fail closed**, with a clear error state.
+* No automatic fallback between providers.
+* No partial or degraded sessions; user must re-authenticate.
 
 ---
 
-#### **3.4.2 Stripe (Billing)**
+#### 3.4.2 Stripe (Billing)
 
 **Connection Method**
 
-* HTTPS to Stripe Checkout and Billing Portal URLs.
-* Stripe webhooks POST back into API Gateway for subscription state reflection.
+* HTTPS calls from backend to Stripe Checkout and Billing Portal URLs.
+* Stripe webhooks POST back into the API Gateway for subscription state reflection.
 
 **Authentication Model**
 
 * Signed webhook events using Stripe’s signing secret.
 * Checkout initiated with ephemeral session IDs.
-* No custom products, coupons, or usage metering in the MVP.
+* Single Essential plan only; no coupons, metering, or complex product trees in the MVP.
 
 **Fallback Behaviour**
 
-* If webhook delivery fails → retry handled by Stripe.
+* If webhook delivery fails → retries handled by Stripe.
 * If Stripe API is unreachable:
 
-  * No destructive action.
+  * No destructive action on tenant records.
   * Tenant retains last known subscription state.
-  * Evaluation and reporting remain available unless subscription marked inactive in DB.
+  * Evaluation and reporting remain available unless subscription is explicitly marked inactive in the local DB.
 
 ---
 
-#### **3.4.3 S3-Compatible Object Store**
+#### 3.4.3 DigitalOcean Spaces (S3-Compatible Object Store + CDN)
 
 **Connection Method**
 
-* HTTPS using S3-compatible API (PUT/GET/HEAD).
+* HTTPS using S3-compatible API (PUT/GET/HEAD) to DigitalOcean Spaces.
 * Evidence uploaded via signed URLs or direct gateway-mediated writes.
 * Per-tenant prefixes enforce storage isolation.
+* CDN fronted via Spaces’ integrated edge delivery for public assets and report downloads where appropriate.
 
 **Authentication Model**
 
-* Access keys stored in secrets manager.
+* Access keys stored in secrets management (no hard-coded keys).
 * Envelope encryption applied at upload.
 * Signed URLs time-boxed for downloads.
 
 **Fallback Behaviour**
 
-* If object write fails → atomic failure (no partial evidence).
-* Evaluation does not proceed with missing artefacts.
-* If object retrieval fails → report generation fails cleanly with clear diagnostic.
+* If object write fails → atomic failure (no partial artefacts).
+* Evaluation does not proceed if required evidence artefacts are missing.
+* If object retrieval fails → report generation fails cleanly with a clear diagnostic; no silent degradation.
 
 ---
 
-#### **3.4.4 Email Delivery Provider**
+#### 3.4.4 MXroute (Email Delivery Provider)
 
 **Connection Method**
 
-* SMTP or vendor HTTPS API (PRD does not specify a preference).
-* Used for onboarding, nudges, and notification messages.
+* Outbound email via MXroute using SMTP or, if adopted later, their HTTPS API.
+* Used for onboarding, evidence nudges, and notification messages only; no marketing blast behaviour in MVP.
 
 **Authentication Model**
 
-* SMTP credentials or API token stored in secrets manager.
-* No PII beyond email addresses and minimal metadata.
+* SMTP credentials or API token stored in secrets management.
+* No payload beyond email address, subject, and minimal body metadata; no attachment-heavy workflows for MVP.
 
 **Fallback Behaviour**
 
 * Email failure never blocks evaluation or reporting.
-* Failure logged and surfaced through telemetry.
-* No retry logic mandated in PRD — left to provider or SAIS-layer policy.
+* Failures are logged and surfaced via telemetry.
+* Retries may be handled by MXroute’s own delivery semantics; no complex local retry logic in MVP.
 
 ---
 
-#### **3.4.5 CDN / Edge Delivery Layer**
+#### 3.4.5 CDN / Edge Delivery Layer
 
 **Connection Method**
 
-* CDN sits in front of the Marketing/Blog Next.js runtime.
+* CDN sits in front of the Marketing/Blog Next.js runtime and static assets hosted in Spaces.
 * Handles asset delivery, SSR/ISR caching, and geographic routing.
 
 **Authentication Model**
 
-* No tenant-level authentication at CDN layer.
-* Authenticated flows bypass cache and route to origin.
+* No tenant-level authentication at CDN layer for public routes.
+* Authenticated Essentials flows bypass cache and route directly to origin.
 
 **Fallback Behaviour**
 
 * Cache miss → origin render.
-* Origin unavailable → CDN serves stale-if-available; if none, explicit failure.
-* CDN never caches authenticated Essentials content.
+* Origin unavailable → CDN serves stale content if available; otherwise, explicit failure with a status page where possible.
+* CDN never caches authenticated Essentials content or any route that exposes tenant data.
 
 ---
 
-#### **3.4.6 External Integrations Summary**
+#### 3.4.6 External Integrations Summary
 
-| Integration           | Type     | Purpose               | Auth Model                        | Fallback Behaviour                             |
-| --------------------- | -------- | --------------------- | --------------------------------- | ---------------------------------------------- |
-| Entra/Okta/Google     | External | User authentication   | OIDC + JWT                        | Fail closed; no fallback                       |
-| Stripe                | External | Billing               | Stripe secrets + signed webhooks  | No destructive state; retry by Stripe          |
-| S3-Compatible Storage | External | Artefact storage      | Access keys + envelope encryption | Atomic failure; clear diagnostics              |
-| Email Provider        | External | Notification delivery | SMTP or API token                 | Logged failure; non-blocking                   |
-| CDN/Edge Layer        | External | Content delivery      | None (public)                     | Stale-if-available; no caching of auth content |
+| Integration                      | Type     | Purpose                  | Auth Model                         | Fallback Behaviour                              |
+| -------------------------------- | -------- | ------------------------ | ---------------------------------- | ----------------------------------------------- |
+| Entra / Okta / Google / Keycloak | External | User authentication      | OIDC + JWT                         | Fail closed; no cross-provider fallback         |
+| Stripe                           | External | Billing                  | Stripe secrets + signed webhooks   | No destructive state; Stripe retries webhooks   |
+| DigitalOcean Spaces (S3 + CDN)   | External | Artefact + asset storage | Access keys + envelope encryption  | Atomic failure; clear diagnostics on retrieval  |
+| MXroute                          | External | Notification delivery    | SMTP or API token                  | Logged failure; non-blocking for core workflows |
+| CDN / Edge Layer                 | External | Content delivery         | None (public); origin handles auth | Stale-if-available; no caching of auth content  |
+
+
+
 
 
 ### 3.5 Shared Libraries and SDKs
@@ -1279,8 +1284,6 @@ The broader operational and infrastructure-level resilience model is expanded la
 ## 4. Data and Storage Model
 
 Canonical schemas, entity relationships, encryption, retention, and provenance. Includes schema versioning and ownership.
-
-Fair. You’re right — when I start calibrating counts, I’m optimising for optics, not substance. The correct approach is to treat subsection count as an *outcome* of coverage, not a design variable.
 
 ---
 
