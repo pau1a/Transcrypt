@@ -1302,24 +1302,888 @@ Across all three classes, the model follows the same principles: each object has
 
 ### 4.2 Canonical Entities
 
-Define the core objects and their identifiers: Organisation, User, Control, Evidence, Report, and BillingRecord. Provide an ER or class diagram showing their relationships and ownership boundaries.
+This section defines the core entities Transcrypt recognises as first-class data objects, their identifiers, and how they relate to each other. These are the “official nouns” of the system: everything stored, evaluated, or rendered by the platform is expressed in terms of these entities.
+
+#### 4.2.1 Operational Entities (Essentials App)
+
+**Organisation / Tenant**
+
+* **Identifier:** `tenant_id` (UUID)
+* **Purpose:** Represents a single customer organisation and acts as the primary isolation boundary.
+* **Key relationships:**
+
+  * Has one current **OrgProfile**.
+  * Owns many **Evidence** records, **Findings**, **Reports**, **BillingRecords**, and **AuditEvents**.
+  * Linked to one or more **Accounts** (human users).
+
+**Account (User)**
+
+* **Identifier:** `account_id` (UUID)
+* **Purpose:** Human user with access to one or more tenants (typically the primary contact / admin in v1).
+* **Key relationships:**
+
+  * Belongs to one primary **Tenant** in the MVP.
+  * Used as the `actor` in **AuditEvents**.
+
+**OrgProfile**
+
+* **Identifier:** `org_profile_id` (UUID) + `tenant_id`
+* **Purpose:** Structured snapshot of the organisation’s environment and answers at the time of an evaluation.
+* **Key relationships:**
+
+  * Belongs to exactly one **Tenant**.
+  * Referenced by one or more **Findings** sets and **Reports**.
+* **Notes:** Versioned over time so historical evaluations can be replayed against new RulePacks.
+
+**RulePack / Control Set**
+
+* **Identifier:** `rulepack_id` (UUID), `version`, and `hash`
+* **Purpose:** Signed, immutable bundle of controls, tests, and references for Cyber Essentials v3.2 (or later packs).
+* **Key relationships:**
+
+  * Referenced by **Findings** and **Reports**.
+  * Controls are addressed by `control_id` within a RulePack; they are not separate DB entities in the MVP.
+
+**Finding**
+
+* **Identifier:** `finding_id` (UUID)
+* **Purpose:** Result of evaluating a single control or check for a given OrgProfile under a specific RulePack.
+* **Key relationships:**
+
+  * Belongs to one **Tenant**.
+  * References one **OrgProfile** and one **RulePack** (`org_profile_id`, `rulepack_id`, `control_id`).
+  * May reference zero or more **Evidence** items.
+  * Aggregated into **Reports**.
+
+**Evidence (Metadata)**
+
+* **Identifier:** `evidence_id` (UUID), `hash`
+* **Purpose:** Metadata for an evidential artefact (file or assertion) used to support a finding.
+* **Key relationships:**
+
+  * Belongs to one **Tenant**.
+  * Stored as metadata in Postgres; blob lives in DO Spaces under a tenant-scoped prefix.
+  * Linked to one or more **Findings** and indirectly to **Reports**.
+* **Immutability:** Once accepted and bound to a finding, the blob and hash are immutable; replacement creates a new `evidence_id`.
+
+**Report (Metadata)**
+
+* **Identifier:** `report_id` (UUID)
+* **Purpose:** Canonical record of an evaluation run and its outcome, including references to findings and evidence.
+* **Key relationships:**
+
+  * Belongs to one **Tenant**.
+  * References a specific **OrgProfile** and **RulePack**.
+  * Aggregates many **Findings** and through them **Evidence**.
+  * PDF/HTML artefact stored in DO Spaces; metadata in Postgres.
+
+**BillingRecord**
+
+* **Identifier:** `billing_id` (UUID)
+* **Purpose:** Tracks the mapping between Transcrypt tenants and Stripe subscription state.
+* **Key relationships:**
+
+  * Belongs to one **Tenant**.
+  * Holds Stripe customer ID, subscription ID, plan, and status needed for access control.
+
+**AuditEvent**
+
+* **Identifier:** `audit_id` (UUID)
+* **Purpose:** Immutable log of security-relevant and compliance-relevant actions (evaluations, evidence uploads, report generation, billing changes).
+* **Key relationships:**
+
+  * Belongs to one **Tenant**.
+  * References the acting **Account** (where applicable) and related entities (`report_id`, `evidence_id`, etc.).
+
+#### 4.2.2 Product Content Entities (Marketing / Blog Runtime)
+
+**BlogPost**
+
+* **Identifier:** `slug` (string) + repo path
+* **Purpose:** Long-form content explaining concepts, updates, and guidance.
+* **Storage:** Versioned file in the Marketing/Blog repo (e.g. markdown/MDX with frontmatter).
+* **Key relationships:**
+
+  * May reference product entities conceptually (e.g. screenshots of Reports) but does not bind to tenant data.
+
+**StaticPage / LegalPage**
+
+* **Identifier:** `slug` (string)
+* **Purpose:** Marketing pages (`/product`, `/pricing`) and legal/trust surfaces (`/privacy`, `/terms`, `/dpa`, `/subprocessors`, etc.).
+* **Storage:** Versioned content in the repo, rendered via Next.js SSG/ISR.
+
+**ChangelogEntry / StatusNote** (if used in v1)
+
+* **Identifier:** timestamp + slug
+* **Purpose:** Public record of product changes and availability notes.
+* **Storage:** Versioned in the repo, displayed via the Marketing runtime.
+
+#### 4.2.3 Relationship Overview (Text ER Diagram)
+
+At a high level, the relationships can be expressed as:
+
+* **Tenant** 1 — * **Account**
+* **Tenant** 1 — 1 **OrgProfile** (current), plus historical profiles as needed
+* **Tenant** 1 — * **Evidence**
+* **Tenant** 1 — * **Finding**
+* **Tenant** 1 — * **Report**
+* **Tenant** 1 — * **BillingRecord**
+* **Tenant** 1 — * **AuditEvent**
+
+And per evaluation:
+
+* **OrgProfile** + **RulePack** → many **Findings**
+* **Finding** → 0..* **Evidence**
+* **Report** → aggregates many **Findings** and their linked **Evidence**
+* **BillingRecord** → governs whether a **Tenant** may create new **Reports**
+
+Marketing/Blog entities (**BlogPost**, **StaticPage**, **LegalPage**, **ChangelogEntry**) are **owned by the platform**, not by tenants. They are versioned with the codebase, deployed alongside the Marketing runtime, and must be recoverable, but they never contain tenant-specific operational or evidential data.
 
 ### 4.3 Schema and Versioning
 
-Explain schema sources, how changes are versioned and migrated, and how validation is enforced in CI. Include the naming and branching convention for schema updates.
+Transcrypt treats schemas as *public contracts* between services, the UI, and stored data.
+They define what is valid, what is storable, and what is auditable.
+Nothing may be persisted, transmitted, or evaluated unless it passes schema validation.
+
+This section defines **where schemas live**, **how they are versioned**, **how breaking changes are introduced**, and **how CI enforces correctness**.
+
+---
+
+## **4.3.1 Schema Sources and Location**
+
+All canonical schemas live inside the repository under a dedicated package, for example:
+
+```
+/packages/schemas/
+    org_profile.schema.json
+    evidence.schema.json
+    finding.schema.json
+    report.schema.json
+    rulepack.schema.json
+    billing_record.schema.json
+    audit_event.schema.json
+```
+
+Marketing/Blog content uses a lighter form of schema (frontmatter). These live in the Marketing repo under:
+
+```
+/content/blog/*.mdx
+/content/pages/*.mdx
+/content/legal/*.mdx
+/content/changelog/*.mdx
+```
+
+and are validated using a Zod or JSON Schema definition embedded in the Marketing site.
+
+All schemas are **source-controlled, diff-reviewed, and version-tagged**.
+
+---
+
+## **4.3.2 Schema Versioning Model**
+
+Transcrypt uses **semantic versioning** for all formal schemas:
+
+```
+MAJOR.MINOR.PATCH
+```
+
+* **MAJOR** increments only when a breaking change is introduced (field removed, type changed, semantics altered).
+* **MINOR** increments when new optional fields or capabilities are added.
+* **PATCH** increments for non-breaking corrections or clarifications.
+
+Each schema file includes the version inside its metadata block:
+
+```json
+{
+  "schema": "OrgProfile",
+  "version": "1.1.0",
+  "description": "Canonical OrgProfile schema for the Essentials evaluation engine"
+}
+```
+
+Changes to *any* schema require a version bump.
+
+---
+
+## **4.3.3 Migration Rules**
+
+Schema changes follow strict principles:
+
+1. **No destructive changes to evidential data.**
+   Once an evidence artefact is associated with a finding, its metadata may not be mutated.
+   Instead, a new evidence record is created.
+
+2. **Operational data migrations are explicit.**
+   If a schema requires a DB migration (e.g. adding a non-null column), a matching SQL migration lives in:
+
+   ```
+   /migrations/*.sql
+   ```
+
+3. **RulePacks are immutable.**
+   You do not “migrate” RulePacks; you publish a new signed version.
+
+4. **Marketing content is implicitly versioned by Git.**
+   There is no migration system for pages; old versions are in the repo history.
+
+---
+
+## **4.3.4 CI Validation Enforcement**
+
+CI enforces schema correctness through:
+
+**1. Schema Validation Tests**
+All payloads in unit tests and fixtures must validate against the canonical JSON schemas.
+If a field is added to a schema, all fixtures must be updated or tests fail.
+
+**2. Schema Compatibility Checks**
+A CI step compares the previous schema version to the proposed one:
+
+* Breaking changes without a MAJOR version bump → fail
+* New fields without a MINOR version bump → fail
+* Silent semantic changes → fail
+
+**3. Generation of TypeScript Types**
+Types are generated from schemas (e.g. using `json-schema-to-typescript`) to guarantee UI/backend alignment.
+Mismatch → fail.
+
+**4. Linting of Marketing Content Frontmatter**
+Blog posts and pages must conform to their frontmatter schema.
+Incorrect metadata → fail.
+
+---
+
+## **4.3.5 Branching and Change Procedure**
+
+Schema changes follow a specific Git workflow:
+
+1. Create a branch named:
+
+   ```
+   schema/<entity>/<short-description>
+   ```
+
+   Example:
+   `schema/orgprofile/add-backup-schedule`
+
+2. Modify schema, bump version.
+
+3. Update any necessary DB migrations.
+
+4. Update fixtures, generated types, and tests.
+
+5. Open a PR labelled:
+
+   ```
+   SCHEMA-CHANGE: <entity> vX.Y.Z
+   ```
+
+6. PR reviewers must check:
+
+   * version bump correctness
+   * backwards compatibility
+   * migration safety
+   * test coverage
+
+7. Merge only after CI confirms:
+
+   * schema validity
+   * generated types updated
+   * migrations applied cleanly in test DB
+   * rule engine tests pass
+
+---
+
+## **4.3.6 Why This Rigour Exists**
+
+Transcrypt’s value depends on:
+
+* deterministic evaluations
+* reproducible reports
+* audit-proof artefacts
+* exact replay using stored inputs
+
+Any looseness in schema evolution breaks determinism and undermines trust.
+
+This versioning model ensures that:
+
+* a Report generated today can be regenerated in a year
+* a RulePack can be replayed against an older OrgProfile
+* no evidence artefact ever becomes invalid due to schema drift
+* marketing content remains predictable and build-stable
+* every change is reviewable and reversible
 
 ### 4.4 Storage Architecture
 
-Describe physical stores—PostgreSQL for structured data, object storage for artefacts, Redis for ephemeral state—and how encryption, indexing, and region replication work.
+Transcrypt’s storage architecture is intentionally minimal: a small number of clearly defined storage surfaces, each with a single purpose, strict boundaries, and predictable lifecycle rules. The goal is to keep state easy to reason about, easy to back up, and impossible to tamper with silently.
+
+The MVP uses **three persistent storage surfaces** and **one ephemeral surface**:
+
+1. **PostgreSQL** — structured operational data
+2. **DigitalOcean Spaces** — immutable artefacts and large binary objects
+3. **Repository-based content** — marketing/blog/static content under Git
+4. **Local Droplet Filesystem (ephemeral)** — runtime files generated during build or request processing, never long-term storage
+
+Each surface has its own guarantees and constraints.
+
+---
+
+## **4.4.1 PostgreSQL (Authoritative Structured Storage)**
+
+PostgreSQL stores all structured, queryable operational data:
+
+* Tenants and Accounts
+* OrgProfile snapshots
+* Findings
+* Report metadata
+* Evidence metadata (not the blob)
+* Billing state
+* Audit events
+* RulePack metadata
+
+**Characteristics**
+
+* Highly structured, strongly typed, relational.
+* Full integrity via foreign keys and unique constraints.
+* All changes auditable (AuditEvent on every write).
+* Tenant boundary enforced at query level: no cross-tenant joins allowed.
+
+**Encryption**
+
+* Disk-level or PostgreSQL-native at-rest encryption.
+* TLS enforced on all connections.
+
+**Indexing Strategy**
+
+* Primary indexes on IDs (`*_id`).
+* Composite indexes on time-based lookups (`tenant_id, created_at`).
+* Hash index on evidence hash for fast duplicate detection.
+* Strict rule: no unindexed foreign keys.
+
+**Backup & Recovery**
+
+* Daily snapshots with 30–day retention.
+* Restore operations verified manually as part of environment rotation.
+* Backups encrypted before storage.
+
+---
+
+## **4.4.2 DigitalOcean Spaces (Immutable Artefact Storage)**
+
+DigitalOcean Spaces holds all **large, immutable** objects:
+
+* Evidence file blobs
+* Screenshots, logs, exports
+* Report PDFs
+* RulePack bundles
+* Optional: marketing images, diagrams, assets
+
+**Path Isolation**
+
+Per-tenant prefixes:
+
+```
+spaces/
+  tenants/<tenant_id>/evidence/<evidence_id>/...
+  tenants/<tenant_id>/reports/<report_id>/...
+  rulepacks/<rulepack_id>/bundle.json
+```
+
+**Encryption**
+
+* HTTPS in transit.
+* DO-managed encryption at rest.
+* Optional envelope keying if you want tenant-separated keys later.
+
+**Access Control**
+
+* No public access.
+* All downloads via short-lived signed URLs.
+* Uploads only through server-side authenticated endpoints.
+
+**CDN Interaction**
+
+* Evidence blobs **never cached** at edge.
+* Marketing/static assets cached according to TTL.
+* Report downloads may be cached if allowed.
+
+**Replication**
+
+* DO Spaces provides intra-region redundancy.
+* Cross-region replication is deferred (future enhancement).
+
+---
+
+## **4.4.3 Repository-Based Content (Marketing / Blog)**
+
+All marketing and blog content lives in the **Git repository** as source files:
+
+* MD/MDX blog posts
+* Marketing pages
+* Legal/trust documents
+* Changelog entries
+* Static assets in `/public`
+
+These files are pulled into the build during deployment, converted by Next.js, and served via SSR/ISR or CDN caching.
+
+**Advantages**
+
+* Perfect history via Git
+* Atomic rollbacks
+* Zero runtime write operations → zero risk of data leakage
+* No migrations required
+* Deterministic deployment behaviour
+
+**Encryption**
+
+* None required (content is public).
+* Secrets for API calls live only in runtime environment variables.
+
+---
+
+## **4.4.4 Local Droplet Filesystem (Ephemeral Runtime Storage)**
+
+The web server droplet has its own disk (typically DO Volumes or ephemeral SSD) which forms the **fourth storage class**, but **not a persistent one**.
+
+It is used for:
+
+* Build artefacts (Next.js `.next` folder)
+* Temporary file buffers during uploads
+* Report assembly buffers before committing to Spaces
+* Cached rulepacks in memory or disk for faster cold-starts
+* Node process temp files
+
+**Rules**
+
+* Nothing written here is authoritative.
+* Nothing on this disk is considered durable.
+* Evidence is only “real” once it reaches DO Spaces AND its metadata row is committed in Postgres.
+* Re-deploying the droplet can wipe the entire filesystem without data loss.
+
+**Security**
+
+* Droplet disk encrypted at rest (provider-level).
+* File permissions locked to service user.
+* Secrets injected via environment variables, not stored on disk.
+
+---
+
+## **4.4.5 Why This Architecture Works**
+
+* Only structured state goes to Postgres.
+* Only large/immutable state goes to DO Spaces.
+* Only public/read-only content lives in the repo.
+* Only transient work lives on the droplet.
+
+This keeps the entire system:
+
+* measurable
+* predictable
+* easy to restore
+* resistant to silent corruption
+* cheap to operate
+* aligned with your PRD’s “deterministic, auditable, single-founder MVP” design
+
 
 ### 4.5 Provenance, Retention, and Deletion
 
-Combine integrity and lifecycle here: how hashes, timestamps, and audit IDs are generated; how retention differs by data class; and how redaction or deletion is proven.
+Transcrypt treats all stored data as evidence—either of customer posture, system behaviour, or product correctness.
+This section defines **how every piece of data can be proven, traced, retained, and (where allowed) deleted** without ambiguity or silent mutation.
+The goal is simple: *any report, at any time in the future, can be replayed and proven correct.*
+
+---
+
+## **4.5.1 Provenance Model**
+
+Every authoritative object in the system carries **three immutable provenance anchors**:
+
+### **1. Cryptographic Hashes**
+
+All evidential artefacts and RulePacks are hashed using a **stable algorithm** (SHA-256).
+
+* Evidence blob → hash stored in Postgres, blob stored in DO Spaces
+* RulePack bundle → hash embedded in metadata
+* Report PDF → hash stored at generation
+
+No artefact is considered “real” until its hash is written to the database.
+
+Hashes are used to:
+
+* detect tampering
+* guarantee replayability
+* serve as deduplication keys
+* bind artefacts to Findings
+
+### **2. Timestamps (UTC)**
+
+Every object has:
+
+* `created_at` (immutable)
+* `updated_at` (mutable only for operational entities, never evidence)
+* `evaluated_at` for Findings and Reports
+
+Timestamps are stored in UTC and never rely on client clocks.
+
+### **3. Audit IDs**
+
+Every write path emits an **AuditEvent**, with:
+
+* `audit_id` (UUID)
+* `actor_id` (Account)
+* `tenant_id`
+* `action` (enum)
+* `entity_type` / `entity_id`
+* hashes relevant to the action
+* timestamp
+
+The audit log is append-only and never mutated.
+
+---
+
+## **4.5.2 Retention Classes**
+
+Not all data has the same purpose or legal constraints.
+Transcrypt uses **three retention classes**:
+
+---
+
+### **A. Operational Data (mutable, business-critical)**
+
+Examples:
+
+* Tenant
+* Accounts
+* OrgProfile snapshots
+* BillingRecords
+* RulePack metadata
+
+**Retention:** Indefinite unless the tenant deletes their account.
+**Mutation rules:**
+
+* Updates allowed
+* All updates generate AuditEvents
+* Old OrgProfiles retained for replay
+
+---
+
+### **B. Evidential Data (immutable, high-assurance)**
+
+Examples:
+
+* Evidence blobs
+* Evidence metadata
+* Findings
+* Report PDFs/HTML
+
+**Retention:** Minimum of **3 years** for compliance reproducibility.
+(You may choose longer later.)
+
+**Mutation rules:**
+
+* **Never** updated in place
+* **Never** overwritten
+* **Never** re-hashed
+* Replacement → new evidence_id, new hash, new audit event
+
+If a tenant requests deletion, the artefact is deleted from DO Spaces and the metadata row is marked as `redacted=true` with:
+
+* deletion timestamp
+* deletion audit ID
+* destroyed blob hash
+
+This preserves the integrity of historic Reports without retaining the data itself.
+
+---
+
+### **C. Product Content (public, versioned via Git)**
+
+Examples:
+
+* Blog posts
+* Marketing pages
+* Legal pages
+* Changelog entries
+
+**Retention:** As long as needed for product evolution.
+**Mutation rules:**
+
+* Direct commits alter content
+* Git history *is* the retention mechanism
+* No deletion from DB because no DB is involved
+
+This class never stores customer data.
+
+---
+
+## **4.5.3 Deletion and Redaction**
+
+Deletion rules depend on data class:
+
+---
+
+### **Operational Data**
+
+* Fully deletable when a tenant account is closed
+* Hard delete followed by audit event
+* Backups retain copies until their natural expiry (30 days)
+
+---
+
+### **Evidential Data**
+
+Deletion is **never silent**.
+
+Procedure:
+
+1. Tenant requests deletion (manual or automated workflow).
+2. Evidence blob is removed from DO Spaces.
+3. Evidence metadata row remains but is marked as:
+
+```json
+{
+  "redacted": true,
+  "deleted_at": "<timestamp>",
+  "deleted_by": "<actor>",
+  "deletion_audit_id": "<audit_id>"
+}
+```
+
+4. Findings referencing that evidence remain valid but display a “Redacted Evidence” badge.
+5. Reports referencing that evidence remain unmodified (historical truth preserved).
+
+This ensures **GDPR compliance without breaking immutability guarantees**.
+
+---
+
+### **Product Content**
+
+* Deleted via Git commit
+* Previous versions preserved in repository history
+* Deployment removes content from the runtime automatically
+
+No audit log required beyond Git commit metadata.
+
+---
+
+## **4.5.4 Proving Integrity**
+
+A third party must be able to verify any object via:
+
+* its hash
+* its timestamp
+* its associated audit trail
+* its storage location and lifecycle markers
+
+Examples:
+
+**Proving a Report is genuine**
+
+* Verify Report hash in Postgres
+* Verify Findings belong to that RulePack version
+* Verify RulePack hash matches the signed bundle
+* Verify all referenced evidence hashes match their artefact blobs or redaction records
+
+**Proving an evidence deletion occurred correctly**
+
+* Evidence metadata row shows `redacted=true`
+* AuditEvent shows deletion
+* Blob missing from DO Spaces
+* No update of previous hashes or Findings
+
+---
+
+## **4.5.5 Why This Matters**
+
+This system ensures:
+
+* reports can be re-generated exactly
+* tenants cannot accidentally invalidate old evaluations
+* redactions are provable
+* no silent tampering is possible
+* every output is reproducible long after system changes
+* your system is legally defensible and auditor-friendly
+
+It is the backbone of Transcrypt’s credibility.
+
 
 ### 4.6 Access Control and Recovery
 
-Define ownership and permissions, IAM roles, and read/write restrictions.
-Add the recovery path: snapshot frequency, restore validation, and off-site replication.
+This section defines **who can touch what**, **how data is protected from accidental or malicious access**, and **how the entire platform is recovered** in the event of data loss, corruption, or infrastructure failure.
+The emphasis is on **tenant isolation**, **least privilege**, and **deterministic, testable recovery paths**.
+
+---
+
+## **4.6.1 Access Control Model**
+
+Transcrypt’s MVP deliberately uses a **minimal role model** to match the simplicity of the product:
+
+### **Actors**
+
+1. **Tenant Owner (Account)**
+
+   * The human who signs up and manages the organisation’s subscription.
+   * Has full access to their own tenant’s OrgProfile, Evidence, Findings, Reports, and Billing state.
+
+2. **Platform System User (Runtime Services)**
+
+   * Internal service identity used by API Gateway, Evaluation Service, Evidence Service, and Report Service.
+   * Strongly scoped credentials; never shared across services.
+
+3. **Administrator (Founder / Operator)**
+
+   * Limited to operational diagnostics and emergency recovery.
+   * *Does not* access tenant evidence or private data directly.
+
+---
+
+## **4.6.2 Permission Boundaries**
+
+### **Tenant-Level Isolation (Hard Rule)**
+
+Every request inside the Essentials App carries a `tenant_id`.
+No service may return or mutate data where:
+
+```
+requested.tenant_id != actor.tenant_id
+```
+
+There is **no** cross-tenant visibility—even for the platform admin.
+
+### **Account Permissions**
+
+* Read/write OrgProfile
+* Upload evidence
+* Trigger evaluation
+* Download/view reports
+* Manage billing via Stripe customer portal
+* View audit events related to their own tenant
+
+### **Platform Services Permissions**
+
+Each internal service has exactly one purpose and only the minimum permissions required:
+
+* **API Gateway**: read/write routes by proxy, verifies tokens
+* **Evaluation Service**: read OrgProfile, read Evidence metadata, write Findings
+* **Evidence Service**: write Evidence metadata, write blobs to Spaces
+* **Report Service**: read Findings, read Evidence metadata, write Report metadata, write blobs to Spaces
+
+### **Prohibitions**
+
+* No service may list tenants.
+* No service may return raw blobs except via signed URLs.
+* No system component may impersonate a tenant owner.
+* No service may access marketing/blog content as if it were runtime data.
+
+This eliminates entire classes of security risk.
+
+---
+
+## **4.6.3 Infrastructure & IAM Controls**
+
+### **PostgreSQL**
+
+* Only the API backend has read/write access.
+* Evaluation/Report services use narrowly scoped credentials (no schema modification rights).
+* Admin access restricted to maintenance windows.
+
+### **DigitalOcean Spaces**
+
+* Upload/delete via server-side roles only.
+* Downloads require generated signed URLs.
+* Bucket listing disabled.
+* Per-tenant prefixes guarantee logical separation.
+
+### **Droplet Filesystem**
+
+* Process user only.
+* No world-readable permissions.
+* Secrets provided exclusively through environment variables.
+
+---
+
+## **4.6.4 Snapshot and Backup Strategy**
+
+### **Database (PostgreSQL)**
+
+* Daily automatic snapshot (minimum), 30-day retention.
+* Snapshots encrypted and isolated from runtime path.
+* Restores tested manually at each environment refresh to verify schema and data integrity.
+
+### **Object Storage (DO Spaces)**
+
+* DO’s intra-region redundancy provides baseline durability.
+* Weekly backup of entire Spaces bucket exported to a separate Spaces bucket or cold archive (optional but recommended).
+* Versioning OFF by default in MVP to control cost; may be enabled for evidence preservation in later phases.
+
+### **Repository Content**
+
+* Git is the backup mechanism.
+* Every clone is a full copy.
+* Every deployment includes a full checkout and rebuild.
+
+---
+
+## **4.6.5 Recovery Procedure (MVP)**
+
+Recovery must be **predictable, scriptable, and verifiable**.
+
+### **Step 1: Database Restore**
+
+* Restore from latest valid snapshot.
+* Bring database online in isolation.
+* Run consistency checks:
+
+  * UUID uniqueness
+  * Tenant boundary correctness
+  * Evidence/Report cross-references
+  * RulePack signatures and hashes
+
+### **Step 2: Object Store Restore**
+
+* Rehydrate affected prefixes in DO Spaces from backup (if blob loss occurred).
+* Validate hashes in Postgres against recovered blobs.
+* Mark any missing evidence as `redacted` to maintain audit truth.
+
+### **Step 3: Redeploy Services**
+
+* Fresh deploy of Marketing runtime
+* Fresh deploy of Essentials backend
+* Reconnect to restored database and DO Spaces
+* Warm-load current RulePacks and configuration
+* Emit an AuditEvent for the restoration event
+
+### **Step 4: Verification**
+
+* Run an evaluation replay test for a random tenant
+* Generate a sample report
+* Confirm audit logs are intact
+* Confirm billing state matches Stripe records
+
+If all checks pass → platform is declared healthy.
+
+---
+
+## **4.6.6 Off-Site Replication (Future Capability)**
+
+While the MVP prioritises simplicity, the architecture allows for optional later enhancements:
+
+* Cross-region snapshot replication (Postgres)
+* Cross-region bucket duplication (Spaces)
+* External cold-storage export (e.g., monthly encrypted tarball)
+
+These are not required for v1 but are documented so that extending resilience later does not require rethinking the entire design.
+
+---
+
+## **Why This Matters**
+
+This model gives Transcrypt:
+
+* **Tenant isolation that is actually enforceable**
+* **A tiny, predictable IAM surface**
+* **A provable recovery workflow**
+* **A security posture aligned with your PRD (“determinism, auditability, trust”)**
+* **A system simple enough for a single founder to operate safely**
 
 ---
 
