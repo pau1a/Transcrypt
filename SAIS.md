@@ -3339,7 +3339,7 @@ sequenceDiagram
   Report-->>Store: Write HTML/PDF artefact (hashed)
   Report-->>Gateway: 201 { report_id, download_url, summary }
   Gateway-->>Browser: 201 + report metadata\n(links to download/view in app)
-```
+````
 
 This keeps the journeys strictly aligned with the PRD’s Quick Start flow, MVP cut (`/evaluate`, `/reports/generate`), and the defined services and interfaces (Evidence Service, Evaluation Service, LLM Inference, Report Service, OrgProfile data model, and `/api/auth/*` OIDC flows).
 
