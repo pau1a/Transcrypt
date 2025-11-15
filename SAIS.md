@@ -2611,8 +2611,153 @@ Exact numbers are **not** committed in SAIS; only the presence of throttling.
 
 ### 5.4 Internal Service Interfaces
 
-Defines calls between internal modules (Rule Engine ↔ Evidence Service, Report ↔ Storage).
-Include payload shapes, message queues or RPC patterns, and retry/timeout policy.
+Internal services in the MVP communicate using the same HTTP/JSON contracts and canonical schemas as the public APIs. There is no separate internal protocol, no hidden message bus, and no second ingress path: all calls are normalised through the API Gateway, which attaches identity and tenancy context. The goal is to keep service boundaries clear while avoiding accidental divergence between “public” and “internal” behaviour.
+
+Only the services required to support the PRD’s intake → evidence → evaluate → report loop exist in v1:
+
+* API Gateway
+* Auth / Identity Adapter
+* OrgProfile / Intake handler
+* Evidence Service
+* Rule Evaluation Service
+* Report Service
+
+The Marketing/Blog runtime does not talk to separate internal services; it calls the same public APIs exposed to the Essentials App.
+
+#### 5.4.1 Gateway → Internal Service Contracts
+
+The API Gateway is the single entrypoint for all runtime requests and forwards them to internal handlers with the following guarantees:
+
+* HTTP/JSON only
+* Canonical schemas only (OrgProfile, Evidence, Findings, Report, BillingRecord)
+* Tenant and account context attached via headers:
+
+  ```
+  X-Account-Id
+  X-Tenant-Id
+  X-Request-Id
+  ```
+
+Downstream services **never** infer tenancy from client-supplied body fields. They trust only gateway-injected context.
+
+Examples:
+
+* `PUT /api/v1/org-profile` → forwarded to the OrgProfile handler with validated body = `OrgProfile` schema.
+* `POST /api/v1/evidence/files` → forwarded to the Evidence Service with validated evidence metadata and a pre-authenticated DO Spaces write path.
+* `POST /api/v1/evaluate` → forwarded to the Rule Evaluation Service with `tenant_id`, `rulepack_id`, and the relevant OrgProfile/Evidence references.
+* `POST /api/v1/reports` → forwarded to the Report Service with `evaluation_id`.
+
+No internal service can bypass the gateway or accept unauthenticated traffic.
+
+#### 5.4.2 Evidence Service Interface
+
+The Evidence Service is responsible for registering evidential artefacts and coordinating blob storage in DigitalOcean Spaces.
+
+**Inputs**
+
+* Evidence metadata as per `Evidence` schema
+* Gateway context headers (`X-Tenant-Id`, `X-Account-Id`, `X-Request-Id`)
+
+**Outputs**
+
+* `evidence_id` (UUID)
+* status (`accepted` / `rejected`)
+* AuditEvent for every accepted artefact
+
+**Behaviour**
+
+* Writes metadata to Postgres.
+* Writes blobs to DO Spaces under tenant-scoped prefixes.
+* Returns only identifiers and statuses; never returns raw blob content.
+* Treats evidence as immutable once accepted.
+
+All failures are returned to the gateway as Problem+JSON; partial writes (blob without metadata, or vice versa) are treated as failures.
+
+#### 5.4.3 Rule Evaluation Service Interface
+
+The Rule Evaluation Service consumes OrgProfile snapshots, Evidence metadata, and RulePack definitions to emit Findings.
+
+**Inputs**
+
+* `tenant_id` from gateway
+* `rulepack_id`
+* References to current `OrgProfile` and Evidence set (via DB lookups)
+
+**Outputs**
+
+* `evaluation_id` (UUID)
+* List of Findings, each following the canonical Finding schema
+* AuditEvent for the evaluation run
+
+**Behaviour**
+
+* Pulls OrgProfile and Evidence metadata from Postgres.
+* Loads the referenced RulePack (immutable bundle).
+* Produces deterministic Findings for objective controls; may invoke runtime inference for interpretive checks, but always under the guardrails described in the PRD.
+* Writes Findings and evaluation metadata back to Postgres.
+
+The Evaluation Service is called synchronously in MVP. If an evaluation cannot complete within the configured timeout, it returns a clean failure with a traceable error code; it does not leave half-written findings.
+
+#### 5.4.4 Report Service Interface
+
+The Report Service assembles a Report from a completed evaluation and publishes the PDF/HTML artefact.
+
+**Inputs**
+
+* `evaluation_id` (UUID) via the gateway
+* Gateway context headers
+
+**Outputs**
+
+* `report_id` (UUID)
+* Report metadata as per `Report` schema
+* Signed URL (via a separate download endpoint)
+* AuditEvent for report generation
+
+**Behaviour**
+
+* Reads Findings and referenced OrgProfile / RulePack metadata from Postgres.
+* Renders the report (HTML → PDF) using the current template version.
+* Writes the PDF to DO Spaces under the tenant’s prefix.
+* Writes Report metadata (including artefact hash) to Postgres.
+
+Report generation is idempotent per `evaluation_id`. If the same request is replayed, the service returns the existing `report_id` and artefact reference rather than generating duplicates.
+
+#### 5.4.5 Auth / Identity Adapter Interface
+
+The Auth/Identity adapter mediates between OIDC providers and Transcrypt’s session model.
+
+**Inputs**
+
+* OIDC callback data (`code`, `state`, `provider`, `redirect_uri`)
+* Gateway context for request tracing
+
+**Outputs**
+
+* Session cookie (set via gateway / frontend)
+* Canonical Account identity (`account_id`)
+* Tenant binding for the user (where applicable)
+* AuditEvent for sign-in
+
+**Behaviour**
+
+* Exchanges the OIDC code for tokens with the chosen provider (Entra ID, Okta, Google).
+* Validates token signatures and claims.
+* Creates or updates the local Account record.
+* Binds the account to a tenant according to the MVP rules (typically one tenant per account).
+
+It never exposes IdP access tokens to other services; internal services work only with Transcrypt’s own `account_id` and `tenant_id`.
+
+#### 5.4.6 Error, Retry, and Timeout Policy (Internal)
+
+Internal interfaces follow the same high-level rules as public ones, but without committing to numeric thresholds in this SAIS:
+
+* All errors are propagated back to the gateway as Problem+JSON with `trace_id`.
+* Transient failures (e.g. a brief DO Spaces blip) may be retried once by the calling service; repeated failure results in a single, clear error to the client.
+* No internal automatic “fire-and-forget” flows in MVP: evaluations and report generation are synchronous from the caller’s perspective.
+* Circuit-breaking and fine-grained timeout values are implementation details and must not change the observable contract (either the operation completes successfully, or it fails in a single, well-defined way).
+
+This keeps the internal interface model simple: a small number of services, a single transport (HTTP/JSON through the gateway), canonical schemas as payloads, and deterministic behaviour that matches the expectations set by the PRD.
 
 ### 5.5 Webhooks and Event Topics
 
