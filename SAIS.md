@@ -2305,34 +2305,309 @@ All failures return **Problem+JSON** with a consistent error code and the reques
 
 ### 5.3 Public APIs
 
-Documents externally callable endpoints that belong to the Essentials App and Marketing ↔ Essentials handshake.
-For each, show:
+The MVP exposes a **small, versioned, deterministic API surface** under:
 
-* Endpoint URI and method
-* Request/response schema
-* Success / error codes
-* Example payloads
-* Rate limits and idempotency rules
+```
+/api/v1/
+```
 
-(Example)
+All endpoints use HTTPS + JSON, accept only authenticated sessions (except Stripe webhook), and return errors in Problem+JSON format with a correlation ID.
+All requests operate within a single tenant context enforced at the API Gateway.
 
-```http
-POST /api/v1/evidence
-Authorization: Bearer <token>
-Content-Type: application/json
+Only the endpoints listed below are part of the public interface for v1.
 
+---
+
+## **5.3.1 Authentication & Session Establishment**
+
+### **POST /api/v1/auth/callback**
+
+Completes the OIDC Authorization Code + PKCE flow and establishes a session cookie.
+
+**Request**
+
+```json
 {
-  "control_id": "CE3.2-1",
-  "file_ref": "obj_78f...",
-  "metadata": { "hash": "..." }
+  "provider": "entra|okta|google",
+  "code": "<oidc_code>",
+  "state": "<opaque>",
+  "redirect_uri": "<uri>"
 }
 ```
 
-**Response 201 Created**
+**Response 200**
 
 ```json
-{ "evidence_id": "EV-2411", "status": "accepted" }
+{ "status": "authenticated" }
 ```
+
+**Errors**
+
+* 401 invalid code / token
+* 400 missing required fields
+
+---
+
+## **5.3.2 Org Profile (Intake) APIs**
+
+### **GET /api/v1/org-profile**
+
+Returns the tenant’s current OrgProfile.
+
+**Response 200**
+
+```json
+{ ...OrgProfileSchema }
+```
+
+---
+
+### **PUT /api/v1/org-profile**
+
+Updates the tenant’s OrgProfile snapshot.
+
+**Request**
+
+```json
+{ ...OrgProfileSchema }
+```
+
+**Response 200**
+
+```json
+{ "status": "updated" }
+```
+
+**Rules**
+
+* Fully replaces the profile (no partial updates in MVP)
+* Automatically versioned per update
+* Validated strictly against the canonical schema
+
+**Errors**
+
+* 400 schema violation
+* 403 tenant mismatch
+
+---
+
+## **5.3.3 Evidence APIs**
+
+### **POST /api/v1/evidence/files**
+
+Registers a file-based evidential artefact.
+
+**Request**
+
+```json
+{
+  "control_id": "CE3.2-1",
+  "filename": "vpn-policy.pdf",
+  "size": 482313,
+  "hash": "<sha256>",
+  "content_type": "application/pdf"
+}
+```
+
+(Multipart upload or pre-signed PUT upload is allowed ― metadata still posted here.)
+
+**Response 201**
+
+```json
+{
+  "evidence_id": "<uuid>",
+  "status": "accepted"
+}
+```
+
+---
+
+### **POST /api/v1/evidence/assertions**
+
+Registers a non-file “assertion” artefact (typed claim).
+
+**Request**
+
+```json
+{
+  "control_id": "CE3.2-5",
+  "assertion_type": "boolean|string|object",
+  "value": true
+}
+```
+
+**Response 201**
+
+```json
+{ "evidence_id": "<uuid>", "status": "accepted" }
+```
+
+**Rules**
+
+* Evidence is immutable once accepted
+* All evidence is audit-logged
+
+---
+
+## **5.3.4 Evaluation API**
+
+### **POST /api/v1/evaluate**
+
+Runs the deterministic + runtime-inference evaluation against the tenant’s current OrgProfile and Evidence.
+
+**Request**
+
+```json
+{
+  "rulepack_id": "<uuid>"
+}
+```
+
+**Response 200**
+
+```json
+{
+  "evaluation_id": "<uuid>",
+  "findings": [ ...FindingSchema ]
+}
+```
+
+**Notes**
+
+* Idempotent for unchanged OrgProfile + Evidence
+* Generates AuditEvents
+* No partial evaluation in MVP
+
+---
+
+## **5.3.5 Report APIs**
+
+### **POST /api/v1/reports**
+
+Creates a new Report from the most recent evaluation.
+
+**Request**
+
+```json
+{ "evaluation_id": "<uuid>" }
+```
+
+**Response 201**
+
+```json
+{
+  "report_id": "<uuid>",
+  "status": "generated"
+}
+```
+
+---
+
+### **GET /api/v1/reports/{report_id}**
+
+Returns the canonical Report metadata.
+
+**Response 200**
+
+```json
+{ ...ReportSchema }
+```
+
+---
+
+### **GET /api/v1/reports/{report_id}/download**
+
+Returns a signed URL for the PDF artefact.
+
+**Response 200**
+
+```json
+{ "url": "<signed_url>" }
+```
+
+---
+
+## **5.3.6 Billing APIs**
+
+### **POST /api/v1/billing/portal**
+
+Creates a Stripe Customer Portal session.
+
+**Response 200**
+
+```json
+{ "url": "<stripe_portal_url>" }
+```
+
+---
+
+### **POST /api/v1/billing/checkout**
+
+Starts a Stripe Checkout session for the Essentials plan.
+
+**Response 200**
+
+```json
+{ "url": "<stripe_checkout_url>" }
+```
+
+---
+
+### **POST /api/v1/billing/stripe/webhook** *(unauthenticated, signature-verified)*
+
+Receives billing state changes from Stripe.
+
+**Events consumed**
+
+* `checkout.session.completed`
+* `customer.subscription.updated`
+* `invoice.paid`
+* `invoice.payment_failed`
+
+**Response**
+Always 200 on acceptance (or 400 on invalid signature).
+
+---
+
+## **5.3.7 Marketing → Essentials Handshake**
+
+### **GET /api/v1/handshake/redirect**
+
+Used by the Marketing runtime to confirm session validity and hand the user into the Essentials app seamlessly.
+
+**Response 200**
+
+```json
+{ "status": "ok", "tenant_id": "<uuid>" }
+```
+
+**Notes**
+
+* No personal data returned
+* Purely state-confirmation for routing
+
+---
+
+## **5.3.8 Rate Limits and Idempotency**
+
+### **Rate Limits**
+
+MVP-level throttles apply:
+
+* Per-IP simple request limits
+* Per-session limits on evidence uploads
+* Soft throttling for evaluation (1 run per minute)
+* Hard throttling on report generation (protects cost + CPU)
+
+Exact numbers are **not** committed in SAIS; only the presence of throttling.
+
+### **Idempotency**
+
+* Evidence metadata POSTs are idempotent by `(tenant_id, hash)`
+* Evaluation is idempotent by `(tenant_id, rulepack_id, org_profile_hash, evidence_set_hash)`
+* Report creation is idempotent by `evaluation_id`
+
+---
 
 ### 5.4 Internal Service Interfaces
 
