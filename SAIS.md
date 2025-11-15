@@ -3357,7 +3357,7 @@ Document how each journey behaves under failure: object store down (accept recor
 
 Define state diagrams for long-running processes.
 
-**7.7.1 Report Lifecycle**
+**6.7.1 Report Lifecycle**
 
 ```mermaid
 stateDiagram-v2
@@ -3371,7 +3371,7 @@ stateDiagram-v2
   PUBLISHED --> [*]
 ```
 
-**7.7.2 Evidence Ingestion**
+**6.7.2 Evidence Ingestion**
 
 ```mermaid
 stateDiagram-v2
