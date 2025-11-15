@@ -2759,20 +2759,149 @@ Internal interfaces follow the same high-level rules as public ones, but without
 
 This keeps the internal interface model simple: a small number of services, a single transport (HTTP/JSON through the gateway), canonical schemas as payloads, and deterministic behaviour that matches the expectations set by the PRD.
 
-### 5.5 Webhooks and Event Topics
+## 5.5 Webhooks and Event Topics
 
-Lists outbound notifications the system emits (e.g., `report.generated`, `billing.payment_succeeded`).
-For each: event name, schema, delivery mechanism, retries, signature verification, and replay window.
+The MVP does **not** expose any outbound webhooks or event topics.
+No external systems subscribe to Transcrypt events, and Transcrypt does not publish notifications such as `report.generated`, `evaluation.completed`, or `evidence.uploaded`. These capabilities belong to later phases (Assisted Tier, Partner Channel) and are deliberately excluded from v1.
 
-### 5.6 Error Handling and Response Semantics
+The only webhook interaction in the MVP is **inbound**, from Stripe to Transcrypt, used to confirm billing events (`checkout.session.completed`, subscription updates, invoice status). Stripe’s webhook is validated using its signature scheme, processed synchronously, and logged via an AuditEvent. No replay window or outbound retries are required because Transcrypt is the consumer, not the producer.
 
-Standardises error format across all interfaces:
+Outbound event feeds, partner-facing webhooks, or pub/sub topics remain **out of scope for v1** and will be introduced only when the PRD expands to the Assisted Tier or Partner APIs.
+
+---
+
+## 5.6 Error Handling and Response Semantics
+
+All public and internal interfaces follow a single error-handling model so that failures are predictable, debuggable, and traceable across the entire request path. Errors are expressed using a structured JSON envelope, paired with standard HTTP status codes, and always include a correlation identifier assigned by the API Gateway.
+
+### **5.6.1 Error Envelope**
+
+All errors returned by the platform use this canonical structure:
 
 ```json
-{ "error": { "code": "E400_INVALID_FIELD", "message": "sector is required" } }
+{
+  "error": {
+    "code": "E403_TENANT_MISMATCH",
+    "message": "You do not have access to this tenant.",
+    "trace_id": "req-9f87b5e2"
+  }
+}
 ```
 
-Defines HTTP-to-application-error mapping, correlation ID propagation, and localisation rules for user-facing messages.
+Fields:
+
+* **code** — Stable, machine-readable error identifier (string).
+* **message** — Human-readable explanation suitable for UI display.
+* **trace_id** — The correlation ID generated at the gateway and propagated through all internal services.
+
+No additional fields are included unless they form part of the stable public contract.
+Stack traces are never returned to clients.
+
+---
+
+### **5.6.2 HTTP ↔ Application Error Mapping**
+
+The MVP uses a deterministic mapping between HTTP status codes and application error categories:
+
+| HTTP Code | Meaning                                          | Example Application Error Code            |
+| --------- | ------------------------------------------------ | ----------------------------------------- |
+| **400**   | Invalid input or schema failure                  | `E400_INVALID_FIELD`, `E400_BAD_SCHEMA`   |
+| **401**   | Unauthenticated                                  | `E401_INVALID_TOKEN`, `E401_OIDC_FAILURE` |
+| **403**   | Authenticated but forbidden                      | `E403_TENANT_MISMATCH`                    |
+| **404**   | Resource not found                               | `E404_REPORT_NOT_FOUND`                   |
+| **409**   | Conflict / duplicate                             | `E409_EVIDENCE_EXISTS`                    |
+| **422**   | Semantically valid JSON but failed business rule | `E422_EVALUATION_IMPOSSIBLE`              |
+| **429**   | Rate limited                                     | `E429_TOO_MANY_REQUESTS`                  |
+| **500**   | Unexpected server error                          | `E500_INTERNAL`                           |
+| **503**   | Downstream dependency unavailable                | `E503_OBJECT_STORE_UNAVAILABLE`           |
+
+This table is **not** an exhaustive taxonomy; it defines the conventions.
+Implementations may add more codes, but all must conform to these mappings.
+
+---
+
+### **5.6.3 Correlation ID Propagation**
+
+Every request receives a gateway-generated correlation ID:
+
+```
+X-Request-Id: req-9f87b5e2
+```
+
+Rules:
+
+* Included in all log lines (gateway and internal services).
+* Returned to the client on both success and error.
+* Recorded in AuditEvents where applicable.
+* Never overwritten by downstream services.
+
+This ensures every incident is traceable across HTTP logs, audit logs, and object-store access logs.
+
+---
+
+### **5.6.4 Localisation & User-facing Messages**
+
+User-facing error messages follow the PRD’s tone: **plain, direct, non-technical**.
+
+Localisation is **out of scope** for the MVP; messages are English-only.
+Internal log messages may contain additional context but never leak PII or tenant secrets.
+
+UI surfaces are expected to display the `message` field as returned by the API, without rewriting or embedding sensitive detail.
+
+---
+
+### **5.6.5 Idempotency and Safe Replays**
+
+Many API operations (evidence submission, evaluation, report generation) are idempotent per their respective keys (hash, evaluation_id).
+If an idempotent call is replayed:
+
+* The API returns **200 or 201** with the existing resource identifier.
+* **No duplicate writes** occur.
+* No partial-write scenarios leave the system in an inconsistent state.
+
+If a duplicated request is incompatible (wrong tenant, changed OrgProfile, stale state), the API responds with:
+
+```
+409 Conflict
+```
+
+paired with an appropriate `E409_*` code.
+
+---
+
+### **5.6.6 Failure Behaviour for Downstream Dependencies**
+
+When a downstream service fails (DO Spaces, Stripe, IdP):
+
+* The platform **fails closed**.
+* A deterministic error is returned with an appropriate code, e.g.:
+
+```
+503 Service Unavailable
+E503_OBJECT_STORE_UNAVAILABLE
+```
+
+* No retries are hidden from the client except a single safe retry permitted for evidence blob storage or evaluation metadata fetch.
+
+No automatic fallback services exist in the MVP.
+All failure modes are explicit.
+
+---
+
+### **5.6.7 Why This Matters**
+
+A single, stable error contract prevents ambiguity in client handling and simplifies debugging.
+It reinforces the PRD’s emphasis on:
+
+* deterministic behaviour
+* auditability
+* transparent reasoning
+* developer ergonomics
+* predictable failures in a multi-tenant environment
+
+This error surface is small, consistent, and hostile to ambiguity — exactly what a compliance-automation platform requires.
+
+---
 
 ### 5.7 Interface Versioning and Deprecation
 
