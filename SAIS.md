@@ -3225,7 +3225,6 @@ This enables end-to-end traceability and reliable ordering for diagnostics and a
 
 ### **6.1.7 Baseline Runtime Diagram**
 
-````markdown
 ```mermaid
 flowchart LR
     C[Client\nBrowser/App] --> G[API Gateway]
@@ -3250,7 +3249,6 @@ flowchart LR
 
     S -->|Response| G --> C
 ```
-````
 
 This diagram expresses the runtime invariants: single ingress, stateless services, explicit tenant context, and deterministic request–response behaviour.
 
