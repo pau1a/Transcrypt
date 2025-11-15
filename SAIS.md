@@ -1875,7 +1875,7 @@ Examples:
 * Findings
 * Report PDFs/HTML
 
-**Retention:** Minimum of **3 years** for compliance reproducibility.
+**Retention:** Minimum of **2 years** for compliance reproducibility.
 (You may choose longer later.)
 
 **Mutation rules:**
