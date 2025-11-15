@@ -1283,8 +1283,9 @@ The broader operational and infrastructure-level resilience model is expanded la
 
 ## 4. Data and Storage Model
 
-Canonical schemas, entity relationships, encryption, retention, and provenance. Includes schema versioning and ownership.
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+This section defines how Transcrypt represents, stores, protects, and governs all data across the platform. It establishes the canonical schemas, the entities they describe, and the storage surfaces they occupy. It also sets out the rules for versioning, immutability, provenance, and lifecycle management so that every evaluation, report, and evidential artefact can be traced, verified, and reproduced long after it was created.
+
+The focus is on clarity and determinism: each data class has a single source of truth, a defined ownership boundary, and a lifecycle that can be proven from audit logs and cryptographic hashes. The model covers operational platform data, evidential artefacts, and the version-controlled content that powers the Marketing/Blog runtime, ensuring consistent behaviour across all environments without hidden state or ambiguity.
 
 ---
 
@@ -2202,20 +2203,105 @@ Example requests/responses
 
 ---
 
-### 5.1 Interface Overview
+## 5.1 Interface Overview
 
-Summarises the scope: which APIs, webhooks, and events exist in the MVP; their purpose; and the protocols used (HTTPS REST, JSON, optional GraphQL/event bus).
-Defines naming and versioning conventions such as `/v1/` in URLs and semantic version headers.
+The MVP exposes a **small, tightly defined set of interfaces**, all of which arise directly from the flows described in the PRD: onboarding via the Marketing site, authentication via OIDC, subscription via Stripe, tenant intake in the Essentials App, evidence upload, evaluation, and report generation. There are no partner APIs, no assisted-tier collaboration surfaces, and no external event feeds in v1. Everything exposed is required to make the end-to-end “intake → evidence → evaluate → report” loop work.
+
+All public interfaces use **HTTPS with JSON**, served through the unified API entrypoint that sits behind the Marketing and Essentials runtimes. REST is the only protocol in the MVP. There is no GraphQL, no gRPC, and no WebSockets. Interface versioning is explicit: all externally callable endpoints live under a `/api/v1/` namespace, and the version is part of the URL, not a header.
+
+Authentication is via **OIDC (Entra ID, Okta, Google)** using the same flow described in the PRD for both Marketing → Essentials sign-in and Essentials session continuation. Every authenticated request includes a short-lived JWT session, and all API calls enforce tenant isolation at token-validation time.
+
+The Essentials App exposes three functional groups of interface:
+
+1. **OrgProfile & Intake**
+   Endpoints that collect tenant-submitted structured data required for Cyber Essentials evaluation.
+
+2. **Evidence Upload**
+   Endpoints that accept evidential artefacts, forward blobs to object storage, and register metadata and hashes in the canonical store.
+
+3. **Evaluation & Reporting**
+   Endpoints that run the rule engine against the tenant’s OrgProfile and evidence, then generate the corresponding report artefact.
+
+In addition, the platform exposes the minimal billing interfaces required for Stripe Checkout and webhook confirmation of subscription state.
+
+Internal services communicate through the same API layer using service credentials — no hidden protocols or secondary transports. Error semantics are uniform across all surfaces, using Problem+JSON structures and correlation IDs to ensure every failure is debuggable and auditable.
+
+This gives the MVP a clear, deterministic interface surface: one identity mechanism, one API gateway, one versioned namespace, and a deliberately narrow set of operations that correspond exactly to the PRD’s defined user flows.
+
+---
 
 ### 5.2 Authentication and Authorisation
 
-Explains how clients obtain and present credentials.
-Covers:
+The MVP uses a single, uniform authentication model across all surfaces: **OIDC for humans**, and **signed service credentials for internal services**. Authorisation is strictly tenant-bound and enforced at the API Gateway. No additional identity mechanisms, roles, or escalation paths exist in v1.
 
-* OAuth 2.1 / OIDC token flows for users (Entra ID / Okta)
-* API-key or signed-JWT approach for service-to-service calls
-* Token lifetime, refresh behaviour, and scopes
-* Multi-tenant isolation enforcement at token-validation stage
+### **5.2.1 User Authentication (OIDC)**
+
+Users authenticate through the **OIDC Authorization Code flow with PKCE** using one of the PRD-specified identity providers: **Entra ID, Okta, or Google**.
+The platform requests only the minimal standard claims required to create an account and bind it to a tenant:
+
+```
+sub, email, iss, exp
+```
+
+After successful sign-in, the frontend receives a **short-lived session JWT** (HttpOnly, Secure, SameSite=Lax).
+No access tokens are exposed to the browser, and no passwords are stored by Transcrypt.
+
+### **5.2.2 Service Authentication**
+
+Internal services authenticate to the API Gateway using a **short-lived, signed service JWT**.
+Each token encodes:
+
+* service identity
+* expiry
+* service role (minimal privilege)
+
+These tokens are rotated automatically as part of deployment and are not usable by user-facing clients.
+
+### **5.2.3 Token Lifetime and Renewal**
+
+Token rules in the MVP follow the PRD’s simplicity and determinism:
+
+* User sessions are **short-lived** (hours).
+* Refresh occurs only through the IdP; Transcrypt does not mint long-lived tokens.
+* Service tokens are valid for **less than one hour** and rotate on container start.
+* No device trust, adaptive policies, or extended claims.
+* No refresh tokens stored in the browser.
+
+If a refresh fails, the user performs a full OIDC sign-in.
+
+### **5.2.4 Authorisation and Tenant Isolation**
+
+Authorisation is binary:
+
+1. The request must be authenticated.
+2. The authenticated user must belong to the tenant they are accessing.
+
+The API Gateway enforces tenant isolation by attaching:
+
+```
+X-Account-Id
+X-Tenant-Id
+X-Request-Id
+```
+
+to verified requests.
+Downstream services treat these values as authoritative and do not accept tenant identifiers from client payloads.
+
+There is **no cross-tenant visibility**, no shared views, and no admin override for reading tenant evidence or reports.
+
+### **5.2.5 Failure Behaviour**
+
+Consistent with the PRD’s fail-closed posture:
+
+* Invalid or expired tokens → **401**
+* Tenant mismatch → **403**
+* Missing/invalid service token → **401**
+* IdP unreachable → clean error state with correlation ID
+* No silent retries or fallback authentication paths
+
+All failures return **Problem+JSON** with a consistent error code and the request’s correlation ID.
+
+---
 
 ### 5.3 Public APIs
 
