@@ -3258,58 +3258,91 @@ This diagram expresses the runtime invariants: single ingress, stateless service
 
 ### 6.2 Primary User Journeys (Happy Paths)
 
-Sequence the MVP flows with explicit actors, calls, and returns.
+These diagrams describe the core interactive paths for Transcrypt Essential’s MVP: sign-in and initial OrgProfile onboarding, followed by evidence upload, evaluation, and report generation. They align with the Quick Start journey (“Tell us about your setup” → “Add evidence (or skip)” → “Run assessment”) and the canonical interfaces defined in the PRD (`OrgProfile`, `Evidence`, `Evaluations`, `Reports`).
 
-**7.2.1 Sign-in → Onboarding (Org Profile)**
+---
 
-```mermaid
-sequenceDiagram
-  autonumber
-  actor User
-  participant UI
-  participant Gateway
-  participant Auth
-  participant OrgSvc as Org Service
-  User->>UI: Submit credentials (OIDC)
-  UI->>Auth: Auth code exchange
-  Auth-->>UI: ID/Access token (tenant claims)
-  UI->>Gateway: POST /org (payload)
-  Gateway->>OrgSvc: Create org (idempotency-key)
-  OrgSvc-->>Gateway: 201 {org_id}
-  Gateway-->>UI: 201 {org_id}
-```
-
-**7.2.2 Evidence Upload → Evaluation → Report Generate**
+#### 6.2.1 Sign-in → Onboarding (OrgProfile)
 
 ```mermaid
 sequenceDiagram
   autonumber
   actor User
-  participant UI
-  participant Gateway
-  participant Evidence as Evidence Svc
-  participant Store as Object Store
-  participant Rule as Rule Engine
-  participant Queue
-  participant Report as Report Svc
-  User->>UI: Upload file + metadata
-  UI->>Gateway: POST /evidence (refs object URI)
-  Gateway->>Evidence: Validate & persist record
-  Evidence->>Store: PUT artefact (hash, tags)
-  Evidence-->>Gateway: 201 {evidence_id}
-  Gateway-->>UI: 201
-  UI->>Gateway: POST /evaluate?framework=CEv3_2
-  Gateway->>Rule: Evaluate(tenant, controls, evidence_refs)
-  Rule-->>Gateway: 200 {results, score}
-  UI->>Gateway: POST /reports/generate
-  Gateway->>Queue: publish report.requested
-  Queue->>Report: deliver message
-  Report->>Store: read evidence, templates
-  Report-->>Store: write PDF/HTML
-  Report-->>Queue: publish report.generated
-  Report-->>Gateway: 202 {report_id}
-  Gateway-->>UI: 202
+  participant Browser as Web App (Browser)
+  participant IdP as OIDC IdP
+  participant Gateway as API Gateway
+  participant App as App API (Tenants/OrgProfile)
+
+  User->>Browser: Open /app (Transcrypt portal)
+  Browser->>Gateway: GET /app (no active session)
+  Gateway-->>Browser: 302 Redirect to /api/auth/oidc/start
+  Browser->>IdP: Redirect to IdP /authorize (client_id, redirect_uri, state)
+
+  User->>IdP: Enter credentials / approve sign-in
+  IdP-->>Browser: Redirect to /api/auth/oidc/callback?code=...
+
+  Browser->>Gateway: GET /api/auth/oidc/callback?code=...
+  Gateway->>IdP: Exchange code for tokens
+  IdP-->>Gateway: ID/Access token (tenant/user claims)
+  Gateway->>App: Upsert tenant + user (from claims)
+  App-->>Gateway: { tenant_id, user_id }
+  Gateway-->>Browser: Set session (cookie / token), redirect to /app/quick-start
+
+  Browser->>Gateway: GET /api/org_profiles/current
+  Gateway->>App: Load OrgProfile for { tenant_id }
+  App-->>Gateway: Existing OrgProfile or empty template
+  Gateway-->>Browser: OrgProfile JSON (schema-tagged)
+
+  User->>Browser: Complete Quick Start card 1 (“Tell us about your setup”)
+  Browser->>Gateway: POST /api/org_profiles (OrgProfileV1 payload)
+  Gateway->>App: Validate and persist OrgProfile (idempotent write)
+  App-->>Gateway: 200 { org_profile_id, version }
+  Gateway-->>Browser: 200 + updated OrgProfile
+````
+
+---
+
+#### 6.2.2 Evidence Upload → Evaluation → Report Generate
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor User
+  participant Browser as Web App (Browser)
+  participant Gateway as API Gateway
+  participant Evidence as Evidence Service
+  participant Store as Object Store (Evidence)
+  participant Eval as Evaluation Service
+  participant LLM as LLM Inference (Runtime)
+  participant Report as Report Service
+
+  User->>Browser: Choose “Add evidence” (Quick Start card 2)
+  Browser->>Gateway: POST /api/evidence/files (file + control refs)
+  Gateway->>Evidence: Ingest file (tenant context)
+  Evidence->>Store: PUT encrypted blob (per-tenant KMS, hashed)
+  Store-->>Evidence: { url, etag }
+  Evidence-->>Gateway: 201 { evidence_id, sha256, url }
+  Gateway-->>Browser: 201 { evidence_id, sha256 }
+
+  User->>Browser: Click “Run assessment” (Quick Start card 3)
+  Browser->>Gateway: POST /api/evaluations\n(OrgProfile, EvidenceInventory, rule_pack_id)
+  Gateway->>Eval: Evaluate(tenant_id, OrgProfile, Evidence refs, rule_pack_id)
+  Eval->>LLM: Optional runtime inference request\n(model_version, prompt_version, hashes)
+  LLM-->>Eval: AI findings + rationale (per control)
+  Eval-->>Gateway: 200 FindingsV1 JSON\n(per-control status, rationale, ce_refs)
+  Gateway-->>Browser: 200 Findings summary (Pass/Fail/Partial)
+
+  User->>Browser: Click “Generate report”
+  Browser->>Gateway: POST /api/reports\n(rule_pack_id, findings_ref, org_profile_ref)
+  Gateway->>Report: Generate report(tenant_id, inputs)
+  Report->>Store: Read evidence blobs + templates
+  Report-->>Store: Write HTML/PDF artefact (hashed)
+  Report-->>Gateway: 201 { report_id, download_url, summary }
+  Gateway-->>Browser: 201 + report metadata\n(links to download/view in app)
 ```
+
+This keeps the journeys strictly aligned with the PRD’s Quick Start flow, MVP cut (`/evaluate`, `/reports/generate`), and the defined services and interfaces (Evidence Service, Evaluation Service, LLM Inference, Report Service, OrgProfile data model, and `/api/auth/*` OIDC flows).
+
 
 ### 6.3 Asynchronous/Event Patterns
 
