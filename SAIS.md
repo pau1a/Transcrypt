@@ -3124,133 +3124,135 @@ System-level and user-journey diagrams showing how components, APIs, and UI inte
 
 ### 6.1 Runtime Context and Assumptions
 
-This section establishes the non-negotiable runtime conditions under which Transcrypt operates. These assumptions underpin every sequence, state machine, and interface contract that follows. They define the ground truth for consistency, timing, identity propagation, and isolation.
+This section defines the fixed conditions under which all runtime behaviour in §6 operates. These assumptions are binding: every sequence, workflow, and state diagram that follows is interpreted within this model.
 
-Transcrypt’s runtime model is intentionally narrow: **stateless services, deterministic behaviour, strict tenancy boundaries, and explicitly managed async paths**. No component is allowed to rely on side-effects, sticky sessions, or ambient state.
-
----
-
-### **Stateless Service Model**
-
-All central services (Gateway, Rule Engine, Evidence Service, Report Service) operate as **stateless units** behind the platform’s load balancer.
-
-Key expectations:
-
-* Any service instance may handle any request.
-* No service stores in-memory session state.
-* All request-specific data (auth, tenant, correlation IDs) arrives explicitly in headers.
-* Horizontal scaling does not alter behaviour.
-
-This guarantees reproducibility across instances and removes node affinity entirely.
+Transcrypt Essential executes as a collection of **stateless application services**, all reachable exclusively through the **API Gateway**, running on a shared host for the MVP while maintaining strict tenant-level logical isolation. All request-scoped information is explicitly provided; no component relies on ambient state or hidden context.
 
 ---
 
-### **Tenancy Isolation Model**
+### **6.1.1 Execution Model**
 
-Every request is evaluated under a **tenant-scoped context** derived from the validated access token and the resolved organisation record.
+All runtime interactions follow the same invariant structure:
+
+**Client → API Gateway → Application Service → Storage / Audit / Events → API Gateway → Client**
+
+Where *Application Service* refers to:
+
+* the Evaluation/Findings service,
+* the Evidence service,
+* the Report service,
+* internal admin/control endpoints exposed through the Gateway.
+
+There are **no intermediate routing layers**, **no out-of-band service access**, and **no direct client-to-service calls**. The Gateway is the sole ingress and egress for all interactive operations.
+
+---
+
+### **6.1.2 Stateless Service Behaviour**
+
+All application services are stateless:
+
+* No service instance keeps session data, workflow state, or cached identity.
+* Every call is self-contained and depends only on its request payload, headers, and the persistent state held in storage.
+* Any instance may process any request without reliance on prior calls.
+
+This ensures deterministic behaviour for synchronous evaluation and reporting workflows.
+
+---
+
+### **6.1.3 Tenant Isolation Assumptions**
+
+Every request is executed under a **tenant-scoped context** established by the Gateway via:
+
+* token validation,
+* extraction of tenant identity from claims,
+* lookup of the organisation record, and
+* enforcement of the tenant’s permissions and plan.
 
 Assumptions:
 
-* No cross-tenant data reads.
-* No cross-tenant caching.
-* Tenant ID becomes part of the routing key for data fetches and artefact writes.
-* Event streams carry tenant IDs in the envelope.
-* Bulk jobs are partitioned by tenant before execution.
+* No cross-tenant reads or writes.
+* All storage access is performed in the tenant’s logical namespace.
+* Audit entries always include tenant identifiers.
+* Event payloads include tenant metadata.
 
-Isolation is behavioural, storage-level, and audit-level.
-
----
-
-### **Consistency Expectations**
-
-Transcrypt adopts a split-consistency model:
-
-* **Synchronous (request/response) paths:**
-  *Strictly deterministic and strongly consistent.*
-  Evaluations, rule lookups, policy checks, and report renders produce the same output on any node.
-
-* **Asynchronous paths:**
-  *Eventual consistency with monotonic progression.*
-  Evidence aggregation, scheduled pullers, and template regeneration settle within bounded windows.
-
-No user-facing workflow depends on async completion for correctness.
+Tenant isolation is behavioural, storage-level, and audit-level.
 
 ---
 
-### **Idempotency Requirements**
+### **6.1.4 Consistency and Determinism**
 
-Every **POST** and **PUT** endpoint that mutates state MUST be idempotent.
+Transcrypt uses a split consistency model:
 
-Assumptions:
+**Synchronous paths:**
+(e.g., evaluation, evidence fetch, report generation)
+→ deterministically consistent;
+given the same inputs, all services produce the same output.
 
-* Idempotency keys are provided by the caller or generated at the Gateway.
-* Retries (automatic or user-triggered) cannot produce duplicates.
-* Reconciliation logic ensures the final state is identical regardless of retry count.
-* All connectors and pullers revalidate state before writing.
+**Asynchronous paths:**
+(e.g., scheduled evidence pullers, background processing, template refresh)
+→ eventually consistent;
+these do not affect correctness of synchronous workflows.
 
-Determinism and safety beat throughput.
-
----
-
-### **Clock, Time, and Ordering Guarantees**
-
-All services use:
-
-* **UTC** as the sole time standard.
-* A shared **NTP-synchronised clock source**.
-* Monotonic timestamps for internal event ordering.
-* RFC 3339 timestamps in all logs, events, and artefacts.
-
-If system clocks drift, ordering and retries behave predictably.
+No user workflow depends on the completion of an asynchronous task for correctness.
 
 ---
 
-### **Correlation ID Format**
+### **6.1.5 Idempotency Requirements**
 
-Every inbound request receives a correlation envelope:
+All state-mutating operations exposed through the Gateway must be idempotent:
 
-* `x-correlation-id`:
-  A 128-bit UUIDv7 (time-ordered) generated at ingress if not provided.
+* Retries must not create duplicates or inconsistent intermediate states.
+* If a request is replayed (client retry, network retry, or internal retry), the end-state must be the same as if it were executed once.
+* Connectors and background jobs must revalidate before writing.
 
-* `x-request-id`:
-  A per-hop identifier issued by the Gateway for trace fan-out.
-
-Correlation rules:
-
-* IDs propagate through all services unchanged.
-* Every log, metric, trace, and event carries the correlation ID.
-* The audit log stores correlation IDs alongside immutable event hashes.
-
-This enables full cradle-to-grave causality reconstruction.
+This protects the system from accidental duplication and race conditions.
 
 ---
 
-### **Baseline Runtime Diagram**
+### **6.1.6 Time, Ordering, and Correlation**
 
+Runtime assumptions:
+
+* All services operate in **UTC**.
+* All timestamps conform to **RFC 3339**.
+* Ordering-sensitive operations use monotonic timestamps or sequence counters.
+* Every inbound request receives a **correlation ID** generated at Gateway ingress if not supplied.
+* Correlation IDs propagate through all internal service calls, audit writes, and event emissions.
+
+This enables end-to-end traceability and reliable ordering for diagnostics and audit reconstruction.
+
+---
+
+### **6.1.7 Baseline Runtime Diagram**
+
+````markdown
 ```mermaid
 flowchart LR
-  subgraph Client
-    UI[Browser / App]
-  end
+    C[Client\nBrowser/App] --> G[API Gateway]
 
-  subgraph Edge
-    LB[Load Balancer]
-    GW[API Gateway]
-  end
+    subgraph S[Application Services]
+        EVAL[Evaluation / Findings Service]
+        EVD[Evidence Service]
+        RPT[Report Service]
+    end
 
-  subgraph Core
-    S1[Service Instance A]
-    S2[Service Instance B]
-  end
+    G -->|Tenant-scoped request| EVAL
+    G -->|or| EVD
+    G -->|or| RPT
 
-  UI -->|Request + Token + Correlation-ID| LB --> GW
-  GW -->|Stateless dispatch| S1
-  GW -->|or S2 depending on load| S2
+    EVAL -->|Read/Write| ST[(Storage)]
+    EVD -->|Read/Write| ST
+    RPT -->|Read/Write| ST
 
-  S1 -->|Deterministic response| GW --> UI
+    EVAL --> AU[(Append-only Audit)]
+    EVD --> AU
+    RPT --> AU
+
+    S -->|Response| G --> C
 ```
+````
 
-*Note:* No service assumes request affinity or shared memory. All state transitions occur in tenant-scoped storage or through events.
+This diagram expresses the runtime invariants: single ingress, stateless services, explicit tenant context, and deterministic request–response behaviour.
 
 ---
 
