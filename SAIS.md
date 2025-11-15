@@ -3250,6 +3250,134 @@ flowchart LR
     S -->|Response| G --> C
 ```
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Good — that diagram *renders*, but the **issue** is now obvious:
+
+### **You have inserted literal “or” labels and line breaks**
+
+that Mermaid will **never** accept because Mermaid **does not support branch labels like “or”**, and it does not support:
+
+* arrows split across lines
+* edge labels floating unattached
+* optionality expressed as natural language
+
+Your new rendering shows that you pasted a *non-Mermaid diagram* (looks like Excalidraw or MPE auto-conversion), not Mermaid source.
+
+If you want **Mermaid**, you cannot express:
+
+* “or” branching
+* multiline edge annotation
+* arrows that bend arbitrarily
+* free-floating labels
+
+Mermaid is strict.
+
+So let’s align:
+
+---
+
+# ✅ If you want a **clean Mermaid version**,
+
+this is the **canonical** rendering equivalent to your visual diagram:
+
+
+```mermaid
+flowchart LR
+    C[Client<br/>Browser/App] --> G[API Gateway]
+
+    subgraph AS[Application Services]
+        EVAL[Evaluation / Findings Service]
+        EVD[Evidence Service]
+        RPT[Report Service]
+    end
+
+    G -->|Tenant-scoped request| EVAL
+    G --> EVD
+    G --> RPT
+
+    EVAL -->|Read/Write| ST[(Storage)]
+    EVD -->|Read/Write| ST
+    RPT -->|Read/Write| ST
+
+    EVAL --> AU[(Append-only Audit)]
+    EVD --> AU
+    RPT --> AU
+
+    EVAL -->|Response| G
+    EVD -->|Response| G
+    RPT -->|Response| G
+```
+
+
+### Key differences:
+
+* No “or” (Mermaid doesn’t support branching labels).
+* No free-floating text labels.
+* No multiline arrows.
+* No arbitrary routing curves (Mermaid has fixed routing unless overridden by `linkStyle`, but keeping it simple is safest).
+* Clean left-to-right topology.
+
+This is the **correct** and **guaranteed-to-render** Mermaid equivalent of your visual diagram.
+
+---
+
+# ❗ If you want the **pretty diagram** (like your screenshot) in the SAIS…
+
+Then:
+
+### **(A) It must be exported as an image and embedded**,
+
+because Mermaid cannot produce that layout.
+
+or
+
+### **(B) You must draw it in Excalidraw and embed the exported PNG/SVG.**
+
+Your screenshot is **not Mermaid**.
+It is a **hand-drawn layout with curved arrows and floating labels**, which Mermaid will never replicate.
+
+---
+
+# 🧭 So your options are:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 This diagram expresses the runtime invariants: single ingress, stateless services, explicit tenant context, and deterministic request–response behaviour.
 
 ---
