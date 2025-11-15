@@ -3116,89 +3116,145 @@ There is no manual override in the MVP.
 
 ---
 
-## 6. User Experience and Wireframes
-
-Functional UI definition — navigation spine, screen-by-screen wireframes, UX–API bindings, accessibility guarantees, and responsive behaviour.
-Wireframes embedded (Mermaid/Figma links) and tied to acceptance criteria. 
-
----
-
-### 6.1 UX Philosophy and Objectives
-
-Defines the purpose of the UX layer: to make compliance workflows self-evident, error-resistant, and measurable.
-Explains the alignment with PRD §4 Interface Philosophy — clarity over aesthetics, automation over manual entry, evidence over opinion.
-States that every user action must be traceable to a single API call or state change.
-
-### 6.2 Navigation Spine and Information Architecture
-
-Shows how users move through the Essentials app:
-
-* Primary nav: Dashboard · Controls · Evidence · Reports · Billing · Settings
-* Secondary nav: Profile, Support, Logout
-* Routing rules for Marketing ↔ Essentials handshake
-  Provide a Mermaid or site-map diagram illustrating the hierarchy and deep-link behaviour.
-
-### 6.3 Screen Flows and Wireframes
-
-Defines the canonical screens that constitute the MVP:
-
-1. Landing / Sign-in
-2. Onboarding – Organisation Profile
-3. Controls Overview
-4. Evidence Upload
-5. Evaluation / Results
-6. Report Generation
-7. Billing & Checkout
-   Each screen must:
-
-* Identify its purpose and success criteria
-* Reference its API endpoints (from §5)
-* Show a low-fidelity wireframe (embedded or linked to Figma)
-* Note any conditional states, modals, or errors
-
-Example (Mermaid):
-
-```mermaid
-flowchart TD
-  A[Sign-in] --> B[Onboarding]
-  B --> C[Controls Overview]
-  C --> D[Evidence Upload]
-  D --> E[Evaluate]
-  E --> F[Report Generate]
-  F --> G[Billing]
-```
-
-### 6.4 UX → API Bindings
-
-Maps UI actions to backend endpoints and response expectations.
-Document in a table: *Screen → API → Payload → Success/Error → Next State.*
-This ensures determinism between UI flow and backend behaviour.
-
-### 6.5 Accessibility and Responsiveness
-
-Lists compliance targets: WCAG 2.2 AA contrast ratios, keyboard-first operation, ARIA landmarks, focus traps.
-Defines responsive breakpoints and expected layout behaviour for mobile, tablet, and desktop.
-Include validation scripts for accessibility testing.
-
-### 6.6 UX Instrumentation and Feedback
-
-Specifies telemetry events (screen_loaded, form_submitted, error_shown) and how they’re logged with tenant and session IDs.
-Links back to §10 Observability for metric definitions.
-Defines qualitative feedback hooks (survey, bug report) for future usability analysis.
-
----
-
-## 7. Sequence and Runtime Behaviour
+## 6. Sequence and Runtime Behaviour
 
 System-level and user-journey diagrams showing how components, APIs, and UI interact at runtime. Includes async/event patterns.
 
 ---
 
-### 7.1 Runtime Context and Assumptions
+### 6.1 Runtime Context and Assumptions
 
-Document baseline assumptions: stateless services behind a load balancer, per-tenant isolation, eventual consistency only in async paths, and strict idempotency for all POST/PUT endpoints. Note clock source (e.g., UTC via NTP) and correlation-ID format used end-to-end.
+This section establishes the non-negotiable runtime conditions under which Transcrypt operates. These assumptions underpin every sequence, state machine, and interface contract that follows. They define the ground truth for consistency, timing, identity propagation, and isolation.
 
-### 7.2 Primary User Journeys (Happy Paths)
+Transcrypt’s runtime model is intentionally narrow: **stateless services, deterministic behaviour, strict tenancy boundaries, and explicitly managed async paths**. No component is allowed to rely on side-effects, sticky sessions, or ambient state.
+
+---
+
+### **Stateless Service Model**
+
+All central services (Gateway, Rule Engine, Evidence Service, Report Service) operate as **stateless units** behind the platform’s load balancer.
+
+Key expectations:
+
+* Any service instance may handle any request.
+* No service stores in-memory session state.
+* All request-specific data (auth, tenant, correlation IDs) arrives explicitly in headers.
+* Horizontal scaling does not alter behaviour.
+
+This guarantees reproducibility across instances and removes node affinity entirely.
+
+---
+
+### **Tenancy Isolation Model**
+
+Every request is evaluated under a **tenant-scoped context** derived from the validated access token and the resolved organisation record.
+
+Assumptions:
+
+* No cross-tenant data reads.
+* No cross-tenant caching.
+* Tenant ID becomes part of the routing key for data fetches and artefact writes.
+* Event streams carry tenant IDs in the envelope.
+* Bulk jobs are partitioned by tenant before execution.
+
+Isolation is behavioural, storage-level, and audit-level.
+
+---
+
+### **Consistency Expectations**
+
+Transcrypt adopts a split-consistency model:
+
+* **Synchronous (request/response) paths:**
+  *Strictly deterministic and strongly consistent.*
+  Evaluations, rule lookups, policy checks, and report renders produce the same output on any node.
+
+* **Asynchronous paths:**
+  *Eventual consistency with monotonic progression.*
+  Evidence aggregation, scheduled pullers, and template regeneration settle within bounded windows.
+
+No user-facing workflow depends on async completion for correctness.
+
+---
+
+### **Idempotency Requirements**
+
+Every **POST** and **PUT** endpoint that mutates state MUST be idempotent.
+
+Assumptions:
+
+* Idempotency keys are provided by the caller or generated at the Gateway.
+* Retries (automatic or user-triggered) cannot produce duplicates.
+* Reconciliation logic ensures the final state is identical regardless of retry count.
+* All connectors and pullers revalidate state before writing.
+
+Determinism and safety beat throughput.
+
+---
+
+### **Clock, Time, and Ordering Guarantees**
+
+All services use:
+
+* **UTC** as the sole time standard.
+* A shared **NTP-synchronised clock source**.
+* Monotonic timestamps for internal event ordering.
+* RFC 3339 timestamps in all logs, events, and artefacts.
+
+If system clocks drift, ordering and retries behave predictably.
+
+---
+
+### **Correlation ID Format**
+
+Every inbound request receives a correlation envelope:
+
+* `x-correlation-id`:
+  A 128-bit UUIDv7 (time-ordered) generated at ingress if not provided.
+
+* `x-request-id`:
+  A per-hop identifier issued by the Gateway for trace fan-out.
+
+Correlation rules:
+
+* IDs propagate through all services unchanged.
+* Every log, metric, trace, and event carries the correlation ID.
+* The audit log stores correlation IDs alongside immutable event hashes.
+
+This enables full cradle-to-grave causality reconstruction.
+
+---
+
+### **Baseline Runtime Diagram**
+
+```mermaid
+flowchart LR
+  subgraph Client
+    UI[Browser / App]
+  end
+
+  subgraph Edge
+    LB[Load Balancer]
+    GW[API Gateway]
+  end
+
+  subgraph Core
+    S1[Service Instance A]
+    S2[Service Instance B]
+  end
+
+  UI -->|Request + Token + Correlation-ID| LB --> GW
+  GW -->|Stateless dispatch| S1
+  GW -->|or S2 depending on load| S2
+
+  S1 -->|Deterministic response| GW --> UI
+```
+
+*Note:* No service assumes request affinity or shared memory. All state transitions occur in tenant-scoped storage or through events.
+
+---
+
+### 6.2 Primary User Journeys (Happy Paths)
 
 Sequence the MVP flows with explicit actors, calls, and returns.
 
@@ -3253,23 +3309,23 @@ sequenceDiagram
   Gateway-->>UI: 202
 ```
 
-### 7.3 Asynchronous/Event Patterns
+### 6.3 Asynchronous/Event Patterns
 
 Define topics/queues, publishers, and consumers. Include delivery guarantees (at-least-once), back-off, DLQ policy, and replay rules. List canonical events (e.g., `report.requested`, `report.generated`, `billing.payment_succeeded`) with payload schemas (link to §5.5).
 
-### 7.4 Concurrency, Idempotency, and Ordering
+### 6.4 Concurrency, Idempotency, and Ordering
 
 State idempotency-key rules for mutating endpoints; describe how keys are scoped (tenant+endpoint+hash). Define where strict ordering is required (per-report job chain) and how it’s enforced (FIFO queue or per-key partitioning). Mention optimistic concurrency (ETags/version fields) on mutable resources.
 
-### 7.5 Timeouts, Retries, and Circuit Breaking
+### 6.5 Timeouts, Retries, and Circuit Breaking
 
 Specify default client/gateway/service timeouts, retry counts/back-off for transient failures, and circuit-breaker thresholds. Clarify which errors are retryable vs terminal. Provide a small matrix for GET/POST/PUT/DELETE behaviours.
 
-### 7.6 Failure Scenarios and Degradation Paths
+### 6.6 Failure Scenarios and Degradation Paths
 
 Document how each journey behaves under failure: object store down (accept record, queue retry; UI shows “processing”), rule engine degraded (queue evaluation, notify), webhook target unreachable (retry→DLQ→admin alert). Define user-visible states and recovery actions.
 
-### 7.7 Workflow State Machines (Authoritative)
+### 6.7 Workflow State Machines (Authoritative)
 
 Define state diagrams for long-running processes.
 
@@ -3298,17 +3354,17 @@ stateDiagram-v2
   SEALED --> [*]
 ```
 
-### 7.8 Performance Budgets and SLO Paths
+### 6.8 Performance Budgets and SLO Paths
 
 Declare target latencies and throughput for each path (e.g., p95: sign-in ≤ 400 ms, evidence POST ≤ 800 ms, evaluate ≤ 1.5 s synchronous, report async ≤ 2 min). Map each SLO to metrics in §10 and acceptance checks in §13.
 
-### 7.9 Observability Hooks and Correlation
+### 6.9 Observability Hooks and Correlation
 
 Define mandatory headers/attributes (`X-Request-ID`, `X-Tenant-ID`, `X-Idempotency-Key`) and how they propagate across UI → gateway → services → queue. List log events and trace spans required per step, with namespacing conventions.
 
 ---
 
-## 8. Deployment and Environment Architecture
+## 7. Deployment and Environment Architecture
 
 Describes environments (dev, staging, prod), configuration, secrets handling, and network topology. Defines IaC linkage and environment parity rules.
 
@@ -3389,7 +3445,7 @@ Where backups land, cross-region replication toggles, RPO/RTO targets, and runbo
 
 ---
 
-## 9. Security, Privacy, and Compliance Alignment
+## 8. Security, Privacy, and Compliance Alignment
 
 Maps architecture to controls in IEC 62443, NIS2, and Cyber Essentials. Details key management, isolation, audit logging, and redaction pipelines.
 
@@ -3464,7 +3520,7 @@ Describe process for tracking deviations or compensating controls — who approv
 
 ---
 
-## 10. Observability and Telemetry
+## 9. Observability and Telemetry
 
 Defines metrics, traces, structured logs, and SLOs. Specifies tenant/request correlation IDs and alert thresholds.
 
@@ -3572,7 +3628,7 @@ Pre-merge CI fails on: missing `request_id` propagation, unbound metrics, or log
 
 ---
 
-## 11. Build and Delivery Pipeline
+## 10. Build and Delivery Pipeline
 
 CI/CD architecture — linting, test suites, security scans, release gating, artefact signing, and promotion between environments.
 
@@ -3652,7 +3708,7 @@ On PR open, spin an isolated stack with seeded, sanitised data. Auto-destroy on 
 
 ---
 
-## 12. Operational Runbooks
+## 11. Operational Runbooks
 
 Day-two procedures: monitoring, backup cadence, rotation, incident response, recovery validation, and change windows.
 
@@ -3724,7 +3780,7 @@ State fallback manual paths if automation fails.
 
 ---
 
-## 13. Non-Functional Requirements
+## 12. Non-Functional Requirements
 
 Quantitative targets: performance, scalability, reliability, and resource budgets. Links directly to observability metrics.
 
@@ -3805,7 +3861,7 @@ Specify how each target is validated:
 
 ---
 
-## 14. Traceability and Acceptance Mapping
+## 13. Traceability and Acceptance Mapping
 
 Table mapping PRD requirements and acceptance criteria to implementing components, APIs, and tests.
 
@@ -3879,7 +3935,7 @@ Ensures auditors can trace the lineage of every requirement from conception to v
 
 ---
 
-## 15. Appendices and Change Log
+## 14. Appendices and Change Log
 
 Supporting material — schema dumps, diagram sources, glossary, environment variables, revision history.
 
