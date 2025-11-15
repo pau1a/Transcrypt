@@ -566,6 +566,8 @@ The platform has two surface experiences that share a design system and analytic
 * **Public site** — the publication and community layer for articles, updates, and social engagement. It is publicly readable, cacheable, and instrumented for discoverability, but it has no path to tenant data.
 * **Tenant portal** — the authenticated workspace for customers to manage their assurance activities. It communicates through the API gateway using short-lived credentials and tenant-scoped routes. All user actions terminate at this gateway, which enforces authentication, rate limiting, and routing based on tenant context.
 
+The `/app` path is a security and identity boundary, not a product. For v1, it maps to the Essential product at `/app/essential`, with future regulated packs extending under `/app/{product}`.
+
 ### Central Layer ()
 
 Within the heart of the Transcrypt system, an **evaluation pipeline**, known commercially as Transcrypt Essential, processes tenant-scoped inputs from the gateway. This heart is composed of discrete, bounded services:
@@ -1501,7 +1503,14 @@ The Marketing and Blog site will run as a Next.js application and will operate a
   * Auth: `POST /api/auth/callback`, `POST /api/auth/logout`.
   * Tenant: `GET /api/tenants/me`, `POST /api/tenants/switch`.
   * Health: `GET /api/healthz` (unauthenticated ping), `GET /api/readyz` (auth, deeper checks).
-**App (auth-gated):** `/app/*` – intake `/app/intake/*`, evidence `/app/evidence`, reports `/app/reports/*`, settings `/app/settings`.
+Authenticated Runtime Boundary: `/app`
+For v1, `/app` routes to the Transcrypt Essential product at `/app/essential/*`.
+Future product modules (e.g. NIS2, AI-Risk) follow the structure `/app/{product}/…` under the same authenticated boundary.
+
+* **App routes:**
+  * `/app/essential/*` (Primary v1 product)
+  * `/app` (redirects to `/app/essential`)
+  * `/app/{product}/*` (future product routes)
 
 #### 3.2.3 Rule Evaluation Service (Deterministic + Runtime Inference)
 
@@ -1599,7 +1608,7 @@ Guardrails: JSON Schema validation; missing citations = build fail; human review
 
 * **Purpose:** End-to-end traceability for support and assurance.
 * **Interfaces:** OpenTelemetry export (`/otel/v1/*`); structured logs include `tenant_id`, `rule_pack_hash`, `trace_id`; append-only `audit_events` via write-only API from gateway/services.
-* **User-visible:** `/app/settings/audit` — filterable per-tenant audit viewer.
+* **User-visible:** `/app/essential/settings/audit` — filterable per-tenant audit viewer.
 
 #### 3.2.10 Marketing Site & Content (Marketing, Legal, Support)
 
@@ -1688,7 +1697,7 @@ Extensibility is governed by **versioned contracts** and forward-compat rules. E
 * **IaC:** **Terraform** for network, compute, storage, DNS, certificates, WAF; per-env workspaces.
 * **Environments:** `dev` (ephemeral PR previews), `staging` (prod-like), `prod` (locked); **no direct prod DB access**.
 * **CDN/WAF:** Edge caching for static assets; WAF/bot filtering on `/api/*` and auth routes.
-* **Domain & topology:** Single origin `https://transcrypt.xyz` (marketing + app at `/app`), easy migration path to `app.transcrypt.xyz` later (cookie domain `.transcrypt.xyz`, shared codebase).
+* **Domain & topology:** Single origin `https://transcrypt.xyz` (marketing + authenticated boundary at `/app`, which resolves to `/app/essential` in v1), easy migration path to `app.transcrypt.xyz` later (cookie domain `.transcrypt.xyz`, shared codebase).
 
 **Payments & Commerce**
 
@@ -1974,9 +1983,9 @@ Each journey below describes a single intent, its supporting proof points, prima
 ### How the Marketing Site and Essentials handshake (frictionless routing)
 
 * **CTAs map to Essentials intents:**
-  – “Start Free Trial” → `/app/signup?intent=trial`
-  – “See a Sample Report” → `/app/demo` (read-only tenant)
-  – “Invite your tech helper” → prefilled `/app/settings/users/invite`
+  – “Start Free Trial” → `/app/essential/signup?intent=trial`
+  – “See a Sample Report” → `/app/essential/demo` (read-only tenant)
+  – “Invite your tech helper” → prefilled `/app/essential/settings/users/invite`
   – “Join the Early-Access List” → `/waitlist`
 * **Deep links carry context:** choosing “Cyber Essentials” on `/product` passes `rulePack=CE-2025.3` into signup so Quick Start is preselected.
 * **One origin, one session:** hosting both Marketing Site / Blog and Essentials under `transcrypt.xyz` allows OIDC cookies to persist across flows—no CORS friction.
@@ -2021,7 +2030,7 @@ The Marketing Site / Blog operates as Transcrypt’s credibility engine. Its job
 **SME owner (conversion path)**
 *Route:* `/` → `/why-transcrypt` → `/product` → `/pricing` → `/security` → **Join Waitlist** *(pre-launch)* → **Start Free Trial** *(post-launch)*.
 *Promises shown:* “First defensible report in one sitting”; screenshots of **Quick Start / Findings / PDF**; clear statement that **AI assists at runtime** but is **auditable, version-pinned, and logged**; simple transparent pricing.
-*CTAs:* `/waitlist` during Marketing phase → `/app/signup?intent=trial&rulePack=CE-2025.3` once Essentials opens.
+*CTAs:* `/waitlist` during Marketing phase → `/app/essential/signup?intent=trial&rulePack=CE-2025.3` once Essentials opens.
 *Acceptance / KPIs:*
 
 * Hero→Product CTR ≥ 35 %
@@ -2090,11 +2099,11 @@ The onboarding spine defines how every user first encounters Essentials — whet
 ---
 
 **1. Direct signup (owner / admin)**
-Email → OIDC login → MFA → Tenant name → lands in **Quick Start**.
+Email → OIDC login → MFA → Tenant name → user is redirected to `/app`, which resolves to `/app/essential` during v1, and lands in **Quick Start**.
 Applies to new SMEs joining from the **Start Free Trial** or **Join Waitlist** CTA. Billing defaults to the Essential plan.
 
 **2. Invite accept (tech helper)**
-Magic link carries `tenant` + `role=contributor`; skips billing; lands directly in **Evidence / Intake** with a short checklist, e.g. “Upload IdP export, confirm backups.”
+Magic link carries `tenant` + `role=contributor`; skips billing; lands directly in **Evidence / Intake** at `/app/essential/intake` with a short checklist, e.g. “Upload IdP export, confirm backups.”
 The invite enforces one-time use and 72 h expiry.
 
 **3. Auditor / verifier (read-only)**
@@ -2499,7 +2508,7 @@ Everything leading up to **Run assessment** must be possible in airplane mode.
 * **PWA and caching:**
 
   * Web App Manifest + Service Worker (Workbox).
-  * Precache the app shell, fonts, icons, and core routes (`/app`, `/app/intake`, `/app/reports`).
+  * Precache the app shell, fonts, icons, and core routes (`/app`, `/app/essential/intake`, `/app/essential/reports`).
   * Runtime cache: *stale-while-revalidate* for small JSON objects (feature flags, rule-pack metadata).
   * **Never cache secrets**, credentials, or authenticated API responses beyond session TTL.
 
@@ -2720,7 +2729,7 @@ Every release follows a disciplined flow: scoped change → peer review → auto
 Change logs describe what altered and why it matters for customers.
 Incidents feed directly into documentation and future updates so that fixes, not repetition, become the habit.
 
-> **Looking ahead:** As the Transcrypt Platform expands, broader frameworks such as NIS2, GDPR, ISO 27001, and IEC 62443 will be added as configurable rule-packs rather than parallel systems.
+> **Looking ahead:** As the Transcrypt Platform expands, broader frameworks such as NIS2, GDPR, ISO 27001, and IEC 62443 will be introduced as additional product surfaces under `/app/{product}`, using the same authenticated runtime boundary.
 
 ---
 
@@ -2871,7 +2880,7 @@ The aim is a product that earns trust early and keeps it — not by promises, bu
 
 * **Site shell:** Next.js App Router + Tailwind. No SCSS anywhere.
 * **Top pages:** `/` (Home), `/product` (Essentials explainer), `/pricing` (placeholder tiers with “Essentials” only), `/security`, `/privacy`, `/terms`, `/cookies`, `/dpa`, `/subprocessors`, `/blog/*`, `/changelog`, `/status`, `/contact`, `/newsletter`, `/waitlist`.
-* **CTAs:** All primary CTAs point to **waitlist/signup forms**, not `/app/*`. Any historic `/app/*` deep link is disabled with a friendly “Coming soon” state plus waitlist capture.
+* **CTAs:** All primary CTAs point to **waitlist/signup forms**, not `/app/essential/*`. Any historic `/app/essential/*` deep link is disabled with a friendly “Coming soon” state plus waitlist capture.
 * **Trust blocks:** Security highlights, responsible disclosure link (`/.well-known/security.txt`), legal pages versioned, and a sample (redacted) **report screenshot** clearly marked “mock / for illustration”.
 * **Newsletter + waitlist:** Double-opt-in, explicit consent copy, and data-use notice. Segmented tags: `owner`, `tech-helper`, `auditor/insurer`, `partner`.
 * **Analytics & consent:** Privacy-first analytics loaded **after consent**. Cookie banner wired; no third-party trackers pre-consent.
@@ -2879,7 +2888,7 @@ The aim is a product that earns trust early and keeps it — not by promises, bu
 
 **Out of scope (deferred to App MVP):**
 
-* Authenticated flows (`/app/*`), rule evaluation, evidence uploads, billing, auditor read-only links.
+* Authenticated flows (`/app/essential/*` in v1), rule evaluation, evidence uploads, billing, auditor read-only links.
 
 **Content promises (must be true today):**
 
