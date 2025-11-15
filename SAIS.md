@@ -2903,13 +2903,216 @@ This error surface is small, consistent, and hostile to ambiguity — exactly wh
 
 ---
 
-### 5.7 Interface Versioning and Deprecation
+## 5.7 Interface Versioning and Deprecation
 
-Describes how backward compatibility is managed, how breaking changes are signalled, and the expected support horizon for each API version.
+The MVP exposes a single, stable public API namespace under:
+
+```
+/api/v1/
+```
+
+Versioning exists to guarantee that once a contract is published, it remains reliable for the lifetime of the version. The MVP does not introduce multiple API versions, but it defines the rules that will govern them as the product evolves.
+
+### **5.7.1 Versioning Model**
+
+Transcrypt uses **URL-prefix semantic versioning** for public interfaces:
+
+* `/api/v1/` — current stable interface
+* `/api/v2/` — future breaking changes
+* No headers, no negotiated versions, no mode flags
+
+A new **major version** is created only when:
+
+* a request or response schema changes incompatibly,
+* an endpoint is removed or fundamentally repurposed,
+* a behavioural guarantee is altered in a way that affects clients.
+
+Minor or additive changes within `/api/v1/` do not require a new prefix. These include:
+
+* adding optional fields
+* adding new endpoints
+* enriching metadata
+* adding new error codes that conform to the existing structure
+
+### **5.7.2 Backward Compatibility Guarantees**
+
+Within a major version:
+
+* No existing required fields may change type or semantics
+* No endpoints may be removed
+* No HTTP codes may be changed in a way that alters client behaviour
+* No idempotency rules may be relaxed
+* No error envelope changes are allowed
+* No tenant-scoping behaviour may change
+
+These guarantees ensure that `/api/v1/` clients continue to function without modification.
+
+### **5.7.3 Deprecation Policy**
+
+Deprecation can occur only in two ways:
+
+1. **Soft Deprecation (within v1)**
+
+   * Endpoint remains fully functional
+   * Marked in documentation as deprecated
+   * Logging emits a structured `"deprecated": true` field
+   * No behavioural change until a major version is released
+
+2. **Hard Deprecation (new major version)**
+
+   * Deprecated operations removed only in the next major version (`v2`)
+   * `/api/v1/` remains available for the full deprecation window
+   * Feature flagged rollout to ensure safe transition
+
+No silent removal or behaviour changes are permitted.
+
+### **5.7.4 Deprecation Window**
+
+The MVP does not require a formal duration because multiple API versions do not yet exist.
+However, the SAIS defines the future principle:
+
+* Each major API version will be supported for a **minimum of one full billing cycle** after a new version becomes available.
+  (i.e., customers must never lose functionality mid-subscription.)
+
+### **5.7.5 Schema Versioning Interaction**
+
+API versioning is **separate** from schema versioning:
+
+* Schemas (OrgProfile, Evidence, Report, Finding) evolve via semver inside the repo
+* API versions evolve via URL prefixes
+* A new schema version **does not** create a new API version unless it is breaking
+* Clients always receive schemas that match the API’s declared major version
+
+This prevents accidental coupling between backend evolution and public contracts.
+
+### **5.7.6 Internal Interfaces**
+
+Internal service contracts follow the same principles but **do not publish public version prefixes**.
+Breaking changes in internal interfaces require:
+
+* regeneration of the service JWT roles
+* redeployment of dependent services
+* no impact on public API callers
+
+Internal versioning is implementation detail, never exposed to clients.
+
+### **5.7.7 Signalling Breaking Changes**
+
+Before introducing a breaking change, Transcrypt must:
+
+* Document the pending removal in `/changelog` on the Marketing site
+* Announce the change via email to affected tenants (if applicable)
+* Maintain `/api/v1/` unchanged throughout the transition
+* Release `/api/v2/` as opt-in until ready to switch by default
+
+This mirrors the PRD’s commitment to transparency, plain language, and predictability.
+
+---
 
 ### 5.8 Testing and Validation
 
-Specifies contract-test tooling (Postman collections, pytest fixtures, OpenAPI validator) and the acceptance requirement that every public endpoint has at least one automated contract test.
+Interface contracts in the MVP are validated through a small but mandatory set of automated checks. The goal is to guarantee that every public endpoint behaves exactly as specified, that schemas remain stable across changes, and that no regressions can silently break the Marketing ↔ Essentials flows or the intake → evidence → evaluate → report loop defined in the PRD.
+
+Testing focuses on **behavioural correctness**, **schema fidelity**, and **deterministic responses**, rather than large-scale load or fuzz testing. Every test is repeatable, environment-agnostic, and runs as part of CI before deployment.
+
+### **5.8.1 Contract Testing Requirements**
+
+Every public endpoint under `/api/v1/` must have at least one automated **contract test** that verifies:
+
+* request/response shape matches canonical schemas
+* correct HTTP status codes (200/201/400/401/403/404/409/422/429/500/503 as appropriate)
+* correct error envelope format (Problem+JSON)
+* correct propagation of `X-Request-Id`
+* correct enforcement of tenant isolation
+* correct behaviour under idempotent replay
+
+Contract tests are considered part of the public API itself: changing a contract test is equivalent to changing the interface and requires review.
+
+### **5.8.2 Schema Validation in CI**
+
+Canonical schemas (OrgProfile, Evidence, Findings, Report, BillingRecord) are validated in CI using:
+
+* a schema validator (JSON Schema, Zod, or equivalent)
+* fixtures representing valid and invalid payloads
+* auto-generated types used by the frontend and backend
+
+If a schema evolves (new field, removed field, type change):
+
+* CI will fail until fixtures and generated types are updated
+* a version bump is required per Section 4.3
+* incompatible changes require a new API version prefix
+
+This prevents accidental drift between definition and implementation.
+
+### **5.8.3 API Consistency Checks**
+
+CI includes a lightweight static consistency check that ensures:
+
+* all public endpoints are documented in the SAIS
+* all endpoints in the codebase exist in the OpenAPI definition (if generated)
+* no undocumented or experimental endpoints are exposed
+* all response shapes are serialisable, traceable, and deterministic
+
+These checks help maintain the “small surface, no surprises” promise of the PRD.
+
+### **5.8.4 Integration Tests for Core Flows**
+
+Two end-to-end flows are considered **mandatory** for validation:
+
+1. **Intake → Evidence Upload → Evaluation**
+2. **Evaluation → Report Generation → Report Download**
+
+Integration tests run these flows against a test environment, ensuring:
+
+* strict adherence to schemas
+* idempotent behaviour
+* stable findings for identical inputs
+* correct storage of artefacts in DO Spaces
+* correct audit log emission
+
+The system must be able to recreate a report deterministically from stored inputs during test replay.
+
+### **5.8.5 Stripe Webhook Validation**
+
+The Stripe webhook handler must have automated tests that verify:
+
+* signature validation
+* correct event handling (`checkout.session.completed`, subscription updates, invoices)
+* correct update of BillingRecord
+* correct audit events
+* correct behaviour on malformed or unexpected events
+
+Failure in Stripe webhook tests blocks deployment.
+
+### **5.8.6 Environment Parity Tests**
+
+The same contract tests run in:
+
+* PR builds
+* staging
+* pre-deploy checks in production
+
+This enforces the PRD’s mandate that **environments differ only in secrets and scale**, not behaviour.
+
+### **5.8.7 No Mock-Only Interfaces**
+
+Critical paths (evidence, evaluation, reports) must be tested against the real internal services, not mocks.
+Mocks may be used to simulate failures (e.g., object storage outage), but not as a substitute for testing actual behaviour.
+
+### **5.8.8 Acceptance Criteria**
+
+A deployment is acceptable only if:
+
+* all contract tests pass
+* all integration flows pass
+* schema validation passes
+* error-format tests pass
+* gateway context propagation (tenant, account, request ID) is verified
+* Stripe webhook tests pass
+* audit event tests pass
+
+If any interface test fails, the release is blocked.
+There is no manual override in the MVP.
 
 ---
 
