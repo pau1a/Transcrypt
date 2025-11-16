@@ -4799,7 +4799,6 @@ All workflow state machines in this section share the following rules:
 
 These state machines are the authoritative source for workflow behaviour. Any implementation, documentation, or UI that diverges from them must be corrected or the state machine revised.
 
-
 ### 6.8 Performance Budgets and SLO Paths
 
 Declare target latencies and throughput for each path (e.g., p95: sign-in ≤ 400 ms, evidence POST ≤ 800 ms, evaluate ≤ 1.5 s synchronous, report async ≤ 2 min). Map each SLO to metrics in §10 and acceptance checks in §13.
@@ -4816,76 +4815,76 @@ Describes environments (dev, staging, prod), configuration, secrets handling, an
 
 ---
 
-### 8.1 Environments and Parity Rules
+### 7.1 Environments and Parity Rules
 
 Define `dev`, `staging`, `prod` (and any ephemeral preview envs).
 State strict parity principles: same images, same configs-by-name, differences limited to scale and secrets. List environment-specific toggles.
 
-### 8.2 Infrastructure as Code (IaC)
+### 7.2 Infrastructure as Code (IaC)
 
 Name the IaC stack (e.g., Terraform + Terragrunt).
 Describe state management, module layout, and promotion workflow (plan → apply via CI with approvals). Reference repo paths for infra modules.
 
-### 8.3 Runtime Topology
+### 7.3 Runtime Topology
 
 High-level diagram and description of components per environment: CDN/Edge, Web (Next.js), API Gateway, Services (Rule, Evidence, Report), Queue/Workers, PostgreSQL, Object Store, Redis. Include port bindings and health-check endpoints.
 
-### 8.4 Networking and Segmentation
+### 7.4 Networking and Segmentation
 
 VPCs/VNets, subnets, security groups/NSGs, private endpoints, peering.
 Public vs private ingress, egress allow-lists, NAT gateways, WAF, rate limiting, DDoS protections. Document outbound DNS and restricted IP ranges.
 
-### 8.5 Secrets and Configuration Management
+### 7.5 Secrets and Configuration Management
 
 Source of truth (e.g., AWS Secrets Manager/Azure Key Vault), rotation cadence, envelope encryption, and secret injection at runtime.
 Config hierarchy (base, env, instance), precedence rules, and validation on boot.
 
-### 8.6 Build Artifacts, Signing, and Supply Chain
+### 7.6 Build Artifacts, Signing, and Supply Chain
 
 Container registry, image tags, SBOM generation, signature and provenance (Cosign/Sigstore; SLSA level target).
 Policy at admission (only signed, non-vulnerable images run; CVE budget and gate).
 
-### 8.7 Deployment Strategies
+### 7.7 Deployment Strategies
 
 Blue/green vs canary, rollout steps, health and rollback criteria, and how database migrations are coordinated (pre-deploy checks, backward-compatible migrations, post-deploy clean-ups).
 
-### 8.8 Database, Storage, and Data Paths
+### 7.8 Database, Storage, and Data Paths
 
 PostgreSQL sizing, HA/replicas, connection pooling; object storage buckets (namespacing per tenant), lifecycle rules; Redis persistence mode and eviction policy. Link to §4 for retention/provenance.
 
-### 8.9 Observability Plumbing
+### 7.9 Observability Plumbing
 
 Agents/collectors, log drains, metrics endpoints, trace sampling.
 Env-specific SLO targets and alert routes. Cross-env dashboard parity.
 
-### 8.10 Access Control and Operational Safety
+### 7.10 Access Control and Operational Safety
 
 Who can do what, where: break-glass accounts, just-in-time elevation, bastion hosts, MFA/SSO, command logging.
 Change windows and freeze policies.
 
-### 8.11 Edge, CDN, and TLS
+### 7.11 Edge, CDN, and TLS
 
 Domains/DNS, TLS cert issuance/renewal (ACME), HSTS, origin shields, cache keys/invalidation strategies, and static asset hardening headers.
 
-### 8.12 Feature Flags and Kill Switches
+### 7.12 Feature Flags and Kill Switches
 
 Flag provider, naming conventions, default-off for risky features, per-tenant targeting, and immediate disable paths for downstream failures.
 
-### 8.13 Cost and Capacity Guardrails
+### 7.13 Cost and Capacity Guardrails
 
 Instance classes, autoscaling policies, quota limits, and cost alerts.
 Load/capacity assumptions for MVP with headroom targets.
 
-### 8.14 Third-Party Integrations in Runtime
+### 7.14 Third-Party Integrations in Runtime
 
 Network routes and credentials for Stripe, IdP (Entra/Okta), SMTP, etc.
 Timeouts, retries, circuit breaker thresholds, and sandbox vs live separation.
 
-### 8.15 Environment Bootstrap and Data Seeding
+### 7.15 Environment Bootstrap and Data Seeding
 
 Minimal boot scripts, seed data for staging (sanitised), fixture packs for E2E tests, and scrubbing rules for any prod snapshots used in non-prod.
 
-### 8.16 Disaster Readiness Hooks
+### 7.16 Disaster Readiness Hooks
 
 Where backups land, cross-region replication toggles, RPO/RTO targets, and runbook pointers to §12 for restore drills.
 
