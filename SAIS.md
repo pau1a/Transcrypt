@@ -3510,7 +3510,323 @@ The visitor uses navigation or search to reach the evergreen explainer, the page
 
 ### 6.3 Asynchronous/Event Patterns
 
-Define topics/queues, publishers, and consumers. Include delivery guarantees (at-least-once), back-off, DLQ policy, and replay rules. List canonical events (e.g., `report.requested`, `report.generated`, `billing.payment_succeeded`) with payload schemas (link to §5.5).
+Transcrypt uses asynchronous messaging for work that does not require immediate user interaction. Reports, emails, billing synchronisation, and analytics events are processed in the background to keep the user interface responsive and to ensure reliable execution of long-running tasks. Interactive actions (navigation, form submission, control updates) remain fully synchronous.
+
+Asynchronous behaviour is defined in terms of **event topics**, **work queues**, **publishers**, **consumers**, delivery guarantees, and failure-handling policies.
+
+---
+
+## **6.3.1 Purpose of the Asynchronous Layer**
+
+The asynchronous layer exists to:
+
+* offload long-running or IO-heavy operations from the request/response cycle;
+* decouple modules so that no subsystem depends on another being immediately available;
+* provide reliable, auditable task execution using an event log;
+* enable features such as report generation, email dispatch, billing integration, analytics, and future scheduled tasks;
+* allow downstream systems (dashboards, audit logs, summaries) to rebuild state from event history.
+
+Only operations with predictable, short execution paths are synchronous. Everything else passes through the event system.
+
+---
+
+## **6.3.2 Event Transport and Topology**
+
+The design assumes a general-purpose event bus. The SAIS does not mandate a specific technology; the implementation may use Kafka, NATS, SNS+SQS, or an equivalent.
+
+Two logical patterns are defined:
+
+1. **Domain event topics**
+   Broadcast facts about something that has already happened. Multiple consumers may subscribe.
+   Examples: `tenant.created`, `control.answered`, `report.generated`.
+
+2. **Work queues**
+   Point-to-point queues used to request work from background workers.
+   Examples: report rendering, email dispatch, evidence processing.
+
+Topic naming follows the pattern:
+
+```
+transcrypt.<domain>.<event>
+```
+
+Queue naming follows the pattern:
+
+```
+transcrypt.<service>.commands
+```
+
+---
+
+## **6.3.3 Delivery Guarantees**
+
+All events are delivered with **at-least-once** semantics. This guarantees that no event is silently lost, but introduces the possibility of duplicates. Every consumer must therefore be **idempotent**.
+
+Idempotency is enforced using:
+
+* a stable `event_id` on every message;
+* idempotency keys stored per consumer to track what has already been processed;
+* guards around external side-effects (email providers, billing systems) to prevent duplicate actions.
+
+At-least-once is chosen because it provides operational predictability and avoids the complexity and fragility of exactly-once pipelines.
+
+---
+
+## **6.3.4 Publishing Model**
+
+All synchronous operations that modify domain state write two things:
+
+1. the mutated domain state;
+2. an **outbox entry** representing the event.
+
+A background publisher reads outbox entries, publishes them to the event bus, and marks them as sent. This prevents the “state was updated but the event was never published” failure mode.
+
+**Exception:**
+Inbound billing webhooks may publish events directly because they originate outside the system and do not participate in application transactions.
+
+**Mermaid – Outbox Publishing Pattern**
+
+```mermaid
+sequenceDiagram
+  participant API as API Layer
+  participant DB as Database (State + Outbox)
+  participant PUB as Outbox Publisher
+  participant BUS as Event Bus
+
+  API->>DB: Write domain state
+  API->>DB: Write outbox row
+  PUB->>DB: Read pending outbox rows
+  PUB->>BUS: Publish event(s)
+  BUS-->>PUB: Ack
+  PUB->>DB: Mark outbox row as sent
+```
+
+---
+
+## **6.3.5 Consumption Model**
+
+Consumers subscribe to topics or queues based on their responsibility:
+
+* **Fan-out consumers**
+
+  * audit log writer
+  * analytics pipeline
+  * dashboard summariser
+  * activity timeline
+
+* **Work consumers**
+
+  * report generator
+  * email dispatcher
+  * evidence processor
+  * billing normaliser
+
+Consumers must:
+
+* use idempotency keys to avoid duplicate work;
+* acknowledge messages only when all processing is complete;
+* isolate tenant-scoped work to avoid cross-tenant side-effects.
+
+**Mermaid – Generic Consumption Pattern**
+
+```mermaid
+sequenceDiagram
+  participant BUS as Event Bus
+  participant CON as Consumer
+  participant SVC as Service/Worker
+
+  BUS->>CON: Deliver event
+  CON->>CON: Idempotency check
+  CON->>SVC: Perform work
+  SVC-->>CON: Result
+  CON->>BUS: Acknowledge event
+```
+
+---
+
+## **6.3.6 Retry, Backoff, and Dead-Letter Queues**
+
+Each consumer implements:
+
+* **Exponential backoff** for transient failures (network errors, rate limits).
+* **Fixed retry count** (3–5 attempts) depending on task type.
+* **Non-retriable classification** (schema errors, invalid tenant, missing resources).
+
+Failure routing:
+
+* After max retries, the event is moved to a **DLQ** under the name:
+
+  ```
+  <topic>.dlq
+  ```
+* DLQ items are enriched with:
+
+  * `error_code`
+  * `error_message`
+  * `failed_consumer`
+  * `attempt_count`
+
+Operators can inspect DLQ contents to diagnose systemic issues.
+
+---
+
+## **6.3.7 Replay and Rebuild Rules**
+
+The event system supports controlled replay.
+
+Replay is **allowed** for:
+
+* rebuilding read-models;
+* regenerating dashboards or summaries;
+* re-rendering reports with updated templates;
+* recomputing analytics.
+
+Replay is **not allowed** for:
+
+* triggering external actions again (emails, payments);
+* applying destructive operations twice.
+
+Replay is governed by operational runbooks in §12.
+
+---
+
+## **6.3.8 Canonical Event Envelope**
+
+All events share a standard structure:
+
+* `event_id` — unique identifier
+* `event_type` — canonical type string
+* `occurred_at` — UTC timestamp
+* `tenant_id` — logical tenant ID (nullable pre-signup)
+* `actor` — user ID or `"system"`
+* `correlation_id` — identifier tying related events together
+* `payload` — typed data object defined in §5.5
+* `schema_version` — optional schema evolution field
+
+Event schemas in §5.5 define payload validation rules.
+
+---
+
+## **6.3.9 Canonical Events by Domain**
+
+Below are the canonical event families. Payload definitions are in §5.5.
+
+### **Tenant Events**
+
+* `tenant.created`
+* `tenant.updated`
+* `tenant.plan_changed`
+
+### **User and Access Events**
+
+* `user.invited`
+* `user.invite_accepted`
+* `user.deactivated`
+
+### **Control Events**
+
+* `control.answered`
+* `control.status_changed`
+
+### **Evidence Events**
+
+* `evidence.added`
+* `evidence.removed`
+* `evidence.tagged`
+
+### **Report Lifecycle Events**
+
+(typical async workflow)
+
+```mermaid
+sequenceDiagram
+  participant API as API
+  participant BUS as Event Bus
+  participant WRK as Report Worker
+
+  API->>BUS: report.requested
+  BUS->>WRK: Deliver event
+  WRK->>WRK: Generate report
+  WRK->>BUS: report.generated
+```
+
+* `report.requested`
+* `report.started`
+* `report.generated`
+* `report.failed`
+
+### **Email Events**
+
+* `email.dispatch_requested`
+* `email.sent`
+* `email.bounced`
+
+### **Billing Events**
+
+* `billing.invoice_created`
+* `billing.payment_succeeded`
+* `billing.payment_failed`
+
+### **Audit & Security Events**
+
+* `audit.activity_recorded`
+* `audit.security_event`
+
+### **Analytics Events**
+
+* `analytics.pageview_recorded`
+* `analytics.cta_clicked`
+* `analytics.signup_completed`
+
+---
+
+## **6.3.10 Scheduling via Events**
+
+Scheduled operations emit events rather than executing work directly:
+
+* daily summaries
+* weekly progress digests
+* monthly billing syncs
+* evidence expiry checks
+
+Example events:
+
+* `scheduled.daily`
+* `scheduled.weekly`
+* `scheduled.monthly`
+
+Workers subscribe and carry out tasks asynchronously.
+
+---
+
+## **6.3.11 Observability**
+
+The event system exposes:
+
+* consumer lag;
+* throughput per topic;
+* DLQ size;
+* retry counts;
+* processing latency;
+* correlation-ID-based tracing.
+
+This integrates with observability definitions in §10.
+
+---
+
+## **6.3.12 Operational Expectations**
+
+Operations teams can:
+
+* inspect queue/topic lag;
+* inspect and replay DLQ items under runbook control;
+* perform partial or full replay from event history;
+* track schema updates and rollouts;
+* monitor consumer health and restart behaviour.
+
+Runbooks in §12 define recovery and replay procedures.
+
+---
 
 ### 6.4 Concurrency, Idempotency, and Ordering
 
