@@ -4801,7 +4801,223 @@ These state machines are the authoritative source for workflow behaviour. Any im
 
 ### 6.8 Performance Budgets and SLO Paths
 
-Declare target latencies and throughput for each path (e.g., p95: sign-in ≤ 400 ms, evidence POST ≤ 800 ms, evaluate ≤ 1.5 s synchronous, report async ≤ 2 min). Map each SLO to metrics in §10 and acceptance checks in §13.
+Performance budgets and Service Level Objectives (SLOs) define the expected latency and throughput characteristics of each major user path. These expectations guide implementation, test coverage, observability instrumentation (§10), and performance-acceptance criteria (§13). Budgets are stated as engineering targets for individual request stages; SLOs express the required percentile performance over time.
+
+SLOs apply independently across the Marketing runtime (site/blog), the Essentials application, and asynchronous background processes. All values in this section refer to **steady-state** performance under normal load.
+
+---
+
+## **6.8.1 Principles**
+
+* **Performance Budgets**
+  A performance budget allocates the total allowed latency across the individual steps of a request or rendering path. These budgets inform architectural decisions (edge vs origin, cached vs dynamic) and UI expectations.
+
+* **SLOs**
+  SLOs define measurable, percentile-based performance targets (typically p95 and p99). They provide the threshold for operational alerts and release gating tests.
+
+* **Availability Targets**
+  Availability is defined per path, not globally. For example, blog pages and the marketing homepage must achieve higher availability than authenticated application pages.
+
+* **Mapping**
+  Each SLO maps to one or more metrics defined in §10 and validated by acceptance checks in §13.
+
+---
+
+## **6.8.2 Marketing Site & Blog Performance**
+
+The marketing runtime is responsible for first impressions, conversion, and lead acquisition. Its performance requirements are therefore strict and user-perceptible.
+
+### **6.8.2.1 Homepage (Critical Landing Path)**
+
+**Budgets**
+
+| Stage                              | Budget           |
+| ---------------------------------- | ---------------- |
+| CDN / edge TTFB                    | ≤ 300 ms         |
+| Above-the-fold render (hero + CTA) | ≤ 1.5 s          |
+| Hydration of critical components   | ≤ 300 ms         |
+| Deferred / non-critical JS         | ≤ 700 ms (async) |
+
+**SLOs**
+
+* **p95 full render ≤ 2.0 s** (hero visible and CTA interactive)
+* **p99 ≤ 3.0 s**
+* **Availability ≥ 99.0%**
+
+### **Latency Budget Illustration**
+
+```mermaid
+flowchart TD
+  A[Total Budget 2000 ms] --> B[TTFB 300 ms]
+  A --> C[Critical Render 1500 ms]
+  A --> D[Hydration 300 ms]
+  A --> E[Deferred Assets 700 ms]
+```
+
+---
+
+### **6.8.2.2 Blog Article Pages**
+
+**Budgets**
+
+| Stage                | Budget   |
+| -------------------- | -------- |
+| TTFB                 | ≤ 300 ms |
+| Article text visible | ≤ 1.8 s  |
+
+**SLOs**
+
+* **p95 article render ≤ 2.5 s**
+* **Availability ≥ 99.0%**
+* CTA block must render even during degraded JS mode (§6.6).
+
+---
+
+### **6.8.2.3 Lead-Magnet CTA Flow**
+
+**Budgets**
+
+| Stage                      | Budget   |
+| -------------------------- | -------- |
+| CTA click → form visible   | ≤ 500 ms |
+| Form submit → confirmation | ≤ 1.0 s  |
+
+**SLOs**
+
+* **p95 end-to-end ≤ 1.5 s**
+* **99% of valid submissions succeed with 2xx**
+* Direct download must initiate ≤ 1.0 s when available; otherwise fallback to email (§6.6.4).
+
+---
+
+### **6.8.2.4 Early-Access / Newsletter Signup**
+
+* **p95 submit → confirmation ≤ 1.2 s**
+* **99% success rate for valid submissions**
+
+Marketing APIs must meet these SLOs independently of Essentials runtime load.
+
+---
+
+## **6.8.3 Essentials Application Performance**
+
+### **6.8.3.1 Sign-In and Initial Context Load**
+
+* **p95 redirect + session establishment + initial dashboard load ≤ 800 ms**
+* **p99 ≤ 1.5 s**
+* **Success ≥ 99%** (excluding user-error 401/403)
+
+### **6.8.3.2 Dashboard (Quick Start) Load**
+
+* **p95 main data fetch ≤ 600–800 ms**
+* UI interactive ≤ 1.2 s after navigation.
+
+### **6.8.3.3 Control List View**
+
+* **p95 list fetch ≤ 700–900 ms**
+* Subsequent sorting/filtering operations ≤ 300 ms p95 (local or cached).
+
+### **6.8.3.4 Control Update**
+
+* **p95 ≤ 500–800 ms** for the POST/PATCH
+* UI round-trip ≤ 1.0 s.
+
+### **6.8.3.5 Evidence Upload**
+
+Budgets refer to server-side processing, not total wall clock time (which depends on file size and bandwidth).
+
+* Metadata write ≤ 300 ms
+* Chunk/stream initiation p95 ≤ 800 ms
+* User must see a “processing/uploading” state within ≤ 500 ms.
+
+### **6.8.3.6 Help Panel / Contextual Docs**
+
+* **p95 fetch ≤ 400–600 ms**
+* Cacheable responses must be served ≤ 200 ms when warm.
+
+---
+
+## **6.8.4 Asynchronous & Background SLOs**
+
+### **6.8.4.1 Report Generation**
+
+* **95% READY within 2 minutes** of request
+* **99% READY within 5 minutes**
+* **0% lost** (every job must end as READY or FAILED)
+
+### **6.8.4.2 Email Delivery (Welcome, Invites, Report Links)**
+
+* 95% of emails accepted by provider ≤ 30 seconds (welcome/invites)
+* 95% accepted ≤ 60 seconds (report links, lead magnets)
+
+### **6.8.4.3 Lead-Magnet Fallback Email**
+
+* 95% fallback emails accepted by provider ≤ 5 minutes
+
+### **6.8.4.4 Evaluation Jobs (if offloaded)**
+
+* 95% completed ≤ 30 seconds
+* 99% completed ≤ 2 minutes
+
+---
+
+### **Report SLO Timeline Illustration**
+
+```mermaid
+timeline
+  title Report Generation SLO
+  Request : 0s
+  Job Enqueued : within 0–5s
+  Worker Start : within 5–20s
+  Processing : 20–120s
+  Delivery Target : READY ≤ 120s (95%)
+  Hard Deadline : READY ≤ 300s (99%)
+```
+
+---
+
+## **6.8.5 Mapping SLOs to Metrics (§10)**
+
+Each SLO corresponds to specific metrics families:
+
+* **HTTP request latency**
+  `http_server_request_duration_seconds{route,method}`
+* **Availability**
+  `http_server_request_errors_total / http_server_requests_total`
+* **Background workloads**
+  `report_generation_duration_seconds`
+  `email_delivery_latency_seconds`
+  `evaluation_job_duration_seconds`
+* **Marketing conversion metrics**
+  CTA click latency, form submit latency, download initiation latency
+
+Dashboard and alerting rules in §10 must reference the SLO values defined here.
+
+---
+
+## **6.8.6 Mapping SLOs to Acceptance Criteria (§13)**
+
+Performance-acceptance criteria validate key paths against their budgets:
+
+* Load-test `/` and `/blog/*` under steady load to confirm p95 ≤ 2.0 s and ≥ 99% availability.
+* Synthetic monitors validate sign-in, dashboard load, and control updates against their SLOs.
+* Evidence upload tests ensure “processing” and “verifying” transitions occur within stated budgets.
+* Report SLO is validated by staging-environment synthetic workloads using a known tenant dataset.
+* Marketing conversions (CTA → form → confirmation) must be tested as part of each release.
+
+Section §13.4 defines the thresholds and required acceptance test suites.
+
+---
+
+## **6.8.7 SLO Philosophy and Error Budgets**
+
+Transcrypt adopts a simple rule:
+
+* **Meeting the SLOs in this section is mandatory for maintaining perceived product quality.**
+* **Error budgets** (e.g., the 1% allowance in p99 definitions) must be reserved for genuine transient conditions, not structural regressions.
+* Features that cause repeated SLO violations must be corrected or rolled back.
+
+---
 
 ### 6.9 Observability Hooks and Correlation
 
