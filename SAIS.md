@@ -4467,7 +4467,7 @@ flowchart TD
     B -->|No| D[Serve static fallback]
 
     C --> E{JS loads?}
-    E -->|Yes| F[Hydrate page (CTA + analytics)]
+    E -->|Yes| F[Hydrate page-CTA + analytics]
     E -->|No| G[Use static CTA + HTML form fallback]
 
     D --> G
