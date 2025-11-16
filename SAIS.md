@@ -3258,83 +3258,83 @@ This diagram expresses the runtime invariants: single ingress, stateless service
 
 ### 6.2 Primary User Journeys (Happy Paths)
 
-These diagrams describe the core interactive paths for Transcrypt Essential’s MVP: sign-in and initial OrgProfile onboarding, followed by evidence upload, evaluation, and report generation. They align with the Quick Start journey (“Tell us about your setup” → “Add evidence (or skip)” → “Run assessment”) and the canonical interfaces defined in the PRD (`OrgProfile`, `Evidence`, `Evaluations`, `Reports`).
+#### 6.2.1 Phase 1 – Marketing happy paths (already quite simple)
 
-#### 6.2.1 Sign-in → Onboarding (OrgProfile)
+1. **Visitor lands on homepage, understands what Transcrypt is and who it’s for, and sees a clear CTA to “Join early access” / “Get the checklist” / similar.**
+   
+  ```mermaid
+  flowchart TD
+    V[Visitor arrives on homepage] --> H[Homepage hero renders]
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    participant Browser as "Web App"
-    participant IdP as "OIDC IdP"
-    participant Gateway as "API Gateway"
-    participant App as "OrgProfile / Tenant Service"
+    H --> C1{First few seconds}
+    C1 -->|Understands value| CTAState[CTA visible above the fold]
+    C1 -->|Does not understand| Bounce[Visitor leaves]
 
-    User->>Browser: Open /app
-    Browser->>Gateway: GET /app (no session)
-    Gateway-->>Browser: Redirect to /api/auth/oidc/start
-    Browser->>IdP: OIDC /authorize (client_id, redirect_uri, state)
+    CTAState --> C2{CTA matches intent}
+    C2 -->|Yes| ClickCTA[Clicks primary CTA]
+    C2 -->|No| Scroll[Scrolls for more info]
 
-    User->>IdP: Authenticate
-    IdP-->>Browser: Redirect with code
+    Scroll --> Proof[Sees proof points and explainer]
+    Proof --> C3{Convinced}
+    C3 -->|Yes| ClickCTA
+    C3 -->|No| SoftExit[Leaves site]
 
-    Browser->>Gateway: OIDC callback with code
-    Gateway->>IdP: Token exchange
-    IdP-->>Gateway: ID/Access tokens
-    Gateway->>App: Upsert tenant + user
-    App-->>Gateway: { tenant_id, user_id }
-    Gateway-->>Browser: Set session, redirect /app/quick-start
+    H --> TrackView[(Analytics: view)]
+    ClickCTA --> TrackCTA[(Analytics: CTA click)]
+    Bounce --> TrackExit[(Analytics: exit)]
+    SoftExit --> TrackExit
 
-    Browser->>Gateway: GET /api/org_profiles/current
-    Gateway->>App: Load OrgProfile
-    App-->>Gateway: OrgProfile (existing or template)
-    Gateway-->>Browser: OrgProfile JSON
-```
+  ```
+
+2. **Visitor clicks CTA → goes to a short form (email + basic company info).**
+3. **Visitor submits form → sees a friendly confirmation state (no weird reload or error).**
+4. **The system creates/updates a contact with email, basic profile, and source/UTM so we can actually use the data.**
+5. **Visitor receives the correct email (confirmation or welcome), with working links and consistent branding.**
+6. **Visitor requests/downloads a lead magnet (e.g. Cyber Essentials checklist) → email capture happens if needed → asset is delivered reliably (download or via email link).**
+7. **Visitor comes back via an email link → lands on the intended page (not 404, not root) and can continue exploring.**
+8. **Visitor views “How it works” / pricing → sees that Essentials is “coming soon / in beta” and can join the list from there.**
+9.  **Visitor comes from social (e.g. LinkedIn/Brian video) → lands on a matching landing page with a clear CTA into the same signup flow.**
+10. **Site works properly on mobile (hero, nav, forms, CTAs).**
+11. **Basic analytics work: we can see sessions, sources, sign-ups, and lead-magnet downloads in one place.**
+12. **We can export the email list (with basic fields) as CSV or similar.**
+13. **We can publish a new blog/article, it appears on the site, and has an embedded CTA into the same signup flow.**
+14. **Visitor can find an evergreen explainer (like “What is Cyber Essentials?”) via nav/search and join the list from that page.**
+
+Phase 1 is “people hit site → give email → get value → you keep data and insight”. No extra ceremony.
 
 ---
 
-#### 6.2.2 Evidence Upload → Evaluation → Report Generate
+#### 6.2.2 – Essentials app happy paths (simplified roles, no “first-time owner”)
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    participant Browser as "Web App"
-    participant Gateway as "API Gateway"
-    participant Evidence as "Evidence Service"
-    participant Store as "Object Store"
-    participant Eval as "Evaluation Service"
-    participant LLM as "LLM Inference"
-    participant Report as "Report Service"
+**Admin = user with full control of that organisation**
+**Member = user invited to help with controls/evidence**
+**Read-only guest = auditor/insurer etc**
 
-    User->>Browser: Upload evidence
-    Browser->>Gateway: POST /api/evidence/files
-    Gateway->>Evidence: Ingest file
-    Evidence->>Store: PUT object (encrypted, hashed)
-    Store-->>Evidence: { url, etag }
-    Evidence-->>Gateway: { evidence_id, sha256, url }
-    Gateway-->>Browser: 201 Created
+### Phase 2 list
 
-    User->>Browser: Run assessment
-    Browser->>Gateway: POST /api/evaluations
-    Gateway->>Eval: Evaluate(tenant_id, OrgProfile, evidence refs, rule_pack_id)
-    Eval->>LLM: Optional inference
-    LLM-->>Eval: Findings + rationale
-    Eval-->>Gateway: Findings JSON
-    Gateway-->>Browser: Findings summary
-
-    User->>Browser: Generate report
-    Browser->>Gateway: POST /api/reports
-    Gateway->>Report: Generate report
-    Report->>Store: Read evidence + templates
-    Report-->>Store: Write HTML/PDF artefact
-    Report-->>Gateway: { report_id, download_url }
-    Gateway-->>Browser: 201 Created
-```
----
-
-This keeps the journeys strictly aligned with the PRD’s Quick Start flow, MVP cut (`/evaluate`, `/reports/generate`), and the defined services and interfaces (Evidence Service, Evaluation Service, LLM Inference, Report Service, OrgProfile data model, and `/api/auth/*` OIDC flows).
+1. Someone on the early access list is invited into Essentials → clicks invite link → lands on Essentials sign-in/sign-up screen with the right context (email/tenant).
+2. Admin signs in to Essentials for the first time via OIDC → new organisation is created → Admin lands in the app with an onboarding view.
+3. Admin signs in on later visits → goes straight to the main home view (dashboard / status), not onboarding.
+4. On first sign-in, Admin fills a minimal organisation profile (name, size, sector, region) → saves successfully → details show up in header/settings.
+5. On first sign-in, Admin sees and completes a short Quick Start checklist (e.g. confirm org profile, pick framework, invite a helper, upload first artefact) → reaches a “You’re set up” state with a clear next action.
+6. Admin invites a Member via email → Member receives an invite → accepts → signs in via OIDC → lands inside the correct organisation as a Member.
+7. Admin invites a tech helper as a Member (we don’t need a special label; just “Member with the right permissions”) → helper accepts → signs in → sees only the organisations they’re added to.
+8. Admin invites a Read-only guest (auditor/insurer) → guest accepts → signs in (or uses a tightly controlled magic link) → can browse controls, evidence, and reports without any edit buttons.
+9. Admin selects a primary framework (e.g. Cyber Essentials) → the framework’s controls appear as the main list for that organisation.
+10. Member (or Admin) opens a control → reads clear guidance → sets status (Compliant / Partially compliant / Not compliant / Not applicable) → saves successfully.
+11. Member (or Admin) attaches evidence to a control (file, URL, note) → evidence shows up on that control and inside a central evidence vault, tagged to that organisation and control.
+12. Member (or Admin) updates a previously failing control after remediation → status moves to Compliant → overall progress indicators update.
+13. Member (or Admin) uploads an artefact file → upload is accepted (size/type OK) → file can be viewed and re-used as evidence.
+14. Admin generates a framework report → preview shows correct branding, organisation details, and current status → export to PDF/DOCX works and the file opens fine.
+15. Admin shares a report via secure link → system generates a time-limited link or small read-only portal → recipient sees just that report and nothing else.
+16. Admin upgrades from free/trial to paid in-app → payment succeeds → organisation’s plan/limits update immediately without knocking anyone off.
+17. Admin opens billing → can see current plan, renewal date, and invoice history → can download invoices.
+18. Admin updates billing details (card, billing email, invoice name) → changes save and are used for the next billing cycle.
+19. Admin updates organisation settings (display name, logo, timezone, notification preferences) → UI and newly generated reports reflect the changes.
+20. Any signed-in user opens contextual help from a control/setting → help content appears (panel or modal) → closing it returns them to exactly where they were, with edits intact.
+21. Any signed-in user logs out → session is killed → protected pages aren’t accessible via back button → logging in again works and returns them to the right organisation.
+22. Admin deactivates a user → that user can no longer access that organisation → if they belong to other organisations, those remain.
+23. Admin cancels a pending invite → invite link stops working.
 
 
 ### 6.3 Asynchronous/Event Patterns
@@ -4037,3 +4037,4 @@ sha256sum system-architecture-and-interface-spec.md
 ```
 
 ---
+
