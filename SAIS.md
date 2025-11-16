@@ -4049,11 +4049,486 @@ Partitioning or versioned DB updates enforce:
 
 ### 6.5 Timeouts, Retries, and Circuit Breaking
 
-Specify default client/gateway/service timeouts, retry counts/back-off for transient failures, and circuit-breaker thresholds. Clarify which errors are retryable vs terminal. Provide a small matrix for GET/POST/PUT/DELETE behaviours.
+This section defines the timeout boundaries, retry rules, and circuit-breaker behaviour across Transcrypt’s runtime layers. The goal is to ensure predictable failure modes, avoid cascading timeouts, and protect external dependencies from overload. All rules here are consistent with the idempotency and ordering guarantees in §§6.3–6.4.
+
+The behaviour is defined for four distinct layers:
+
+1. Client (browser → Gateway)
+2. API Gateway → Application Services
+3. Services → Infrastructure/External Dependencies
+4. Asynchronous Workers
+
+Each layer has its own timeout envelope, retry policy, and circuit-breaking conditions.
+
+---
+
+## **6.5.1 Timeout Model**
+
+Timeouts are bounded to keep interactive operations fast and to avoid cascading failures. Outer timeouts are always greater than inner timeouts.
+
+### **Client (Browser → Gateway)**
+
+* Default timeout for interactive HTTP requests: **≤ 10 seconds** total.
+* Lightweight GETs (dashboard tiles, metadata): **≤ 5 seconds**.
+* File uploads: per-chunk or streaming timeouts are permitted to be longer (15–30 seconds), but UI should remain responsive.
+
+The client does not perform silent automatic retries of mutating requests.
+
+### **API Gateway → Application Services**
+
+* Per-call timeout: **3–5 seconds** for typical API operations.
+* Higher bound for synchronous POSTs that still run on the hot path: **≤ 8 seconds**.
+* Any request expected to exceed this limit must be executed asynchronously (§6.3).
+
+### **Services → Infrastructure and External Providers**
+
+Timeouts vary by dependency characteristics:
+
+* Primary database operations: **1–2 seconds** per query.
+* Object store operations: **3–5 seconds**.
+* Identity provider JWKS/token checks: **1–2 seconds** (fail closed if exceeded).
+* Billing provider API calls: **3–5 seconds**.
+* Email provider API calls: **3–5 seconds**.
+
+Long-running tasks such as report rendering are prohibited in synchronous flows.
+
+### **Asynchronous Workers**
+
+Workers may have longer task-level timeouts but must respect job deadlines:
+
+* Report rendering: **≤ 60 seconds** per report job.
+* Evidence processing: **≤ 60 seconds** (scan, classify, verify).
+* Email dispatch: **≤ 5 seconds** per send operation.
+
+Workers must fail early for known terminal errors and allow the event system to handle retries (§6.3.6).
+
+---
+
+## **6.5.2 Retry Behaviour**
+
+Retries are applied cautiously and only where idempotency and ordering guarantees make them safe.
+
+### **Client**
+
+* No automatic browser-level retries of POST/PUT/PATCH/DELETE.
+* GET requests may be retried manually via UI controls, not automatically.
+* Upload retry logic is governed by the client UX and is not part of transport-layer behaviour.
+
+### **API Gateway**
+
+The Gateway may retry **only** idempotent operations:
+
+* **Auto-retry permitted:**
+
+  * `GET`, `HEAD` on transient network errors (connection reset, DNS failure, 5xx).
+  * At most **1 retry**, with a small delay (100–200 ms).
+
+* **Auto-retry forbidden:**
+
+  * Any mutating request without an idempotency key.
+  * Any request returning a 4xx from the upstream service.
+
+### **Services → External Dependencies**
+
+Services apply controlled retry logic on transient failures:
+
+* Allowed failure classes:
+
+  * Network timeouts
+  * 502, 503, 504 responses
+  * 429 (rate limit), with exponential backoff and jitter
+
+* Retry strategy (per dependency):
+
+  * Up to **3 attempts**
+  * Exponential backoff (100 ms → 400 ms → 900 ms)
+  * Jitter to prevent synchronised retry storms
+
+* No retries for:
+
+  * 400, 401, 403, 404, 422
+  * 409 (version mismatch or idempotency mismatch)
+  * Permanent application errors
+
+### **Asynchronous Workers**
+
+Workers use the retry rules defined in §6.3:
+
+* Maximum attempts: **3–5**, depending on job type.
+* Exponential backoff with capped delay.
+* Terminal classification moves event/job to DLQ.
+* Idempotent processing ensures retries do not cause duplicate side-effects.
+
+---
+
+## **6.5.3 Circuit Breaking**
+
+Circuit breakers prevent services from repeatedly calling failing dependencies, reducing load and improving recovery behaviour.
+
+### **Behaviour**
+
+Each breaker monitors a sliding window of recent calls. If the failure rate crosses the configured threshold, the circuit opens.
+
+* **Open state**
+
+  * Immediate fail-fast to callers
+  * No attempt made to call the dependency
+  * Error surfaced as “Upstream unavailable”
+
+* **Half-open state**
+
+  * After a cool-down period (e.g., 30–60 seconds), allow a limited number of trial calls
+  * If they succeed → close the circuit
+  * If they fail → reopen
+
+### **Where Circuit Breakers Apply**
+
+* Identity provider (token validation, JWKS fetch)
+* Billing provider API
+* Email provider API
+* Object store (to avoid long hangs on network partitions)
+* Any future LLM or AI service dependency
+
+### **Where Circuit Breakers Are Not Applied**
+
+* Internal services in a shared deployment unit (latency controlled by local network)
+* Primary database, which uses built-in connection pooling, failover, and backoff mechanisms rather than circuit breaking
+
+---
+
+## **6.5.4 Retryable vs Terminal Errors**
+
+Transcrypt defines retryability based on method semantics and status codes.
+
+### **Retry Matrix by HTTP Method**
+
+| Method | Semantics               | Safe to Retry?                        |
+| ------ | ----------------------- | ------------------------------------- |
+| GET    | Safe, idempotent        | Yes, once, on transient errors        |
+| HEAD   | Safe, idempotent        | Yes, once                             |
+| POST   | Create/trigger          | No, unless idempotency key used       |
+| PUT    | Idempotent update       | Yes, on transient errors              |
+| PATCH  | Partial update          | No (non-idempotent)                   |
+| DELETE | Idempotent per resource | Yes, resource-gone treated as success |
+
+### **Error Class Matrix**
+
+| Error Class                          | Retry? | Notes                                     |
+| ------------------------------------ | ------ | ----------------------------------------- |
+| Network timeout / connection error   | Yes    | Retry with backoff                        |
+| 502 / 503 / 504                      | Yes    | Transient; retry allowed                  |
+| 429 Too Many Requests                | Yes    | Retry only with backoff + jitter          |
+| 400 / 401 / 403 / 404 / 422          | No     | Terminal; caller must correct input/state |
+| 409 (version / idempotency mismatch) | No     | Terminal; caller must resolve conflict    |
+| Application-level permanent errors   | No     | Explicit non-retryable                    |
+
+---
+
+## **6.5.5 Interaction with Idempotency and Ordering**
+
+The timeout and retry rules above depend on invariants defined in §§6.3–6.4:
+
+* Idempotent HTTP calls ensure that gateway or client retries do not produce duplicate side-effects.
+* Optimistic concurrency prevents conflicting updates during overlapping edits.
+* At-least-once event delivery and idempotent consumers ensure that worker retries are safe.
+* Per-key ordering allows workers to retry safely without breaking report lifecycles or billing sequences.
+
+This alignment ensures Transcrypt behaves predictably under degraded conditions and avoids cascading failures across tenants or services.
+
+---
 
 ### 6.6 Failure Scenarios and Degradation Paths
 
-Document how each journey behaves under failure: object store down (accept record, queue retry; UI shows “processing”), rule engine degraded (queue evaluation, notify), webhook target unreachable (retry→DLQ→admin alert). Define user-visible states and recovery actions.
+Transcrypt must behave predictably during component failures. This section defines how each subsystem degrades, which user-visible states are presented, and how recovery is handled. All behaviours are aligned with the asynchronous patterns in §6.3 and the idempotency/ordering guarantees in §6.4.
+
+Failures are grouped into:
+
+1. Marketing/Blog Runtime
+2. Shared UX behaviour (Site + App)
+3. Essentials Runtime
+4. Canonical recovery and user-visible states
+
+Three diagrams anchor the section:
+
+* the event lifecycle pattern,
+* the marketing/blog fallback flow,
+* and the long-running job state progression.
+
+---
+
+## **6.6.1 Marketing and Blog Runtime Failures**
+
+The marketing runtime must remain usable even when dependencies are degraded. Content must always be readable; sign-up flows must never silently fail; lead magnets must never produce dead ends.
+
+### **(a) CDN or Static Asset Failure (CSS/JS/images)**
+
+Content remains functional without styling or JavaScript.
+
+* HTML always served.
+* CTAs fall back to standard HTML `<form>` posts.
+* Lead magnet links fall back to email-delivery.
+* Blog articles remain fully readable.
+* No blocking overlays or blank screens.
+
+User-visible state:
+
+* None required beyond optional lightweight “Some resources are loading slowly”.
+
+### **(b) Blog Rendering Engine or MDX Failure**
+
+If dynamic rendering fails, serve a static fallback.
+
+* Pre-rendered static version is always available.
+* CTA block always appears (simplified version if needed).
+* No article may return 500 or blank output.
+
+User-visible state:
+
+* Non-blocking banner: “Some elements failed to load”.
+
+### **(c) Lead Magnet Delivery Failure**
+
+If file retrieval fails:
+
+* Form submission is accepted.
+* Asset is queued for delayed email delivery.
+* No broken download buttons.
+
+User-visible state:
+
+* “Your download will arrive by email shortly.”
+
+### **(d) Object Store Failure (Marketing Assets)**
+
+If blog images or downloadable files are unavailable:
+
+* HTML served normally.
+* Low-resolution placeholder used if available.
+* Lead magnet delivery switches to email fallback.
+
+### **(e) Signup/CRM Integration Failure**
+
+If the marketing backend or CRM endpoint is unreachable:
+
+* The client accepts the email and submits once connectivity returns.
+* Server stores the record via idempotent call.
+* Confirmation email queued via async worker.
+
+User-visible state:
+
+* “Thanks — check your inbox. It may take a moment.”
+
+Signup records must never be lost.
+
+### **(f) Analytics Failure**
+
+Analytics is additive; no degradation affects site functionality.
+
+* Analytics calls become silent no-ops.
+* No JS errors surfaced.
+
+---
+
+## **6.6.2 Shared Runtime Failures (Site + App)**
+
+### **(a) API Gateway Unavailable or Overloaded**
+
+* Blog pages remain fully accessible because they are static.
+* Essentials pages show a clean error boundary.
+* Gateway returns 429/503 with no long timeouts.
+
+User-visible state:
+
+* “We’re experiencing high load — please retry.”
+
+### **(b) Authentication / IdP Degradation**
+
+Affects Essentials only.
+
+* Fail closed on token verification or JWKS errors.
+* No partial sessions.
+* Sign-in page reports IdP unavailability.
+
+User-visible state:
+
+* “Sign-in provider unavailable — try again later.”
+
+---
+
+## **6.6.3 Essentials Runtime Failures**
+
+### **(a) Object Store Failure (Evidence, Reports)**
+
+* Metadata accepted.
+* Blob write deferred to async worker.
+* Evidence/report record shows “Processing”.
+* Worker retries with backoff; failed jobs land in DLQ.
+
+User-visible state:
+
+* “Processing upload” or “Processing report”.
+
+### **(b) Database Failure or Latency**
+
+* Write operations fail fast.
+* No retries for mutating operations.
+* Workers pause until DB recovers via circuit-breaker.
+
+User-visible state:
+
+* “Service temporarily unavailable — please retry.”
+
+### **(c) Rule Engine Degradation**
+
+Evaluation becomes asynchronous.
+
+* Control updates accepted.
+* Evaluation queued.
+* Summary/progress tiles marked “Updating”.
+
+User-visible state:
+
+* “Updating…” for summaries; controls remain editable.
+
+### **(d) Report Generator Failure**
+
+* Report request accepted and enqueued.
+* Worker retries; on permanent failure, DLQ entry created.
+* User may trigger manual retry.
+
+User-visible state:
+
+* “Queued” → “Processing” → “Ready” or “Failed — retry available”.
+
+### **(e) Email Provider Failure**
+
+* Welcome, invite, or report emails enter retry loop.
+* No user-facing blocking.
+* Hard failures → DLQ + operator alert.
+
+User-visible state:
+
+* None in the hot path; confirmation screens always succeed.
+
+### **(f) Billing Provider Failure**
+
+* All billing calls idempotent by billing-object key.
+* Plan changes marked “pending” until confirmation.
+* No double-charging.
+* Failed invoices or webhooks replayed via ordered queue.
+
+User-visible state:
+
+* “Billing provider unavailable — try again shortly.”
+
+---
+
+## **6.6.4 Canonical Event Lifecycle (Diagram)**
+
+This pattern underpins all deferred work: evidence uploads, report generation, email dispatch, lead magnet fallback, and outbound webhooks.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant Queue
+    participant Worker
+    participant Dependency
+    participant DLQ
+
+    Client->>API: Request (idempotent)
+    API->>Queue: Enqueue job
+    Queue->>Worker: Deliver job
+    Worker->>Dependency: Perform work
+    Dependency-->>Worker: Success
+    Worker-->>API: Commit result
+
+    alt Transient failure
+        Worker->>Queue: Retry with backoff
+    end
+
+    alt Permanent failure
+        Worker->>DLQ: Move to DLQ
+    end
+```
+
+This diagram is referenced by every scenario that uses deferred processing.
+
+---
+
+## **6.6.5 Marketing/Blog Fallback Path (Diagram)**
+
+Shows how the site remains functional even when JS, CDN, or assets fail.
+
+```mermaid
+flowchart TD
+    A[Visitor requests page] --> B{CDN available?}
+    B -->|Yes| C[Serve full page]
+    B -->|No| D[Serve static fallback]
+
+    C --> E{JS loads?}
+    E -->|Yes| F[Hydrate page (CTA + analytics)]
+    E -->|No| G[Use static CTA + HTML form fallback]
+
+    D --> G
+```
+
+This cement the guarantee that the marketing funnel never collapses.
+
+---
+
+## **6.6.6 Long-Running Job States (Diagram)**
+
+Used for report generation, heavy evaluations, bulk invites, and any similar flow.
+
+```mermaid
+flowchart LR
+    RQ[Requested] --> QD[Queued]
+    QD --> PR[Processing]
+    PR --> OK[Ready]
+    PR --> FL[Failed]
+    FL --> RT[Retry]
+    RT --> QD
+```
+
+All long-running operations expose only these states.
+
+---
+
+## **6.6.7 Canonical User-Visible States**
+
+Transcrypt uses a fixed vocabulary so UX and backend remain aligned:
+
+* **Queued** — Request accepted; work scheduled.
+* **Processing** — Worker currently running.
+* **Pending** — Awaiting external dependency or asynchronous evaluation.
+* **Delayed** — Retrying due to transient upstream failure.
+* **Ready** — Output available.
+* **Failed** — Work could not complete; user can retry.
+* **Unavailable** — Upstream dependency outage detected.
+* **Fallback mode** — Static or simplified rendering used.
+* **Stored but not delivered** — Lead magnet/email saved but not yet sent.
+* **Viewable but incomplete** — Content served without full assets or dynamic hydration.
+
+These states are shared across both runtimes.
+
+---
+
+## **6.6.8 Recovery Model**
+
+For all failures, the system uses:
+
+* **Retry with exponential backoff** for transient upstream errors.
+* **Circuit breaking** to prevent overloading downstream providers.
+* **DLQs** for terminal failures, each with operator visibility.
+* **Replay** of DLQ payloads after remediation.
+* **Idempotent processing** to ensure safe recovery from retries.
+* **Clear user pathways** for retrying report generation or evidence upload.
+
+No user action ever causes irreversible loss of work.
+No marketing visitor hits a dead conversion path.
+
+---
 
 ### 6.7 Workflow State Machines (Authoritative)
 
