@@ -685,7 +685,7 @@ Normalise OIDC interaction across supported providers; validate tokens; perform 
 
 ---
 
-# ✅ **TODO 1 — Evidence Upload Format & Limits (Product-Level Requirement)**
+## ✅ **TODO 1 — Evidence Upload Format & Limits (Product-Level Requirement)**
 
 **Where it lands in 3.3:** Evidence Service
 
@@ -713,7 +713,7 @@ Without this, 3.3 cannot fully define:
 
 ---
 
-# ✅ **TODO 2 — Session Semantics (Product-Level Requirement)**
+## ✅ **TODO 2 — Session Semantics (Product-Level Requirement)**
 
 **Where it lands in 3.3:** API Gateway + Auth Adapter
 
@@ -5021,7 +5021,258 @@ Transcrypt adopts a simple rule:
 
 ### 6.9 Observability Hooks and Correlation
 
-Define mandatory headers/attributes (`X-Request-ID`, `X-Tenant-ID`, `X-Idempotency-Key`) and how they propagate across UI → gateway → services → queue. List log events and trace spans required per step, with namespacing conventions.
+Transcrypt uses distributed tracing (Jaeger via OpenTelemetry), structured logging, and Prometheus metrics to provide end-to-end visibility across the Marketing runtime, Essentials application, asynchronous workers, and external providers. This section defines the authoritative headers, context attributes, span conventions, and propagation rules required to correlate activity across all components.
+
+Observability is a cross-cutting concern: every request, job, and workflow step must carry the identifiers defined here, and every service must emit logs, metrics, and traces in a consistent format. These conventions underpin the SLOs defined in §6.8 and the metrics and dashboards in §10.
+
+---
+
+## **6.9.1 Core Identifiers and Context Fields**
+
+Every inbound request, internal call, job, and worker span must include the following identifiers:
+
+### **Mandatory Identifiers**
+
+* **`request_id` / `X-Request-ID`**
+  End-to-end request correlation.
+  Generated at the Gateway if not present; trusted if client-provided and valid.
+
+* **`trace_id` and `span_id`**
+  OpenTelemetry W3C Trace Context fields (`traceparent`, `tracestate`).
+  Propagate unchanged through all layers.
+
+* **`tenant_id`**
+  Only for Essentials.
+  Derived from authentication context, never accepted from client input.
+
+* **`user_id`**
+  Derived from authentication; used in logs, traces, and metrics.
+
+* **`idempotency_key` / `X-Idempotency-Key`**
+  Required for POST/PUT operations where retries must not duplicate work (reports, evidence, lead magnets, billing).
+  Propagated into job metadata and DLQs.
+
+### **Workflow-Specific Identifiers**
+
+* `report_id`
+* `evidence_id`
+* `invitation_id`
+* `lead_magnet_delivery_id`
+* `job_id` (queue system identifier)
+
+These identifiers anchor workflows defined in §6.7 to their traces and logs.
+
+### **Marketing-Specific Context**
+
+Marketing events (site/blog) include additional structured attributes:
+
+* `lead_id`
+* `utm_source`, `utm_medium`, `utm_campaign`
+* `magnet_id`
+* `landing_page_id`
+
+No raw PII (emails, names) is logged; only hashes or domains.
+
+---
+
+## **6.9.2 Trace Context Propagation (Browser → Gateway → API → Queue → Worker → Provider)**
+
+OpenTelemetry W3C Trace Context is propagated through every component.
+The Gateway is authoritative for generating or normalising trace context.
+
+### **Propagation Rules**
+
+* Browser → Gateway
+
+  * Browser instrumentation passes `traceparent`/`tracestate` if available.
+  * Gateway generates if missing.
+
+* Gateway → API
+
+  * Forwards `traceparent`, `X-Request-ID`, and `X-Idempotency-Key`.
+
+* API → Queue
+
+  * Embeds `trace_id` as a **span link** in the job metadata.
+  * Includes `tenant_id`, `user_id`, and workflow IDs.
+
+* Worker → External Providers
+
+  * Worker creates a new span with a link back to the original `trace_id`.
+  * Downstream calls (email, billing, object store) inherit this context.
+
+### **Diagram: End-to-End Trace Propagation**
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant Gateway
+    participant API
+    participant Queue
+    participant Worker
+    participant Provider
+
+    Browser->>Gateway: HTTP request (traceparent?, request_id?)
+    Gateway->>API: Forward request_id, traceparent, tenant_id, idempotency_key
+    API->>Queue: Enqueue job (trace_id as span link)
+    Queue->>Worker: Deliver job with context
+    Worker->>Provider: External call (email/storage) with propagated trace
+```
+
+This ensures Jaeger can reconstruct the entire journey, including async steps.
+
+---
+
+## **6.9.3 Asynchronous Workflow Correlation (Span Link Model)**
+
+As workflows such as report generation, evidence ingestion, invitations, and lead-magnet delivery involve queues and retries, correlation relies on **span links** rather than a single linear trace.
+
+### **Rules**
+
+* Enqueue spans must include **`workflow_id`** and **`idempotency_key`**.
+* Workers must:
+
+  * Start a new span.
+  * Link to the original `trace_id`.
+  * Include all workflow identifiers.
+* Retries create new spans, all linked to the original job.
+
+### **Diagram: Worker Span Link Correlation**
+
+```mermaid
+flowchart TD
+  A[HTTP Request<br>trace_id=T] --> B[Enqueue Job<br>span links T]
+  B --> C[Worker Start<br>new span, link T]
+  C --> D[External Provider Call<br>child span of worker]
+  C --> E[Worker Finish<br>READY or FAILED]
+```
+
+This ensures all activity related to a workflow is visible in a single Jaeger trace view.
+
+---
+
+## **6.9.4 Structured Logging Conventions**
+
+All logs must be structured JSON with the following mandatory fields:
+
+| Field                 | Description                                   |
+| --------------------- | --------------------------------------------- |
+| `timestamp`           | ISO-8601 UTC                                  |
+| `severity`            | Structured level                              |
+| `request_id`          | Correlates logs to traces                     |
+| `trace_id`, `span_id` | OpenTelemetry identifiers                     |
+| `tenant_id`           | Required for Essentials; absent for Marketing |
+| `user_id`             | Authenticated user (hashed if necessary)      |
+| `route`               | Normalised route template                     |
+| `workflow_id`         | report/evidence/invite/lead-magnet ID         |
+| `event`               | Domain event name                             |
+| `details`             | Structured payload                            |
+
+### **Mandatory Domain Events**
+
+Each workflow in §6.7 must emit log events summarising its transitions:
+
+* Report:
+
+  * `report.requested`, `report.queued`, `report.processing`, `report.ready`, `report.failed`
+
+* Evidence:
+
+  * `evidence.upload_started`, `evidence.verify`, `evidence.sealed`, `evidence.rejected`
+
+* Invitation:
+
+  * `invite.created`, `invite.email_sent`, `invite.accepted`, `invite.completed`, `invite.expired`, `invite.revoked`
+
+* Lead Magnet:
+
+  * `lead_magnet.requested`, `lead_magnet.delivering`, `lead_magnet.sent`, `lead_magnet.failed`
+
+These align directly with the state machines in §6.7.
+
+---
+
+## **6.9.5 Metrics Naming & Labeling (Prometheus)**
+
+All metrics exposed via `/metrics` follow Prometheus best practices.
+
+### **6.9.5.1 Standard Metrics**
+
+* HTTP request latency (histogram)
+  `http_request_duration_seconds{route,method,status,tenant_id}`
+* Request counts and error counts
+  `http_requests_total{route,method,status,tenant_id}`
+* Queue depth
+  `queue_depth{workflow}`
+* DLQ size
+  `dlq_items{workflow}`
+
+### **6.9.5.2 Workflow Metrics**
+
+Each long-running workflow must publish duration histograms:
+
+* `report_generation_duration_seconds{tenant_id}`
+* `evidence_ingestion_duration_seconds{tenant_id}`
+* `lead_magnet_delivery_duration_seconds{magnet_id}`
+* `email_delivery_latency_seconds{provider}`
+
+### **6.9.5.3 Marketing Labels**
+
+Marketing metrics may include:
+
+* `landing_page_id`
+* `utm_source`, `utm_campaign`
+* `magnet_id`
+
+**Never include raw PII**.
+
+### **6.9.5.4 Cardinality Guardrails**
+
+* `tenant_id` acceptable (bounded)
+* `report_id`, `evidence_id` not used as metric labels
+* No per-user labels
+* Campaign IDs must be bounded and curated
+
+---
+
+## **6.9.6 Multi-Tenant Isolation in Observability**
+
+* Every Essentials trace, log, and metric must include the **tenant_id**.
+* Tenant ID is derived from auth and never read from a header.
+* No cross-tenant logs or traces.
+* Aggregated platform metrics must anonymise tenant identity.
+* Marketing traces never include tenant identifiers.
+
+---
+
+## **6.9.7 Relationship to §10 (Telemetry) and §13 (Acceptance)**
+
+* Metrics defined in §6.9 feed directly into dashboards and alerts in §10.
+* Trace/span conventions defined here determine:
+
+  * Jaeger trace visualisation
+  * Flame-graphs
+  * Worker/job correlation
+* Acceptance tests in §13 validate:
+
+  * Trace context propagation
+  * Span emission
+  * Required log events
+  * Prometheus metric presence and correct labels
+  * SLO compliance (§6.8)
+
+Together, §§6.8–6.9 define how performance expectations are measured, traced, and validated.
+
+---
+
+## **6.9.8 Invariants**
+
+* Every request must have a unique `request_id` and `trace_id`.
+* Every workflow must have a `workflow_id`.
+* All logs must be structured JSON with mandatory fields.
+* All services must propagate OpenTelemetry trace context.
+* No raw PII is logged anywhere in the system.
+* Multi-tenant isolation applies to all observability data.
 
 ---
 
