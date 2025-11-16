@@ -3285,22 +3285,193 @@ This diagram expresses the runtime invariants: single ingress, stateless service
     SoftExit --> TrackExit
 
   ```
-
+---
 2. **Visitor clicks CTA → goes to a short form (email + basic company info).**
-3. **Visitor submits form → sees a friendly confirmation state (no weird reload or error).**
-4. **The system creates/updates a contact with email, basic profile, and source/UTM so we can actually use the data.**
-5. **Visitor receives the correct email (confirmation or welcome), with working links and consistent branding.**
-6. **Visitor requests/downloads a lead magnet (e.g. Cyber Essentials checklist) → email capture happens if needed → asset is delivered reliably (download or via email link).**
-7. **Visitor comes back via an email link → lands on the intended page (not 404, not root) and can continue exploring.**
-8. **Visitor views “How it works” / pricing → sees that Essentials is “coming soon / in beta” and can join the list from there.**
-9.  **Visitor comes from social (e.g. LinkedIn/Brian video) → lands on a matching landing page with a clear CTA into the same signup flow.**
-10. **Site works properly on mobile (hero, nav, forms, CTAs).**
-11. **Basic analytics work: we can see sessions, sources, sign-ups, and lead-magnet downloads in one place.**
-12. **We can export the email list (with basic fields) as CSV or similar.**
-13. **We can publish a new blog/article, it appears on the site, and has an embedded CTA into the same signup flow.**
-14. **Visitor can find an evergreen explainer (like “What is Cyber Essentials?”) via nav/search and join the list from that page.**
 
-Phase 1 is “people hit site → give email → get value → you keep data and insight”. No extra ceremony.
+```mermaid
+flowchart TD
+  CTA[Visitor clicks CTA] --> LoadForm[Form page loads]
+
+  LoadForm --> CheckRender{Form visible?}
+  CheckRender -->|Yes| ShowForm[Show email and basic info fields]
+  CheckRender -->|No| ErrorPage[Show error message]
+
+  ShowForm --> ReadyToSubmit[User can type and submit]
+
+  %% Optional analytics
+  CTA --> TrackClick[(Analytics: CTA click)]
+  LoadForm --> TrackView[(Analytics: form view)]
+```
+
+### What this diagram expresses
+
+* User clicks the CTA.
+* Browser loads the form page.
+* If it renders OK → user sees: email, company name, company size, sector, whatever.
+* If it *doesn’t* load → error page or fallback (we still show this path so the happy path is honest).
+* Analytics hooks are tacked on the side, not in the main flow.
+
+---
+1. **Visitor submits form → sees a friendly confirmation state (no weird reload or error).**
+
+```mermaid
+flowchart TD
+  Submit[Visitor submits form] --> Send[Browser sends form data]
+  Send --> Validate[Server validates and stores data]
+  Validate --> Confirm[Show confirmation state]
+```
+
+This shows the straight-line happy path: user submits, data is sent, backend accepts it, confirmation state appears.
+
+---
+1. **The system creates/updates a contact with email, basic profile, and source/UTM so we can actually use the data.**
+
+```mermaid
+flowchart TD
+  Receive[Server receives form data] --> Match[Find existing contact by email]
+  Match --> Update[Update contact with profile and UTM data]
+  Match -->|No existing contact| Create[Create new contact with profile and UTM data]
+  Update --> Done[Contact record ready to use]
+  Create --> Done
+```
+
+**Explanation:**
+The server takes the submitted data, checks whether a contact with that email already exists, updates it if it does, or creates a new one if it doesn’t. The result is a usable contact record with profile and UTM information.
+
+---
+1. **Visitor receives the correct email (confirmation or welcome), with working links and consistent branding.**
+
+```mermaid
+flowchart TD
+  Trigger[Contact record ready] --> Generate[Generate correct email]
+  Generate --> Send[Send email to visitor]
+  Send --> Delivered[Visitor receives email with working links and branding]
+```
+
+**Explanation:**
+Once the contact data is in place, the system generates the appropriate email and sends it. The visitor receives it with the correct content and working links.
+
+---
+1. **Visitor requests/downloads a lead magnet (e.g. Cyber Essentials checklist) → email capture happens if needed → asset is delivered reliably (download or via email link).**
+
+```mermaid
+flowchart TD
+  Request[Visitor requests lead magnet] --> CheckEmail{Email already captured}
+  CheckEmail -->|Yes| Deliver[Deliver asset to visitor]
+  CheckEmail -->|No| Capture[Show email capture form]
+  Capture --> Save[Store email and profile]
+  Save --> Deliver[Deliver asset to visitor]
+```
+
+**Explanation:**
+The visitor requests the lead magnet. If their email is already known, the system delivers it immediately. If not, it captures their email first, stores it, and then delivers the asset.
+
+---
+1. **Visitor comes back via an email link → lands on the intended page (not 404, not root) and can continue exploring.**
+
+```mermaid
+flowchart TD
+  Click[Visitor clicks email link] --> Open[Browser opens target URL]
+  Open --> Resolve[Server resolves the deep link]
+  Resolve --> Page[Correct page loads]
+```
+
+**Explanation:**
+The visitor clicks the link in the email, the browser opens the intended URL, the server resolves it properly, and the correct page loads so the visitor can continue exploring.
+
+---
+1. **Visitor views “How it works” / pricing → sees that Essentials is “coming soon / in beta” and can join the list from there.**
+
+```mermaid
+flowchart TD
+  Visit[Visitor opens How-it-works or Pricing page] --> Load[Page loads content]
+  Load --> SeeMsg[Visitor sees 'Essentials coming soon / in beta' message]
+  SeeMsg --> CTA[Visitor sees option to join the list]
+```
+
+**Explanation:**
+The visitor opens the How-it-works or Pricing page, the content loads, they see the “coming soon / in beta” message, and the page presents a clear way to join the list.
+
+---
+1.  **Visitor comes from social (e.g. LinkedIn/Brian video) → lands on a matching landing page with a clear CTA into the same signup flow.**
+
+```mermaid
+flowchart TD
+  Click[Visitor clicks social link] --> Open[Browser opens landing page URL]
+  Open --> Match[Landing page content matches social context]
+  Match --> CTA[Visitor sees clear CTA to join the signup flow]
+```
+
+**Explanation:**
+The visitor clicks a social link, arrives on the correct landing page, the content matches what they expected, and the page presents a clear CTA into the signup flow.
+
+---
+1.  **Site works properly on mobile (hero, nav, forms, CTAs).**
+   
+```mermaid
+flowchart TD
+  Load[Site loads on mobile device] --> Render[Responsive layout renders correctly]
+  Render --> Interact[Hero, navigation, forms, and CTAs are usable]
+```
+
+**Explanation:**
+The site loads on a mobile device, the responsive layout renders correctly, and all key elements (hero, navigation, forms, CTAs) work as expected.
+
+---
+1.  **Basic analytics work: we can see sessions, sources, sign-ups, and lead-magnet downloads in one place.**
+
+```mermaid
+flowchart TD
+  Events[Visitor actions occur] --> Track[Analytics script records events]
+  Track --> Store[Events stored in analytics system]
+  Store --> View[Sessions, sources, sign-ups, and downloads visible in dashboard]
+```
+
+**Explanation:**
+Visitor activity is tracked, stored in the analytics system, and shown in a single dashboard where sessions, sources, sign-ups, and downloads can be viewed.
+
+---
+1.  **We can export the email list (with basic fields) as CSV or similar.**
+
+```mermaid
+flowchart TD
+  Request[User requests export] --> Fetch[System gathers email records]
+  Fetch --> Generate[Generate CSV with basic fields]
+  Generate --> Download[CSV made available for download]
+```
+
+**Explanation:**
+When an export is requested, the system collects the stored email records, generates a CSV containing the basic fields, and provides it for download.
+
+---
+1.  **We can publish a new blog/article, it appears on the site, and has an embedded CTA into the same signup flow.**
+
+```mermaid
+flowchart TD
+  Create[New blog article created] --> Publish[Article is published]
+  Publish --> Visible[Article appears on the site]
+  Visible --> CTA[CTA block displayed inside article]
+```
+
+**Explanation:**
+A new article is created and published. It becomes visible on the site, and the embedded CTA appears inside it, linking into the same signup flow.
+
+---
+1.  **Visitor can find an evergreen explainer (like “What is Cyber Essentials?”) via nav/search and join the list from that page.**
+
+```mermaid
+flowchart TD
+  Navigate[Visitor uses nav or search] --> Find[Evergreen explainer page found]
+  Find --> Load[Page loads normally]
+  Load --> CTA[Visitor sees CTA to join the list]
+```
+
+**Explanation:**
+The visitor uses navigation or search to reach the evergreen explainer, the page loads as expected, and a CTA is present so they can join the list directly from that page.
+
+---
+
+# Phase 1 is “people hit site → give email → get value → you keep data and insight”. No extra ceremony.
 
 ---
 
