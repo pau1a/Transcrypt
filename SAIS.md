@@ -3830,7 +3830,222 @@ Runbooks in §12 define recovery and replay procedures.
 
 ### 6.4 Concurrency, Idempotency, and Ordering
 
-State idempotency-key rules for mutating endpoints; describe how keys are scoped (tenant+endpoint+hash). Define where strict ordering is required (per-report job chain) and how it’s enforced (FIFO queue or per-key partitioning). Mention optimistic concurrency (ETags/version fields) on mutable resources.
+Concurrency control in Transcrypt ensures that repeated requests, parallel edits, and asynchronous job execution do not create duplicate state, conflicting updates, or misordered operations. All mutating endpoints are idempotent; all shared resources use optimistic concurrency; and only clearly-defined workloads require strict ordering.
+
+This section defines the rules for idempotency keys, concurrency markers, and ordered processing. These rules apply to both the synchronous API layer and the asynchronous event/worker layer.
+
+---
+
+## **6.4.1 Idempotency for HTTP Mutations**
+
+All mutating HTTP endpoints (POST, PUT, PATCH, DELETE) must be idempotent. This ensures that retries — whether from the client, network, or gateway — do not create duplicate side effects.
+
+### **Idempotency Key Model**
+
+Each request that mutates state carries an idempotency key. The service scopes keys as:
+
+```
+(tenant_id, endpoint_identifier, idempotency_key)
+```
+
+Two forms of keys exist:
+
+* **Header-based keys**
+  The client supplies `Idempotency-Key: <uuid>`.
+  Used for generic create operations (e.g., creating report jobs).
+
+* **Domain-derived keys**
+  A natural unique fingerprint is used as the idempotency key
+  (evidence hash, report_id, invite key, etc.).
+  Useful where the operation already has a collision-proof identifier.
+
+### **Behaviour**
+
+* First request:
+
+  * Persist `(tenant_id, endpoint, idempotency_key)`
+  * Store request fingerprint and generated response
+  * Apply side effects
+
+* Repeat request with same key and identical payload:
+
+  * Return previously stored response (200/201)
+  * Do **not** perform side effects again
+
+* Repeat request with same key but **different** payload:
+
+  * Return `409 Conflict (IDEMPOTENCY_MISMATCH)`
+  * Do **not** apply side effects
+
+### **HTTP Idempotency – Sequence Diagram**
+
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant API as Gateway/API
+  participant DB as Idempotency Store
+
+  C->>API: POST /resource (Idempotency-Key: X)
+  API->>DB: Lookup key X
+  alt First request
+    API->>DB: Store response + fingerprint
+    API-->>C: 201 Created (response)
+  else Replay
+    API-->>C: 201 Created (cached response)
+  end
+```
+
+---
+
+## **6.4.2 Idempotent Event Consumption**
+
+All events delivered via the asynchronous layer use at-least-once delivery semantics. Consumers therefore must be idempotent.
+
+Each consumer maintains a small processed-event table:
+
+```
+processed_events(consumer_name, event_id, processed_at)
+```
+
+On delivery:
+
+1. Lookup `(consumer_name, event_id)`
+2. If present → acknowledge and do nothing
+3. If absent → process the event, then record it as processed
+
+This prevents duplicate:
+
+* email sends
+* report generation jobs
+* billing state transitions
+* evidence processing
+
+---
+
+## **6.4.3 Optimistic Concurrency on Shared Resources**
+
+Mutable records that can be edited by more than one user or worker require optimistic concurrency.
+
+Each such resource carries a version marker:
+
+* `version` column (integer), or
+* `etag` derived from a version counter or hash
+
+### **Read**
+
+Client receives the current version or ETag in the response.
+
+### **Write**
+
+Client includes:
+
+```
+If-Match: <etag>
+```
+
+or sends `version` in the payload.
+If version mismatch → `409 Conflict (VERSION_MISMATCH)`.
+
+### **Where Used**
+
+Optimistic concurrency applies to:
+
+* Tenant profile (name, logo, timezone)
+* Control answers if multi-editor access is possible
+* Any multi-user tenant-level configuration record
+
+One-off operations (report generation, invites, evidence upload) do not require optimistic concurrency because they are guarded by idempotency, not by shared mutable state.
+
+---
+
+## **6.4.4 Ordering Guarantees**
+
+Ordering is not global. Ordering is enforced **only per logical unit of work**, where correctness depends on sequence.
+
+### **Workflows Requiring Strict Ordering**
+
+#### **1. Report Generation**
+
+A report follows a strict lifecycle:
+
+`report.requested → report.started → report.generated/report.failed`
+
+Ordering is enforced by queue partitioning or FIFO semantics using:
+
+```
+partition_key = report_id
+```
+
+Only one worker processes messages for each report_id at a time.
+
+**Ordered Report Workflow – Sequence Diagram**
+
+```mermaid
+sequenceDiagram
+  participant API as API
+  participant BUS as Event Bus (partition by report_id)
+  participant W as Report Worker
+
+  API->>BUS: report.requested (key=report_id)
+  BUS->>W: Deliver in order
+  W->>W: Generate report
+  W->>BUS: report.generated
+```
+
+#### **2. Billing Events**
+
+Ordering is required **per subscription or invoice**, not globally.
+
+Partition key:
+
+```
+billing_object_id
+```
+
+Examples:
+
+* `billing.invoice_created`
+* `billing.payment_succeeded`
+* `billing.payment_failed`
+
+#### **3. Evidence Lifecycle**
+
+Evidence transitions should be consistent per evidence item.
+Partitioning or versioned DB updates enforce:
+
+`REGISTERED → VERIFIED → SEALED → REJECTED`
+
+### **Workflows Where Ordering Does Not Matter**
+
+* Analytics events (`pageview_recorded`, `cta_clicked`)
+* Audit events
+* Any stateless fan-out consumer
+* Control and evidence additions (idempotency protects them without ordering)
+
+---
+
+## **6.4.5 Interaction Summary**
+
+* **HTTP Layer**
+
+  * All mutating endpoints are idempotent
+  * Side effects run once
+  * Replays return stored responses
+  * Version/ETag semantics prevent conflicting edits
+
+* **Event Layer**
+
+  * At-least-once delivery
+  * Consumers maintain “seen set” via event_id
+  * Ordering is enforced only where required via partitioning
+
+* **System-Wide**
+
+  * Correlation IDs and timestamps ensure end-to-end traceability
+  * Race conditions are avoided through idempotency and version checks
+  * Ordered operations are restricted to the few workflows where correctness depends on sequence
+
+---
 
 ### 6.5 Timeouts, Retries, and Circuit Breaking
 
