@@ -4532,32 +4532,273 @@ No marketing visitor hits a dead conversion path.
 
 ### 6.7 Workflow State Machines (Authoritative)
 
-Define state diagrams for long-running processes.
+This section defines the authoritative state machines for long-running workflows in Transcrypt.
+Each state machine:
 
-**6.7.1 Report Lifecycle**
+* Has a finite set of well-defined states.
+* Is driven by asynchronous events and background workers (§6.3).
+* Respects idempotency, ordering, and retry semantics (§6.4–6.5).
+* Maps cleanly to user-visible status where applicable (§6.6).
+
+Only workflows that are truly multi-step and asynchronous are modelled here:
+
+1. Report lifecycle
+2. Evidence ingestion
+3. Invitation lifecycle
+4. Lead-magnet delivery
+
+All other behaviours (authentication, navigation, simple reads/writes) are intentionally excluded.
+
+---
+
+### 6.7.1 Report Lifecycle
+
+The report lifecycle covers generation of framework reports (e.g. Cyber Essentials) from the point a user requests a report until it is available for download or marked as failed.
+
+**Key properties**
+
+* Reports are generated asynchronously by background workers.
+* Multiple retries may occur for transient errors.
+* User-visible states are a subset of the internal lifecycle.
+
+**States**
+
+* `REQUESTED` — API has accepted the report request and created a report record.
+* `QUEUED` — a job has been enqueued for processing.
+* `PROCESSING` — a worker is actively generating the report.
+* `READY` — report artefact has been rendered and stored successfully.
+* `FAILED` — terminal failure after retries or unrecoverable error.
+
+**State machine**
 
 ```mermaid
 stateDiagram-v2
   [*] --> REQUESTED
-  REQUESTED --> RENDERING
-  RENDERING --> STORED: success
-  RENDERING --> RETRYING: transient error
-  RETRYING --> RENDERING: backoff window
-  RENDERING --> FAILED: terminal error
-  STORED --> PUBLISHED
-  PUBLISHED --> [*]
+
+  REQUESTED --> QUEUED: job enqueued
+  QUEUED --> PROCESSING: worker picks job
+
+  PROCESSING --> READY: render + store succeeded
+  PROCESSING --> QUEUED: transient error, retry scheduled
+  PROCESSING --> FAILED: terminal error / max retries reached
+
+  READY --> [*]
+  FAILED --> [*]
 ```
 
-**6.7.2 Evidence Ingestion**
+**User-visible mapping**
+
+* `REQUESTED` / `QUEUED` → “Queued”
+* `PROCESSING` → “Processing”
+* `READY` → “Ready”
+* `FAILED` → “Failed — retry available” (if manual retry is supported)
+
+**Invariants**
+
+* A report cannot return to `REQUESTED` once it has left it.
+* `READY` and `FAILED` are terminal from the user’s perspective; a retry creates a new `REQUESTED`/`QUEUED` cycle.
+* All transitions are driven by events and worker actions, not by client-side state.
+
+---
+
+### 6.7.2 Evidence Ingestion
+
+The evidence ingestion lifecycle describes how uploaded artefacts move from initial registration through upload and verification to a sealed, immutable state.
+
+**Key properties**
+
+* Metadata and blob transfer may be decoupled.
+* Object-store and verification errors are retried with backoff.
+* Once sealed, evidence becomes immutable.
+
+**States**
+
+* `REGISTERED` — evidence record created; metadata stored.
+* `UPLOADING` — binary content is being sent to the object store.
+* `UPLOAD_FAILED` — upload failed after attempts but is retryable.
+* `VERIFYING` — hash, size, and integrity checks are being run.
+* `SEALED` — evidence verified and marked immutable; normal terminal state.
+* `REJECTED` — evidence permanently rejected (corrupt, mismatched, or policy violation).
+
+**State machine**
 
 ```mermaid
 stateDiagram-v2
   [*] --> REGISTERED
-  REGISTERED --> VERIFIED: hash & size check
-  VERIFIED --> SEALED: immutability enforced
-  VERIFIED --> REJECTED: integrity mismatch
+
+  REGISTERED --> UPLOADING: upload initiated
+
+  UPLOADING --> VERIFYING: upload complete
+  UPLOADING --> UPLOAD_FAILED: transient store error
+
+  UPLOAD_FAILED --> UPLOADING: retry after backoff
+
+  VERIFYING --> SEALED: hash/size valid, policy passed
+  VERIFYING --> REJECTED: integrity or policy failure
+
   SEALED --> [*]
+  REJECTED --> [*]
 ```
+
+**User-visible mapping**
+
+* `REGISTERED` / `UPLOADING` → “Processing upload”
+* `VERIFYING` → “Verifying file” (optional surfaced)
+* `SEALED` → “Available”
+* `REJECTED` → “Rejected” (with reason)
+
+**Invariants**
+
+* `SEALED` evidence must not transition back to any mutable state.
+* `REJECTED` evidence must not be used to satisfy controls.
+* Retries only move `UPLOAD_FAILED` back to `UPLOADING`; they do not recreate the evidence record.
+
+---
+
+### 6.7.3 Invitation Lifecycle
+
+The invitation lifecycle governs how internal collaborators, external helpers, and other users are invited into a tenant and how their invitation can complete, expire, or be revoked.
+
+**Key properties**
+
+* Invitations are created by tenant owners or administrators.
+* Email dispatch is asynchronous.
+* Links can be accepted, expire naturally, or be revoked.
+
+**States**
+
+* `CREATED` — invitation object has been created but email not yet dispatched.
+* `EMAIL_PENDING` — email send has been queued to the mail dispatcher.
+* `EMAIL_SENT` — email provider has accepted the invitation email.
+* `EMAIL_FAILED` — email dispatch failed after retries.
+* `ACCEPTED` — invite link has been used and validated.
+* `COMPLETED` — user account created/linked and assigned the intended role(s).
+* `EXPIRED` — invitation lifetime elapsed before acceptance.
+* `REVOKED` — invitation revoked by an administrator before completion.
+
+**State machine**
+
+```mermaid
+stateDiagram-v2
+  [*] --> CREATED
+
+  CREATED --> EMAIL_PENDING: enqueue email
+  EMAIL_PENDING --> EMAIL_SENT: provider accepted
+  EMAIL_PENDING --> EMAIL_FAILED: max retries exceeded
+
+  EMAIL_FAILED --> EMAIL_PENDING: manual resend
+
+  EMAIL_SENT --> ACCEPTED: invite link used
+  EMAIL_SENT --> EXPIRED: expiry reached
+  EMAIL_SENT --> REVOKED: admin revokes invite
+
+  ACCEPTED --> COMPLETED: user account linked/created
+
+  COMPLETED --> [*]
+  EXPIRED --> [*]
+  REVOKED --> [*]
+```
+
+**User-visible mapping**
+
+* Sender (owner/admin):
+
+  * `CREATED` / `EMAIL_PENDING` → “Sending”
+  * `EMAIL_SENT` → “Pending acceptance”
+  * `EMAIL_FAILED` → “Email failed — resend available”
+  * `ACCEPTED` / `COMPLETED` → “Accepted”
+  * `EXPIRED` → “Expired”
+  * `REVOKED` → “Revoked”
+
+* Recipient:
+
+  * Invitation link unusable once in `EXPIRED` or `REVOKED`.
+
+**Invariants**
+
+* `COMPLETED`, `EXPIRED`, and `REVOKED` are terminal.
+* A `COMPLETED` invitation must not be reused to onboard another identity.
+* `EMAIL_FAILED` is recoverable only via explicit resend action.
+
+---
+
+### 6.7.4 Lead-Magnet Delivery Lifecycle
+
+The lead-magnet lifecycle models how marketing assets (e.g. checklists, guides) are delivered once a visitor requests them, either via direct download or email.
+
+**Key properties**
+
+* Email capture and consent are stored before delivery.
+* Delivery may be synchronous (download) or asynchronous (email).
+* Failures fall back to email delivery where possible.
+
+**States**
+
+* `REQUESTED` — visitor has requested the asset (form submitted or CTA clicked).
+* `CAPTURED` — contact details and consent successfully stored.
+* `DELIVERING_FILE` — system attempting direct file delivery.
+* `DELIVERING_EMAIL` — system attempting email-based delivery.
+* `SENT` — asset successfully delivered (download or email).
+* `FAILED` — delivery failed after retries; contact still stored for future remediation.
+
+**State machine**
+
+```mermaid
+stateDiagram-v2
+  [*] --> REQUESTED
+
+  REQUESTED --> CAPTURED: email/consent stored
+
+  CAPTURED --> DELIVERING_FILE: direct download path
+  CAPTURED --> DELIVERING_EMAIL: email-only path
+
+  DELIVERING_FILE --> SENT: download initiated
+  DELIVERING_FILE --> DELIVERING_EMAIL: file delivery failed, fallback to email
+
+  DELIVERING_EMAIL --> SENT: provider accepted email
+  DELIVERING_EMAIL --> FAILED: max retries exceeded
+
+  SENT --> [*]
+  FAILED --> [*]
+```
+
+**User-visible mapping**
+
+* `REQUESTED` / `CAPTURED` → “Preparing your download”
+* `DELIVERING_FILE` → download starts in browser; optional “Your download should begin shortly” message.
+* `DELIVERING_EMAIL` → “We’ll email your copy shortly.”
+* `SENT` → confirmation (“Check your inbox” or completed download).
+* `FAILED` → “We could not deliver your copy automatically; we will follow up or you can contact support.”
+
+**Invariants**
+
+* Lead requests must never be discarded, even if delivery fails; `FAILED` still retains the captured contact.
+* Transition from `DELIVERING_FILE` to `DELIVERING_EMAIL` is one-way; once fallback is used, the system does not attempt further file delivery.
+* `SENT` and `FAILED` are terminal; repeated requests from the same visitor create a new lifecycle instance.
+
+---
+
+### 6.7.5 General Rules for Workflow State Machines
+
+All workflow state machines in this section share the following rules:
+
+* **Finite state set**
+  Each workflow has a finite, explicit set of states; no implicit or ad-hoc states are permitted.
+
+* **Event-driven transitions**
+  Transitions occur in response to domain events (e.g., job succeeded, email accepted, link used), never directly from client-side assumptions.
+
+* **Idempotent transitions**
+  Reprocessing the same event must not cause an illegal or duplicated transition (e.g., re-handling the same “report.generated” event keeps the report in `READY`).
+
+* **Terminal states**
+  Terminal states (`READY`, `FAILED`, `SEALED`, `REJECTED`, `COMPLETED`, `EXPIRED`, `REVOKED`, `SENT`) are absorbing; workflows do not transition out of them except by creating a new instance (e.g., a new report request or a new invitation).
+
+* **Alignment with observability**
+  Every state transition should emit structured logs and/or events with correlation IDs, so that operators can reconstruct the lifecycle in traces and audits.
+
+These state machines are the authoritative source for workflow behaviour. Any implementation, documentation, or UI that diverges from them must be corrected or the state machine revised.
+
 
 ### 6.8 Performance Budgets and SLO Paths
 
