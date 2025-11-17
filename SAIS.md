@@ -8232,8 +8232,291 @@ flowchart LR
 
 ### 7.14 Third-Party Integrations in Runtime
 
-Network routes and credentials for Stripe, IdP (Entra/Okta), SMTP, etc.
-Timeouts, retries, circuit breaker thresholds, and sandbox vs live separation.
+Transcrypt interacts with a small set of external services for identity, billing, storage, email, analytics, and inference. All integrations are accessed **only** from the backend runtime on the DigitalOcean droplet; browsers never talk directly to third parties using privileged credentials.
+
+This section defines the runtime model for these integrations: network routes, credential handling, timeouts, retries, circuit-breaking behaviour, and sandbox vs live separation. It also ties each integration to the feature-flag and kill-switch model in §7.12 and the cost controls in §7.13.
+
+---
+
+#### 7.14.1 Integration Catalogue
+
+Transcrypt distinguishes runtime integrations by surface.
+
+##### Marketing runtime integrations
+
+Used by the public site and blog:
+
+* **DigitalOcean Spaces and CDN** – blog images, lead magnets, marketing assets.
+* **MXroute** – waitlist, newsletter, and lead magnet email delivery.
+* **Analytics** – Umami and Google Analytics measurement scripts embedded in pages.
+
+The browser never holds secrets for any of these; all privileged tokens and API keys are confined to the droplet.
+
+##### Essentials runtime integrations
+
+Used by the authenticated Essentials application:
+
+* **Keycloak** – primary OpenID Connect identity provider.
+* **Stripe** – subscription billing, upgrades, and invoice history.
+* **MXroute** – invites, password-less magic links when applicable, report link emails, and notifications.
+* **DigitalOcean Spaces and CDN** – evidence artefacts and generated reports.
+* **Inference API** – external LLM endpoint for AI-assisted evaluation and content.
+* **Analytics** – Umami and Google Analytics for authenticated usage, with stricter privacy configuration.
+
+The design remains compatible with future additional OIDC IdPs (such as Entra, Okta, or Google) without altering the core patterns described here.
+
+---
+
+#### 7.14.2 Network Routes and Egress
+
+All third-party traffic originates from the production droplet:
+
+* **Outbound DNS and HTTP**:
+
+  * The droplet resolves provider hostnames and connects over TLS.
+  * No direct browser calls to Stripe or inference with privileged credentials.
+  * No client-side storage of API keys, signing keys, or secrets.
+
+* **Firewall stance**:
+
+  * The DigitalOcean cloud firewall and droplet firewall restrict inbound traffic to HTTPS and SSH as defined in §7.4.
+  * Outbound traffic is designed to be progressively narrowed to known provider domains and ports as operations mature, without runtime code changes.
+
+* **Spaces and CDN**:
+
+  * The droplet interacts with Spaces over S3-compatible HTTPS endpoints.
+  * Browsers fetch assets through the DO CDN using public URLs that carry no secrets.
+
+---
+
+#### 7.14.3 Credentials and Secret Handling
+
+All third-party credentials are managed according to §7.5:
+
+* Provider keys and secrets (Stripe, Keycloak client secrets, MXroute credentials, inference tokens, analytics keys) are stored in the encrypted secrets store and injected as environment variables at process start.
+* No third-party credential is ever stored in source control, Docker images, or browser-accessible configuration.
+* Different keys are used for local development and production; key sets are not reused across environments.
+
+Keycloak configuration uses:
+
+* A dedicated Keycloak realm and client(s) for Transcrypt.
+* Client IDs and client secrets injected from secrets at runtime.
+* OIDC discovery and JWKS endpoints configured via environment variables so they can differ between local dev and production.
+
+---
+
+#### 7.14.4 Timeouts, Retries, and Circuit Breakers per Integration
+
+All third-party calls follow the baseline timeout, retry, and circuit-breaking rules in §6.5. This subsection clarifies behaviour per integration.
+
+##### Keycloak
+
+* **Use**:
+
+  * Browser redirects to Keycloak for login.
+  * Backend calls OIDC discovery and JWKS endpoints to validate tokens.
+
+* **Timeouts**:
+
+  * Short per-call timeouts on JWKS and discovery endpoints.
+  * If timeouts are exceeded, validation fails closed.
+
+* **Retries**:
+
+  * No automatic retries on token validation; avoiding reusing stale or partial results.
+  * Limited retries allowed for JWKS fetch under strict backoff.
+
+* **Circuit breaker**:
+
+  * Per-provider breaker for Keycloak.
+  * When open, new sign-in attempts are rejected with a clear “Identity provider unavailable” state.
+  * Existing sessions remain valid until their normal expiry.
+
+##### Stripe
+
+* **Use**:
+
+  * Creating checkout sessions, customer objects, subscriptions.
+  * Receiving webhooks for payment events.
+
+* **Timeouts**:
+
+  * Low single-digit second timeouts for outbound calls.
+
+* **Retries**:
+
+  * Allowed only on transient error codes and network failures.
+  * Explicitly not retried on 4xx or application-level permanent errors.
+
+* **Circuit breaker**:
+
+  * When open:
+
+    * No new billing actions are initiated.
+    * Billing UI is disabled and surfaces a clear error message.
+    * Existing subscriptions are not modified.
+  * The system never attempts to guess payment outcomes; state is driven by Stripe webhooks.
+
+##### MXroute
+
+* **Use**:
+
+  * Outbound SMTP or API calls for waitlist, newsletter, invitations, and report emails.
+
+* **Timeouts and retries**:
+
+  * Short timeouts for email send operations.
+  * A small number of retries for transient network or 5xx errors, with backoff.
+
+* **Degradation**:
+
+  * Failures never block core workflows:
+
+    * Waitlist or lead magnet submissions still succeed and are recorded.
+    * Invitations and reports are persisted even if email fails.
+  * Hard failures move messages to DLQ as defined in §6.3.
+
+##### Inference API
+
+* **Use**:
+
+  * External LLM calls for evaluation assistance or generative behaviour in Essentials.
+
+* **Timeouts**:
+
+  * Strict time limits on inference calls to avoid tying up worker threads.
+
+* **Retries**:
+
+  * Retries only on network-level errors, not on model errors or timeouts.
+  * Aggressive backoff to avoid hammering a degraded provider.
+
+* **Circuit breaker and cost integration**:
+
+  * Breaker opens if failure rate crosses threshold or latency is persistently high.
+  * Cost guardrails in §7.13 also trigger automatic disablement when budgets are approached.
+  * When disabled:
+
+    * The application falls back to deterministic, rule-based evaluation.
+    * No inference requests are sent until explicitly re-enabled.
+
+##### Analytics and Tracking
+
+* **Use**:
+
+  * Script injection for Umami and Google Analytics.
+  * Purely client-side HTTP calls from the browser.
+
+* **Timeouts and retries**:
+
+  * Analytics calls are non-blocking and never retried by the backend.
+  * Failure to load scripts or send events must not affect page interactivity or Essentials behaviour.
+
+---
+
+#### 7.14.5 Sandbox vs Live Separation
+
+Each integration has a clear separation between development and production usage.
+
+* **Local development**:
+
+  * Stripe operates in test mode with test keys and test webhooks.
+  * Keycloak uses a dev realm and dev clients.
+  * MXroute can send to dev-specific addresses or a test mailbox.
+  * Inference API uses a dev token and strict quota limits.
+  * Analytics libraries may be disabled or use a dev property.
+
+* **Production**:
+
+  * Stripe uses live keys and live webhooks.
+  * Keycloak uses the production realm and clients.
+  * MXroute sends to real recipients.
+  * Inference API uses a production token governed by budgets in §7.13.
+  * Analytics use live properties with privacy settings aligned to policy.
+
+No production key is ever loaded in local development, and no test key is ever used in production.
+
+---
+
+#### 7.14.6 Flags, Kill Switches, and Degradation
+
+Each integration is governed by feature flags and kill switches defined in §7.12:
+
+* `billing_enabled` controls all Stripe driven flows.
+* `email_dispatch_enabled` and invite/report specific flags control MXroute usage.
+* `inference_api_enabled` controls whether inference calls are allowed at all.
+* `oidc_provider_keycloak_enabled` governs whether Keycloak sign-in is offered.
+* Marketing flags determine whether analytics scripts are injected.
+
+When a kill switch is activated:
+
+* The integration is not called at all.
+* A deterministic Problem+JSON response is returned where applicable.
+* Structured logs and metrics record the disabled state.
+* The UI degrades to clear fallback behaviour:
+
+  * Billing panels unavailable.
+  * Sign-in via the disabled IdP no longer shown.
+  * AI features either hidden or marked as unavailable.
+  * Emails queued or suppressed according to the feature’s needs.
+
+Degradation paths are aligned with the failure scenarios in §6.6.
+
+---
+
+#### 7.14.7 Observability for Third-Party Integrations
+
+Observability conventions in §7.9 apply to all integrations:
+
+* Every call to a third-party provider runs in its own span with attributes:
+
+  * `provider` such as `stripe`, `keycloak`, `mxroute`, `inference`, `spaces`, `analytics`.
+  * `operation` such as `create_checkout`, `validate_token`, `send_email`, `run_inference`.
+  * `tenant_id` where applicable.
+
+* Logs:
+
+  * Structured JSON with `trace_id`, `tenant_id`, `provider`, `status_class`, `latency_ms`.
+  * No PII from provider responses is logged.
+
+* Metrics:
+
+  * Per provider latency histograms and error counters.
+  * Used to drive alerts when a provider becomes slow or unreliable.
+
+This allows operators to distinguish between internal problems and external provider issues quickly.
+
+---
+
+#### 7.14.8 Third-Party Integration Diagram
+
+```mermaid
+flowchart LR
+    App[Transcrypt Droplet\nSite Blog Essentials] --> Keycloak[Keycloak IdP]
+    App --> Stripe[Stripe Billing]
+    App --> MX[MXroute Email]
+    App --> Spaces[DO Spaces And CDN]
+    App --> Infer[Inference API]
+    App --> Analytics[Analytics Scripts]
+
+    App --> Flags[Feature Flags And Kill Switches]
+    App --> Obs[Metrics Logs Traces]
+```
+
+---
+
+#### 7.14.9 Invariants
+
+* All third-party calls originate from the backend; browsers never hold privileged secrets or talk directly to sensitive APIs.
+* Keycloak is the primary IdP in the MVP; additional IdPs must implement the same OIDC and runtime patterns.
+* Stripe webhooks are the sole source of truth for payment outcomes.
+* Email failures never cause data loss; invites and report artefacts are persisted even if email dispatch is delayed.
+* Inference is optional; the system must operate safely and deterministically with inference fully disabled.
+* Sandbox and production keys are strictly separated and never mixed across environments.
+
+This completes the runtime integration story and keeps the surface area with the outside world explicit and controllable.
+
+---
 
 ### 7.15 Environment Bootstrap and Data Seeding
 
