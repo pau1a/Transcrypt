@@ -8520,7 +8520,223 @@ This completes the runtime integration story and keeps the surface area with the
 
 ### 7.15 Environment Bootstrap and Data Seeding
 
-Minimal boot scripts, seed data for staging (sanitised), fixture packs for E2E tests, and scrubbing rules for any prod snapshots used in non-prod.
+This section defines how new environments come online, how deterministic development and testing datasets are constructed, and how production data is protected from accidental reuse. In Transcrypt’s model there are only two environments:
+
+* **Local Development (Mac)** — the full working platform for engineering, content authoring, test execution, and end-to-end behaviour.
+* **Production (DigitalOcean)** — the customer-facing runtime served via a DO droplet, DO CDN, and DO Spaces.
+
+There is no staging environment at this time, but the rules below ensure that one could be introduced later without architectural redesign.
+
+Environment bootstrap concerns **three domains**:
+
+1. **Platform bootstrap** — bringing up the runtime (DB, Keycloak realm, services, blog/site runtime, inference connections).
+2. **Reference data** — static, version-controlled facts shipped to both environments (frameworks, Quick Start templates).
+3. **Dev/test seed data** — deterministic fake data only for Local Dev and CI.
+4. **Scrubbing and safety** — how production data is kept out of non-production environments.
+
+---
+
+#### **7.15.1 Bootstrap Procedures (Dev and Prod)**
+
+Environment bootstrap ensures the system can be brought from a blank host to a fully functioning Transcrypt runtime with no manual, ad-hoc steps. Bootstrap is not IaC; it is a minimal, repeatable scripted sequence that aligns the environment with the architecture described in §§7.1–7.14.
+
+##### **Local Development Bootstrap (Mac)**
+
+Local Development bootstrap:
+
+* Installs runtime dependencies (Node, pnpm/yarn, local PostgreSQL).
+* Creates the local development database.
+* Applies all database migrations.
+* Loads **reference data** (framework definitions, Quick Start templates).
+* Loads **dev seed data** (see §7.15.3).
+* Starts Keycloak with a **local development realm**:
+
+  * Transcrypt OIDC client with localhost redirect URIs.
+  * Test identities for Admin, Member, Read-only Guest.
+* Loads sample blog posts, landing pages, and lead-magnet assets from the repo.
+* Configures environment variables for:
+
+  * DO Spaces access (dev-safe keys),
+  * Inference API (real or stubbed),
+  * MXroute dev routing,
+  * Stripe test mode.
+
+Bootstrap succeeds only when the full platform — site/blog, Essentials, Keycloak, workers, inference hooks — runs end-to-end.
+
+##### **Production Bootstrap (DO Droplet)**
+
+Production bootstrap is performed on a fresh DigitalOcean droplet and includes:
+
+* OS updates, prerequisite packages.
+* Node installation and the chosen process manager (e.g., systemd services).
+* Runtime user creation and file layout (app, logs, cache).
+* PostgreSQL installation/configuration (or attachment to DO Managed Postgres).
+* Application migrations **without** dev/test seed data.
+* Loading of **reference data only**.
+* Configuration of:
+
+  * Keycloak (production realm, external to the droplet),
+  * DO Spaces (production bucket),
+  * MXroute (production mailboxes),
+  * Stripe live mode,
+  * Inference API (live endpoint/key).
+* Enabling and starting:
+
+  * Web runtime,
+  * API runtime,
+  * Background worker runtime.
+* Confirming health endpoints and liveness checks.
+
+All deployments to Production arrive via CI/CD. Bootstrap is concerned only with the initial provisioning of a new host.
+
+---
+
+#### **7.15.2 Reference Data (Shipped to All Environments)**
+
+Reference data is version-controlled, deterministic, and applied identically to Dev and Prod. It includes:
+
+* Cyber Essentials framework definitions.
+* Control templates and grouping metadata.
+* Quick Start checklist templates.
+* Default help content fragments (non-tenant-specific).
+* Any static site/blog taxonomy metadata (for consistent rendering).
+
+Reference data is applied via migrations or a dedicated reference-data loader. It is **not** considered “seed” data; it is part of the product.
+
+---
+
+#### **7.15.3 Dev-Only Seed Data (Local Dev)**
+
+Dev Seed Data makes the Local Development environment usable and testable without manual setup. It is never applied to Production.
+
+##### **Essentials Dev Seed Pack**
+
+* One deterministic example organisation.
+* Mappings to the **Keycloak dev realm** identities:
+
+  * `admin@example.test`,
+  * `member@example.test`,
+  * `guest@example.test`.
+* A pre-attached Cyber Essentials framework.
+* A representative spread of control statuses:
+
+  * Compliant / Partial / Not compliant / N/A.
+* Sample evidence:
+
+  * Dummy PDFs, URLs, note-only evidence.
+* Sample reports:
+
+  * One READY, one FAILED, one PROCESSING.
+* At least one control with **inference-enabled** behaviour to exercise real/stub inference paths.
+
+##### **Marketing Dev Seed Pack**
+
+* A set of sample blog posts.
+* Example landing pages.
+* Development-only lead magnets.
+* Sample CTA targets and UTM-tagged examples.
+
+##### **Safety Rules**
+
+* Seeds are fully deterministic: same output on each execution.
+* Seeds are idempotent: re-running them overwrites or replays safely.
+* Seeds never introduce external secrets, real email addresses, or PII.
+
+---
+
+#### **7.15.4 Test Fixtures (E2E and CI)**
+
+Automated test runs must begin from a clean, known state:
+
+* Fresh database.
+* All migrations applied.
+* All reference data loaded.
+* Test fixture pack applied:
+
+  * A minimal example organisation.
+  * One Keycloak test user.
+  * A small, fixed set of controls/evidence.
+* Inference API:
+
+  * Configurable to use either real inference or a stub/mock endpoint in CI.
+* Deterministic behaviour across runs (no random IDs unless deterministic prefixes are used).
+
+Fixture packs are separate from dev seeds and stored under a dedicated test directory.
+
+---
+
+#### **7.15.5 Production Data Scrubbing**
+
+Raw production data **must never** be mounted or queried directly from Local Development or any future non-production environment.
+
+If a production snapshot is ever required for debugging or performance profiling, it must pass through a deterministic **scrubbing pipeline**:
+
+* Replace all email addresses with structured fakes (`user123@example.test`).
+* Replace organisation names with generic placeholders preserving shape (`Org A`, `Org B`).
+* Null or hash any free-text fields that might contain PII.
+* Strip all authentication and session tables.
+* Remove or replace evidence binary content:
+
+  * Option A: remove all evidence rows,
+  * Option B: keep metadata but replace file blobs with harmless placeholders.
+* Remove any billing or Stripe-related data containing card or customer identifiers.
+
+Scrubbed snapshots are immutable, kept only for their debugging purpose, and never written back to Production.
+
+---
+
+#### **7.15.6 Bootstrap Diagram (Dev vs Prod)**
+
+Placed at the end of the section for visual clarity.
+
+```mermaid
+flowchart TD
+    subgraph Dev[Local Development (Mac)]
+        A1[Install deps<br/>Node, Postgres]
+        A2[Run migrations]
+        A3[Load reference data]
+        A4[Load dev seeds]
+        A5[Start Keycloak dev realm]
+        A6[Configure inference API (real/stub)]
+        A7[Start web/API/workers]
+    end
+
+    subgraph Prod[Production (DigitalOcean Droplet)]
+        B1[Provision droplet]
+        B2[Install deps<br/>Node, Postgres/system]
+        B3[Run migrations]
+        B4[Load reference data]
+        B5[Connect to Keycloak prod realm]
+        B6[Configure inference API (live)]
+        B7[Start web/API/workers via systemd]
+    end
+
+    Dev -->|CI Build + Deploy| Prod
+```
+
+---
+
+#### **7.15.7 Production Scrubbing Pipeline**
+
+```mermaid
+flowchart LR
+    P[Production Snapshot] --> S[Scrubbing Process<br/>• anonymise PII<br/>• remove evidence blobs<br/>• strip secrets]
+    S --> C[Clean Snapshot]
+    C --> D[Safe for Dev/Test Use]
+```
+
+---
+
+#### **7.15.8 Invariants**
+
+* Production must never receive dev seeds or test fixtures.
+* Local Development must always load dev seeds and reference data.
+* Test fixtures must be deterministic and isolated from dev seeds.
+* Scrubbed snapshots must contain no PII, secrets, or evidence blobs.
+* Bootstrap must be fully repeatable and scriptable for both environments.
+* All identity mappings in dev/test rely solely on the Keycloak dev realm.
+
+---
 
 ### 7.16 Disaster Readiness Hooks
 
