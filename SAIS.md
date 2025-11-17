@@ -5289,7 +5289,20 @@ Together, §§6.8–6.9 define how performance expectations are measured, traced
 
 ## 7. Deployment and Environment Architecture
 
-Describes environments (dev, staging, prod), configuration, secrets handling, and network topology. Defines IaC linkage and environment parity rules.
+This section defines **how Transcrypt is deployed, operated, and promoted across environments**. It establishes the physical shape of the platform – the environments it runs in, how they are provisioned and updated, how secrets and configuration are managed, how traffic reaches the system, and how the infrastructure is protected and observed.
+
+It sets the **environmental contract** that all engineering work must obey:
+
+* each environment (dev, staging, prod, and any preview stacks) runs the same build artefacts and configuration-by-name;
+* promotion between environments is driven by Infrastructure-as-Code, with no manual drift;
+* the network topology, segmentation, secrets, runtime permissions, and external integrations follow a single documented pattern;
+* all components (Next.js, Gateway, services, workers, queues, storage, database) exist in well-defined places with clear trust boundaries;
+* rollout, rollback, migrations, signing, and supply-chain controls are consistent across environments;
+* observability, access control, cost guardrails, and disaster-readiness follow the same rules everywhere.
+
+Where §6 defines **how the system behaves**, §7 defines **where and how the system runs**, what it is allowed to talk to, and how it stays safe, reproducible, and recoverable.
+
+All diagrams, topology descriptions, access-control rules, and IaC conventions in this section are **normative** for implementation and operations.
 
 ---
 
