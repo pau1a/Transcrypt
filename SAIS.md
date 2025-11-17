@@ -9009,9 +9009,9 @@ A lightweight visualisation of disaster recovery using §7.15 bootstrap scripts.
 
 ```mermaid
 flowchart TD
-    A[Provision New Droplet] --> B[Run Bootstrap Scripts (§7.15)]
+    A[Provision New Droplet] --> B[Run Bootstrap Scripts §7.15]
     B --> C[Restore PostgreSQL from Backup]
-    C --> D[Restore Spaces Prefixes (Evidence/Reports)]
+    C --> D[Restore Spaces Prefixes Evidence/Reports]
     D --> E[Reconfigure Secrets & Keycloak]
     E --> F[Start Runtimes<br/>Web/API/Workers]
     F --> G[Service Operational]
