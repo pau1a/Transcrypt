@@ -5704,8 +5704,7 @@ Terraform is not a prerequisite for scaling into revenue—it's simply an option
 
 #### **7.2.7 Infrastructure Definition & Rebuild Blueprint**
 
-Placed **at the end of the section**, after all prose.
-This diagram gives the operator a visual summary of the entire IaC model:
+The following diagram summarises the infrastructure model for the MVP, showing how the production droplet, CDN, object storage, external services, and backup/restore flow fit together.
 
 ```mermaid
 flowchart TB
@@ -5734,7 +5733,206 @@ This captures:
 
 ### 7.3 Runtime Topology
 
-High-level diagram and description of components per environment: CDN/Edge, Web (Next.js), API Gateway, Services (Rule, Evidence, Report), Queue/Workers, PostgreSQL, Object Store, Redis. Include port bindings and health-check endpoints.
+The runtime topology describes how Transcrypt executes in both local development and production. It defines how the web runtime, API routes, background workers, database, object storage, external providers, and CDN fit together during execution. This section captures the physical layout of the system at runtime, not the logical architecture in §6.
+
+The marketing site, blog, and Essentials application are all served by a single Next.js runtime. Background work (reports, email dispatch, evidence ingestion) runs in a separate worker process that shares the same codebase. PostgreSQL is used as the system-of-record; DigitalOcean Spaces provides object storage and powers the CDN. Stripe, MXroute, and the inference API are external SaaS dependencies accessed over HTTPS.
+
+---
+
+#### **7.3.1 Local Development Runtime Topology**
+
+Local development runs the entire platform on the MacBook. All routes, workers, and integrations must work end-to-end exactly as they do in production, with the only differences being scale and secret values.
+
+**Local components**
+
+* **Next.js runtime (dev mode)**
+  Serves:
+
+  * marketing site (`/`)
+  * blog (`/blog/*`)
+  * Essentials application (`/app/*`)
+  * API routes (`/api/*`)
+
+  Listens on **`localhost:3000`**.
+
+* **Local PostgreSQL**
+  Runs on **`localhost:5432`** and stores all application data.
+
+* **Background worker**
+  A separate Node process that pulls jobs from a Postgres-backed queue and executes asynchronous workflows (report generation, evidence processing, email triggers).
+
+* **External services (test/dev)**
+
+  * DigitalOcean Spaces for asset upload
+  * Stripe (test mode)
+  * MXroute (dev/test routing)
+  * Inference API (dev key)
+
+**Traffic behaviour**
+
+* The browser connects directly to `localhost:3000`.
+* Next.js routes issue DB queries locally.
+* Next.js and the worker communicate with external services via HTTPS.
+* Assets are pushed up to DO Spaces during development and are the same assets later used in production via CDN.
+
+**Health checks**
+
+* `/healthz` — liveness
+* `/readyz` — readiness (DB reachable, Spaces reachable, external API check within tight timeout)
+* Worker health through a lightweight heartbeat (DB row) or its own HTTP endpoint if enabled.
+
+##### **Local Runtime Diagram**
+
+```mermaid
+flowchart LR
+    Browser[Browser<br/>localhost] --> App[Next.js Runtime<br/>localhost:3000]
+
+    App --> DB[(PostgreSQL<br/>localhost:5432)]
+    Worker[Background Worker<br/>Local Process] --> DB
+
+    App --> Spaces[(DO Spaces)]
+    Worker --> Spaces
+
+    App --> Stripe[Stripe Test API]
+    Worker --> Stripe
+
+    App --> MX[MXroute Dev/Test]
+    Worker --> MX
+
+    App --> LLM[Inference API<br/>Dev Key]
+    Worker --> LLM
+```
+
+---
+
+#### **7.3.2 Production Runtime Topology**
+
+Production runs on a single DigitalOcean droplet. The same Next.js build that runs locally is served here in optimised mode. All customer-facing traffic enters through DNS and reaches the droplet over HTTPS. Static assets are delivered through DigitalOcean’s CDN backed by Spaces.
+
+**Production components**
+
+* **Next.js runtime (production build)**
+  Serves:
+
+  * marketing site
+  * blog
+  * Essentials application UI
+  * `/api/*` (evaluation, evidence, reporting, billing, invitations, etc.)
+
+  Listens on **port 443** (via Node directly or via a lightweight reverse proxy such as Caddy or Nginx).
+  Port 80 redirects to 443.
+
+* **PostgreSQL**
+  Runs on the droplet or via DO’s managed database service.
+  Accessible only locally or via DO private networking.
+
+* **Background worker**
+  A separate Node process on the droplet executing asynchronous workflows through the same DB-backed queue.
+
+* **DigitalOcean Spaces + CDN**
+
+  * All blog images, hero assets, static downloads, and lead magnets.
+  * CDN handles caching and global delivery.
+  * Application reads/writes via the Spaces S3-compatible API.
+
+* **External providers (live)**
+
+  * Stripe (live mode)
+  * MXroute (production mailboxes)
+  * Inference API (production project/key)
+
+**Traffic behaviour**
+
+* Client → DNS → droplet (443) → Next.js → DB
+* Client → CDN → Spaces for static assets
+* Next.js and worker communicate with Stripe, MXroute, inference API via outbound HTTPS.
+
+**Ports**
+
+* **443** — HTTPS (public)
+* **80** — HTTP (redirect)
+* **5432** — PostgreSQL (private only)
+* **22** — SSH (restricted)
+  No other ports exposed.
+
+**Health checks**
+
+* `/healthz` — process liveness
+* `/readyz` — DB ready, Spaces reachable, ability to contact Stripe/LLM provider within configured timeout
+* Worker health via HTTP or heartbeat row
+
+##### **Production Runtime Diagram**
+
+```mermaid
+flowchart LR
+    Client[Client Browser<br/>HTTPS 443] --> DNS[DNS Routing]
+    DNS --> Droplet[DigitalOcean Droplet<br/>Next.js Runtime]
+
+    Droplet --> DB[(PostgreSQL<br/>Private)]
+    Worker[Background Worker<br/>Same Droplet] --> DB
+
+    CDN[DO CDN] --> Spaces[(DO Spaces<br/>Static Assets)]
+    Droplet --> Spaces
+
+    Droplet --> Stripe[Stripe Live API]
+    Worker --> Stripe
+
+    Droplet --> MX[MXroute SMTP]
+    Worker --> MX
+
+    Droplet --> LLM[Inference API<br/>Prod Key]
+    Worker --> LLM
+```
+
+---
+
+#### **7.3.3 Logical Services Within a Single Runtime**
+
+Although Transcrypt uses the terminology of “Evaluation Service”, “Evidence Service”, “Report Service”, and similar, these are **logical modules**, not separate runtime processes. All API routes are served by the single Next.js runtime on the droplet and during development. The worker process calls into the same modules.
+
+All service boundaries described in §6 (evaluation, evidence, reporting, user/tenant, billing, invitations) are implemented as internal code organisation rather than standalone containers.
+
+---
+
+#### **7.3.4 Queue and Worker Execution Model**
+
+The asynchronous execution layer uses a **PostgreSQL-backed queue** in the MVP.
+The worker process:
+
+* runs on the same droplet as the app,
+* polls the queue for jobs,
+* emits events to the DB-backed outbox,
+* and performs all deferred work (report generation, email dispatch, evidence ingestion, billing normalisation).
+
+No Redis, RabbitMQ, Kafka, or other queueing infrastructure is part of the MVP runtime.
+
+---
+
+#### **7.3.5 Port Bindings**
+
+| Component             | Local (Mac)      | Production (Droplet)      |
+| --------------------- | ---------------- | ------------------------- |
+| Web/App/API (Next.js) | 3000             | 443 (HTTPS) / 80 redirect |
+| PostgreSQL            | 5432             | 5432 (private only)       |
+| Worker process        | n/a (local proc) | n/a (local proc)          |
+| SSH                   | n/a              | 22 (restricted)           |
+| CDN / Spaces          | HTTPS outbound   | HTTPS outbound            |
+
+All other inbound ports are closed.
+
+---
+
+#### **7.3.6 Health-Check Endpoints**
+
+Transcrypt exposes consistent health endpoints across environments:
+
+* **`/healthz`** — liveness (process running)
+* **`/readyz`** — readiness (DB reachable, Spaces reachable, minimal external API check)
+* **Worker health** — via database heartbeat or separate endpoint if configured
+
+These endpoints integrate with CI/CD post-deploy checks and operational monitoring.
+
+---
 
 ### 7.4 Networking and Segmentation
 
