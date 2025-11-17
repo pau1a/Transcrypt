@@ -6248,7 +6248,7 @@ For **tenant-bound secrets** that must be persisted (e.g. future per-tenant API 
 
 ```mermaid
 flowchart LR
-    S[Plain tenant secret] --> G[Generate DEK\n(random key)]
+    S[Plain tenant secret] --> G[Generate DEK\n random key ]
     G --> E[Encrypt secret with DEK\n AES-GCM]
     G --> W[Wrap DEK with master key]
     E --> D[(DB row:\nwrapped DEK + ciphertext + IV + tag)]
@@ -6383,8 +6383,205 @@ Inference API credentials are never exposed to the browser, never embedded in HT
 
 ### 7.6 Build Artifacts, Signing, and Supply Chain
 
-Container registry, image tags, SBOM generation, signature and provenance (Cosign/Sigstore; SLSA level target).
-Policy at admission (only signed, non-vulnerable images run; CVE budget and gate).
+Transcrypt uses a single CI pipeline to build, scan, and publish production artefacts for the marketing site, blog, and Essentials application. Although production is not containerised, the build pipeline enforces provenance, reproducibility, and vulnerability gating in line with modern supply-chain expectations. This section defines the artefacts produced, the provenance model, SBOM generation, CVE gating rules, and the admission policy that determines what is permitted to run on the production droplet.
+
+The goal is simple: **production only runs artefacts built by CI from a known commit, with a corresponding SBOM and a clean vulnerability report**.
+
+---
+
+#### 7.6.1 Artifact Types
+
+Each CI run that targets production creates a complete artefact set for the entire platform. Artefacts cover the site, blog, and Essentials runtime because all three reside in the same Next.js codebase.
+
+##### Build Output
+
+* The Next.js **production build directory** produced by `next build`.
+* The static bundle used by the DO CDN:
+
+  * pre-rendered HTML,
+  * CSS and JS assets,
+  * blog imagery,
+  * lead-magnet assets,
+  * public static content.
+* A compressed release archive:
+
+  * `transcrypt-build-{git-sha}.tar.gz`
+  * contains the `.next` directory, static assets, and deployment scripts.
+
+These represent the exact state of the platform delivered to production.
+
+##### Metadata Artifacts
+
+Each build includes:
+
+* A **build manifest**:
+
+  * git SHA,
+  * CI pipeline run ID,
+  * timestamp,
+  * dependency lockfile checksum.
+* A **Software Bill of Materials** (SBOM):
+
+  * CycloneDX JSON,
+  * captures all Node dependencies and versions.
+* A **vulnerability scan report**:
+
+  * results of dependency scanning (`npm audit` or improved scanner),
+  * CVEs grouped by severity,
+  * list of approved waivers where relevant.
+
+Metadata is archived with the build and linked to the commit history for future investigation or rollback.
+
+---
+
+#### 7.6.2 Provenance Model and Signing
+
+Even without containers, Transcrypt enforces a clean provenance chain.
+
+##### Source Provenance
+
+* All production builds originate from the **main** branch.
+* Direct pushes to main are blocked; merges must come from PRs.
+* GitHub Actions builds are automatically tied to the commit SHA.
+* Release tags may optionally be **signed** using GitHub’s built-in signing, providing a verifiable root for provenance chains.
+
+##### Build Provenance
+
+* The CI workflow emits a provenance record:
+
+  * commit SHA,
+  * build script version,
+  * environment image used to build,
+  * dependency lockfile used,
+  * SBOM file checksum.
+
+This ensures downstream debugging can always reconstruct what was shipped.
+
+##### Future Provision for Cosign
+
+If Transcrypt later moves to containerisation, Cosign signing will be applied to container images and release artefacts. The SAIS design does not assume containers but keeps the pathway open for future SLSA-level progression.
+
+---
+
+#### 7.6.3 SBOM and Vulnerability Scanning
+
+Every production candidate build emits a full SBOM and is scanned for vulnerabilities. Supply-chain safety depends on predictable dependency behaviour, so the pipeline enforces strict gating.
+
+##### SBOM Generation
+
+* CycloneDX SBOM is generated in CI at build time.
+* SBOM includes:
+
+  * all Node dependencies (direct and transitive),
+  * resolved versions from the lockfile,
+  * hashes where available,
+  * licence metadata.
+
+SBOMs are stored with build artefacts and linked to the release manifest.
+
+##### Vulnerability Scanning
+
+CI performs dependency scanning using both:
+
+1. **The Node ecosystem scanner** (`npm audit` or a superior OSS scanner).
+2. **Optional secondary scanners** for corroboration or defence-in-depth.
+
+##### CVE Budget and Policy Gate
+
+A production artefact is **rejected** if:
+
+* any **critical** vulnerability is present in direct dependencies;
+* any **high severity** vulnerability is present without an approved waiver;
+* the dependency tree shows inconsistent version resolution compared to the lockfile.
+
+A waiver system exists only for:
+
+* known false positives,
+* vulnerabilities in unused optional paths,
+* upstream bugs with no immediate fix but confirmed low exploitability.
+
+Waivers must be explicitly documented in the repo; they do not silently accumulate.
+
+If the scan fails, the build is labelled unfit for deployment and blocked from admission to production.
+
+---
+
+#### 7.6.4 Deployment and Admission Policy
+
+Production only accepts artefacts that satisfy three conditions:
+
+1. **Built by CI** from a known commit.
+2. **Has a valid SBOM** and clean scan (or documented waivers).
+3. **Matches the git SHA** the deploy step is referencing.
+
+##### Deployment Workflow
+
+* CI produces a build artefact and metadata bundle.
+* Deployment uses a controlled script that:
+
+  * pulls the artefact associated with the target SHA,
+  * verifies presence of the SBOM and scan results,
+  * unpacks the artefact onto the droplet,
+  * restarts the runtime (Next.js server and background workers),
+  * performs health-check queries before marking the deploy complete.
+
+##### Admission Policy
+
+The admission rule is strict:
+
+> **If CI did not build it, sign it, and scan it, it does not run in production.**
+
+There are no manual overrides, no hot-fix uploads, and no shell-built assets on the droplet.
+This protects against tampering, accidental mis-builds, and “unknown origin” artefacts.
+
+---
+
+#### 7.6.5 External Dependencies and Inference API
+
+The supply-chain boundary includes SDKs, but excludes remote model internals.
+
+##### SDK Dependency Model
+
+* The inference API client library is treated as a normal dependency:
+
+  * appears in SBOM,
+  * subject to vulnerability scanning,
+  * rejected if breaking CVEs appear.
+
+* Version pins prevent silent upstream changes.
+
+##### Remote Service Boundary
+
+* The underlying LLM or inference service exists **outside** your supply-chain boundary.
+* Its behaviour is validated by:
+
+  * regression tests,
+  * mocked tests for CI,
+  * controlled real API tests in dev or scheduled CI steps.
+
+No inference API key, prompt, or response detail is written to build artefacts or logs.
+
+---
+
+#### 7.6.6 Build-to-Production Flow Diagram
+
+This single diagram anchors the supply-chain lifecycle.
+No parentheses in labels, as required.
+
+```mermaid
+flowchart LR
+    Git[Git Repo] --> CI[CI Build and Scan]
+    CI --> SBOM[SBOM and Scan Report]
+    CI --> ART[Build Artifact]
+    SBOM --> GATE[Policy Gate]
+    ART --> GATE
+    GATE --> DEPLOY[Deploy to Droplet]
+    DEPLOY --> PROD[Production Runtime]
+```
+
+The diagram shows the complete chain: commit → build → provenance → SBOM → gating → production.
+
+---
 
 ### 7.7 Deployment Strategies
 
