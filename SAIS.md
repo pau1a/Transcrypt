@@ -8004,6 +8004,34 @@ flowchart LR
 Instance classes, autoscaling policies, quota limits, and cost alerts.
 Load/capacity assumptions for MVP with headroom targets.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### 7.14 Third-Party Integrations in Runtime
 
 Network routes and credentials for Stripe, IdP (Entra/Okta), SMTP, etc.
@@ -8025,13 +8053,13 @@ Maps architecture to controls in IEC 62443, NIS2, and Cyber Essentials. Details 
 
 ---
 
-### 9.1 Security Philosophy and Objectives
+### 8.1 Security Philosophy and Objectives
 
 Defines the overarching intent: defence in depth, least privilege, isolation by default, and full traceability.
 Connects these principles directly to Transcrypt’s mission of “measurable security and invisible complexity.”
 States that every control maps to a verifiable artefact — no “policy-only” items.
 
-### 9.2 Control-Framework Mapping
+### 8.2 Control-Framework Mapping
 
 Summarises how the architecture satisfies mandatory frameworks:
 
@@ -8040,13 +8068,13 @@ Summarises how the architecture satisfies mandatory frameworks:
 * **NIS2** – incident reporting, supply-chain governance, resilience, data integrity.
   Provide a cross-reference table: *Framework → Control → Section(s)/Component(s) → Evidence Artefact.*
 
-### 9.3 Identity, Access, and Segregation
+### 8.3 Identity, Access, and Segregation
 
 Detail how authentication and authorisation are enforced across layers:
 OIDC for users, IAM roles for services, policy-based routing per tenant, and attribute-based access for admin tooling.
 Include session lifetime, MFA enforcement, and revocation workflow.
 
-### 9.4 Data Protection and Key Management
+### 8.4 Data Protection and Key Management
 
 Describe encryption models:
 
@@ -8055,40 +8083,40 @@ Describe encryption models:
 * Key lifecycle: rotation, audit, destruction, and escrow.
   Note which services hold plaintext transiently and how memory zeroisation is handled.
 
-### 9.5 Audit and Logging Architecture
+### 8.5 Audit and Logging Architecture
 
 Define immutable audit-log flow:
 structured JSON logs → append-only store → periodic hash → object-store replication.
 Include tenant/request correlation, tamper-detection, and retention policy.
 Clarify what is *not* logged (sensitive fields, credentials, tokens).
 
-### 9.6 Redaction, Anonymisation, and DSR Handling
+### 8.6 Redaction, Anonymisation, and DSR Handling
 
 Explain the redaction pipeline for AI prompts or logs, the anonymisation of test data, and how Data Subject Requests are executed and verified.
 Reference data schemas affected (from §4) and retention limits (from §4.5).
 
-### 9.7 Network and Runtime Hardening
+### 8.7 Network and Runtime Hardening
 
 List baseline controls: locked-down inbound rules, egress allow-lists, minimal images, CIS-benchmarked OS profiles, container sandboxing, and runtime policy (seccomp/AppArmor).
 Document vulnerability scanning cadence and patch SLAs.
 
-### 9.8 Secure Development and Supply Chain
+### 8.8 Secure Development and Supply Chain
 
 Specify dependency scanning, SBOM generation, commit-signing, and build pipeline attestation.
 Describe how third-party libraries are approved, updated, and revoked.
 Link to §8.6 (Build Artifacts and Signing).
 
-### 9.9 Incident Detection and Response Readiness
+### 8.9 Incident Detection and Response Readiness
 
 Summarise monitoring sources (IDS/WAF alerts, anomaly logs), escalation flow, severity classification, and 24 h notification target for NIS2 incidents.
 Point to detailed procedures in §12 (Operational Runbooks).
 
-### 9.10 Compliance Evidence and Verification
+### 8.10 Compliance Evidence and Verification
 
 Define how control compliance is proven automatically: scheduled checks, stored artefacts, signed reports.
 Include evidence export format (JSON / PDF), reviewer sign-off workflow, and hash-anchoring of reports for integrity.
 
-### 9.11 Residual Risk and Exception Register
+### 8.11 Residual Risk and Exception Register
 
 Describe process for tracking deviations or compensating controls — who approves, how expiry is enforced, and where exceptions are logged for audit.
 
@@ -8100,11 +8128,11 @@ Defines metrics, traces, structured logs, and SLOs. Specifies tenant/request cor
 
 ---
 
-### 10.1 Objectives and Scope
+### 9.1 Objectives and Scope
 
 Define why we instrument: verify SLOs, shorten MTTR, and prove compliance evidence. Clarify scope (apps, workers, gateway, jobs, CDN/edge).
 
-### 10.2 Telemetry Standards and Context Propagation
+### 9.2 Telemetry Standards and Context Propagation
 
 Adopt OpenTelemetry for metrics, traces, and logs.
 W3C Trace Context headers (`traceparent`, `tracestate`) are mandatory end-to-end.
@@ -8115,7 +8143,7 @@ Correlation keys carried on every event:
 * `user_id` (if authenticated)
 * `component` / `version` / `region`
 
-### 10.3 Metrics (SLIs) and SLOs
+### 9.3 Metrics (SLIs) and SLOs
 
 Define the canonical SLIs and targets; namespaced `transcrypt.<domain>.<metric>` with labels `{tenant, region, version}`.
 
@@ -8130,7 +8158,7 @@ Define the canonical SLIs and targets; namespaced `transcrypt.<domain>.<metric>`
 
 Error budget policy: 0.1% monthly. Burn-rate alerts defined in §10.7.
 
-### 10.4 Tracing Requirements
+### 9.4 Tracing Requirements
 
 Spans for UI→Gateway→Service→DB/Queue with consistent names:
 `svc:<component>.<operation>` (e.g., `svc:rule.evaluate`).
@@ -8138,7 +8166,7 @@ Span attributes (must-have): `tenant_id`, `request_id`, `http.route`, `db.statem
 Sampling: head-based 10% in prod; tail-based for top-latency and error outliers.
 Store exemplar traces for all SLO breaches.
 
-### 10.5 Structured Logging Schema
+### 9.5 Structured Logging Schema
 
 JSON logs only; one event per line. Required fields:
 
@@ -8160,7 +8188,7 @@ JSON logs only; one event per line. Required fields:
 
 PII/secret scrubbing: token/secret patterns redacted at source; logs rejected by schema if unsanitised.
 
-### 10.6 Dashboards and Reporting
+### 9.6 Dashboards and Reporting
 
 Minimum dashboards:
 
@@ -8170,7 +8198,7 @@ Minimum dashboards:
 * **SLO Overview** with budget remaining and breach history
   Export weekly PDF snapshots for audit evidence (hash stored per §4.5).
 
-### 10.7 Alerting Policy and Burn-Rate Rules
+### 9.7 Alerting Policy and Burn-Rate Rules
 
 Alerts must be actionable and route to on-call with runbook link. Multi-window/multi-burn-rate examples:
 
@@ -8179,7 +8207,7 @@ Alerts must be actionable and route to on-call with runbook link. Multi-window/m
 * Queue lag: threshold > 30 s for 10 min
   Channels: PagerDuty (P1/P2), Slack (P3), email digest (P4). Silence windows require change ticket.
 
-### 10.8 Health and Readiness Endpoints
+### 9.8 Health and Readiness Endpoints
 
 Every service exposes:
 
@@ -8188,13 +8216,13 @@ Every service exposes:
 * `/metrics` (Prometheus/OpenMetrics)
   Readiness gates deployments; health feeds uptime checks.
 
-### 10.9 Data Retention, Cost, and Privacy
+### 9.9 Data Retention, Cost, and Privacy
 
 Retention: traces 7 days (hot), 30 days (cold, sampled); logs 90 days; metrics 13 months (roll-ups).
 Cost caps per tenant; drop non-key labels if cardinality explodes.
 Privacy: no raw PII in telemetry; hashed IDs only. Telemetry exports are in scope for DSR discovery but not deletion unless they contain PII.
 
-### 10.10 Testability and CI Hooks
+### 9.10 Testability and CI Hooks
 
 Contract tests assert: required spans emitted, logs conform to schema, key metrics increment on actions.
 Synthetic checks (login, upload, evaluate, report) run continuously and feed SLO dashboards.
