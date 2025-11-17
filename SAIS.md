@@ -5477,8 +5477,260 @@ This diagram shows the full environment model: develop locally, publish assets t
 
 ### 7.2 Infrastructure as Code (IaC)
 
-Name the IaC stack (e.g., Terraform + Terragrunt).
-Describe state management, module layout, and promotion workflow (plan → apply via CI with approvals). Reference repo paths for infra modules.
+Transcrypt’s infrastructure for the MVP is intentionally minimal: a **single DigitalOcean droplet**, a **DigitalOcean Spaces bucket + CDN**, **MXroute** for email, **Stripe** for billing, and an external **Inference API** used by the application. The priority in this phase is *speed, reliability, and repeatability*, not early adoption of Terraform or cloud-formalised IaC stacks.
+
+“IaC” in the MVP therefore means:
+
+* **Every infrastructure decision is documented.**
+* **Every configuration value is committed as structured config (never implicit).**
+* **Every environment can be rebuilt cleanly following written, reproducible steps.**
+* **Bootstrap scripts and CI/CD jobs automate everything that is safe to automate.**
+
+Full Terraform/Terragrunt adoption may come later when the Essentials app generates enough recurring revenue to justify managed complexity. For now, the system follows a **documented-IaC + scripted-IaC** model that still ensures determinism.
+
+---
+
+#### **7.2.1 IaC Philosophy for the MVP**
+
+Transcrypt’s infrastructure principles in the MVP are:
+
+1. **Everything must be reproducible**
+   A clean DO droplet must be rebuildable from a documented procedure plus configuration files checked into Git.
+
+2. **Everything configurable must be explicit**
+   No hidden environment-only configuration.
+   No “stuff on the droplet nobody remembers creating”.
+
+3. **No mutations outside CI/CD**
+   The droplet runs *only* what CI/CD deploys.
+   No manual editing of files or services on the server.
+
+4. **Documentation *is* infrastructure**
+   For the MVP, written system definitions are treated as first-class IaC.
+
+5. **Bootstrap scripts fill the gap**
+   Where automation makes sense (service start, migrations, health checks), small scripts handle the busywork.
+
+6. **Future Terraform adoption is not blocked**
+   The MVP structure is designed so IaC can be introduced incrementally later.
+
+This gives you 100% control today, and a clean runway for future automation when the business case appears.
+
+---
+
+#### **7.2.2 What Counts as IaC in This Phase**
+
+Even without Terraform, the infrastructure is still “defined as code” through:
+
+* **`infra/` directory** inside the repo
+  Holds authoritative documentation, config schemas, bootstrap scripts, rebuild steps.
+
+* **CI/CD workflows**
+  Build → test → deploy → health-check.
+  These are declarative automation. They *are* IaC.
+
+* **Bootstrap scripts (`scripts/`)**
+  For provisioning services on the droplet:
+
+  * Next.js runtime start
+  * Worker scheduler start
+  * Database migrations
+  * Sanity checks (bucket access, Stripe key validation)
+
+* **Configuration manifests**
+  `.env.example`, config schemas, and validation code inside the app.
+
+* **DigitalOcean snapshot + DB backups**
+  Not “IaC” in the Terraform sense, but functionally “infrastructure definition & restore model”.
+
+This combination gives you deterministic behaviour without overloading yourself with Terraform maintenance.
+
+---
+
+#### **7.2.3 State Management (Human-Readable, Repo-Anchored)**
+
+Because there is no Terraform state, Transcrypt tracks infra state via **source-controlled JSON/YAML**:
+
+* `infra/state/droplet.json`
+
+  * DO droplet size
+  * region
+  * image used
+  * firewall profile
+  * ports open (80/443/SSH inbound)
+  * outbound allowances
+
+* `infra/state/spaces.json`
+
+  * Spaces bucket name
+  * region
+  * CDN config
+  * caching defaults
+
+* `infra/state/dns.json`
+
+  * A/AAAA records
+  * CNAMEs
+  * MX records for MXroute
+  * ACME certificate domains
+
+* `infra/state/email.json`
+
+  * MXroute routing patterns
+  * SPF/DKIM/DMARC records
+
+These documents represent “the truth” for the current environment and allow deterministic rebuild.
+
+Nothing in production is allowed to diverge from these. If the droplet is replaced, these files rebuild it.
+
+---
+
+#### **7.2.4 Module Layout (Documentation + Scripts)**
+
+Transcrypt uses a small, predictable directory structure:
+
+```
+repo/
+  infra/
+    state/
+      droplet.json
+      spaces.json
+      dns.json
+      email.json
+    docs/
+      rebuild.md
+      droplet-provision.md
+      spaces-setup.md
+      dns-config.md
+      backups.md
+    scripts/
+      bootstrap.sh
+      migrate.sh
+      verify-env.sh
+      deploy.sh
+```
+
+**This is IaC.**
+The "definition" lives in `infra/state/`.
+The "automation" lives in `infra/scripts/`.
+
+This section is where the second diagram goes (the repo layout diagram).
+
+##### **Diagram — Infrastructure Code Footprint (MVP)**
+
+Placed *here*, directly after describing module layout.
+
+```mermaid
+flowchart LR
+    R[repo/] --> I[infra/]
+    I --> ST[state/\ndroplet.json\nspaces.json\ndns.json\nemail.json]
+    I --> DOCS[docs/\nrebuild.md\ndroplet-provision.md\nspaces-setup.md]
+    I --> SCR[scripts/\nbootstrap.sh\nmigrate.sh\nverify-env.sh\ndeploy.sh]
+```
+
+---
+
+#### **7.2.5 Promotion Workflow (plan → apply, MVP edition)**
+
+Without Terraform, promotion follows a hybrid model:
+
+##### **1. Local Development (Authoring)**
+
+You build content, code, and configuration locally.
+
+##### **2. Git Commit → CI Pipeline**
+
+CI performs:
+
+* linting
+* static analysis
+* unit tests
+* integration tests
+* smoke tests
+* build of Next.js (site/blog/app)
+* report/workers build
+* artefact bundling
+
+##### **3. CI Deploy → Production Droplet**
+
+CI uses:
+
+* SSH deploy
+* or rsync-based atomic release
+* or container image + systemd unit update (if using Docker)
+
+After deploy:
+
+* Container/service restart
+* DB migrations run from CI (never from the droplet)
+
+##### **4. Post-Deploy Health Checks**
+
+CI tests:
+
+* `/` loads through CDN
+* `/app` loads through droplet
+* DB connectivity
+* Spaces access
+* MXroute SMTP check
+* Stripe key validation
+* Inference API test call
+
+##### **5. Promotion Complete**
+
+If health checks pass, the release is pinned.
+If not, rollback procedure triggers (redeploy previous artefact).
+
+This gives you the behavioural equivalent of “terraform plan → terraform apply → validation”.
+
+---
+
+#### **7.2.6 Future Terraform Migration Path (Optional, Not Required Now)**
+
+Although not part of the MVP, this section establishes future readiness:
+
+Terraform can later be introduced incrementally:
+
+1. Start with DNS
+2. Then Spaces + CDN
+3. Then the Droplet
+4. Finally database + firewall rules
+
+Because infra is already documented in JSON/YAML, the Terraform modules can be built directly from existing state.
+
+Terraform is not a prerequisite for scaling into revenue—it's simply an option.
+
+---
+
+#### **7.2.7 Infrastructure Definition & Rebuild Blueprint**
+
+Placed **at the end of the section**, after all prose.
+This diagram gives the operator a visual summary of the entire IaC model:
+
+```mermaid
+flowchart TB
+    Console[DigitalOcean Console\nManual Provisioning] --> Droplet[(Production Droplet)]
+    Droplet --> DNS[DNS Records]
+    Droplet --> MX[MXroute]
+    Droplet --> Stripe[Stripe API]
+    Droplet --> LLM[Inference API\n(external SaaS)]
+    Spaces[(DO Spaces)] --> CDN[(DO CDN)]
+    Droplet --> Spaces
+
+    Backup[DO Snapshots\n+ DB Backups] --> Restore[Rebuild Procedure]
+    Restore --> Droplet
+```
+
+This captures:
+
+* manual infra creation
+* code-driven deployments
+* DO Spaces as canonical content store
+* CDN as distribution layer
+* email + billing + inference API as external SaaS
+* backup/restore as the DR mechanism
+
+---
 
 ### 7.3 Runtime Topology
 
