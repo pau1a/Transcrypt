@@ -9230,60 +9230,98 @@ flowchart TB
 
 #### 8.5.1 Log Classes and Routing (Summary)
 
-All logs conform to the schema, classes, and severity model defined in §6.9. Audit, application, access, and infrastructure logs are emitted as JSON to stdout, collected via the platform agent, and routed to the central log sink with `log_type` attached for policy controls.
+Audit logging reuses the log classes and severity model in §6.9, but treats **audit** events as special.
+
+All components emit structured JSON logs to stdout with a `log_type` field. For security-relevant actions, services emit `log_type="audit"` events which:
+
+* are written into the **append-only audit table** (canonical source of truth), and
+* may be mirrored into the central log sink for search and dashboards.
+
+Application, access, and infrastructure logs follow the same envelope but are not treated as canonical evidence.
 
 #### 8.5.2 Audit Event Schema
 
-Audit events are the canonical evidence artefacts. Each event includes: `timestamp`, `tenant_id`, `request_id`, `actor_id`, `action`, `resource_type`, `resource_id`, `outcome`, `origin`, and `hash_of_payload` (when applicable). Schema definitions in §4 (artefacts & entities) govern the allowed values.
+Audit events are the canonical evidence artefacts. Each logical event includes at least:
+
+* `timestamp`
+* `tenant_id`
+* `request_id`
+* `actor_id` (user or service)
+* `action` (normalised verb such as `EVIDENCE.UPLOAD.CREATED`)
+* `resource_type`
+* `resource_id`
+* `outcome` (e.g. `success`, `denied`, `error`)
+* `origin` (coarse source such as region, IP block, or integration)
+* `hash_of_payload` (when applicable)
+
+The storage representation in the audit table also carries:
+
+* `event_id` (stable identifier),
+* `event_hash`, and
+* `prev_event_hash`,
+
+to support the hash-chaining described in §8.5.3 and in the PRD. Schema definitions in §4 (artefacts & entities) govern allowed values for `tenant_id`, `resource_type`, and `resource_id`.
 
 #### 8.5.3 Immutable Audit Flow
 
-* Services emit audit JSON events with the schema above and `log_type=audit`.
-* Events are written to an **append-only Postgres audit table**; `UPDATE`/`DELETE` are disallowed.
+* Services emit audit JSON events with the schema above and `log_type="audit"`.
+* Events are written to an **append-only Postgres audit table**; `UPDATE` and `DELETE` are disallowed. Corrections are always new rows that reference the original event.
 * An **hourly batch export** writes the audit stream to a versioned object-store prefix.
 * Each batch has a manifest enumerating files, batch sequence, and a batch hash (SHA-256).
 * Batch hashes are chained or checkpointed (linear or Merkle) to prove ordering and detect gaps.
 * A cold replication job copies each batch to a second object-store region.
 
+The audit table is the canonical record; exported batches and replicas are tamper-evident copies used for verification, disaster recovery, and long-term analysis.
+
 #### 8.5.4 Integrity and Tamper Detection
 
 * Verification recomputes the batch hash from exported files and compares it to the stored manifest value.
 * Any divergence signals corruption or tampering and triggers incident handling.
-* Corrections never mutate history; they emit new audit events that reference the original record and describe the correction context.
+* Because events are append-only, corrections never mutate history; they emit new audit events that reference the original record and describe the correction context.
+* Hash-chain breaks or missing batch sequences are treated as potential tampering and investigated.
 
 #### 8.5.5 Redaction and What Is Not Logged
 
-The following are never logged: passwords; ID/access/refresh tokens; secrets/API keys; evidence plaintext; PII such as emails, phone numbers, or names; sensitive payloads in application logs; only hashes or opaque IDs are permitted.
+Audit events are designed to carry **metadata and hashes only**, never raw sensitive content. The system **does not log**:
+
+* passwords or password equivalents,
+* ID/access/refresh tokens,
+* secrets and API keys,
+* evidence plaintext,
+* directly identifying PII such as email addresses, phone numbers, or full names,
+* full request/response bodies in application logs.
+
+Only hashes, opaque IDs, and coarse, non-sensitive attributes are permitted.
 
 Enforcement mechanisms:
 
-* Logging middleware that strips or masks forbidden fields before emission.
-* Scrubbers that reject logs matching forbidden patterns at ingest time.
-* Validation that rejects log records containing disallowed keys before they enter the pipeline.
+* Logging middleware strips or masks forbidden fields before emission.
+* Scrubbers reject logs matching forbidden patterns at ingest time.
+* Validation on the audit table and log pipeline rejects records containing disallowed keys before they enter the pipeline.
 
 #### 8.5.6 Retention & Crypto-Shred
 
-* Audit events are retained for **at least 12 months** (configurable beyond that floor), with hot storage for recent periods and cold storage thereafter.
-* Crypto-shred is implemented by revoking access to the Data Encryption Keys; once DEKs are dropped, the corresponding segments are unrecoverable.
-* Expiry is segment-based: no partial deletion of individual events within a retained segment.
+* Audit events are retained for **at least 12 months** (configurable above that floor), with hot storage for recent periods and cold storage thereafter.
+* Crypto-shred is implemented by revoking access to the Data Encryption Keys associated with encrypted artefacts. Once those DEKs are dropped, underlying artefact data becomes unrecoverable even if audit metadata persists.
+* Audit exports themselves are expired on a **segment basis**: whole segments are dropped once they age past retention; individual events within a retained segment are not edited or removed.
 
 #### 8.5.7 Failure Modes
 
-* Loss of the audit pipeline is treated as a platform fault.
-* Privileged actions may fail closed when audit persistence is unavailable.
-* Backpressure triggers alerts and throttling to protect the pipeline when sinks slow down.
+* Loss of the audit pipeline (audit table write failure or export failure) is treated as a platform fault and raises alerts.
+* For privileged or sensitive actions, operations may **fail closed** when audit persistence is unavailable rather than succeeding without an audit trail.
+* Backpressure and sink errors trigger throttling and degraded-mode behaviour to protect the pipeline and avoid silent loss of audit events.
 
 #### 8.5.8 Diagram
 
 ```mermaid
 flowchart LR
-    SERVICES[Services<br/>log_type=audit] --> TABLE[Audit Append-only Table]
-    TABLE --> EXPORT[Hourly Export]
+    SERVICES[Services<br/>emit log_type=audit] --> TABLE[Audit Append-only Table]
+    TABLE --> EXPORT[Hourly Export<br/>versioned prefix]
     EXPORT --> HASHING[Hashing Step<br/>batch hash + manifest]
-    HASHING --> REPLICA[Cold Replica (secondary region)]
+    HASHING --> REPLICA[Cold Replica<br/>(secondary region)]
 
-    SERVICES -. carries tenant_id/request_id .-> TABLE
-    EXPORT -. carries tenant_id/request_id in batch metadata .-> HASHING
+    SERVICES -. includes tenant_id/request_id .-> TABLE
+    EXPORT -. includes tenant_id/request_id in batch metadata .-> HASHING
 ```
 
 ### 8.6 Redaction, Anonymisation, and DSR Handling
