@@ -7293,8 +7293,211 @@ This diagram applies to both local development and production; only the concrete
 
 ### 7.10 Access Control and Operational Safety
 
-Who can do what, where: break-glass accounts, just-in-time elevation, bastion hosts, MFA/SSO, command logging.
-Change windows and freeze policies.
+Transcrypt maintains a strict separation between three access planes — the **public marketing plane**, the **Essentials application plane**, and the **operational plane** — to prevent privilege leakage, reduce blast radius, and ensure that both the marketing runtime and the Essentials app can evolve safely without increasing operational risk. This section defines the authoritative rules for who can perform which actions, how elevated privileges are controlled, and how production remains safe under change.
+
+Operational and tenant identities are strongly separated. Operational accounts cannot access tenant data through the Essentials application, and tenant identities have no access to operational consoles or runtimes. All privileged operations are logged, time-bounded, and executed under explicit operator intent.
+
+---
+
+#### **7.10.1 Access Planes**
+
+##### **A. Marketing Plane (Site, Blog, Waitlist, Newsletter)**
+
+The marketing runtime is **publicly accessible**, but it exposes no privileged endpoints and contains no administrative functionality.
+
+* All unauthenticated visitors access the site/blog via HTTPS behind the DigitalOcean firewall and CDN.
+* Waitlist and newsletter submissions write to Postgres through a **low-privilege service account** that can only insert into the required tables.
+* No marketing endpoint provides privileged reads of email lists or contact data.
+* Rate limiting protects newsletter and waitlist endpoints from spam and scraping.
+* Lead magnets are always delivered via CDN paths or via the asynchronous email workflow — never from a privileged file path on the droplet.
+
+The marketing plane represents a **read-heavy, minimally write-capable surface**, intentionally scoped to prevent any form of privilege escalation.
+
+---
+
+##### **B. Essentials Application Plane (Tenant-Scoped Access)**
+
+Essentials uses OIDC authentication (Entra/Google/Okta) with tenant-scoped roles:
+
+* **Owner** – full administrative rights for one organisation.
+* **Admin** – manages users, billing, evidence, controls.
+* **Member** – edits controls and evidence, participates in evaluations.
+* **Read-only user** – auditors/insurers with view-only capabilities.
+
+Rules:
+
+* Tenant isolation is enforced at API, DB, and object-store prefix level.
+* System actors (background workers) only access tenant resources through scoped storage prefixes and tenant-bound queries.
+* Operational identities **cannot sign in as tenants** — impersonation is forbidden. Troubleshooting relies exclusively on logs, traces, synthetic paths, and test tenants.
+
+Essentials enforces the principle of **least privilege**, with no ability for tenant users to escalate outside their tenant boundary.
+
+---
+
+##### **C. Operational Plane (Infrastructure and Deployment Control)**
+
+The operational plane is restricted to a single operator identity (and future trusted maintainers). This plane governs deployment, logs, backups, object storage, and production repair.
+
+Key principles:
+
+* **SSH is restricted to fixed operator IPs**; password authentication is disabled.
+* **SSH keys** are the only authentication mechanism.
+* **fail2ban** or equivalent rate-limiting blocks repeated SSH attempts.
+* **MFA-enforced cloud console access** protects the break-glass path.
+* No tenant data is inspected directly on the file system or object store — all access must go through the governed backend paths to maintain audit integrity.
+
+All operational activity funnels through:
+
+1. **CI/CD** (normal deploy path)
+2. **SSH** (time-bound, logged, and only for repair)
+3. **DigitalOcean console** (break-glass only)
+
+---
+
+#### **7.10.2 Break-Glass Accounts**
+
+A break-glass account exists for catastrophic scenarios such as CI/CD failure, deployment corruption, or firewall lockout.
+
+Rules:
+
+* Break-glass credentials are stored offline and only used during operational emergencies.
+* The break-glass path may modify infrastructure, firewall rules, or restore backups, but **may not deploy features**.
+* All break-glass actions must be captured in operator logs immediately after recovery.
+
+This provides a survivability path without undermining the integrity of normal operations.
+
+---
+
+#### **7.10.3 Just-in-Time Elevation (JIT)**
+
+Operator access uses a **non-root** account for routine inspections. Elevation is granted only for short bursts:
+
+* `sudo` privileges require password + MFA.
+* `sudo` timestamps expire quickly (2–5 minutes).
+* Each elevation event produces a log entry containing timestamp, operator ID, and the executed command.
+* No persistent root shells are permitted.
+
+Elevation is **intentional**, **short-lived**, and **fully logged**.
+
+---
+
+#### **7.10.4 SSH Hardening and Boundary Controls**
+
+SSH is the only remote interactive channel and follows strict constraints:
+
+* Allowlist of operator IPs.
+* No password authentication; key-only.
+* Port unchanged (22) but protected by DO firewall + fail2ban.
+* Optional: SSH over Tailscale for private network overlay.
+* All shell sessions log commands with timestamps in `auth.log` and sudo logs.
+
+No container shells or “exec into runtime” paths exist for the site/blog or Essentials workloads — all runtime services run as supervised processes managed by systemd.
+
+---
+
+#### **7.10.5 Command Logging and Auditability**
+
+Every privileged action must leave a durable, queryable record:
+
+* `systemd` journal captures app, worker, and API logs.
+* `auth.log` captures authentication, SSH login, failure events, and sudo usage.
+* Sudo logs record every elevated command.
+* Shell history timestamps are enforced.
+* Critical operational actions are summarised by additional structured logs written by deployment scripts (e.g., backup restore start/end).
+
+Nothing occurs anonymously. Operational errors must be reconstructable from logs alone.
+
+---
+
+#### **7.10.6 Essentials Administrative Safety Rules**
+
+Administrative actions inside the Essentials application are governed by strict audit and safety constraints:
+
+* **Tenant deletion** requires double-confirmation and commits an audit entry with operator identity.
+* **Evidence deletion** observes retention and provenance rules defined in §4; evidence marked as sealed cannot be removed.
+* **User removal** logs: actor, target identity, and reason.
+* **Billing edits** are reserved to tenant owner/admin roles; system actors do not modify billing state except through ordered webhook processing.
+
+Essentials administrative capabilities remain tenant-scoped and do not overlap with operational privileges.
+
+---
+
+#### **7.10.7 Marketing Assets, Waitlist, and Newsletter Protections**
+
+The marketing plane has unique operational safety constraints:
+
+* Waitlist/newsletter writes occur through a minimal-privilege DB role.
+* No marketing endpoint exposes the entire email list or contact table.
+* CDN serves all public assets; the droplet never hosts raw lead magnets under a public path.
+* Rate limiting is applied to:
+
+  * newsletter sign-up,
+  * waitlist submission,
+  * lead-magnet request endpoints.
+* No server-side code in the marketing runtime interacts with operational secrets.
+
+This guarantees that the marketing plane remains isolated from the Essentials and operations planes.
+
+---
+
+#### **7.10.8 Secrets, Storage, and Evidence Protection**
+
+Operational safety extends to all sensitive assets:
+
+* Production `.env` is **never copied** to local development machines.
+* DigitalOcean Spaces keys differ between dev and prod.
+* Evidence and reports stored in Spaces may only be read via the governed backend API so that audit records are created.
+* Object-store operations run under tenant-scoped prefixes (e.g., `tenant/<uuid>/evidence/...`).
+* Inference API keys are never present in client-side bundles and are rotated with the same cadence as other operational secrets.
+
+Direct operator access to raw evidence blobs is forbidden unless performing a backup or restore operation.
+
+---
+
+#### **7.10.9 Change Windows and Operational Freezes**
+
+To avoid accidental downtime during sensitive periods:
+
+* Routine deploys occur at any time except during:
+
+  * ongoing backups
+  * billing cycles
+  * significant marketing pushes
+* Destructive migrations require a scheduled maintenance window.
+* A full backup must exist and be verified before a schema-changing deploy.
+* The operator may declare a **freeze** to block deployments during periods of high operational risk.
+
+This process keeps production stable even as the platform evolves rapidly.
+
+---
+
+#### **7.10.10 Operator Boundary Diagram**
+
+This diagram summarises the privilege boundaries and access flows across all three planes.
+
+```mermaid
+flowchart LR
+    Visitor[Visitor] --> SiteBlog[Site and Blog]
+    Visitor --> Waitlist[Waitlist and Newsletter]
+    TenantUser[Tenant User] --> Essentials[Essentials App]
+
+    Operator[Operator] --> CICD[CI CD Pipeline]
+    CICD --> Droplet[DigitalOcean Droplet]
+    Operator --> SSH[SSH Access]
+    SSH --> Droplet
+
+    BreakGlass[Break Glass Account] --> DOConsole[DO Console]
+    DOConsole --> Droplet
+
+    Droplet --> Spaces[DO Spaces]
+    Droplet --> Postgres[Postgres]
+    Droplet --> Workers[Background Workers]
+
+    Essentials --> Postgres
+    Essentials --> Spaces
+```
+
+---
 
 ### 7.11 Edge, CDN, and TLS
 
