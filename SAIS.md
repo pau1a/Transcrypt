@@ -9757,16 +9757,393 @@ It ensures the supply chain remains intelligible and manageable as the platform 
 
 ### 8.9 Incident Detection and Response Readiness
 
-Summarise monitoring sources (IDS/WAF alerts, anomaly logs), escalation flow, severity classification, and state that **critical incident alerts must be raised rapidly, and operational teams must be able to respond within defined internal time targets**. Point to detailed procedures in §12 (Operational Runbooks).
+Transcrypt does not use heavyweight IDS/WAF stacks or formal SOC tooling.
+Incident detection is driven entirely by the telemetry architecture defined in §§6.9 and 7.9: structured logs, Prometheus metrics, and OpenTelemetry traces. These provide enough visibility for a single-engineer team to identify, confirm, and remediate faults quickly.
+
+Readiness is defined as the ability to act rapidly on signals from these systems, rather than adherence to enterprise on-call frameworks.
+
+---
+
+#### **8.9.1 Detection Sources (Authoritative)**
+
+The following signals form the complete incident-detection surface for both the Essentials application and the Marketing/Blog runtime:
+
+##### **Metrics (Prometheus)**
+
+* Elevated 5xx error rates by route
+* Latency breaches for SLO-defined endpoints
+* Queue lag for report/evidence processing
+* Worker failure counts
+* Postgres health (connections, errors, replication lag if used)
+* CPU/memory/disk pressure on the droplet
+* Inference failure rates (timeout, provider error, malformed response)
+
+##### **Structured Logs**
+
+* `ERROR` or `FATAL` entries
+* repeated retries or DLQ insertions
+* audit-pipeline export errors
+* inbound request anomalies (invalid auth tokens, malformed payloads)
+* failures from marketing/blog submission endpoints (waitlist, newsletter)
+
+##### **Traces (Jaeger)**
+
+* expansion of critical spans (gateway → evaluation → evidence → report)
+* stuck spans or unexpected branching
+* fan-out anomalies caused by inference delays
+
+These three pillars form the complete signal set; no additional detection products are assumed.
+
+---
+
+#### **8.9.2 Severity Classification (Practical, Minimal)**
+
+Incidents are classified using a small, pragmatic model suitable for a single-operator platform:
+
+**Critical**
+
+* user-visible outage (major 5xx wave, blank pages, unable to sign in)
+* evaluation pipeline failing end-to-end
+* corrupted audit export batches
+* Postgres unavailable
+
+**High**
+
+* persistent error-rate elevation
+* queue stuck or rapidly growing
+* inference provider degradation causing repeated job failures
+* disk pressure approaching limits
+
+**Medium**
+
+* latency regressions
+* intermittent inference timeouts
+* partial marketing/blog outages (lead magnets, newsletter form)
+
+**Low**
+
+* cosmetic issues, debug-level noise, non-impacting warnings
+
+This classification governs urgency but not ceremony.
+
+---
+
+#### **8.9.3 Response Workflow (Signal → Action)**
+
+Transcrypt’s response model is deliberately lightweight:
+
+1. **Alert fires**
+   Prometheus alert rules send notifications to the designated operator channel.
+
+2. **Triage using telemetry**
+   Operator inspects logs, metrics, and traces to identify the fault domain
+   (gateway, evaluation, evidence ingestion, Postgres, inference provider, worker, marketing/blog endpoint).
+
+3. **Immediate containment**
+
+   * rollback to previous build if regression-related
+   * restart worker or runtime if stuck
+   * clear queue if poisoned messages detected
+   * enable diagnostic logging temporarily (prod/staging)
+
+4. **Root cause and fix**
+
+   * dependency issue → patch + rebuild
+   * inference instability → fallback or temporary throttling
+   * storage issue → expand, prune, or rotate
+   * logic error → code fix + redeploy
+
+5. **Verification**
+
+   * SLO endpoints return to normal
+   * audit pipeline resumes successful exports
+   * queue drains cleanly
+   * no remaining error-rate spikes
+
+6. **Incident Record**
+   A minimal log is added to the operator’s internal record:
+   timestamp, root cause, action taken, verification step.
+
+No external communication or formalised post-mortem process is mandated.
+
+---
+
+#### **8.9.4 Marketing/Blog Runtime Considerations**
+
+The marketing/blog runtime shares the same detection system.
+Incidents in this plane are most commonly:
+
+* form submission failures
+* CDN or asset delivery issues
+* build regressions in the marketing pages
+* analytics integration failure
+
+These are handled through the same Signal → Action flow.
+
+---
+
+#### **8.9.5 Link to Operational Procedures (§12)**
+
+This section defines *what* signals constitute an incident and *how* they are handled conceptually.
+The detailed operational steps — including:
+
+* service restart procedures
+* backup restoration
+* audit-pipeline verification
+* database recovery
+* inference provider fallback
+* environment-specific restart sequences
+
+— are defined in **§12 Operational Runbooks**.
+
+---
 
 ### 8.10 Compliance Evidence and Verification
 
-Define how control compliance is proven automatically: scheduled checks, stored artefacts, signed reports.
-Include evidence export format (JSON / PDF), reviewer sign-off workflow, and hash-anchoring of reports for integrity.
+Transcrypt is not a compliance authority and does not generate attestations about its own internal controls.
+Instead, the platform’s role is to **produce, preserve, and export the evidence that tenants rely on for their own certifications**, using strict integrity guarantees: append-only event streams, versioned artefacts, deterministic report generation, and hash-anchored outputs.
+
+This section defines how evidence is recorded, verified, and exported from the system.
+
+---
+
+#### **8.10.1 Evidence Sources (Authoritative)**
+
+Tenant-accessible evidence in Transcrypt comes from a small set of controlled sources:
+
+* **Audit Events** (see §8.5): immutable, append-only, structured records of user actions, system actions, rule evaluations, and evidence ingestion.
+* **Evidence Artefacts** (ingested files): encrypted objects stored with per-tenant DEKs, versioned, and referenced in audit events.
+* **Rule Evaluation Outputs**: structured results from the evaluation engine, including passing/failing checks, timestamps, metadata, and referenced evidence IDs.
+* **Report Bundles**: packaged snapshots of evaluation results, rule versions, evidence references, and system metadata.
+
+These form the complete, verifiable record of a tenant’s compliance activity within the platform.
+
+---
+
+#### **8.10.2 Evidence Integrity Guarantees**
+
+Evidence integrity relies on:
+
+1. **Append-Only Audit Chain**
+
+   * Each audit event includes `prev_event_hash` and `event_hash`.
+   * Hash chains allow external verifiers to confirm ordering and detect gaps.
+
+2. **Immutable Artefact Storage**
+
+   * Evidence files are stored encrypted with per-tenant DEKs.
+   * Artefacts cannot be modified without creating a new object + new audit event.
+
+3. **Deterministic Report Generation**
+   A report generated for a given:
+
+   * rulepack version
+   * evidence state
+   * evaluation timestamp
+   * and inference model version
+     will always produce identical JSON/PDF outputs, ensuring reproducibility.
+
+4. **Export Hashing**
+
+   * Each report export embeds a SHA-256 digest representing the entire exported bundle.
+   * Tenants or auditors can recompute this hash to confirm authenticity.
+
+---
+
+#### **8.10.3 Evidence Export Formats**
+
+Transcrypt supports two export formats:
+
+##### **JSON Evidence Bundle**
+
+A machine-readable package containing:
+
+* audit events relevant to the timeframe
+* rulepack version & hash
+* evaluation outputs
+* evidence object metadata (not plaintext)
+* timestamps, IDs, and signatures
+* bundle hash
+
+Used for automated ingestion into auditor tooling or downstream systems.
+
+##### **PDF Human-Readable Report**
+
+A static rendering of the JSON content, including:
+
+* evaluation summaries
+* rule explanations
+* findings and linked evidence
+* timestamps, bundle hash, and generation metadata
+
+Reports reference evidence IDs and hashed artefacts but never reveal artefact plaintext.
+
+---
+
+#### **8.10.4 Tenant Reviewer Workflow**
+
+Transcrypt includes a lightweight reviewer workflow for report acceptance:
+
+1. Tenant admin generates a report bundle.
+2. Report is assigned a unique `report_id` and stored internally.
+3. Admin reviews contents in the UI.
+4. Admin “approves” the report, generating an audit event (`report.approved`).
+5. Approved reports become part of the tenant’s persistent evidence set.
+
+There is no concept of external sign-off, certification authority, or platform-level attestation.
+
+---
+
+#### **8.10.5 Verification and External Use**
+
+Auditors or automated systems can verify exported bundles by:
+
+* recomputing the embedded bundle hash
+* validating intra-bundle hash references (evidence objects, rulepack hash, audit event chain)
+* checking timestamps and report signatures
+* ensuring rulepack version matches expected certification period
+
+These checks allow consumers to confirm that:
+
+* the report corresponds exactly to the evaluated evidence
+* no artefacts have been altered
+* no audit events were removed or re-ordered
+* the exported state matches the system’s internal record at the time of generation
+
+---
+
+#### **8.10.6 Alignment With Other Sections**
+
+* Audit Events: §8.5
+* Encryption & key management: §8.4
+* Rulepack versioning & evaluation: §4
+* Report pipeline & SLOs: §6.8, §7
+* Operational recovery for evidence: §12
+
+This ensures evidence remains **verifiable, reproducible, and anchored in an immutable chain**, without overstating Transcrypt’s internal compliance obligations.
+
+---
 
 ### 8.11 Residual Risk and Exception Register
 
-Describe process for tracking deviations or compensating controls — who approves, how expiry is enforced, and where exceptions are logged for audit.
+Transcrypt does not maintain an organisational risk register, grant compensating-control approvals, or operate a corporate governance process. Instead, this section describes how the platform records **gaps, anomalies, and exceptions** arising during evidence ingestion and rule evaluation so that tenants can understand and manage their own residual risk.
+
+Residual risk, in the context of Transcrypt, means **evaluations that could not be fully satisfied**—missing artefacts, partial confirmations, skipped checks, fallback evidence, or inference results with insufficient confidence. These gaps are surfaced to the tenant and embedded in audit records and reports, ensuring that no evaluation appears “clean” unless it truly is.
+
+---
+
+#### **8.11.1 What Counts as an Exception**
+
+An “exception” is any evaluation state where the platform must fall back, skip, or proceed with reduced certainty. Common examples:
+
+* **Missing evidence** (no artefact supplied for a required check)
+* **Stale or superseded evidence** (artefact tied to old rulepack version)
+* **Skipped checks** due to incompatible rule configuration or missing data
+* **Low-confidence inference** (model provided uncertain evaluation output)
+* **Fallback logic triggered** (alternative verification route used)
+* **Partial report generation** due to unresolved evaluation paths
+
+These do not halt operation; they are recorded and made visible to the tenant.
+
+---
+
+#### **8.11.2 Recording Mechanism (Audit-Centric)**
+
+Every exception generates a structured **audit event**, for example:
+
+* `evaluation.skipped`
+* `evidence.missing`
+* `rulepack.deprecated`
+* `inference.low_confidence`
+* `fallback.used`
+* `report.partial`
+
+Each event includes:
+
+* timestamp
+* tenant_id
+* actor_id (if user-triggered)
+* resource identifiers
+* relevant hashes (rulepack, artefact)
+* outcome or context message
+
+The append-only audit chain (see §8.5) ensures these records cannot be modified or suppressed.
+
+---
+
+#### **8.11.3 Visibility Within Reports**
+
+Generated reports embed all unresolved items in a dedicated **Exceptions & Residual Risk** section, containing:
+
+* list of missing or stale artefacts
+* checks not fully evaluated
+* any use of fallback logic
+* affected rule identifiers
+* confidence values for inference-based checks
+* links to corresponding audit events
+
+Reports never hide deficiencies.
+Tenants may export these reports as JSON/PDF for their auditors.
+
+---
+
+#### **8.11.4 Tenant Approval Workflow**
+
+Transcrypt does not “approve” or “reject” exceptions.
+The decision to accept a partially complete report rests entirely with the **tenant admin**.
+
+The workflow is:
+
+1. Tenant generates a report bundle.
+2. Exceptions are shown clearly in the UI.
+3. Tenant may choose to:
+
+   * **accept** the report (creating `report.approved` audit event), or
+   * **address exceptions** by uploading evidence and regenerating the report.
+4. Acceptance never modifies the underlying exception events; it simply records the admin’s decision.
+
+This keeps platform behaviour deterministic and auditable.
+
+---
+
+#### **8.11.5 Clearing and Expiry of Exceptions**
+
+Exceptions do not expire automatically. They clear only when:
+
+* new evidence is ingested,
+* the evaluation is rerun,
+* or the report is regenerated under a new rulepack version.
+
+This ensures continuity between the evidence lifecycle, evaluation results, and exportable reports.
+
+There is **no platform-level expiration policy** beyond the natural lifecycle of evidence and rulepacks (§4).
+
+---
+
+#### **8.11.6 Where Exceptions Are Tracked**
+
+Exceptions appear consistently across the system:
+
+* **Audit Events** (authoritative record)
+* **Evaluation Output Objects** (structured API/DB representations)
+* **Report Bundles** (JSON + PDF)
+* **UI Surfaces** (evaluation status panels, report view)
+
+No separate “register” subsystem is introduced; the append-only audit table **is** the register.
+
+---
+
+#### **8.11.7 Alignment With Platform Philosophy**
+
+This approach aligns with Transcrypt’s mission of measurable security and invisible complexity:
+
+* Evidence gaps stay visible.
+* Evaluation behaviour is deterministic.
+* Exceptions cannot be erased.
+* Tenants remain in control of acceptance decisions.
+* Every exception is preserved in the audit chain and reflected in reports.
+
+Transcrypt records reality; it never fabricates completeness.
 
 ---
 
