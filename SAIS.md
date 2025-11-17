@@ -9101,15 +9101,38 @@ flowchart TD
 
 ## 8. Security, Privacy, and Compliance Alignment
 
-Maps architecture to controls in IEC 62443, NIS2, and Cyber Essentials. Details key management, isolation, audit logging, and redaction pipelines.
+Transcrypt’s security model is intentionally narrow and pragmatic. The platform is built around a small, well-understood runtime, strong isolation between tenants, strict control of evidence artefacts, and a traceable flow of user and system actions. Rather than mapping to enterprise certification frameworks, this section describes the **concrete technical controls** that make the system secure: encryption, identity, auditability, observability, redaction, and hardening.
+
+Compliance alignment does not mean the platform claims adherence to Cyber Essentials, IEC 62443, NIS2, or any external regime. Instead, Transcrypt focuses on producing **verifiable artefacts**—audit events, encrypted evidence, deterministic reports—that help *tenants* meet their own obligations. Every control described in this section is anchored in behaviour the platform actually performs, not policy-only declarations.
 
 ---
 
 ### 8.1 Security Philosophy and Objectives
 
-Defines the overarching intent: defence in depth, least privilege, isolation by default, and full traceability.
-Connects these principles directly to Transcrypt’s mission of “measurable security and invisible complexity.”
-States that every control maps to a verifiable artefact — no “policy-only” items.
+Transcrypt’s security philosophy starts from three principles:
+
+1. **Isolation by Default**
+   Every tenant’s data, encryption keys, evidence artefacts, audit events, rulepacks, and evaluation outputs are isolated from every other tenant. No shared tables, no shared objects, no shared keys. The system is designed such that cross-tenant access is structurally impossible.
+
+2. **Defence in Depth**
+   Multiple layers protect every operation: identity and access control, encrypted storage, deterministic evaluation flows, append-only audit events, structured logs, and telemetry that exposes faults before users feel them. No single layer is trusted to be perfect.
+
+3. **Full Traceability**
+   Every meaningful action—user, system, background job, inference call—is logged as a structured event with stable identifiers (`tenant_id`, `request_id`, `trace_id`, `actor_id`). Nothing happens silently. Nothing is ephemeral. Everything that matters leaves an artefact.
+
+These principles connect directly to Transcrypt’s mission of **“measurable security and invisible complexity.”**
+
+* *Measurable security* means that evaluations, evidence ingestion, artefact changes, report generation, and administrative actions all produce **verifiable, immutable records**.
+* *Invisible complexity* means that end users experience a clean, guided workflow while the underlying architecture handles encryption, redaction, hashing, correlation, and integrity without user burden.
+
+Finally, the platform applies a simple, non-negotiable rule:
+
+**Every control must produce a verifiable artefact.**
+There are no “policy-only” statements, no unmeasured controls, and no unverifiable guarantees.
+
+The remainder of §8 details how encryption, key management, identity, audit, redaction, and hardening combine into a coherent, evidence-driven security posture suited to a focused, single-runtime SaaS platform.
+
+---
 
 ### 8.2 Control-Framework Mapping
 
