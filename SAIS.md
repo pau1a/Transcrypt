@@ -6585,7 +6585,230 @@ The diagram shows the complete chain: commit → build → provenance → SBOM �
 
 ### 7.7 Deployment Strategies
 
-Blue/green vs canary, rollout steps, health and rollback criteria, and how database migrations are coordinated (pre-deploy checks, backward-compatible migrations, post-deploy clean-ups).
+Transcrypt uses a controlled, repeatable deployment strategy optimised for a **single DigitalOcean droplet** that serves the marketing site, blog, and Essentials application from one unified Next.js build. The goal is to deploy rapidly while maintaining full reversibility: production must always be able to return to the previously healthy build within seconds.
+
+The deployment model combines:
+
+* **single-host blue/green**, implemented via release directories and an atomic symlink switch;
+* **pre-deployment database checks and backward-compatible migrations**;
+* **mandatory post-deploy health checks** before a release is considered active;
+* **fast rollback** that does not require touching the database;
+* **feature-flag canaries** to de-risk behavioural changes, particularly those involving billing or inference.
+
+This strategy avoids the need for multiple cloud environments while still enforcing predictable, low-risk releases.
+
+---
+
+#### 7.7.1 Single-Host Blue/Green via Release Directories
+
+Each production build is unpacked into its own release directory:
+
+```
+/srv/transcrypt/releases/<git-sha>/
+```
+
+The currently active release is exposed through a stable symlink:
+
+```
+/srv/transcrypt/current -> /srv/transcrypt/releases/<git-sha>
+```
+
+Systemd (or the chosen process manager) launches the app and background workers from the `current` directory. Switching versions is therefore a **single atomic symlink flip** followed by a service restart.
+
+This provides the core blue/green behaviour:
+
+* **blue** = current stable release
+* **green** = new release prepared in parallel
+
+No in-flight traffic is interrupted during file upload or build extraction. Only at the moment of symlink flip does the new version become active.
+
+---
+
+#### 7.7.2 Rollout Steps
+
+Deployments follow a strict sequence enforced by CI and the deploy script:
+
+1. **Build artefact produced in CI**
+   Transcrypt’s CI pipeline generates a production artefact, SBOM, and vulnerability scan report (§7.6).
+
+2. **Upload artefact to the droplet**
+   CI transfers the tarball to `/srv/transcrypt/releases/<git-sha>.tar.gz`.
+
+3. **Extract into a new release directory**
+   The tarball is unpacked into a fresh directory under `/srv/transcrypt/releases/<git-sha>/`.
+
+4. **Pre-deploy validation checks**
+   Before activation, the following checks run:
+
+   * `next build` artefacts present and valid.
+   * Environment variables loaded without missing keys.
+   * Node runtime matches expected version.
+   * Database connection available (but no writes yet).
+
+5. **Run backward-compatible database migrations**
+   Only **expand-phase** migrations are applied here (see §7.7.5).
+   The new schema must remain compatible with both old and new release code paths.
+
+6. **Flip the symlink**
+   `/srv/transcrypt/current` is atomically repointed to the new release directory.
+
+7. **Restart the application and workers**
+   The process manager restarts:
+
+   * the Next.js runtime (site + blog + app),
+   * API handlers,
+   * background workers (reports, email dispatch, evidence processor).
+
+8. **Run post-deploy health checks**
+   Synthetic tests verify that core user journeys and internal endpoints are functioning (see §7.7.3).
+
+9. **Mark release as successful**
+   Only once all health checks pass within the required threshold is the deploy considered complete.
+
+Failure at any stage triggers rollback (§7.7.4).
+
+---
+
+#### 7.7.3 Health Checks and Success Criteria
+
+A release becomes active only after passing both **machine-level** and **synthetic** health checks.
+
+##### Machine-Level Health
+
+Checked via internal health endpoint:
+
+* process running,
+* ability to reach PostgreSQL,
+* ability to read from DO Spaces,
+* ability to contact the inference API (ping-level only),
+* worker loop polling queue correctly.
+
+These checks must complete quickly (≤ 2 seconds).
+
+##### Synthetic Path Checks
+
+Executed automatically after restart:
+
+* `/` loads the marketing hero and CTA.
+* `/blog/<known-slug>` renders text and CTA block.
+* `/app/login` loads correctly and retrieves OIDC config.
+* Ability to perform a test OIDC login with a synthetic user.
+* Essentials dashboard loads tenant context.
+* A lightweight report request enters `queued` state within a few seconds.
+* Evidence upload endpoint accepts a test payload and returns expected metadata.
+
+If any synthetic check fails, the release is rejected and rolled back.
+
+---
+
+#### 7.7.4 Rollback Criteria and Mechanism
+
+Rollback must be fast, total, and predictable.
+
+##### Rollback Conditions
+
+The new release is rolled back if:
+
+* health endpoint fails immediately after restart,
+* synthetic journey checks fail,
+* error rate spikes above acceptable thresholds within the first minutes,
+* database queries fail due to schema mismatches,
+* critical logs or alerts fire during the activation window.
+
+##### Rollback Mechanism
+
+Rollback requires no rebuild and no filesystem intervention:
+
+1. Stop services.
+2. Repoint `/srv/transcrypt/current` to the **previous** release directory.
+3. Restart services.
+4. Run the same health checks used during activation.
+
+Because database migrations are always backward compatible at this stage, the previous code can safely run against the updated schema.
+
+---
+
+#### 7.7.5 Database Migration Coordination
+
+Database migrations follow an **expand → migrate → contract** pattern to preserve rollback safety.
+
+##### Expand Phase (default)
+
+Performed during normal deploys:
+
+* Add new columns, tables, indexes.
+* Add nullable fields only.
+* Do not rename, drop, or tighten required constraints.
+* Application code must tolerate both old and new schema shapes.
+
+Rollback remains safe: old code continues to work on a superset schema.
+
+##### Migrate Phase (background)
+
+Post-deployment backfills or transforms are performed via:
+
+* one-off background jobs, or
+* scheduled async workers (§6.3).
+
+Application continues to support both schemas until completion.
+
+##### Contract Phase (rare, controlled)
+
+Destructive changes (drop columns, remove old tables, enforce new constraints) require:
+
+* explicit maintenance window,
+* fresh DB backup beforehand,
+* tested restore plan (§12),
+* application placed in read-only or maintenance mode if needed.
+
+Contract migrations occur only after multiple stable releases have run on the expanded schema.
+
+---
+
+#### 7.7.6 Feature-Flag Canaries
+
+Because Transcrypt uses a single production environment, behavioural changes are de-risked using **feature flags** rather than multi-environment canaries.
+
+Rules:
+
+* All risky features (billing, inference workflows, evidence pipelines) ship **disabled by default**.
+* Flags can target:
+
+  * your internal tenant only,
+  * selected test tenants,
+  * all tenants.
+* Infra deploy is same for all tenants; behaviour changes incrementally.
+
+This allows shipping new code without exposing unstable behaviour to all users.
+
+---
+
+#### 7.7.7 Deployment Flow Diagram
+
+This diagram summarises the single-host blue/green flow.
+Labels contain **no parentheses**, as required.
+
+```mermaid
+flowchart LR
+    OLD[Current Release]
+    NEW[New Release Prepared]
+    MIGRATE[Run Expand Migrations]
+    SWITCH[Flip Symlink]
+    RESTART[Restart Services]
+    HEALTH[Run Health Checks]
+    GOOD[Deployment Successful]
+    BAD[Rollback to Previous Release]
+
+    OLD --> NEW
+    NEW --> MIGRATE
+    MIGRATE --> SWITCH
+    SWITCH --> RESTART
+    RESTART --> HEALTH
+    HEALTH -->|Pass| GOOD
+    HEALTH -->|Fail| BAD
+```
+
+---
 
 ### 7.8 Database, Storage, and Data Paths
 
