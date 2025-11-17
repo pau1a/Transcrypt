@@ -6249,7 +6249,7 @@ For **tenant-bound secrets** that must be persisted (e.g. future per-tenant API 
 ```mermaid
 flowchart LR
     S[Plain tenant secret] --> G[Generate DEK\n(random key)]
-    G --> E[Encrypt secret with DEK\n(AES-GCM)]
+    G --> E[Encrypt secret with DEK\n AES-GCM]
     G --> W[Wrap DEK with master key]
     E --> D[(DB row:\nwrapped DEK + ciphertext + IV + tag)]
     W --> D
