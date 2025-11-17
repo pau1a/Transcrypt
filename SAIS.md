@@ -6136,6 +6136,289 @@ Local development relies on the MacBook’s local OS firewall and LAN/NAT for pr
 Source of truth (e.g., AWS Secrets Manager/Azure Key Vault), rotation cadence, envelope encryption, and secret injection at runtime.
 Config hierarchy (base, env, instance), precedence rules, and validation on boot.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### 7.5 Secrets and Configuration Management
+
+Transcrypt treats secrets and configuration as first-class runtime inputs, not code. All sensitive values are supplied via environment variables, validated at boot, and never committed to source control or shipped to the browser. Secrets cover:
+
+* Platform/infra credentials (DO Spaces, PostgreSQL, MXroute, Stripe, inference API).
+* Application keys (session/JWT signing, crypto master keys).
+* Future tenant-bound secrets (e.g. per-tenant API tokens), stored in the database using envelope encryption.
+
+Configuration follows a simple hierarchy (base → environment) with a single source of truth per environment and explicit precedence rules.
+
+---
+
+#### 7.5.1 Sources of Truth for Secrets
+
+Secrets have three distinct locations, depending on environment.
+
+##### Local Development (MacBook)
+
+* Secrets are supplied via a **local env file** (e.g. `.env.local`) and environment variables.
+* `.env.local` is:
+
+  * ignored by git,
+  * readable only by the local user.
+* Local values include:
+
+  * DB connection string.
+  * DO Spaces keys (for content authoring).
+  * MXroute credentials (dev mailbox).
+  * Stripe **test mode** key.
+  * Inference API **test/sandbox** key.
+  * Session/JWT secrets.
+
+A password manager (or equivalent) holds the canonical backup of these values; the repo never contains secrets.
+
+##### CI / CD (GitHub Actions)
+
+* GitHub Actions secrets hold all production secrets:
+
+  * `PROD_DB_PASSWORD`
+  * `PROD_SPACES_ACCESS_KEY`, `PROD_SPACES_SECRET_KEY`
+  * `PROD_MXROUTE_PASSWORD`
+  * `PROD_STRIPE_SECRET_KEY`
+  * `PROD_INFERENCE_API_KEY`
+  * `PROD_SESSION_SECRET`
+  * `PROD_ENVELOPE_MASTER_KEY` (crypto master key)
+* CI injects them as environment variables into:
+
+  * build steps that need them (minimised),
+  * deploy steps that provision/update the droplet.
+* Secrets are never written into build artefacts or committed to the repo.
+
+##### Production Droplet (DigitalOcean)
+
+* The droplet reads secrets **only** from environment variables, typically via:
+
+  * `EnvironmentFile=/etc/transcrypt/env` in systemd units, or
+  * equivalent environment injection for the process manager.
+* The env file:
+
+  * is not in source control,
+  * is owned by `root` (or restricted group),
+  * uses restrictive permissions (e.g. `640` or tighter).
+* No secret values are stored in world-readable logs, static files, or the document root.
+
+---
+
+#### 7.5.2 Configuration Hierarchy and Precedence
+
+Configuration is loaded via a single configuration module that reads from environment variables, applies defaults, and validates at boot.
+
+##### Base vs Environment-Specific Config
+
+* **Base configuration** (identical for dev and prod):
+
+  * feature flag names and default values,
+  * timeouts and retry ceilings (§6.5),
+  * SLO thresholds (§6.8),
+  * config keys and schema (not values).
+
+* **Environment-specific configuration**:
+
+  * DB connection string/host.
+  * DO Spaces endpoint, bucket, and CDN base URL.
+  * MXroute host/port.
+  * Stripe test vs live keys.
+  * Inference API endpoint URL(s).
+  * Logging and telemetry endpoints.
+
+* **Instance-specific configuration** (optional, for future scale-out):
+
+  * log sink overrides,
+  * trace sampling overrides,
+  * canary markers.
+
+##### Precedence Rules
+
+1. **Environment variables** are the only authoritative input.
+2. Missing required variables cause **boot-time failure**, not silent defaults.
+3. Derived configuration values (e.g. full connection URLs) are computed inside the config module, not in scattered call sites.
+4. UI and backend share the same semantics for relevant config (e.g. feature flags, environment labels) but secrets never appear in client bundles.
+
+---
+
+#### 7.5.3 Secrets at Rest and Envelope Encryption
+
+Platform-level secrets (Stripe, MXroute, DO Spaces, inference API, session keys) are kept only in environment variables and process memory. Transcrypt does not write these secrets back into the database.
+
+For **tenant-bound secrets** that must be persisted (e.g. future per-tenant API tokens), Transcrypt uses **envelope encryption**:
+
+* A single **application master key** (`APP_ENVELOPE_KEY`) is supplied via environment variable.
+* The master key is never written to disk in plaintext after boot.
+* Each stored secret uses its own randomly generated data-encryption key (DEK).
+
+##### Envelope Encryption Flow
+
+```mermaid
+flowchart LR
+    S[Plain tenant secret] --> G[Generate DEK\n(random key)]
+    G --> E[Encrypt secret with DEK\n(AES-GCM)]
+    G --> W[Wrap DEK with master key]
+    E --> D[(DB row:\nwrapped DEK + ciphertext + IV + tag)]
+    W --> D
+```
+
+* On **write**:
+
+  * Generate a DEK.
+  * Encrypt the secret with DEK (AES-GCM or equivalent).
+  * Encrypt/wrap DEK with the master key.
+  * Store wrapped DEK + ciphertext + IV + tag in the database.
+
+* On **read**:
+
+  * Decrypt the wrapped DEK using the master key.
+  * Decrypt ciphertext using DEK and IV.
+  * Return the plaintext secret in memory only.
+
+Once sealed, secrets are never written in plaintext to disk or logs.
+
+---
+
+#### 7.5.4 Rotation and Incident Response
+
+Transcrypt defines rotation expectations at design level; operational cadence is enforced via runbooks in §12.
+
+##### Platform Secrets
+
+* DO Spaces keys, MXroute SMTP password, Stripe secret key, and inference API key:
+
+  * **Target rotation:** at least annually, and on:
+
+    * suspected compromise,
+    * staff changes that affect access,
+    * provider-driven rotation events.
+* Rotation procedure:
+
+  * Generate new key in provider.
+  * Update CI and production environment variables.
+  * Restart services with new configuration.
+  * Verify health checks and critical paths.
+  * Revoke old key once confidence is established.
+
+##### Session/JWT Keys
+
+* Session/JWT signing keys are rotated more frequently (e.g. every 3–6 months).
+* The implementation supports a short window where:
+
+  * tokens signed with an **old key** remain valid until their natural expiry,
+  * new tokens are signed with the **current key**.
+* State and configuration must allow for two active keys during rotation.
+
+##### Tenant Secret Re-encryption
+
+When the envelope master key is rotated:
+
+* A background job iterates over stored secrets.
+* For each record:
+
+  * decrypt using **old** master key,
+  * re-encrypt using **new** master key,
+  * update record atomically.
+* During rotation, code must support:
+
+  * decryption with both keys,
+  * write with the new key only.
+
+In the event of suspected compromise of a secret:
+
+* The affected key is revoked at the provider.
+* New credentials are generated and applied.
+* Dependent services are restarted with updated environment variables.
+* Relevant tenants or external parties are notified as required.
+
+---
+
+#### 7.5.5 Boot-Time Validation and Fail-Fast Behaviour
+
+Transcrypt fails fast on configuration errors. At process startup:
+
+1. The configuration module reads all required environment variables.
+2. Each variable is validated for:
+
+   * presence,
+   * basic format (e.g. URL parseable, integer parsable, non-empty),
+   * known-good ranges where applicable (timeouts, limits).
+3. The master encryption key (`APP_ENVELOPE_KEY`) is checked for length/format.
+4. If any required secret or config value is missing or invalid:
+
+   * the process aborts during startup,
+   * no HTTP listener is opened,
+   * no background worker loop runs.
+
+No “best-effort” or “fallback default” is used for secrets or critical configuration. Configuration must be correct before accepting traffic.
+
+---
+
+#### 7.5.6 Inference API Secret Handling
+
+Inference API keys are treated as high-value platform secrets:
+
+* Stored only as environment variables in CI and production.
+* Never written to:
+
+  * client-side bundles,
+  * static assets,
+  * logs or metrics labels.
+
+Runtime behaviour:
+
+* Only backend code calls the inference API.
+* Sensitive request/response content is either:
+
+  * not logged at all, or
+  * logged in a redacted/hashed form depending on sensitivity.
+* Usage is recorded at an aggregated level:
+
+  * per-tenant,
+  * per endpoint or feature,
+  * without including full prompts or API keys.
+
+Endpoints that invoke inference:
+
+* are authenticated,
+* are rate-limited as described in §7.4 and §6.5,
+* are tested to ensure that configuration failures (missing or invalid inference API key) surface as clear, non-leaky errors and do not return internal details to the client.
+
+Inference API credentials are never exposed to the browser, never embedded in HTML or JavaScript, and never captured in structured logs.
+
+---
+
 ### 7.6 Build Artifacts, Signing, and Supply Chain
 
 Container registry, image tags, SBOM generation, signature and provenance (Cosign/Sigstore; SLSA level target).
