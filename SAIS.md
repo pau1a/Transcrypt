@@ -3118,7 +3118,18 @@ There is no manual override in the MVP.
 
 ## 6. Sequence and Runtime Behaviour
 
-System-level and user-journey diagrams showing how components, APIs, and UI interact at runtime. Includes async/event patterns.
+This section defines the **runtime behaviour of Transcrypt end-to-end**. It explains what actually happens when a user clicks, types, uploads, or triggers a workflow; how requests propagate through the platform; and how long-running work is handled safely and predictably.
+
+It establishes the **execution invariants** of the system — the rules every component must obey in production:
+
+* how the browser, API Gateway, application services, storage, and event system interact;
+* which paths are synchronous and deterministic, and which are asynchronous and eventually consistent;
+* how idempotency, concurrency, ordering, and retries are enforced across both HTTP and event-driven operations;
+* how failures degrade, how work recovers, and how the system prevents duplication, race conditions, or cross-tenant leakage;
+* how workflows such as reports, evidence ingestion, invitations, and lead-magnet delivery proceed through explicit, finite state machines;
+* and how performance budgets, SLOs, trace propagation, structured logs, and metrics provide measurable proof that the system works as intended.
+
+Every diagram, workflow, and definition in this section is **normative**: implementations, runbooks, observability dashboards, and acceptance tests must conform to the behaviour described here.
 
 ---
 
@@ -4807,7 +4818,7 @@ SLOs apply independently across the Marketing runtime (site/blog), the Essential
 
 ---
 
-## **6.8.1 Principles**
+#### **6.8.1 Principles**
 
 * **Performance Budgets**
   A performance budget allocates the total allowed latency across the individual steps of a request or rendering path. These budgets inform architectural decisions (edge vs origin, cached vs dynamic) and UI expectations.
@@ -4823,11 +4834,11 @@ SLOs apply independently across the Marketing runtime (site/blog), the Essential
 
 ---
 
-## **6.8.2 Marketing Site & Blog Performance**
+#### **6.8.2 Marketing Site & Blog Performance**
 
 The marketing runtime is responsible for first impressions, conversion, and lead acquisition. Its performance requirements are therefore strict and user-perceptible.
 
-### **6.8.2.1 Homepage (Critical Landing Path)**
+##### **6.8.2.1 Homepage (Critical Landing Path)**
 
 **Budgets**
 
@@ -4844,7 +4855,7 @@ The marketing runtime is responsible for first impressions, conversion, and lead
 * **p99 ≤ 3.0 s**
 * **Availability ≥ 99.0%**
 
-### **Latency Budget Illustration**
+##### **Latency Budget Illustration**
 
 ```mermaid
 flowchart TD
@@ -4856,7 +4867,7 @@ flowchart TD
 
 ---
 
-### **6.8.2.2 Blog Article Pages**
+##### **6.8.2.2 Blog Article Pages**
 
 **Budgets**
 
@@ -4873,7 +4884,7 @@ flowchart TD
 
 ---
 
-### **6.8.2.3 Lead-Magnet CTA Flow**
+##### **6.8.2.3 Lead-Magnet CTA Flow**
 
 **Budgets**
 
@@ -4890,7 +4901,7 @@ flowchart TD
 
 ---
 
-### **6.8.2.4 Early-Access / Newsletter Signup**
+##### **6.8.2.4 Early-Access / Newsletter Signup**
 
 * **p95 submit → confirmation ≤ 1.2 s**
 * **99% success rate for valid submissions**
@@ -4899,30 +4910,30 @@ Marketing APIs must meet these SLOs independently of Essentials runtime load.
 
 ---
 
-## **6.8.3 Essentials Application Performance**
+#### **6.8.3 Essentials Application Performance**
 
-### **6.8.3.1 Sign-In and Initial Context Load**
+##### **6.8.3.1 Sign-In and Initial Context Load**
 
 * **p95 redirect + session establishment + initial dashboard load ≤ 800 ms**
 * **p99 ≤ 1.5 s**
 * **Success ≥ 99%** (excluding user-error 401/403)
 
-### **6.8.3.2 Dashboard (Quick Start) Load**
+##### **6.8.3.2 Dashboard (Quick Start) Load**
 
 * **p95 main data fetch ≤ 600–800 ms**
 * UI interactive ≤ 1.2 s after navigation.
 
-### **6.8.3.3 Control List View**
+##### **6.8.3.3 Control List View**
 
 * **p95 list fetch ≤ 700–900 ms**
 * Subsequent sorting/filtering operations ≤ 300 ms p95 (local or cached).
 
-### **6.8.3.4 Control Update**
+##### **6.8.3.4 Control Update**
 
 * **p95 ≤ 500–800 ms** for the POST/PATCH
 * UI round-trip ≤ 1.0 s.
 
-### **6.8.3.5 Evidence Upload**
+##### **6.8.3.5 Evidence Upload**
 
 Budgets refer to server-side processing, not total wall clock time (which depends on file size and bandwidth).
 
@@ -4930,38 +4941,38 @@ Budgets refer to server-side processing, not total wall clock time (which depend
 * Chunk/stream initiation p95 ≤ 800 ms
 * User must see a “processing/uploading” state within ≤ 500 ms.
 
-### **6.8.3.6 Help Panel / Contextual Docs**
+##### **6.8.3.6 Help Panel / Contextual Docs**
 
 * **p95 fetch ≤ 400–600 ms**
 * Cacheable responses must be served ≤ 200 ms when warm.
 
 ---
 
-## **6.8.4 Asynchronous & Background SLOs**
+#### **6.8.4 Asynchronous & Background SLOs**
 
-### **6.8.4.1 Report Generation**
+##### **6.8.4.1 Report Generation**
 
 * **95% READY within 2 minutes** of request
 * **99% READY within 5 minutes**
 * **0% lost** (every job must end as READY or FAILED)
 
-### **6.8.4.2 Email Delivery (Welcome, Invites, Report Links)**
+##### **6.8.4.2 Email Delivery (Welcome, Invites, Report Links)**
 
 * 95% of emails accepted by provider ≤ 30 seconds (welcome/invites)
 * 95% accepted ≤ 60 seconds (report links, lead magnets)
 
-### **6.8.4.3 Lead-Magnet Fallback Email**
+##### **6.8.4.3 Lead-Magnet Fallback Email**
 
 * 95% fallback emails accepted by provider ≤ 5 minutes
 
-### **6.8.4.4 Evaluation Jobs (if offloaded)**
+##### **6.8.4.4 Evaluation Jobs (if offloaded)**
 
 * 95% completed ≤ 30 seconds
 * 99% completed ≤ 2 minutes
 
 ---
 
-### **Report SLO Timeline Illustration**
+##### **Report SLO Timeline Illustration**
 
 ```mermaid
 timeline
@@ -4976,7 +4987,7 @@ timeline
 
 ---
 
-## **6.8.5 Mapping SLOs to Metrics (§10)**
+#### **6.8.5 Mapping SLOs to Metrics (§10)**
 
 Each SLO corresponds to specific metrics families:
 
@@ -4995,7 +5006,7 @@ Dashboard and alerting rules in §10 must reference the SLO values defined here.
 
 ---
 
-## **6.8.6 Mapping SLOs to Acceptance Criteria (§13)**
+#### **6.8.6 Mapping SLOs to Acceptance Criteria (§13)**
 
 Performance-acceptance criteria validate key paths against their budgets:
 
@@ -5009,7 +5020,7 @@ Section §13.4 defines the thresholds and required acceptance test suites.
 
 ---
 
-## **6.8.7 SLO Philosophy and Error Budgets**
+#### **6.8.7 SLO Philosophy and Error Budgets**
 
 Transcrypt adopts a simple rule:
 
@@ -5027,11 +5038,11 @@ Observability is a cross-cutting concern: every request, job, and workflow step 
 
 ---
 
-## **6.9.1 Core Identifiers and Context Fields**
+#### **6.9.1 Core Identifiers and Context Fields**
 
 Every inbound request, internal call, job, and worker span must include the following identifiers:
 
-### **Mandatory Identifiers**
+##### **Mandatory Identifiers**
 
 * **`request_id` / `X-Request-ID`**
   End-to-end request correlation.
@@ -5052,7 +5063,7 @@ Every inbound request, internal call, job, and worker span must include the foll
   Required for POST/PUT operations where retries must not duplicate work (reports, evidence, lead magnets, billing).
   Propagated into job metadata and DLQs.
 
-### **Workflow-Specific Identifiers**
+##### **Workflow-Specific Identifiers**
 
 * `report_id`
 * `evidence_id`
@@ -5062,7 +5073,7 @@ Every inbound request, internal call, job, and worker span must include the foll
 
 These identifiers anchor workflows defined in §6.7 to their traces and logs.
 
-### **Marketing-Specific Context**
+##### **Marketing-Specific Context**
 
 Marketing events (site/blog) include additional structured attributes:
 
@@ -5075,12 +5086,12 @@ No raw PII (emails, names) is logged; only hashes or domains.
 
 ---
 
-## **6.9.2 Trace Context Propagation (Browser → Gateway → API → Queue → Worker → Provider)**
+#### **6.9.2 Trace Context Propagation (Browser → Gateway → API → Queue → Worker → Provider)**
 
 OpenTelemetry W3C Trace Context is propagated through every component.
 The Gateway is authoritative for generating or normalising trace context.
 
-### **Propagation Rules**
+##### **Propagation Rules**
 
 * Browser → Gateway
 
@@ -5101,7 +5112,7 @@ The Gateway is authoritative for generating or normalising trace context.
   * Worker creates a new span with a link back to the original `trace_id`.
   * Downstream calls (email, billing, object store) inherit this context.
 
-### **Diagram: End-to-End Trace Propagation**
+##### **Diagram: End-to-End Trace Propagation**
 
 ```mermaid
 sequenceDiagram
@@ -5123,11 +5134,11 @@ This ensures Jaeger can reconstruct the entire journey, including async steps.
 
 ---
 
-## **6.9.3 Asynchronous Workflow Correlation (Span Link Model)**
+#### **6.9.3 Asynchronous Workflow Correlation (Span Link Model)**
 
 As workflows such as report generation, evidence ingestion, invitations, and lead-magnet delivery involve queues and retries, correlation relies on **span links** rather than a single linear trace.
 
-### **Rules**
+##### **Rules**
 
 * Enqueue spans must include **`workflow_id`** and **`idempotency_key`**.
 * Workers must:
@@ -5137,7 +5148,7 @@ As workflows such as report generation, evidence ingestion, invitations, and lea
   * Include all workflow identifiers.
 * Retries create new spans, all linked to the original job.
 
-### **Diagram: Worker Span Link Correlation**
+##### **Diagram: Worker Span Link Correlation**
 
 ```mermaid
 flowchart TD
@@ -5151,7 +5162,7 @@ This ensures all activity related to a workflow is visible in a single Jaeger tr
 
 ---
 
-## **6.9.4 Structured Logging Conventions**
+#### **6.9.4 Structured Logging Conventions**
 
 All logs must be structured JSON with the following mandatory fields:
 
@@ -5168,7 +5179,7 @@ All logs must be structured JSON with the following mandatory fields:
 | `event`               | Domain event name                             |
 | `details`             | Structured payload                            |
 
-### **Mandatory Domain Events**
+##### **Mandatory Domain Events**
 
 Each workflow in §6.7 must emit log events summarising its transitions:
 
@@ -5192,11 +5203,11 @@ These align directly with the state machines in §6.7.
 
 ---
 
-## **6.9.5 Metrics Naming & Labeling (Prometheus)**
+#### **6.9.5 Metrics Naming & Labeling (Prometheus)**
 
 All metrics exposed via `/metrics` follow Prometheus best practices.
 
-### **6.9.5.1 Standard Metrics**
+##### **6.9.5.1 Standard Metrics**
 
 * HTTP request latency (histogram)
   `http_request_duration_seconds{route,method,status,tenant_id}`
@@ -5207,7 +5218,7 @@ All metrics exposed via `/metrics` follow Prometheus best practices.
 * DLQ size
   `dlq_items{workflow}`
 
-### **6.9.5.2 Workflow Metrics**
+##### **6.9.5.2 Workflow Metrics**
 
 Each long-running workflow must publish duration histograms:
 
@@ -5216,7 +5227,7 @@ Each long-running workflow must publish duration histograms:
 * `lead_magnet_delivery_duration_seconds{magnet_id}`
 * `email_delivery_latency_seconds{provider}`
 
-### **6.9.5.3 Marketing Labels**
+##### **6.9.5.3 Marketing Labels**
 
 Marketing metrics may include:
 
@@ -5226,7 +5237,7 @@ Marketing metrics may include:
 
 **Never include raw PII**.
 
-### **6.9.5.4 Cardinality Guardrails**
+##### **6.9.5.4 Cardinality Guardrails**
 
 * `tenant_id` acceptable (bounded)
 * `report_id`, `evidence_id` not used as metric labels
@@ -5235,7 +5246,7 @@ Marketing metrics may include:
 
 ---
 
-## **6.9.6 Multi-Tenant Isolation in Observability**
+#### **6.9.6 Multi-Tenant Isolation in Observability**
 
 * Every Essentials trace, log, and metric must include the **tenant_id**.
 * Tenant ID is derived from auth and never read from a header.
@@ -5245,7 +5256,7 @@ Marketing metrics may include:
 
 ---
 
-## **6.9.7 Relationship to §10 (Telemetry) and §13 (Acceptance)**
+#### **6.9.7 Relationship to §10 (Telemetry) and §13 (Acceptance)**
 
 * Metrics defined in §6.9 feed directly into dashboards and alerts in §10.
 * Trace/span conventions defined here determine:
@@ -5265,7 +5276,7 @@ Together, §§6.8–6.9 define how performance expectations are measured, traced
 
 ---
 
-## **6.9.8 Invariants**
+#### **6.9.8 Invariants**
 
 * Every request must have a unique `request_id` and `trace_id`.
 * Every workflow must have a `workflow_id`.
