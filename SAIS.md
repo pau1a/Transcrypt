@@ -6133,44 +6133,6 @@ Local development relies on the MacBook’s local OS firewall and LAN/NAT for pr
 
 ### 7.5 Secrets and Configuration Management
 
-Source of truth (e.g., AWS Secrets Manager/Azure Key Vault), rotation cadence, envelope encryption, and secret injection at runtime.
-Config hierarchy (base, env, instance), precedence rules, and validation on boot.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### 7.5 Secrets and Configuration Management
-
 Transcrypt treats secrets and configuration as first-class runtime inputs, not code. All sensitive values are supplied via environment variables, validated at boot, and never committed to source control or shipped to the browser. Secrets cover:
 
 * Platform/infra credentials (DO Spaces, PostgreSQL, MXroute, Stripe, inference API).
