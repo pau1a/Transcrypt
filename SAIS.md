@@ -8742,6 +8742,96 @@ flowchart LR
 
 Disaster readiness ensures that Transcrypt can recover from catastrophic failure of infrastructure, storage, or configuration without data loss beyond agreed tolerances and without architectural improvisation during an incident. This section defines the artefacts that must be backed up, where those backups land, cross-region/off-provider hooks, and the RPO/RTO targets that §12 runbooks must validate during restore drills.
 
+RPO and RTO are two brutally practical numbers that define **how much pain you’re willing to tolerate when the system dies**. They are the backbone of any disaster-readiness story.
+
+Let’s break them down in clean, human terms, not consultancy jargon.
+
+---
+
+##### **RPO — Recovery Point Objective**
+
+RPO answers the question:
+
+**“How much data can we afford to lose?”**
+
+It’s measured in **time**, not “rows” or “files.”
+
+If your RPO is **15 minutes**, it means:
+
+* You’re willing to lose up to 15 minutes of data
+* Your backups or replication must be taken at least every 15 minutes
+* If production explodes at 14:59, everything is fine
+* If it explodes at 16 minutes, you’ve gone past your tolerance
+
+RPO is basically a statement of *data loss tolerance*.
+
+Take three scenarios:
+
+* **RPO = 0 minutes**: No data loss allowed (requires continuous replication).
+* **RPO = 15 minutes**: Small business SaaS sweet spot.
+* **RPO = 24 hours**: “We take nightly backups and live with it.”
+
+---
+
+##### **RTO — Recovery Time Objective**
+
+RTO answers a different question:
+
+**“How long can the system be down before this starts hurting us?”**
+
+Again, measured in **time**, not effort.
+
+If your RTO is **4 hours**, it means:
+
+* From the moment disaster hits
+* Until the moment customers can use the system again
+* You must be able to rebuild everything within 4 hours
+
+This forces you to be honest about:
+
+* bootstrap scripts,
+* DB restores,
+* Spaces restores,
+* reconfiguring Keycloak/inference/MXroute,
+* restarting workers,
+* verifying health endpoints.
+
+If the process actually takes 8 hours, your **real** RTO is 8 hours, no matter what the slide deck claimed.
+
+RTO is essentially *downtime tolerance*.
+
+---
+
+##### **Together: RPO + RTO define your resilience posture**
+
+Think of them like this:
+
+*RPO = acceptable data loss*
+*RTO = acceptable downtime*
+
+For Transcrypt’s scale right now:
+
+* **RPO (DB) ≈ 15 minutes**
+  (logical backups every quarter-hour)
+
+* **RTO ≈ 4 hours**
+  (provision droplet → restore DB → restore Spaces → inject secrets → restart services)
+
+These are sane, grounded targets for a single-region SaaS startup running on DO.
+
+---
+
+##### Why these matter in your SAIS
+
+They let you say in plain engineering terms:
+
+* “We can afford to lose **up to X** minutes of data.”
+* “We can afford **up to Y** hours of downtime.”
+* “Our backups and bootstrap scripts must support these numbers.”
+* “Our restore drills in §12 must prove we can hit them.”
+
+They turn “disaster readiness” from vague reassurance into measurable, testable engineering.
+
 Transcrypt operates with two environments (§7.1): **Local Development (Mac)** and **Production (DigitalOcean)**. Disaster readiness therefore focuses exclusively on the **Production** environment and the ability to rebuild it cleanly using backups and the bootstrap procedures defined in §7.15.
 
 ---
