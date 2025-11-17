@@ -7785,7 +7785,219 @@ Together, these rules and topologies define how Transcrypt uses DNS, TLS, and CD
 
 ### 7.12 Feature Flags and Kill Switches
 
-Flag provider, naming conventions, default-off for risky features, per-tenant targeting, and immediate disable paths for downstream failures.
+Transcrypt uses a unified feature-flag and kill-switch system to control rollout, protect the runtime from unstable dependencies, and safely expose new capabilities to selected tenants. Flags govern behaviour across both the marketing runtime and the Essentials application. Kill switches provide immediate operational shutdown of sensitive subsystems without redeployment.
+
+All flags are stored in a single runtime configuration file on the production droplet:
+
+```
+/srv/transcrypt/config/flags.json
+```
+
+The file is loaded at server start; a local-only operator endpoint triggers a hot reload without requiring a redeploy. No third-party flag provider is used in the MVP.
+
+---
+
+#### **7.12.1 Classification**
+
+Transcrypt defines three categories of runtime controls:
+
+##### **A. Marketing Flags**
+
+Global, stateless toggles for the site/blog, used to enable or disable public-facing flows:
+
+* `waitlist_enabled`
+* `newsletter_enabled`
+* `lead_magnet_direct_download_enabled`
+* `analytics_injection_enabled` (Umami and GA)
+* `cta_promos_enabled`
+* `app_launch_enabled` (controls CTA routing to `/app` vs waitlist)
+* `pricing_live` (Phase 1 placeholder behaviour)
+
+Marketing flags never use per-tenant scoping.
+
+---
+
+##### **B. Essentials Feature Flags**
+
+Rollout gates for authenticated, tenant-scoped functionality:
+
+* `evidence_ingest_enabled`
+* `report_generation_enabled`
+* `inference_api_enabled`
+* `billing_enabled`
+* `rulepack_inference_enabled` (versioned by RulePack hash)
+* `quickstart_preset_enabled`
+* `oidc_provider_google_enabled`
+* `oidc_provider_okta_enabled`
+* `oidc_provider_entra_enabled`
+
+These flags shore up the stability of core workflows: sign-in, evaluation, evidence ingestion, report generation, billing, and any inference-backed behaviour.
+
+---
+
+##### **C. Kill Switches**
+
+Immediate operational shutdown mechanisms for unstable or degraded subsystems. Kill switches take effect before any workflow begins and must:
+
+* return a Problem+JSON error with `trace_id`, `request_id`, and `tenant_id`,
+* write a structured log entry at severity `critical`,
+* emit a domain event (e.g., `feature.disabled`),
+* avoid partial updates or inconsistent state.
+
+Kill switches protect:
+
+* Billing integrations
+* OIDC provider flows
+* Report generation worker pipelines
+* Evidence ingestion pipelines
+* Inference API calls
+* Any cryptographic or verification subsystem
+* External connector subsystems when introduced
+
+Essentials kill switches are authoritative. They override per-tenant overrides.
+
+---
+
+#### **7.12.2 Per-Tenant Overrides**
+
+Essentials supports controlled rollout via per-tenant overrides in `flags.json`:
+
+```
+{
+  "essentials": { ... },
+  "tenant_overrides": {
+    "tenant_uuid": {
+      "new_evaluation_engine": true,
+      "rulepack_inference_enabled_rulepackHash": false
+    }
+  }
+}
+```
+
+Rules:
+
+* Overrides apply only **after** authentication and authorisation have established `tenant_id`.
+* Overrides never supersede kill switches.
+* Overrides always respect row-level security and RBAC.
+* Flags must remain deterministic under offline/online transitions.
+
+This enables early access for selected tenants while maintaining global safety guarantees.
+
+---
+
+#### **7.12.3 Stubbed Feature Handling**
+
+The PRD mandates placeholder routes for future capabilities (connectors, NIS2 pack, partner integrations, attestations). These are gated by feature flags.
+
+* When disabled, stubbed routes must return a deterministic `not_available` Problem+JSON response.
+* When enabled, they expose only the surface defined in the PRD and SAIS; no speculative behaviour occurs.
+* Stubbed responses must include `trace_id` and propagate through the logging and metrics stack.
+
+---
+
+#### **7.12.4 Runtime Loading and Caching**
+
+Feature flags are a standard part of the runtime cache model:
+
+* Flags are fetched at server start and cached locally.
+* A local-only operator trigger performs hot reload.
+* Clients (Essentials browser sessions) receive the effective flags via their normal bootstrap API.
+* Flags follow the same stale-while-revalidate semantics defined for small JSON metadata in §4.5.
+
+This ensures predictable offline behaviour in limited connectivity environments.
+
+---
+
+#### **7.12.5 Behaviour in the Marketing Runtime**
+
+Marketing and blog content must degrade gracefully when flags change.
+
+When marketing flags disable functionality:
+
+* Waitlist/newsletter forms render in a fallback state.
+* CTA blocks adjust routing automatically.
+* Lead magnet direct-download falls back to email delivery.
+* Analytics scripts are removed and CSP headers updated accordingly.
+* No HTML returns invalid JS include paths.
+
+Marketing flags require no audit events.
+
+---
+
+#### **7.12.6 Behaviour in the Essentials Runtime**
+
+All Essentials requests evaluate flag state *before* beginning domain work.
+
+Effects when flags disable functionality:
+
+* **Evidence ingestion:** Upload endpoints return a Problem+JSON `feature_disabled` response. No metadata rows or blob prefixes are created.
+* **Report generation:** API returns a deterministic fallback and publishes a `report.not_generated` event. Worker queues reject creation.
+* **Inference API:** All synchronous and asynchronous inference calls halt. Evaluation falls back to deterministic local rules only.
+* **Billing:** Billing surfaces hide upgrade paths; API returns Problem+JSON with a safe fallback.
+* **OIDC provider kill:** Individual providers can be disabled without affecting others. The sign-in screen updates dynamically based on enabled providers.
+
+All suppressed flows must emit structured logs and propagate correlation identifiers.
+
+---
+
+#### **7.12.7 Naming Conventions**
+
+* All names use snake_case.
+* Flags that disable behaviour end in `_enabled` or use a `disable_` prefix.
+* Versioned flags for RulePacks embed the version hash.
+* Flag names must map precisely to a single behaviour or subsystem.
+
+No flag may depend on another flag unless explicitly stated in this section.
+
+---
+
+#### **7.12.8 Safety, Observability, and Determinism**
+
+Flags interact with the full observability stack in §7.9:
+
+* All kill-switch activations generate structured logs with `trace_id`, `tenant_id`, `route`, and details.
+* All blocked requests generate metrics under the normal HTTP request histograms.
+* Span attributes include `flag_evaluated` and `flag_effective_value`.
+* Disabled workflows publish audit events where defined in §6.9.
+* Feature flags never leak PII and never appear as cardinalizing metric labels.
+
+Determinism requirement:
+
+* A feature disabled at time T must produce identical responses for all requests until re-enabled.
+* Workers must handle repeated disabled states idempotently.
+
+---
+
+#### **7.12.9 Single Diagram**
+
+**Diagram – Feature Flag and Kill Switch Evaluation**
+
+(No parentheses anywhere.)
+
+```mermaid
+flowchart LR
+    Req[Incoming Request] --> LoadFlags[Load Flags]
+    LoadFlags --> TenantCheck[Check Tenant Overrides]
+    TenantCheck --> KillCheck[Evaluate Kill Switches]
+
+    KillCheck -->|Disabled| Block[Return Problem JSON Feature Disabled]
+    KillCheck -->|Enabled| Proceed[Continue Workflow]
+
+    LoadFlags --> FlagsFile[flags json]
+```
+
+---
+
+#### **7.12.10 Invariants**
+
+* All kill switches take effect before any mutation or queue write.
+* Per-tenant overrides apply only after tenant context is established.
+* Stubbed features return deterministic, schema-valid Problem+JSON.
+* Flags.json is the sole source of truth for flag state.
+* No flag may weaken or defeat the security model defined in §§4–6.
+* Flag evaluation is required to be idempotent and side-effect free.
+
+---
 
 ### 7.13 Cost and Capacity Guardrails
 
