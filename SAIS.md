@@ -9058,12 +9058,27 @@ States that every control maps to a verifiable artefact — no “policy-only”
 
 ### 8.2 Control-Framework Mapping
 
-Summarises how the architecture satisfies mandatory frameworks:
+Transcrypt operates within the UK SME cybersecurity landscape, where organisations commonly draw on broadly accepted security guidance—such as that found in Cyber Essentials—to shape expectations around sensible defaults. Transcrypt does not claim compliance with any certification scheme and does not map its design to formal control sets. This section instead acknowledges the general security climate in which the platform runs, without asserting conformance or exposing any non-conformance.
 
-* **Cyber Essentials v3.2** – device protection, boundary firewalls, access control, malware, patch management.
-* **IEC 62443** – zones & conduits, security levels, change control, audit, account management.
-* **NIS2** – incident reporting, supply-chain governance, resilience, data integrity.
-  Provide a cross-reference table: *Framework → Control → Section(s)/Component(s) → Evidence Artefact.*
+The architectural positions described throughout §8 reflect practical engineering choices that happen to align with themes frequently emphasised in UK guidance: limiting public attack surface, isolating ingress, enforcing least-privilege operation across services, securing identity boundaries, maintaining predictable configuration through infrastructure-as-code, and treating uploaded material cautiously. These stances arise from the platform’s measurable-security philosophy rather than from obligations to external frameworks.
+
+Transcrypt naturally generates internal artefacts that record system behaviour, configuration states, and security-relevant events. These artefacts support operational visibility and engineering assurance; they are not produced as certification evidence, nor are they intended to represent fulfilment of external requirements. Any resemblance between platform artefacts and expectations found in common security guidance is incidental.
+
+This subsection therefore provides contextual grounding only. It is not a mapping, not an assessment, and not a claims-bearing statement. It simply situates Transcrypt’s architecture within the general expectations of the environment it serves, leaving the detailed controls of the platform to be described in the remainder of §8.
+
+```mermaid
+flowchart LR
+    A["UK SME Security Expectations<br/><small>(non-normative context)</small>"]:::ctx
+    A --> B["Transcrypt Security Architecture"]
+    B --> C["Ingress Isolation"]
+    B --> D["Least-Privilege Service Boundaries"]
+    B --> E["Controlled Handling of Uploaded Material"]
+    B --> F["Predictable Runtime via IaC"]
+
+    classDef ctx fill:#eef,stroke:#66a,stroke-width:1px;
+```
+
+---
 
 ### 8.3 Identity, Access, and Segregation
 
