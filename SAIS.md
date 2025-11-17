@@ -8001,36 +8001,234 @@ flowchart LR
 
 ### 7.13 Cost and Capacity Guardrails
 
-Instance classes, autoscaling policies, quota limits, and cost alerts.
-Load/capacity assumptions for MVP with headroom targets.
+Transcrypt runs on a deliberately small, fixed footprint in the MVP:
 
+* A single DigitalOcean droplet hosting the runtime, background workers, and PostgreSQL.
+* DigitalOcean Spaces and CDN for static assets and evidence artefacts.
+* External SaaS for inference and email.
 
+None of these resources autoscale. Capacity changes are **deliberate, manual decisions**. This section defines the cost and capacity assumptions, the quota model, and the guardrails that prevent uncontrolled spend or saturation of the fixed environment.
 
+---
 
+#### 7.13.1 Capacity Assumptions and Targets
 
+The MVP is sized for:
 
+* A single production droplet with modest vCPU and RAM.
+* Early adopter tenant base in the low tens to low fifties.
+* Concurrent signed in users in the low tens.
+* Evidence uploads and reports at human scale, not bulk ingestion.
 
+Targets:
 
+* The system must handle at least **two to three times** the initial expected tenant count and traffic before any change of droplet size or topology is required.
+* Normal operation keeps capacity utilisation within safe envelopes so that short spikes do not trigger instability.
 
+The scaling path is:
 
+1. Optimise within the existing droplet.
+2. Vertically resize the droplet class when metrics justify it.
+3. Only later consider a topology change that separates database and application roles.
 
+---
 
+#### 7.13.2 Compute Capacity – Droplet Guardrails
 
+The droplet is the primary bottleneck. Guardrails:
 
+* **CPU**
 
+  * Target average CPU usage under **forty percent** during normal traffic.
+  * p95 CPU usage should remain under **seventy percent**.
+  * If sustained CPU usage exceeds **seventy percent** for a defined window, performance alerts are raised.
 
+* **Memory**
 
+  * Working set must fit in RAM with no sustained swapping.
+  * Memory alerts trigger before the system begins to swap significantly.
 
+* **Worker Concurrency**
 
+  * Report generation and evidence processing workers run with a fixed maximum concurrency.
+  * The number of concurrent jobs is tuned so that CPU and memory headroom remain within targets.
+  * Queues absorb spikes rather than workers oversubscribing the droplet.
 
+* **App Behaviour Under Pressure**
 
+  * Non critical workloads such as background tidy up tasks may be deferred when the droplet is hot.
+  * SLOs in §6.8 and observability metrics in §7.9 are used to detect when the single node is close to capacity.
 
+If sustained utilisation crosses a defined red line, the operational response is to resize the droplet class, not to accept degraded performance indefinitely.
 
+---
 
+#### 7.13.3 Database and Storage Capacity
 
+PostgreSQL initially runs on the same droplet as the application:
 
+* The workload is sized for:
 
+  * modest tenant counts,
+  * a limited number of concurrent editors,
+  * and evidence metadata volume in tens of gigabytes at most.
 
+Guardrails:
+
+* **Connection Pool**
+
+  * Maximum connections are bounded to protect the droplet from exhaustion.
+  * Application pools are configured to fail fast rather than block indefinitely.
+
+* **Evidence Quotas**
+
+  * Per tenant soft quotas on:
+
+    * number of evidence items,
+    * total evidence storage,
+    * individual file size.
+  * Hard limits may be introduced when metrics show sustained growth towards storage thresholds.
+
+* **DigitalOcean Spaces**
+
+  * All large artefacts are stored in Spaces rather than on the droplet disk.
+  * Spaces and CDN have effectively elastic capacity, but Transcrypt treats them as cost constrained resources.
+  * Lifecycle rules may be introduced to expire temporary or redundant artefacts according to retention requirements in §4.
+
+* **Droplet Disk**
+
+  * Only application code, logs, and database files are stored locally.
+  * Log rotation and retention thresholds prevent disk exhaustion.
+  * Alerts trigger if disk usage crosses safe thresholds.
+
+---
+
+#### 7.13.4 Inference and External Spend
+
+Inference API usage is a direct cost driver and must remain under tight control.
+
+* **Budget**
+
+  * A monthly budget for inference operations is defined and tracked.
+  * Inference usage per tenant, per feature, and per type of request is measured via metrics and logs.
+
+* **Quotas**
+
+  * Per tenant quotas for inference backed operations may be enforced.
+  * Non essential inference use cases can be disabled when budget thresholds are approached.
+
+* **Degradation Behaviour**
+
+  * If inference usage approaches the defined budget, non critical inference flows are disabled first.
+  * If the budget is hit, the `inference_api_enabled` flag is switched off and evaluation falls back to deterministic rule based behaviour only.
+  * Behaviour under degraded conditions must remain deterministic as defined in §§6.3–6.4.
+
+Email, billing, and other external costs are comparatively small but still guarded:
+
+* MXroute use is monitored for unusual volume or bounce spikes.
+* Stripe transaction patterns are monitored for anomalous volumes that might indicate misuse.
+* None of these systems are allowed to generate uncontrolled loops of outbound calls.
+
+---
+
+#### 7.13.5 Quotas and Rate Limits
+
+Quotas and rate limits protect both cost and capacity:
+
+* **HTTP Rate Limits**
+
+  * Per IP and per tenant rate limiting applies to:
+
+    * sign in endpoints,
+    * report request endpoints,
+    * evidence upload initiation,
+    * inference triggering endpoints.
+  * Excess traffic is rejected with appropriate error responses rather than stretching the droplet beyond safe utilisation.
+
+* **Per Tenant Quotas**
+
+  * Maximum number of:
+
+    * active users per tenant according to plan,
+    * reports generated per period,
+    * invitations sent per period,
+    * evidence items per tenant during the MVP.
+  * These limits can be increased for specific tenants via configuration once their usage and billing justify it.
+
+* **Report and Job Limits**
+
+  * Report jobs and other long running tasks are limited per tenant and per time window to prevent one tenant from monopolising the workers.
+
+Quotas and rate limits are expressed in configuration and enforced uniformly across all environments.
+
+---
+
+#### 7.13.6 Cost Alerts and Red Lines
+
+Transcrypt defines explicit thresholds at which operators must act:
+
+* **Infra Cost**
+
+  * Baseline expected monthly infra spend is defined.
+  * Alerts fire when projected spend crosses a configurable multiple of baseline.
+
+* **Inference Cost**
+
+  * Alerts at a percentage of the monthly inference budget:
+
+    * early warning threshold,
+    * critical threshold.
+  * At the critical threshold the system automatically degrades or disables non essential inference backed features.
+
+* **Resource Utilisation**
+
+  * Alerts for:
+
+    * sustained CPU usage above target,
+    * sustained memory usage near capacity,
+    * disk usage approaching defined limits,
+    * database connection pool exhaustion,
+    * growing report or evidence queues.
+
+Operator actions when thresholds are hit:
+
+* Temporarily disable non essential capabilities via configuration and feature flags.
+* Increase droplet size when sustained load justifies it.
+* Review per tenant quotas and adjust plans if a small number of tenants are driving disproportionate load.
+
+---
+
+#### 7.13.7 Cost and Capacity Diagram
+
+The following diagram shows how traffic, resources, and guardrails relate at a high level.
+
+```mermaid
+flowchart LR
+    Traffic[User Traffic\nSite Blog App] --> Droplet[DO Droplet\nApp API DB]
+    Droplet --> Spaces[DO Spaces\nEvidence Reports Assets]
+    Droplet --> Inference[Inference API\nExternal SaaS]
+    Droplet --> Email[MXroute Email]
+    Droplet --> Billing[Stripe Billing]
+
+    Droplet --> Metrics[Metrics Logs Traces]
+    Spaces --> Metrics
+    Inference --> Metrics
+
+    Metrics --> Alerts[Cost And Capacity Alerts]
+    Alerts --> Actions[Operator Actions\nResize Droplet\nAdjust Quotas\nFlip Flags]
+```
+
+---
+
+#### 7.13.8 Invariants
+
+* The droplet does not autoscale; any change of instance class is a manual, deliberate operation.
+* DigitalOcean Spaces and CDN scale elastically at the provider level, but Transcrypt treats their usage as cost constrained and enforces quotas at the application level.
+* Inference and other external APIs are always guarded by quotas, budgets, and kill switches.
+* No single tenant or workflow is allowed to saturate the shared infrastructure.
+* Cost and capacity guardrails are enforced primarily through configuration, rate limiting, and feature flags, not reactive firefighting.
+
+---
 
 ### 7.14 Third-Party Integrations in Runtime
 
