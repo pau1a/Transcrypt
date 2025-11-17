@@ -5936,8 +5936,200 @@ These endpoints integrate with CI/CD post-deploy checks and operational monitori
 
 ### 7.4 Networking and Segmentation
 
-VPCs/VNets, subnets, security groups/NSGs, private endpoints, peering.
-Public vs private ingress, egress allow-lists, NAT gateways, WAF, rate limiting, DDoS protections. Document outbound DNS and restricted IP ranges.
+Transcrypt’s networking model is intentionally simple and tightly controlled. Segmentation is **primarily enforced by the free DigitalOcean Cloud Firewall at the project edge**, and **additionally reinforced** by host-level firewalling using UFW (iptables) on the droplet. Internal service binding further restricts exposure by keeping PostgreSQL and background worker interfaces local/private only. Local development uses loopback networking on the MacBook and does not expose public services.
+
+---
+
+#### **7.4.1 Network Model Overview**
+
+Production operates within a single DigitalOcean VPC/project network:
+
+* A single droplet hosting:
+
+  * Next.js runtime (marketing site, blog, Essentials app, API routes).
+  * Background worker process.
+  * PostgreSQL (local or private-networked).
+* DigitalOcean Spaces for static and application assets, fronted by DO CDN.
+* External SaaS providers:
+
+  * Stripe (billing).
+  * MXroute (email).
+  * Inference API.
+
+There are no separate app/db subnets, NAT gateways, peering links, or multi-tier internal networks in the MVP. Segmentation relies on:
+
+* DigitalOcean Cloud Firewall (authoritative network perimeter).
+* UFW/iptables (host-level enforcement).
+* Binding PostgreSQL to `localhost` or the private interface.
+
+Local development runs entirely on the MacBook using loopback networking; it receives no inbound public traffic.
+
+---
+
+#### **7.4.2 Ingress (Public vs Private)**
+
+##### **Public ingress – production**
+
+Only the following ports accept public inbound traffic:
+
+* **80/tcp** — HTTP (redirect to HTTPS).
+* **443/tcp** — HTTPS (Next.js runtime).
+* **22/tcp** — SSH (restricted to a narrow allow-list).
+
+All other inbound traffic is denied by the DigitalOcean Cloud Firewall and UFW.
+
+##### **Private / local-only**
+
+* **PostgreSQL** is bound to localhost or production’s private interface; it is never reachable on the public IP.
+* Internal worker operations run entirely within the droplet and do not expose external listeners.
+* Any future admin interfaces must bind to localhost or private-only addresses.
+
+##### **Static assets and CDN**
+
+* DigitalOcean Spaces and the DO CDN serve public static assets.
+* Public read access is HTTPS-only.
+* Write operations are restricted to the application and worker using scoped credentials.
+
+---
+
+#### **7.4.2.1 Network Flow Diagram**
+
+```mermaid
+flowchart LR
+    Internet[Public Internet] --> DOFW[DigitalOcean Cloud Firewall]
+    DOFW --> Droplet[Transcrypt Droplet<br/>Public IP]
+
+    Droplet --> UFW[UFW / iptables]
+    UFW --> App[Next.js Runtime<br/>Site / Blog / App / API]
+    UFW --> DB[(PostgreSQL<br/>Local / Private)]
+    UFW --> Worker[Background Worker<br/>DB-backed Queue]
+
+    Droplet --> Spaces[(DO Spaces)]
+    Droplet --> CDN[(DO CDN)]
+    Droplet --> Stripe[Stripe API]
+    Droplet --> MX[MXroute SMTP]
+    Droplet --> LLM[Inference API]
+```
+
+---
+
+#### **7.4.3 Egress Policy**
+
+Production egress is limited to the minimum viable set of destinations.
+
+##### **Required outbound destinations**
+
+* DigitalOcean Spaces and CDN endpoints (HTTPS).
+* MXroute SMTP hosts (ports 587/465).
+* Stripe API endpoints (HTTPS).
+* Inference API endpoints (HTTPS).
+* DNS resolvers (53 TCP/UDP).
+* OS update mirrors.
+
+##### **MVP posture**
+
+* Outbound:
+
+  * **HTTPS (443)** allowed to the internet.
+  * **SMTP** allowed only to MXroute.
+  * **DNS** allowed only to configured resolvers.
+* Future tightening will restrict HTTPS to a small allow-list:
+
+  * `*.digitaloceanspaces.com`
+  * Stripe API domains
+  * MXroute SMTP hosts
+  * Inference API domain
+  * Package mirrors
+
+Inference API traffic is treated as cost-sensitive; application endpoints that invoke it are rate-limited per tenant and per IP.
+
+---
+
+#### **7.4.4 Segmentation and Firewalls**
+
+Segmentation is enforced at three levels:
+
+##### **1. DigitalOcean Cloud Firewall (Primary Perimeter)**
+
+The Cloud Firewall is the authoritative enforcement point for all inbound and outbound traffic policies.
+
+* **Inbound**
+
+  * Allow: 80, 443, and 22 (restricted).
+  * Deny: all other inbound ports.
+* **Outbound**
+
+  * Allow: HTTPS, MXroute SMTP, DNS (MVP).
+  * Future: restrict HTTPS to explicit service domains.
+
+##### **2. Host-Level Firewall (UFW / iptables)**
+
+Mirrors and reinforces Cloud Firewall rules on the droplet.
+
+* Default deny incoming.
+* Default allow outgoing (until egress tightening).
+* Allow:
+
+  * 80/tcp and 443/tcp to the Next.js runtime.
+  * 22/tcp from a restricted source.
+* **PostgreSQL** bound to localhost/private; not exposed on public IP.
+
+##### **3. Service Binding and Process Layout**
+
+* Next.js runtime, PostgreSQL, and background worker all run on the same droplet.
+* No internal network-accessible admin endpoints.
+* Any future admin tooling must bind to private/local addresses only.
+
+No peering, VPN tunnels, or cross-project links exist in the MVP.
+
+---
+
+#### **7.4.5 DNS and Name Resolution**
+
+##### **Inbound DNS**
+
+* Root and `www` domains resolve to the droplet’s public IP.
+* Static asset domains resolve to DO CDN.
+* MX records point to MXroute.
+
+##### **Outbound DNS**
+
+* The droplet uses a small, fixed set of resolvers (DigitalOcean default or explicitly specified resolvers).
+* All outbound name resolution is channelled through these resolvers.
+* Future ops will include DNS query logging and anomaly detection.
+
+---
+
+#### **7.4.6 WAF, Rate Limiting, and DDoS Posture**
+
+Transcrypt does not deploy a dedicated managed WAF in the MVP. Protection is provided by:
+
+* DigitalOcean’s baseline L3/L4 DDoS and network protections.
+* Cloud Firewall + UFW inbound filtering.
+* Application-level authentication and validation.
+* Explicit rate limiting on sensitive endpoints.
+
+##### **Rate-limited endpoints**
+
+* Authentication flows.
+* Evidence upload endpoints.
+* Report generation requests.
+* Any endpoint invoking the inference API.
+
+Rate limits are applied per tenant and where possible per source IP.
+
+##### **Request-size and abuse controls**
+
+* Maximum request body sizes enforced for uploads and JSON.
+* Repeated failure patterns or excessive request patterns trigger throttling or temporary blocking.
+
+A managed WAF (e.g., via CDN reverse-proxy) is planned once traffic and revenue justify additional operational cost.
+
+---
+
+Local development relies on the MacBook’s local OS firewall and LAN/NAT for protection. No services are exposed to the public internet during development.
+
+---
 
 ### 7.5 Secrets and Configuration Management
 
