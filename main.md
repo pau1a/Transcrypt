@@ -1287,6 +1287,8 @@ That is exactly what “segmented VPC/VNet: public, app, data; only proxy reache
   * DB/Storage: `db_errors_total{op}`, `object_store_failures_total{op}`.
   * Business: `findings_changed_total{status}`, `reports_generated_total`.
 
+All logs share a single structured schema and fall into four classes: **audit**, **application**, **access**, and **infrastructure**. Severity is canonical across all classes (**TRACE**, **DEBUG**, **INFO**, **WARN**, **ERROR**, **FATAL**), with audit events always emitted regardless of environment thresholds and never filtered by `LOG_LEVEL`. Log emission is JSON-only to stdout and is collected by the platform log agent for onward routing.
+
 **SLOs (initial)**
 
 * **API availability:** ≥ 99.5% monthly.

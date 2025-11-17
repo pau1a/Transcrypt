@@ -5036,9 +5036,38 @@ Transcrypt uses distributed tracing (Jaeger via OpenTelemetry), structured loggi
 
 Observability is a cross-cutting concern: every request, job, and workflow step must carry the identifiers defined here, and every service must emit logs, metrics, and traces in a consistent format. These conventions underpin the SLOs defined in §6.8 and the metrics and dashboards in §10.
 
+#### **6.9.0 Log Classes and Severity**
+
+Logs are grouped into four classes with a shared schema and consistent downstream handling:
+
+* **Audit** — canonical evidence events; append-only and immutable.
+* **Application** — workflow/domain logs used for debugging and behavioural introspection.
+* **Access** — request-level logs at the Gateway and frontends.
+* **Infrastructure** — system-level logs (Postgres, Redis, OS, container runtime).
+
+Each log carries a `log_type` (string enum) to classify the event for routing, storage policy, and visualisation.
+
+Severity levels are canonical across all classes:
+
+* **TRACE** — ultra-fine detail, development only.
+* **DEBUG** — diagnostic detail for investigation.
+* **INFO** — normal operation and state transitions.
+* **WARN** — unexpected conditions that auto-recover.
+* **ERROR** — operations failed and require handling.
+* **FATAL** — process cannot continue and must terminate.
+
+Rules that apply to every log class:
+
+* Every log includes a severity value.
+* `LOG_LEVEL` is an environment variable threshold controlling emission for non-audit logs.
+* **Audit** logs ignore `LOG_LEVEL` and are never filtered.
+* All logs conform to the base JSON schema in §6.9 and are structured by default.
+
 ---
 
 #### **6.9.1 Core Identifiers and Context Fields**
+
+All logs, regardless of class, use the structured JSON envelope defined in this section.
 
 Every inbound request, internal call, job, and worker span must include the following identifiers:
 
@@ -7078,7 +7107,7 @@ This section defines how telemetry is emitted, where it flows in each environmen
 
 #### 7.9.1 Logging and Log Drains
 
-All application components emit **structured JSON logs** to stdout. Systemd captures stdout/stderr and forms the first-level log store on the production droplet.
+All log classes (**audit**, **application**, **access**, **infrastructure**) emit **structured JSON logs** to stdout. Systemd captures stdout/stderr, the platform log agent tails the journal, and the agent forwards to the configured log sink.
 
 ##### Log Structure
 
@@ -7094,20 +7123,33 @@ Log entries follow the conventions in §6.9 and must include:
 
 Marketing+Blog and Essentials logs share the same schema. Marketing-specific events (CTA clicks, lead-magnet requests, blog publishing) are represented as distinct `event` values, not a separate logging system.
 
+Logs are tagged with `log_type` for downstream routing and retention. Every log carries a severity from the canonical set (**TRACE**, **DEBUG**, **INFO**, **WARN**, **ERROR**, **FATAL**); **AUDIT** logs are never filtered and bypass `LOG_LEVEL` thresholds.
+
 ##### Environments
 
 **Local Development (MacBook)**
 
 * Logs written to console in JSON format.
-* Default level `debug` to aid development.
+* Default level `debug`, with `trace` gated behind a feature flag and not committed to release builds.
 * Developers may enable file logging if needed for long sessions.
+
+**Staging (DigitalOcean)**
+
+* Logs captured by systemd journal from all processes and shipped by the log agent to the sink.
+* Default level `info`, with **temporary `debug` overrides applied per component** when diagnosing issues.
+* Log rotation configured to limit disk usage.
+* PII is never logged in raw form; hashes or tokens are used where correlation is required.
+* Audit events bypass `LOG_LEVEL` filtering and are always written.
 
 **Production (DigitalOcean)**
 
-* Logs captured by systemd journal from all processes.
-* Default level `info`, with `debug` enabled only under a feature-flagged diagnostic mode.
+* Logs captured by systemd journal from all processes and shipped by the log agent to the sink.
+* Default level `info`; production builds exclude `trace` logging, and `debug` is enabled only under a controlled diagnostic flag.
 * Log rotation configured to limit disk usage.
 * PII is never logged in raw form; hashes or tokens are used where correlation is required.
+* Audit events bypass `LOG_LEVEL` filtering and are always written.
+
+`LOG_LEVEL` defaults: **prod = INFO**, **staging = INFO with per-component temporary DEBUG**, **dev = DEBUG**. Trace logging must never ship in production builds.
 
 Future evolution to a remote log store (for example, a managed log aggregation service) does not change application behaviour; the app always logs to stdout using the same structured format.
 
@@ -7264,20 +7306,31 @@ The following diagram shows the overall observability plumbing across Marketing+
 
 ```mermaid
 flowchart LR
-    VISITOR[Visitor Browser]
-    USER[Essentials User]
-    APP[Transcrypt Runtime]
+    subgraph RUNTIME[Runtime]
+        VISITOR[Visitor Browser]
+        USER[Essentials User]
+        APP[Transcrypt Runtime]
+    end
+
+    subgraph LOGPIPE[Logging Pipeline]
+        STDOUT[stdout]
+        JOURNAL[systemd journal]
+        AGENT[log agent<br/>tags log_type]
+        LOGS[Structured Log Sink]
+    end
+
+    AUDIT_BUCKET[Audit Object Storage]
+
     OTEL[OTEL Collector]
     JAEGER[Jaeger Tracing]
     PROM[Prometheus Metrics]
-    LOGS[Structured Log Store]
     UMAMI[Umami Analytics]
     GA[Google Analytics]
 
     VISITOR --> APP
     USER --> APP
 
-    APP --> LOGS
+    APP -->|log_type + severity| STDOUT --> JOURNAL --> AGENT --> LOGS
     APP --> PROM
     APP --> OTEL
 
@@ -7285,6 +7338,8 @@ flowchart LR
 
     VISITOR --> UMAMI
     VISITOR --> GA
+
+    LOGS -. hourly audit export — see §8.5 .-> AUDIT_BUCKET
 ```
 
 This diagram applies to both local development and production; only the concrete deployment locations of Prometheus, Jaeger, Umami, and log storage differ by environment.
@@ -9173,10 +9228,63 @@ flowchart TB
 
 ### 8.5 Audit and Logging Architecture
 
-Define immutable audit-log flow:
-structured JSON logs → append-only store → periodic hash → object-store replication.
-Include tenant/request correlation, tamper-detection, and retention policy.
-Clarify what is *not* logged (sensitive fields, credentials, tokens).
+#### 8.5.1 Log Classes and Routing (Summary)
+
+All logs conform to the schema, classes, and severity model defined in §6.9. Audit, application, access, and infrastructure logs are emitted as JSON to stdout, collected via the platform agent, and routed to the central log sink with `log_type` attached for policy controls.
+
+#### 8.5.2 Audit Event Schema
+
+Audit events are the canonical evidence artefacts. Each event includes: `timestamp`, `tenant_id`, `request_id`, `actor_id`, `action`, `resource_type`, `resource_id`, `outcome`, `origin`, and `hash_of_payload` (when applicable). Schema definitions in §4 (artefacts & entities) govern the allowed values.
+
+#### 8.5.3 Immutable Audit Flow
+
+* Services emit audit JSON events with the schema above and `log_type=audit`.
+* Events are written to an **append-only Postgres audit table**; `UPDATE`/`DELETE` are disallowed.
+* An **hourly batch export** writes the audit stream to a versioned object-store prefix.
+* Each batch has a manifest enumerating files, batch sequence, and a batch hash (SHA-256).
+* Batch hashes are chained or checkpointed (linear or Merkle) to prove ordering and detect gaps.
+* A cold replication job copies each batch to a second object-store region.
+
+#### 8.5.4 Integrity and Tamper Detection
+
+* Verification recomputes the batch hash from exported files and compares it to the stored manifest value.
+* Any divergence signals corruption or tampering and triggers incident handling.
+* Corrections never mutate history; they emit new audit events that reference the original record and describe the correction context.
+
+#### 8.5.5 Redaction and What Is Not Logged
+
+The following are never logged: passwords; ID/access/refresh tokens; secrets/API keys; evidence plaintext; PII such as emails, phone numbers, or names; sensitive payloads in application logs; only hashes or opaque IDs are permitted.
+
+Enforcement mechanisms:
+
+* Logging middleware that strips or masks forbidden fields before emission.
+* Scrubbers that reject logs matching forbidden patterns at ingest time.
+* Validation that rejects log records containing disallowed keys before they enter the pipeline.
+
+#### 8.5.6 Retention & Crypto-Shred
+
+* Audit events are retained for **at least 12 months** (configurable beyond that floor), with hot storage for recent periods and cold storage thereafter.
+* Crypto-shred is implemented by revoking access to the Data Encryption Keys; once DEKs are dropped, the corresponding segments are unrecoverable.
+* Expiry is segment-based: no partial deletion of individual events within a retained segment.
+
+#### 8.5.7 Failure Modes
+
+* Loss of the audit pipeline is treated as a platform fault.
+* Privileged actions may fail closed when audit persistence is unavailable.
+* Backpressure triggers alerts and throttling to protect the pipeline when sinks slow down.
+
+#### 8.5.8 Diagram
+
+```mermaid
+flowchart LR
+    SERVICES[Services<br/>log_type=audit] --> TABLE[Audit Append-only Table]
+    TABLE --> EXPORT[Hourly Export]
+    EXPORT --> HASHING[Hashing Step<br/>batch hash + manifest]
+    HASHING --> REPLICA[Cold Replica (secondary region)]
+
+    SERVICES -. carries tenant_id/request_id .-> TABLE
+    EXPORT -. carries tenant_id/request_id in batch metadata .-> HASHING
+```
 
 ### 8.6 Redaction, Anonymisation, and DSR Handling
 
@@ -9196,8 +9304,7 @@ Link to §8.6 (Build Artifacts and Signing).
 
 ### 8.9 Incident Detection and Response Readiness
 
-Summarise monitoring sources (IDS/WAF alerts, anomaly logs), escalation flow, severity classification, and 24 h notification target for NIS2 incidents.
-Point to detailed procedures in §12 (Operational Runbooks).
+Summarise monitoring sources (IDS/WAF alerts, anomaly logs), escalation flow, severity classification, and state that **critical incident alerts must be raised rapidly, and operational teams must be able to respond within defined internal time targets**. Point to detailed procedures in §12 (Operational Runbooks).
 
 ### 8.10 Compliance Evidence and Verification
 
