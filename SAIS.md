@@ -7340,7 +7340,7 @@ The operational plane is restricted to a single operator identity (and future tr
 
 Key principles:
 
-* **SSH is restricted to fixed operator IPs**; password authentication is disabled.
+* **SSH is restricted to fixed operator IPs via port 3698**; password authentication is disabled.
 * **SSH keys** are the only authentication mechanism.
 * **fail2ban** or equivalent rate-limiting blocks repeated SSH attempts.
 * **MFA-enforced cloud console access** protects the break-glass path.
@@ -7363,6 +7363,7 @@ Rules:
 * Break-glass credentials are stored offline and only used during operational emergencies.
 * The break-glass path may modify infrastructure, firewall rules, or restore backups, but **may not deploy features**.
 * All break-glass actions must be captured in operator logs immediately after recovery.
+* Break-glass SSH also uses port 3698, subject to the same allow-list and key-only restrictions.
 
 This provides a survivability path without undermining the integrity of normal operations.
 
@@ -7387,9 +7388,10 @@ SSH is the only remote interactive channel and follows strict constraints:
 
 * Allowlist of operator IPs.
 * No password authentication; key-only.
-* Port unchanged (22) but protected by DO firewall + fail2ban.
+* SSH runs on port 3698, protected by the DO firewall and fail2ban.
 * Optional: SSH over Tailscale for private network overlay.
 * All shell sessions log commands with timestamps in `auth.log` and sudo logs.
+* The droplet runs no other services on port 3698; the port is reserved exclusively for SSH.
 
 No container shells or “exec into runtime” paths exist for the site/blog or Essentials workloads — all runtime services run as supervised processes managed by systemd.
 
@@ -7483,7 +7485,7 @@ flowchart LR
 
     Operator[Operator] --> CICD[CI CD Pipeline]
     CICD --> Droplet[DigitalOcean Droplet]
-    Operator --> SSH[SSH Access]
+    Operator --> SSH[SSH Access Port 3698]
     SSH --> Droplet
 
     BreakGlass[Break Glass Account] --> DOConsole[DO Console]
