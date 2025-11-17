@@ -9602,9 +9602,158 @@ No special-case exceptions exist for marketing traffic; it shares the same ingre
 
 ### 8.8 Secure Development and Supply Chain
 
-Specify dependency scanning, SBOM generation, commit-signing, and build pipeline attestation.
-Describe how third-party libraries are approved, updated, and revoked.
-Link to §8.6 (Build Artifacts and Signing).
+Transcrypt’s supply chain is intentionally narrow. The platform uses a single GitHub repository, a deterministic build pipeline, and a locked dependency graph (npm). There are no containers, no dynamic plugin systems, and no runtime code downloads. The marketing/blog runtime shares exactly the same build pipeline and dependency graph as the Essentials application.
+
+This section defines the minimal but robust controls required to keep the codebase, build artefacts, and dependency chain trustworthy.
+
+---
+
+#### **8.8.1 Source of Truth and Build Lineage**
+
+**Repository:**
+All source code resides in the Transcrypt GitHub repository. The droplet never accepts code outside CI-produced artefacts, and there is no “live patching” or editing on-production.
+
+**Deterministic Builds:**
+The CI pipeline builds production artefacts exclusively from the repository’s `main` branch using the locked dependency graph (`package-lock.json`).
+No code is fetched dynamically during build or runtime.
+
+**Artefact Publication:**
+The CI pipeline produces a Next.js production build and worker bundle and deploys them directly to the DigitalOcean droplet.
+No intermediate package registry or container registry is used.
+
+---
+
+#### **8.8.2 Dependency Chain and Lockfiles**
+
+Transcrypt’s primary supply chain is npm. The system depends on:
+
+* direct npm dependencies declared in `package.json`
+* transitive dependencies fixed in `package-lock.json`
+* OS-level packages installed by DigitalOcean on the base droplet image
+
+Controls in place:
+
+1. **Exact Version Pinning**
+   All direct dependencies use explicit versions; no caret (`^`) or tilde (`~`) ranges.
+   This reduces drift and ensures reproducible builds.
+
+2. **Lockfile as SBOM**
+   `package-lock.json` defines the full dependency closure.
+   It is treated as the authoritative record of what enters the runtime.
+
+3. **No Runtime Installation**
+   Production never runs `npm install`.
+   The build artefact is uploaded as a pre-bundled output from CI.
+
+4. **Review Before Adding Dependencies**
+   New libraries must be mainstream, maintained, and non-exotic.
+   No libraries that fetch code at runtime or introduce dynamic plugin behaviour are permitted.
+
+---
+
+#### **8.8.3 Inference Client as a Supply Chain Element**
+
+The inference SDK (OpenAI, Anthropic, or equivalent) is treated as a pinned npm dependency with:
+
+* explicit version pinning
+* predictable API surface
+* no model downloads to disk
+* all responses handled as **untrusted data**
+
+This prevents inference calls from widening the supply chain risk surface.
+
+---
+
+#### **8.8.4 No Dynamic or External Code Sources**
+
+Neither the Essentials runtime nor the Marketing/Blog runtime downloads:
+
+* themes
+* plugins
+* scripts
+* remote packages
+* model weights
+* templates
+* extensions
+
+All executable logic is bundled at build time.
+This ensures that runtime has a *closed* dependency graph.
+
+---
+
+#### **8.8.5 Vulnerability Scanning and Review Cadence**
+
+Transcrypt applies a pragmatic vulnerability-management cycle:
+
+1. **npm audit in CI**
+   The build pipeline runs `npm audit` as part of the build step.
+   High-severity actionable issues must be reviewed before release.
+
+2. **Manual Dependency Review Cycle**
+   Dependencies are periodically updated in batches rather than continuously.
+   Each batch update includes a manual review of release notes for breaking or security changes.
+
+3. **DigitalOcean OS Updates**
+   System packages receive updates via DO’s standard distro security updates.
+   OS patching is performed during maintenance windows and validated post-patch.
+
+There is no claim of full SCA/SAST coverage, SBOM generation, or automated remediation; the process matches the platform’s size and architecture.
+
+---
+
+#### **8.8.6 Commit Hygiene and Provenance**
+
+Transcrypt does not currently enforce commit signing.
+However:
+
+* All changes shipped to production originate from the GitHub repository.
+* CI deploys only artefacts built from source, not from developer machines.
+* No code path exists to deploy unversioned or unreviewed files.
+
+This provides a practical provenance chain without overstating assurance.
+
+---
+
+#### **8.8.7 Library Approval, Deprecation, and Revocation**
+
+Changes to the dependency graph follow a simple rule:
+
+* **New packages:** added only when the functionality is required and the library is reputable.
+* **Deprecation:** unused or unmaintained packages are removed as part of update cycles.
+* **Revocation:** if a dependency is compromised or becomes unsafe, it is removed immediately and the lockfile rebuilt.
+
+No complex governance procedure exists; the responsibility is architectural discipline rather than process bureaucracy.
+
+---
+
+#### **8.8.8 Marketing/Blog Runtime Uses the Same Supply Chain**
+
+The Site/Blog (marketing runtime) shares:
+
+* the same repository
+* the same dependencies
+* the same deterministic CI build
+* the same runtime environment and policy
+* the same security controls
+
+There is no reduced security posture for the marketing side of the runtime.
+
+---
+
+#### **8.8.9 Alignment with Overall Security Model**
+
+This supply-chain stance aligns directly with Transcrypt’s core security philosophy (defence in depth, isolation by default, observability everywhere):
+
+* predictable build surfaces
+* zero runtime modification
+* locked dependency roots
+* minimal external trust
+* one consistent pipeline for all runtimes
+* no “shadow supply chain” through blog/site behaviour
+
+It ensures the supply chain remains intelligible and manageable as the platform grows.
+
+---
 
 ### 8.9 Incident Detection and Response Readiness
 
