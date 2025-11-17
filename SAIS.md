@@ -5713,7 +5713,7 @@ flowchart TB
     Droplet --> DNS[DNS Records]
     Droplet --> MX[MXroute]
     Droplet --> Stripe[Stripe API]
-    Droplet --> LLM[Inference API\n(external SaaS)]
+    Droplet --> LLM[Inference API\n-external SaaS]
     Spaces[(DO Spaces)] --> CDN[(DO CDN)]
     Droplet --> Spaces
 
