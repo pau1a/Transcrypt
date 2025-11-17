@@ -9326,13 +9326,279 @@ flowchart LR
 
 ### 8.6 Redaction, Anonymisation, and DSR Handling
 
-Explain the redaction pipeline for AI prompts or logs, the anonymisation of test data, and how Data Subject Requests are executed and verified.
-Reference data schemas affected (from §4) and retention limits (from §4.5).
+Redaction, anonymisation, and Data Subject Request (DSR) handling are architectural capabilities built into the platform. They apply across the Marketing+Blog runtime and the Essentials application, and ensure that sensitive data is neither over-retained nor allowed to leak into telemetry, logs, or non-production environments. This section describes the technical mechanisms; operational runbooks for DSR fulfilment live in §12.
+
+---
+
+### **8.6.1 Redaction Pipeline (Logs, Prompts, and Metadata)**
+
+All telemetry produced by the platform passes through a redaction stage before emission, ensuring that sensitive material never enters logs or traces in raw form. Redaction applies uniformly to:
+
+* API requests
+* Evidence-related metadata
+* AI prompts and model inputs
+* System-inferred context (e.g., email-like strings, phone-like sequences)
+
+Redaction guarantees:
+
+* **No raw user-provided content** is logged outside the artefact store.
+* **LLM prompts are reduced to a hash**, input-length, and high-level token statistics.
+* **Structured logs** emitted in §6.9 remove or mask:
+
+  * email patterns
+  * phone numbers
+  * free-text fields over a safe threshold
+  * any key matching a forbidden-field list defined in §8.5.5
+
+Redaction is performed **before** severity filtering or routing, so even DEBUG-level logs in development environments respect the same boundaries.
+
+---
+
+### **8.6.2 Test-Data Anonymisation (Staging and Non-Production)**
+
+Non-production environments never use raw customer artefacts.
+
+Synthetic or anonymised datasets are generated via an anonymisation pipeline that applies:
+
+* **Identifier remapping:** tenant_ids, resource_ids, user_ids replaced with deterministic substitutes.
+* **Text anonymisation:** free-text fields removed or reduced to fixed-pattern placeholders.
+* **Timestamp smoothing:** ordering is preserved, absolute values are randomised.
+* **Artefact sanitisation:** encrypted blobs replaced with fixed-size dummy content.
+* **Staging-safe LLM prompts:** fixtures generated from synthetic examples, not customer data.
+
+These transformations ensure that datasets in staging and developer environments cannot be reverse-engineered back to customer content, while maintaining relational integrity so application behaviour remains representative.
+
+Cross-reference: affected entity fields are defined in §4; retention behaviour for anonymised segments follows §4.5.
+
+---
+
+### **8.6.3 DSR Handling Architecture**
+
+The platform supports DSR execution through a combination of traceable identifiers, crypto-shred, and schema-level isolation. The architecture avoids partial deletions and removes only what is lawful to delete while retaining immutable audit evidence.
+
+**A. Identifiability and Traceability**
+
+All user-generated entities include:
+
+* `user_id`
+* `tenant_id`
+* `resource_id`
+
+as defined in §4. This guarantees that all data related to a user or tenant can be located deterministically, regardless of storage backend.
+
+**B. Deletable vs Non-Deletable Domains**
+
+DSR actions respect system retention rules (§4.5):
+
+* **Deletable:**
+
+  * user profile fields
+  * marketing contacts
+  * newsletter/waitlist entries
+  * artefacts whose DEKs have not yet been expired
+
+* **Non-Deletable (immutability constraints):**
+
+  * Audit Events (§8.5.3)
+  * hash-chain metadata
+  * integrity manifests
+  * system-level operational logs (properly redacted)
+
+Immutable audit events remain, but all references to user content are hashed and therefore non-identifying.
+
+**C. Deletion Mechanisms**
+
+Deletion is implemented through:
+
+* **Crypto-shred** for artefacts: revocation of DEK access renders associated encrypted blobs unrecoverable.
+* **Logical removal** for user records: fields are nulled or replaced with tombstone markers.
+* **Metric/timeline hygiene:** behavioural aggregates recalculate without deleted user identifiers.
+* **Propagation rules:** deletions cascade through related entities using the parent keys defined in §4.
+
+**D. Verification**
+
+After a DSR action, verification proceeds by:
+
+* confirming the DEK segment is no longer retrievable,
+* scanning for remaining references keyed by `user_id` or `tenant_id`, and
+* validating retention boundaries (e.g., audit entries remain but contain no identifying data).
+
+The verification steps are automated at the platform level; operator guidance is defined in §12.
+
+---
+
+### **8.6.4 Relationship to Other Controls**
+
+Redaction, anonymisation, and DSR execution lean on:
+
+* **audit immutability** in §8.5
+* **data schemas and relationships** in §4
+* **retention boundaries** in §4.5
+* **structured logging guarantees** in §6.9
+* **log-stream redaction and forbidden-field enforcement** in §7.9
+
+This integration ensures that sensitive content never enters telemetry, non-production datasets are safe by construction, and customer requests for data removal can be executed without breaking audit integrity or internal consistency.
+
+---
 
 ### 8.7 Network and Runtime Hardening
 
-List baseline controls: locked-down inbound rules, egress allow-lists, minimal images, CIS-benchmarked OS profiles, container sandboxing, and runtime policy (seccomp/AppArmor).
-Document vulnerability scanning cadence and patch SLAs.
+Network and runtime hardening apply uniformly to the **Marketing+Blog runtime**, the **Essentials application**, the **background worker**, and the **inference client** that performs outbound LLM calls. All components run on the same DigitalOcean droplet and follow one security posture. Detailed networking rules are in §7.4; secrets handling is in §7.5; operational access controls are in §7.10.
+
+This section defines the host-level and runtime-level controls that constrain the attack surface and keep the platform predictable under load.
+
+---
+
+#### **8.7.1 Scope and Boundary**
+
+All hardening measures in this section apply to:
+
+* the public marketing plane (site, blog, waitlist, newsletter),
+* the Essentials application plane (authenticated runtime),
+* the background worker (evidence, reports, email, billing), and
+* outbound inference calls to LLM providers.
+
+Marketing endpoints may be public, but they run under the same hardened runtime and inherit the same protections as the Essentials application. No separate “lightweight” marketing configuration exists.
+
+Runtime topology for the droplet is defined in §7.3; network boundaries are in §7.4.
+
+---
+
+#### **8.7.2 OS and Host Hardening**
+
+The platform uses a current LTS Linux base image with a minimal service footprint.
+
+Host-level controls:
+
+* **Minimal packages:** only SSH, the application, worker processes, Postgres, and required system libraries are installed.
+* **SSH hardening:**
+
+  * key-only authentication; password login disabled,
+  * non-standard port (as configured in §7.10),
+  * IP allow-listing for operator access,
+  * fail2ban-style protections enabled.
+* **Service isolation:**
+
+  * Postgres bound to localhost/private interface,
+  * no public admin consoles or dashboards exposed.
+* **File permissions:**
+
+  * environment files readable only by root and the specific app/worker user,
+  * no world-readable config.
+* **CIS-aligned practices** (without claiming CIS certification):
+
+  * disable unused services,
+  * ensure logging of auth failures,
+  * enforce restrictive default umask,
+  * restrict kernel module loading where compatible.
+
+The host OS receives security updates automatically; see §8.7.6 for patch cadence.
+
+---
+
+#### **8.7.3 Network and Egress Controls**
+
+Ingress, internal routing, and egress rules are defined in §7.4. This subsection summarises their security impact.
+
+**Inbound:**
+
+* Only 80/443 (HTTPS termination) and SSH are reachable through the DigitalOcean firewall.
+* All marketing, blog, and Essentials traffic arrives through the same hardened ingress.
+* Internal services (Postgres, worker queues, local services) are unreachable from the public internet.
+
+**Egress:**
+
+Outbound network access is constrained to HTTPS by default. Inference calls, CDN pull-through, email delivery, and object-store access all use the same allow-list approach:
+
+* **SMTP** to MXroute only.
+* **Object storage**: DigitalOcean Spaces via HTTPS.
+* **Inference providers**: outbound HTTPS to preconfigured hosts only.
+* **No arbitrary outbound ports**; non-HTTPS outbound traffic is blocked unless explicitly required.
+
+No component performs dynamic host lookups or downloads remote scripts at runtime.
+
+---
+
+#### **8.7.4 Runtime Process Hardening**
+
+The runtime uses systemd to supervise the app, worker, and supporting processes. All components run as non-privileged users.
+
+Systemd units enforce:
+
+* `User=transcrypt-app` or equivalent for app/worker,
+* `NoNewPrivileges=yes`,
+* `ProtectSystem=strict`,
+* `ProtectHome=yes`,
+* `PrivateTmp=yes`,
+* `RestrictSUIDSGID=yes`,
+* `ReadWritePaths=` limited to app directories and scratch space.
+
+These systemd sandboxing controls provide a baseline of process isolation without requiring full containerisation.
+
+**Future containerisation** (not part of the MVP) would use:
+
+* distroless or minimal images,
+* non-root containers,
+* seccomp/AppArmor profiles with default-deny capabilities,
+* egress controls equivalent to those above.
+
+This future posture is explicitly non-binding for the MVP.
+
+---
+
+#### **8.7.5 Inference & External Runtime Protections**
+
+Outbound LLM calls are treated as untrusted external interactions.
+
+Controls include:
+
+* **Prompt minimisation:** prompts are redacted and reduced to hashes/statistics before logging (§8.6.1).
+* **Strict output handling:** AI output is treated as untrusted data; no eval, code execution, shell invocation, or direct SQL.
+* **HTTP-level constraints:** timeouts, retry limits, and graceful degradation for provider outages.
+* **No provider credentials exposed:** API keys and tokens are injected via environment variables managed by the secrets subsystem (§7.5).
+* **Rate limiting:** worker enforces burst and sustained rate caps to avoid partial-denial-of-service caused by inference retries.
+* **Failure isolation:** inference failure does not block application sign-in or basic navigation; the app degrades to “non-AI mode” where appropriate.
+
+All inference flows share the same redaction and logging boundaries described in §6.9 and §8.6.
+
+---
+
+#### **8.7.6 Vulnerability Management and Patch SLAs**
+
+Patch management covers the OS, runtime packages, and application dependencies.
+
+**Operating system:**
+
+* Security updates automatically applied (unattended-upgrades or equivalent).
+* Critical OS vulnerabilities patched within **7 days**.
+* Routine OS updates applied within **30 days**.
+* Kernel updates applied during planned maintenance windows.
+
+**Application stack:**
+
+* Monthly dependency review and update cycle for Node, npm, and supporting packages.
+* CVE triage: dependencies flagged as high/critical are patched in the next release cycle or sooner if exploitability is high.
+* Use of vendor security advisories from DigitalOcean, Ubuntu, Node, and OpenSSL.
+
+**Scanning:**
+
+* Light host-level vulnerability scanning using platform-provided tools (e.g., DigitalOcean Insights).
+* Software Composition Analysis (SCA) handled in §8.8 as part of supply-chain security.
+
+---
+
+#### **8.7.7 Marketing Runtime Considerations**
+
+The Marketing+Blog runtime inherits the same hardening profile as Essentials:
+
+* Public endpoints run under the hardened app user, not a separate weak context.
+* Newsletter/waitlist submissions use low-privilege DB roles with no read access to bulk email lists.
+* Static content is served behind the CDN; no write-enabled paths are exposed publicly.
+* Marketing analytics (Umami, Google Analytics) operate client-side and do not weaken server-side protections.
+
+No special-case exceptions exist for marketing traffic; it shares the same ingress, egress, and runtime protections as all other components.
+
+---
 
 ### 8.8 Secure Development and Supply Chain
 
