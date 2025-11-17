@@ -9082,18 +9082,94 @@ flowchart LR
 
 ### 8.3 Identity, Access, and Segregation
 
-Detail how authentication and authorisation are enforced across layers:
-OIDC for users, IAM roles for services, policy-based routing per tenant, and attribute-based access for admin tooling.
-Include session lifetime, MFA enforcement, and revocation workflow.
+Transcrypt defines identity boundaries deliberately and narrowly, reflecting the platform’s two-runtime model: the public Marketing Site/Blog and the authenticated Essentials application. These runtimes operate in separate trust zones. The Marketing Site exposes no tenant-aware features and requires no end-user authentication; its administrative interface is isolated and has no relationship to Essentials’ identity graph. All tenant-scoped behaviour occurs exclusively within Essentials.
+
+Human authentication for Essentials follows the OIDC authorisation code flow with PKCE. Identity tokens are validated at the API Gateway, which represents the sole boundary where external identity meets internal trust. Downstream services do not accept unauthenticated requests, do not interpret raw tokens, and rely instead on the Gateway’s issued identity context. This preserves determinism, encapsulates complexity, and ensures that identity logic remains concentrated at a single boundary.
+
+Access within Essentials is governed by explicit tenant membership and role assignment. Each user belongs to exactly one tenant for any given session, and all actions are evaluated against tenant-scoped policy. Cross-tenant access is structurally impossible. Roles determine permissible actions but do not grant access to data outside that tenant boundary. This model reflects the platform’s principle of isolating blast radius and maintaining a consistent, predictable permission surface.
+
+Service-to-service interactions use distinct service identities with least-privilege roles defined in infrastructure-as-code. Each service is granted only the access required for its lane: the rule-evaluation service cannot read evidence blobs; the evidence service cannot inspect rulebases; the reporting service receives only the materials required to generate output. No shared credentials exist. No service operates with broader access than its defined purpose. This approach reduces internal trust assumptions and limits lateral movement within the platform.
+
+Segregation is not purely structural but behavioural. The Marketing runtime serves public content and is intentionally insulated from Essentials’ data paths and tenant logic. Essentials itself separates responsibilities across internal components so that sensitive artefacts pass only through the services designed to handle them. Uploads are accepted only through controlled interfaces; privileged actions require explicit identity context; and no background processing path circumvents tenant isolation. These patterns align with the platform’s measurable-security philosophy: identity boundaries are simple from the user’s perspective, but rigorously enforced internally.
+
+Every identity decision—authentication, role change, membership update, revocation—produces an audit event. These events are not certification artefacts but operational records that reinforce observability and traceability. They exist so that identity behaviour is always attributable, predictable, and aligned with the platform’s security posture.
+
+```mermaid
+flowchart LR
+    subgraph M["Marketing Site / Blog<br/><small>Public Zone</small>"]
+        CMS["Admin Interface<br/><small>Isolated Identity</small>"]
+    end
+
+    subgraph G["API Gateway<br/><small>OIDC Boundary & Token Validation</small>"]
+    end
+
+    subgraph E["Essentials Application<br/><small>Authenticated Zone</small>"]
+        U["User<br/><small>OIDC Authenticated</small>"]
+        S1["Rule Service<br/><small>Scoped Service Identity</small>"]
+        S2["Evidence Service<br/><small>Scoped Service Identity</small>"]
+        S3["Report Service<br/><small>Scoped Service Identity</small>"]
+    end
+
+    M --> G
+    U --> G
+    G --> S1
+    G --> S2
+    G --> S3
+
+    classDef zone fill:#eef,stroke:#669,stroke-width:1px;
+    class M,G,E zone;
+```
+
+---
 
 ### 8.4 Data Protection and Key Management
 
-Describe encryption models:
+Essentials handles tenant-originated material such as evidence artefacts, rulebases, audit logs, and generated reports. These objects are encrypted at rest using an envelope-encryption model. A platform-level Key Encryption Key (KEK) is maintained in the cloud provider’s Key Management Service. For each stored artefact, a Data Encryption Key (DEK) is created, used to encrypt the object, and then itself encrypted with the KEK. Only the encrypted DEK and encrypted payload are persisted. No plaintext artefacts or plaintext DEKs are ever written to disk.
 
-* At rest: AES-256 with envelope keys in KMS.
-* In transit: TLS 1.3 only.
-* Key lifecycle: rotation, audit, destruction, and escrow.
-  Note which services hold plaintext transiently and how memory zeroisation is handled.
+Access to KEKs is controlled entirely through service IAM identities. Individual services do not possess long-lived credentials and cannot retrieve raw key material. A decrypt operation is permitted only when the requesting service identity matches the KMS access policy. Each decrypt attempt results in a verifiable audit entry produced by KMS itself. Human access to KEKs or DEKs is not supported, and no operational process relies on extracting or exporting key material.
+
+Data in transit uses TLS 1.3 exclusively. Internal and external connections, including communication between the API Gateway and downstream services, require TLS 1.3 with modern cipher suites and do not negotiate legacy protocols. Public endpoints inherit TLS termination at the CDN or Gateway depending on the path, and private service-to-service traffic is encrypted end-to-end.
+
+Plaintext exists only transiently and only within the services designed to handle it. Evidence ingest holds plaintext for inspection, validation, and preparation before encryption. Report generation constructs output in memory before encryption and storage. Rule evaluation may use plaintext parts of rulebases during computation. No other service handles unencrypted data. Plaintext is retained only for the minimum time required for the operation and is stored solely in memory.
+
+Temporary buffers are overwritten after use, and services do not write ephemeral plaintext to disk unless unavoidable. If a temporary file is required—for example, during report rendering—the file is stored in a process-local encrypted scratch area using an ephemeral DEK that is destroyed immediately after use. The intent is to ensure that unencrypted material never persists beyond the processing window and does not appear in durable logs, crash dumps, or container layers.
+
+Key lifecycle management is performed by KMS. KEKs follow a scheduled rotation policy, and every new version automatically covers future DEK operations while allowing decryption of previously encrypted objects. Rotation events, key-usage events, and policy updates generate their own audit trails. Destruction of data is implemented using crypto-shred semantics: when the DEK for a given artefact is destroyed or rendered inaccessible, the data becomes irrecoverable without requiring storage-layer sanitisation.
+
+The Marketing Site and Blog store no tenant artefacts and handle no confidential data. Their data protection model is therefore limited to TLS in transit and the inherent protections of the hosting platform. No encryption-at-rest features within Essentials are applicable to these components.
+
+```mermaid
+flowchart TB
+    subgraph KMS["Key Management Service"]
+        KEK["KEK<br/><small>(Platform-level)</small>"]
+        AuditK["KMS Audit Events"]
+    end
+
+    subgraph S["Essentials Services"]
+        Ingest["Evidence Ingest<br/><small>Transient plaintext</small>"]
+        Report["Report Generator<br/><small>Transient plaintext</small>"]
+        Rules["Rule Engine<br/><small>Rulebase plaintext</small>"]
+    end
+
+    subgraph Store["Encrypted Storage"]
+        EObj["Encrypted Artefact"]
+        EDEK["Encrypted DEK"]
+    end
+
+    Ingest -->|Encrypt with DEK| Store
+    Report -->|Encrypt with DEK| Store
+    Rules -->|Use DEK to decrypt| Store
+
+    Store -->|DEK decrypt request| KMS
+    KMS -->|Grant/deny based on IAM| S
+
+    KMS --> AuditK
+
+    classDef zone fill:#eef,stroke:#669,stroke-width:1px;
+    class KMS,S,Store zone;
+```
+
+---
 
 ### 8.5 Audit and Logging Architecture
 
