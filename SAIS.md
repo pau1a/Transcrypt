@@ -8691,23 +8691,23 @@ Placed at the end of the section for visual clarity.
 
 ```mermaid
 flowchart TD
-    subgraph Dev[Local Development (Mac)]
+    subgraph Dev[Local Development Mac]
         A1[Install deps<br/>Node, Postgres]
         A2[Run migrations]
         A3[Load reference data]
         A4[Load dev seeds]
         A5[Start Keycloak dev realm]
-        A6[Configure inference API (real/stub)]
+        A6[Configure inference API real/stub]
         A7[Start web/API/workers]
     end
 
-    subgraph Prod[Production (DigitalOcean Droplet)]
+    subgraph Prod[Production DigitalOcean Droplet]
         B1[Provision droplet]
         B2[Install deps<br/>Node, Postgres/system]
         B3[Run migrations]
         B4[Load reference data]
         B5[Connect to Keycloak prod realm]
-        B6[Configure inference API (live)]
+        B6[Configure inference API live]
         B7[Start web/API/workers via systemd]
     end
 
