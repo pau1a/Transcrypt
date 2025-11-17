@@ -5308,8 +5308,163 @@ All diagrams, topology descriptions, access-control rules, and IaC conventions i
 
 ### 7.1 Environments and Parity Rules
 
-Define `dev`, `staging`, `prod` (and any ephemeral preview envs).
-State strict parity principles: same images, same configs-by-name, differences limited to scale and secrets. List environment-specific toggles.
+Transcrypt operates with a deliberately simple environment model optimised for speed of development, clarity of behaviour, and predictability of deployment. Two environments exist:
+
+1. **Local Development (MacBook)** – the complete working environment where all features of the public site, blog, and Essentials application are built, exercised, and validated.
+2. **Production (DigitalOcean)** – the single cloud environment that serves all customers and all public-facing content.
+
+There is **no separate dev, QA, or staging environment**. Local development is authoritative for engineering, and production is authoritative for live traffic.
+
+---
+
+#### **7.1.1 Environment Catalogue**
+
+##### **Local Development (MacBook)**
+
+Local development runs the **entire Transcrypt platform**:
+
+* Marketing site (`/`)
+* Blog runtime (`/blog/*`)
+* Essentials application (`/app/*`)
+* API routes and application services
+* Background workers (reports, email triggers, evidence flows)
+* Local PostgreSQL instance for application data
+
+Local development uses the **same external services** as production where practical:
+
+* **DigitalOcean Spaces** hosts all public-facing static content (blog images, lead magnets, site assets). These assets are created or updated during development and are the exact files later served to users via CDN in production.
+* **Stripe** is exercised in full using **test mode**.
+* **MXroute** is exercised via a development-safe mailbox or routing pattern.
+* Analytics and telemetry are enabled in development with dev-directed sinks or properties.
+* Logging is verbose (debug-level) to support rapid iteration.
+
+Local development must be able to run **every user path** end-to-end, including site/blog rendering, tenant creation, OIDC sign-in (using dev config), evidence upload, control updates, report generation, and email flows.
+
+##### **Production (DigitalOcean)**
+
+Production runs on a DigitalOcean droplet and serves all public and authenticated experiences:
+
+* Marketing site and blog delivered via DO CDN
+* Essentials app served from the same Next.js build artefacts
+* API runtime and background workers running on the droplet
+* PostgreSQL running on the droplet (or managed DB service)
+* DO Spaces providing static and application asset storage
+* MXroute handling all outbound email
+* Stripe operating in live mode with real billing
+
+Production is the only environment visible to customers. All deployments arrive via the CI/CD pipeline; no manual changes to the production filesystem, configuration, or runtime are permitted.
+
+---
+
+#### **7.1.2 Parity Principles**
+
+Despite running in different locations, **Local Development and Production must behave the same way wherever behaviour matters**. Parity is defined as follows:
+
+##### **Code Parity**
+
+* The same Next.js codebase delivers:
+
+  * the marketing site,
+  * the blog,
+  * and the Essentials application.
+* The same commit is built and tested by CI, and the resulting artefacts are deployed to production.
+* No “prod-only” branches, conditionals, or filesystem content are allowed.
+
+##### **Route Parity**
+
+All routes available in production must be runnable locally:
+
+* `/` (marketing)
+* `/blog/*`
+* `/app/*`
+* `/api/*`
+
+If a route does not function end-to-end on the Mac, it does not ship to production.
+
+##### **Content Parity (Site & Blog)**
+
+* Public-facing content (images, PDFs, hero assets, lead magnets) is generated or updated in the local environment and pushed to **DigitalOcean Spaces**.
+* Production serves **the same assets**, via CDN, without an intermediate “dev bucket”.
+* The marketing/blog content pipeline is shared across both environments, with production acting as the consumer of the artefacts built in development.
+
+##### **Runtime Parity (Essentials App)**
+
+* Local development must fully exercise:
+
+  * tenant lifecycle,
+  * control evaluation,
+  * evidence ingestion,
+  * report generation,
+  * invitation flows,
+  * and asynchronous workflows.
+* The runtime architecture (API → services → workers → storage) is functionally identical.
+
+##### **Configuration Schema Parity**
+
+* Both environments use **the same configuration variable names**, covering:
+
+  * PostgreSQL connection
+  * Object storage (DO Spaces endpoint, bucket, region)
+  * CDN base URL
+  * MXroute credentials
+  * Stripe keys
+  * Analytics/telemetry keys
+  * JWT/session secrets
+* Only **values** differ; schema and naming remain identical.
+
+##### **Storage Parity**
+
+* Both environments use **DigitalOcean Spaces** with the same S3-compatible API.
+* Production uses CDN fronting; local development accesses the same assets directly when creating or updating them.
+* Application-level assets (evidence, reports) may be stored under a different prefix or bucket, but the API behaviour is identical.
+
+---
+
+#### **7.1.3 Environment-Specific Toggles**
+
+Only a narrow and explicitly defined set of differences exists between Local Development and Production. These are intentional deviations, not parity violations.
+
+| Concern                | Local Development (Mac)                      | Production (DigitalOcean)                       |
+| ---------------------- | -------------------------------------------- | ----------------------------------------------- |
+| **Marketing assets**   | Created/edited locally → pushed to DO Spaces | Served via DO CDN from the same Spaces location |
+| **Blog runtime**       | Dev mode, hot reload                         | Built Next.js artefact                          |
+| **Essentials runtime** | Dev mode, debug logs                         | Built and optimised artefacts                   |
+| **Database**           | Local Postgres                               | Production Postgres instance                    |
+| **Object storage**     | DO Spaces (direct access)                    | DO Spaces behind CDN                            |
+| **Email**              | MXroute dev/test routing                     | MXroute production mailboxes                    |
+| **Billing**            | Stripe test mode                             | Stripe live mode                                |
+| **Logging**            | Debug/verbose                                | Structured JSON, info-level                     |
+| **Analytics**          | Dev properties or tagged events              | Production analytics property                   |
+| **Rate limiting**      | Relaxed                                      | Customer-facing strict limits                   |
+| **Telemetry sampling** | High/100%                                    | Reduced sample for proportional overhead        |
+
+These are the only sanctioned differences. Anything outside this list is considered a misconfiguration.
+
+---
+
+#### **7.1.4 Deployment Path**
+
+* Local Development is the sole source of truth for code and content authoring.
+* CI builds artefacts from GitHub, runs the full test suite, and deploys to production upon success.
+* Production is updated **only** by CI/CD; direct edits or manual pushes are prohibited.
+* Public content in DO Spaces is updated from local development and becomes the canonical serving source for the CDN.
+
+---
+
+#### **7.1.5 Environment Diagram**
+
+```mermaid
+flowchart LR
+    Dev[Local Development (MacBook)\n• Next.js (site/blog/app)\n• API + Workers\n• Local Postgres\n• Pushes assets to DO Spaces] 
+        -->|CI Build + Deploy| Prod[Production (DigitalOcean Droplet)\n• Next.js Runtime\n• API + Workers\n• Postgres\n• MXroute\n• Stripe Live]
+
+    Prod --> CDN[(DO CDN)]
+    CDN --> Spaces[(DO Spaces – Canonical Content Storage)]
+```
+
+This diagram shows the full environment model: develop locally, publish assets to Spaces, deploy via CI to the droplet, serve via CDN.
+
+---
 
 ### 7.2 Infrastructure as Code (IaC)
 
