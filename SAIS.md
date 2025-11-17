@@ -8740,7 +8740,217 @@ flowchart LR
 
 ### 7.16 Disaster Readiness Hooks
 
-Where backups land, cross-region replication toggles, RPO/RTO targets, and runbook pointers to §12 for restore drills.
+Disaster readiness ensures that Transcrypt can recover from catastrophic failure of infrastructure, storage, or configuration without data loss beyond agreed tolerances and without architectural improvisation during an incident. This section defines the artefacts that must be backed up, where those backups land, cross-region/off-provider hooks, and the RPO/RTO targets that §12 runbooks must validate during restore drills.
+
+Transcrypt operates with two environments (§7.1): **Local Development (Mac)** and **Production (DigitalOcean)**. Disaster readiness therefore focuses exclusively on the **Production** environment and the ability to rebuild it cleanly using backups and the bootstrap procedures defined in §7.15.
+
+---
+
+#### **7.16.1 Scope and Disaster Scenarios**
+
+The following scenarios define the scope of “disaster” for the MVP architecture:
+
+* **Droplet destruction or corruption**
+  (hardware failure, sysadmin error, OS corruption, unbootable image)
+
+* **PostgreSQL data loss or corruption**
+  (schema corruption, accidental drop, migration failure)
+
+* **Object store loss or unrecoverable damage**
+  (DO Spaces deletion, corruption, or region/capacity outage)
+
+* **Credential compromise**
+  (DO Spaces keys, DB password, MXroute credentials, inference API keys)
+
+* **DigitalOcean regional outage**
+
+* **External dependency outage**
+  (Keycloak IdP, MXroute email, Stripe, inference API)
+
+External dependencies have their own DR policies; Transcrypt’s readiness posture ensures that internal components recover cleanly once dependencies return.
+
+---
+
+#### **7.16.2 Data Classes and Backup Targets**
+
+Backups are defined per data class, not per environment.
+
+##### **A. PostgreSQL (Primary Application State)**
+
+Mandatory backups of:
+
+* Tenants, users, role links
+* Control answers, evaluations
+* Evidence metadata and report metadata
+* Invitations, audit events limited to metadata
+* Billing state (customer IDs, plan records)
+
+The database is the authoritative source of truth for Essentials.
+Loss of the DB = loss of tenant state = unacceptable.
+
+##### **B. Object Storage (DigitalOcean Spaces)**
+
+Two prefixes require protection:
+
+* `evidence/` — immutable sealed evidence artefacts
+* `reports/` — generated report files
+
+Plus marketing/blog assets:
+
+* `blog/`
+* `landing/`
+* `lead-magnets/`
+
+##### **C. Runtime Configuration**
+
+From §7.5:
+
+* environment variables,
+* Keycloak realm identifiers,
+* MXroute SMTP config,
+* inference API endpoints/keys.
+
+These are not “backed up” from Production — they are stored securely in:
+
+* 1Password/offline storage,
+* GitHub Actions secrets,
+* local `.env` files for dev.
+
+##### **D. Source Code and Templates**
+
+Source of truth is GitHub; no infra backup is required.
+
+---
+
+#### **7.16.3 Backup Destinations and Schedules**
+
+##### **PostgreSQL**
+
+Backups land in a dedicated DO Spaces backup bucket:
+
+* **Daily full logical dump** (`pg_dump`)
+* **15-minute incremental logical dumps** (WAL-style or diff-based)
+* Retention: 30 days
+* Encryption: server-side DO Spaces encryption (AES-256) + optional client-side encryption for long-term retention
+* Optional secondary copy to an off-provider store (hook defined but not mandatory at MVP)
+
+##### **Object Storage**
+
+* **Daily snapshot sync** of all evidence/report/blog prefixes to a secondary DO Spaces bucket.
+* Versioning enabled on the primary DO Spaces bucket.
+* Optional: periodic rsync-style mirror to an off-provider store.
+
+##### **Droplet Snapshots**
+
+* Weekly DO snapshot of the full droplet.
+* Not used for DB recovery; used only as a convenience if OS-level recovery is needed.
+
+##### **Config / Secrets**
+
+* Stored externally (1Password + GitHub secrets).
+* Not backed up from Production.
+* Disaster readiness relies on re-injection via §7.15 bootstrap.
+
+---
+
+#### **7.16.4 Cross-Region and Off-Provider Hooks**
+
+While the MVP runs in a single DO region, the backup naming and prefix structure is prepared for future cross-region enablement.
+
+**Design hooks:**
+
+* All DB backups and Spaces syncs are stored under a region-agnostic prefix:
+  `backup/{date}/{component}/...`
+* Spaces prefixes for evidence and report files are stable across regions.
+* DB restore scripts accept a `--target-region` parameter for future region hopping.
+* Optional off-provider storage (e.g. Backblaze, S3) can be enabled by flipping a `DISASTER_REPLICA_ENABLED` flag without changing application code.
+
+Cross-region replication is *prepared*, not *activated*.
+
+---
+
+#### **7.16.5 RPO and RTO Targets**
+
+##### **PostgreSQL**
+
+* **RPO ≤ 15 minutes**
+* **RTO ≤ 4 hours** (rebuild droplet → restore DB → bootstrap → resume)
+
+##### **Object Storage — Evidence & Reports**
+
+* **RPO ≤ 24 hours** (daily sync)
+* **RTO ≤ 4 hours** (restore bucket or switch prefix after droplet restore)
+* Note: evidence is immutable; backups must preserve all historical versions.
+
+##### **Marketing/Blog Assets**
+
+* **RPO = 0** (Git is source of truth; DO Spaces is a build artefact)
+* **RTO ≤ 1–2 hours** (site rebuild and redeploy)
+
+##### **Runtime / Bootstrap**
+
+* **RTO dominated by DB + DO Spaces**
+* Bootstrapping the runtime (Node, migrations, systemd, workers) is ≤ 30 minutes.
+
+##### **External Dependencies**
+
+* Outage results in temporary degraded mode (IdP unavailable, inference disabled).
+* Not in RPO/RTO calculations, but noted as gating factors for full service resumption.
+
+---
+
+#### **7.16.6 Backup Flow (Diagram)**
+
+A minimal diagram visualising the core backup structure.
+
+```mermaid
+flowchart LR
+    DB[(Prod PostgreSQL)] -->|Logical dumps| B1[(Backup Bucket - DB)]
+    Spaces[(DO Spaces - Primary)] -->|Daily sync| B2[(Backup Bucket - Spaces)]
+    B1 -->|Optional| Ext[(Off-Provider Storage)]
+    B2 -->|Optional| Ext
+```
+
+---
+
+#### **7.16.7 Restore Path (Diagram)**
+
+A lightweight visualisation of disaster recovery using §7.15 bootstrap scripts.
+
+```mermaid
+flowchart TD
+    A[Provision New Droplet] --> B[Run Bootstrap Scripts (§7.15)]
+    B --> C[Restore PostgreSQL from Backup]
+    C --> D[Restore Spaces Prefixes (Evidence/Reports)]
+    D --> E[Reconfigure Secrets & Keycloak]
+    E --> F[Start Runtimes<br/>Web/API/Workers]
+    F --> G[Service Operational]
+```
+
+---
+
+#### **7.16.8 Integration with Runbooks (§12)**
+
+§12 defines the **actual restore drills**, including:
+
+* DB restore test (quarterly)
+* Spaces restore test (quarterly)
+* Combined full-restore dry run (biannual)
+* Keycloak outage handling test (annual)
+
+7.16 provides the artefacts, targets, and backup locations used by those drills.
+§12 demonstrates and validates that the organisation can hit its stated RPO/RTO.
+
+---
+
+#### **7.16.9 Invariants**
+
+* No recovery procedure depends on unversioned disk state.
+* DB and Spaces backups must be restorable into any region.
+* DR relies on bootstrap (§7.15) + backups; never manual patching.
+* Evidence immutability is preserved during restore.
+* No production credential is ever written into a backup artefact.
+* Git is always the source of truth for marketing and blog content.
 
 ---
 
