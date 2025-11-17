@@ -7503,7 +7503,285 @@ flowchart LR
 
 ### 7.11 Edge, CDN, and TLS
 
-Domains/DNS, TLS cert issuance/renewal (ACME), HSTS, origin shields, cache keys/invalidation strategies, and static asset hardening headers.
+Transcrypt serves all traffic over HTTPS, with a clear separation between **marketing traffic**, **Essentials traffic**, and **static asset delivery**. This section defines the domain layout, TLS model, CDN behaviour, cache and invalidation strategy, and the hardening headers required at the edge. The goals are:
+
+* keep marketing fast and cacheable
+* keep Essentials secure and non-cacheable
+* ensure all certificates and redirects are fully automated
+* make it impossible to “accidentally” weaken the perimeter
+
+All examples assume the canonical production domain **`transcrypt.xyz`**.
+
+---
+
+#### 7.11.1 Domains and DNS Layout
+
+Production DNS is kept deliberately simple and explicit:
+
+* Root: `transcrypt.xyz`
+* Marketing site and blog: `www.transcrypt.xyz`
+* Essentials app: `app.transcrypt.xyz`
+* API: `api.transcrypt.xyz`
+* CDN fronting static assets in DigitalOcean Spaces: `cdn.transcrypt.xyz`
+
+Rules:
+
+* DNS is managed centrally in the DigitalOcean control plane for `transcrypt.xyz`.
+* `www`, `app`, and `api` resolve directly to the production droplet via A/AAAA records.
+* `cdn.transcrypt.xyz` is a CNAME pointing at the DigitalOcean Spaces CDN endpoint.
+* Only required record types are used: A/AAAA, CNAME, TXT (for ACME), and MX for MXroute email.
+* No wildcard records for `*.transcrypt.xyz` are used in the MVP to avoid accidental exposure of unintended hosts.
+
+All environments and services must use these hostnames; IP-based access is reserved for diagnostics and is firewall-restricted.
+
+---
+
+#### 7.11.2 TLS Certificates and HTTPS Enforcement
+
+TLS certificates are issued automatically via ACME using Let’s Encrypt.
+
+* Each public hostname (`transcrypt.xyz`, `www.transcrypt.xyz`, `app.transcrypt.xyz`, `api.transcrypt.xyz`, `cdn.transcrypt.xyz`) is covered either by:
+
+  * a SAN certificate, or
+  * a wildcard certificate (`*.transcrypt.xyz`) plus a root certificate.
+* Certificate issuance and renewal are automated via a systemd timer and ACME client running on the droplet and in the Spaces CDN configuration.
+* No manual certificate management is required in steady state.
+
+HTTPS enforcement:
+
+* All HTTP requests are redirected to HTTPS at the edge.
+* HSTS is enabled with a long max-age and `includeSubDomains` for `transcrypt.xyz` once the platform is stable.
+* Mixed content is not permitted; all resources are fetched over HTTPS only.
+
+Any service that cannot obtain or renew a valid certificate must be treated as down; there is no HTTP downgrade path.
+
+---
+
+#### 7.11.3 Edge and CDN Topology
+
+The platform uses the CDN aggressively for static asset delivery and conservatively for dynamic content:
+
+* `www.transcrypt.xyz` and `app.transcrypt.xyz` serve HTML directly from the origin droplet.
+* Static assets for both site/blog and Essentials (CSS, JS bundles, images, lead magnets) are served from DigitalOcean Spaces via `cdn.transcrypt.xyz`.
+* The CDN provides:
+
+  * TLS termination for static assets,
+  * edge caching,
+  * an origin shield in front of the Spaces bucket.
+
+Traffic flows:
+
+* Marketing HTML:
+
+  * Browser → `www.transcrypt.xyz` → droplet.
+  * HTML references static assets under `https://cdn.transcrypt.xyz/...`.
+* Essentials HTML:
+
+  * Browser → `app.transcrypt.xyz` → droplet.
+  * Assets again fetched from `cdn.transcrypt.xyz`.
+* API:
+
+  * Browser or app client → `api.transcrypt.xyz` → droplet.
+  * No CDN caching of API responses.
+
+The CDN is never used to cache session-bearing responses or API calls. It is a pure static asset and lead magnet accelerator.
+
+**Diagram – Edge and CDN Topology**
+
+```mermaid
+flowchart LR
+    Browser[Browser] --> WWW[www transcrypt xyz]
+    Browser --> APP[app transcrypt xyz]
+    Browser --> API[api transcrypt xyz]
+    Browser --> CDN[cdn transcrypt xyz]
+
+    WWW --> Origin[Origin Droplet]
+    APP --> Origin
+    API --> Origin
+
+    CDN --> Spaces[DO Spaces Static Assets]
+```
+
+---
+
+#### 7.11.4 Caching Behaviour for Marketing and Essentials
+
+Marketing routes and static assets are designed to be aggressively cacheable; Essentials is explicitly not.
+
+**Marketing and blog caching**
+
+* HTML for `www.transcrypt.xyz`:
+
+  * Short edge TTL (seconds to low tens of seconds) to allow fast content updates.
+  * Cache key includes host and path.
+* Static assets under `cdn.transcrypt.xyz`:
+
+  * Fingerprinted filenames (hash in path or file name).
+  * Cache-Control `public, max-age=31536000, immutable`.
+  * CDN configured to respect origin Cache-Control for these paths.
+
+**Essentials caching**
+
+* HTML for `app.transcrypt.xyz`:
+
+  * Cache-Control `no-store` for pages containing session cookies.
+* API under `api.transcrypt.xyz`:
+
+  * Cache-Control `no-store`.
+  * CDN configured to bypass cache completely for `api.transcrypt.xyz` and any `/api` paths.
+* Essentials static assets:
+
+  * Served via `cdn.transcrypt.xyz` with the same fingerprinted, long-lived cache rules as the site/blog bundles.
+
+**Diagram – Cache Decision Flow**
+
+```mermaid
+flowchart TD
+    R[Incoming Request] --> H{Host}
+    H -->|cdn transcrypt xyz| S[Static Asset Cache]
+    H -->|www transcrypt xyz| M[Marketing HTML]
+    H -->|app transcrypt xyz| E[Essentials HTML]
+    H -->|api transcrypt xyz| A[API Request]
+
+    S --> SDecision{Fingerprint Present}
+    SDecision -->|Yes| SCache[Serve From CDN Cache]
+    SDecision -->|No| SOrigin[Fetch From Spaces Then Cache]
+
+    M --> MTTL[Short TTL Edge Cache]
+    E --> ENoStore[Bypass Cache No Store]
+    A --> ANoStore[Bypass Cache No Store]
+```
+
+---
+
+#### 7.11.5 Static Asset Hardening and CSP
+
+All static content and front-end bundles are hardened at the edge to reduce XSS and clickjacking risks while still allowing analytics and telemetry.
+
+Static asset rules:
+
+* All scripts and styles are served from either:
+
+  * `cdn.transcrypt.xyz`
+  * first-party hosts (`www.transcrypt.xyz`, `app.transcrypt.xyz`)
+  * approved analytics origins for Umami and Google Analytics.
+* No inline scripts are used except where strictly required by the framework and protected by nonces.
+* Security headers:
+
+  * `Content-Security-Policy`:
+
+    * default-src limited to self and specific third-party origins (Umami, GA).
+    * script-src restricted to self, `cdn.transcrypt.xyz`, and the approved analytics endpoints.
+    * object-src set to `none`.
+    * frame-ancestors set to `none`.
+  * `X-Content-Type-Options: nosniff`
+  * `X-Frame-Options: DENY`
+  * `Referrer-Policy: strict-origin-when-cross-origin`
+
+Lead magnet assets and blog images are treated as static content and benefit from the same hardening and CDN cache rules.
+
+---
+
+#### 7.11.6 Edge Rate Limiting and Abuse Protection
+
+Edge-level rate limiting prevents abusive traffic from overwhelming the single droplet.
+
+Policies:
+
+* CDN or firewall rate limiting is enabled for:
+
+  * newsletter and waitlist forms,
+  * lead magnet request endpoints,
+  * Essentials sign-in endpoints,
+  * high-risk unauthenticated API routes.
+* Limits are tuned to:
+
+  * allow legitimate human usage and automated synthetic monitoring,
+  * throttle credential stuffing and basic volumetric probes.
+* The DigitalOcean cloud firewall provides:
+
+  * basic connection rate controls,
+  * IP allow-lists for SSH and operational ports,
+  * drop rules for suspicious sources.
+
+Application-level rate limiting inside the Essentials API can add a second layer of defence but never replaces edge-side protection.
+
+---
+
+#### 7.11.7 Cache Keys and Invalidation Strategy
+
+Correct cache invalidation is essential to avoid stale content and broken assets.
+
+Cache keys:
+
+* Marketing HTML:
+
+  * Keyed by `host + path`.
+  * Query parameters are ignored unless explicitly required by a feature.
+* Static assets:
+
+  * Keyed by `host + full path`.
+  * Fingerprinted filenames ensure new deployments do not conflict with old content.
+* Essentials and API:
+
+  * Not cached; keys are irrelevant to CDN behaviour.
+
+Invalidation:
+
+* Deploy pipeline:
+
+  * On successful deploy, CI calls the CDN API to:
+
+    * purge the HTML cache for `www.transcrypt.xyz` and any critical landing pages,
+    * purge any specific lead magnet paths that have changed.
+  * Static assets rely on fingerprinting; they are not purged and can remain cached indefinitely.
+* Emergency invalidation:
+
+  * For critical content fixes, a targeted purge may be triggered for individual paths or hostnames.
+
+**Diagram – Deployment and Cache Invalidation**
+
+```mermaid
+flowchart LR
+    Dev[Local Dev] --> GitHub[GitHub Repo]
+    GitHub --> CI[CI Pipeline]
+    CI --> Deploy[Deploy To Droplet]
+    CI --> Purge[Call CDN Purge For HTML Paths]
+
+    Deploy --> Origin[Origin Droplet Updated]
+    Purge --> CDN[CDN Edge Cache Updated]
+```
+
+---
+
+#### 7.11.8 DNS, TLS, and Edge Flow Summary
+
+This diagram summarises the end-to-end flow from DNS lookup through TLS termination to origin and static asset delivery.
+
+```mermaid
+flowchart LR
+    Client[Client Browser] --> DNS[DNS For transcrypt xyz]
+    DNS --> HostSel[Select Hostname]
+
+    HostSel --> WWW[www transcrypt xyz]
+    HostSel --> APP[app transcrypt xyz]
+    HostSel --> API[api transcrypt xyz]
+    HostSel --> CDN[cdn transcrypt xyz]
+
+    WWW --> Origin[Origin Droplet TLS]
+    APP --> Origin
+    API --> Origin
+
+    CDN --> Spaces[DO Spaces TLS And Storage]
+
+    ACMEClient[ACME Client] --> LE[ACME Service]
+    ACMEClient --> Origin
+    ACMEClient --> CDN
+```
+
+Together, these rules and topologies define how Transcrypt uses DNS, TLS, and CDN capabilities to keep the site fast, the Essentials app safe, and all customer traffic fully encrypted end to end.
+
+---
 
 ### 7.12 Feature Flags and Kill Switches
 
