@@ -6812,7 +6812,255 @@ flowchart LR
 
 ### 7.8 Database, Storage, and Data Paths
 
-PostgreSQL sizing, HA/replicas, connection pooling; object storage buckets (namespacing per tenant), lifecycle rules; Redis persistence mode and eviction policy. Link to §4 for retention/provenance.
+Transcrypt operates as a unified platform composed of two runtimes:
+the **Marketing+Blog runtime** (`/` and `/blog/*`) and the **Essentials application** (`/app/*`).
+Both runtimes share the same underlying data stores but follow different conventions, retention rules, and access patterns.
+This section defines the roles of PostgreSQL, object storage, and Redis, as well as the canonical data paths through the system.
+All storage behaviour must remain consistent with the system-of-record and provenance rules set out in §4.
+
+---
+
+#### 7.8.1 PostgreSQL Role, Sizing, and Backups
+
+PostgreSQL is the primary system of record for **all structured data** across both the Marketing runtime and Essentials application.
+It runs locally on the production droplet.
+
+##### Sizing and Performance Expectations
+
+The database serves two distinct workloads:
+
+* **Marketing+Blog workload**
+  Lightweight, read-heavy queries: blog metadata, lead capture writes, analytics summarisation.
+  Low computational pressure.
+
+* **Essentials workload**
+  Metadata-heavy domain: tenants, controls, answers, audit logs, report indexes, evidence descriptors.
+  Moderate write frequency with predictable, bursty patterns during onboarding and evaluations.
+
+The droplet is sized so PostgreSQL maintains:
+
+* stable memory headroom for shared buffers,
+* CPU utilisation with predictable peak cushions,
+* low latency for transactional queries underpinning evaluation workflows.
+
+##### High Availability Stance
+
+The MVP uses **a single Postgres instance** without replicas or automatic failover.
+Availability and integrity depend on:
+
+* careful migration discipline (§7.7.5),
+* strict avoid-foot-gun app behaviour,
+* reliable backups and tested restores (§12).
+
+This single-instance design must not leak into application semantics.
+All database access uses a “primary DSN”, allowing future movement to managed HA Postgres without rewrites.
+
+##### Connection Pooling
+
+Both runtimes use explicit connection-pool limits to avoid connection storms:
+
+* Each app process maintains a **small fixed pool** (e.g. 10–20 connections).
+* Background workers maintain an equally constrained pool.
+* The global connection ceiling remains well below the database max.
+
+A lightweight pooler (e.g. PgBouncer) may be introduced later but is optional for MVP.
+
+##### Backups
+
+Backups are part of core operational safety:
+
+* Daily full logical or physical backups.
+* Retention window aligned with §4 retention rules.
+* Off-droplet storage (not local disk).
+* Regular restore tests into a throwaway environment to verify integrity.
+
+Backups must always be auditable:
+no restore may silently violate evidence or audit-log guarantees.
+
+---
+
+#### 7.8.2 Object Storage and Tenant Namespacing
+
+DigitalOcean Spaces is the canonical location for **all static and binary artefacts**.
+Two logical partitions exist and must not be conflated.
+
+##### 7.8.2.1 Marketing and Blog Assets
+
+The site/blog publishes:
+
+* blog images,
+* article banners,
+* embedded graphics,
+* downloadable lead magnets.
+
+These assets are:
+
+* stored in a **public-facing prefix** within Spaces,
+* immutable once published (new versions produce new filenames),
+* served via DO CDN,
+* referenced directly by the marketing runtime.
+
+The marketing content pipeline always writes assets from the local development environment; production serves the exact published files without rewrite or reprocessing.
+
+##### 7.8.2.2 Essentials Artefacts
+
+Essentials produces **tenant-scoped binary artefacts**:
+
+* evidence uploads,
+* generated reports,
+* evaluation exports,
+* supporting attachments.
+
+These are stored under a strict namespace:
+
+```
+tenant/<tenant_id>/evidence/<uuid>
+tenant/<tenant_id>/reports/<uuid>
+```
+
+Rules:
+
+* No public ACLs.
+* Access only via backend using authenticated tenant context.
+* Evidence artefacts are authoritative and must not be overwritten.
+* Report exports are derived artefacts; retention may differ (§4).
+* Paths are deterministic so audit logs can reference them precisely.
+
+##### Lifecycle Policies
+
+Lifecycle rules must follow retention rules described in §4:
+
+* **Primary evidence**: indefinite retention unless destroyed via explicit retention expiry or cryptographic shredding.
+* **Derived artefacts (e.g. old reports)**: may auto-expire after a retention window if regenerate-ability is guaranteed.
+* No lifecycle rule may silently delete authoritative evidence or audit artefacts.
+
+---
+
+#### 7.8.3 Redis Role, Persistence, and Eviction Policy
+
+Redis is an **ephemeral performance layer**, not a system of record.
+
+Its uses:
+
+* rate-limit counters,
+* hot caches (blog metadata, compiled templates, feature flags),
+* transient evaluation scratch data,
+* lightweight inference-response caching if beneficial.
+
+Redis must not store:
+
+* canonical sessions,
+* tenant configuration,
+* any data required for correctness.
+
+##### Persistence
+
+Redis may run in **non-persistent** or **low-frequency snapshot** mode.
+Losing the entire Redis dataset must never result in data loss—only temporary performance degradation.
+
+##### Eviction
+
+Redis enforces a fixed `maxmemory` and uses an eviction policy such as:
+
+* `allkeys-lru`
+  or
+* `volatile-lru`
+
+depending on chosen key-use patterns.
+
+This prevents Redis from starving Postgres or the OS.
+
+---
+
+#### 7.8.4 Logical Data Paths
+
+This runtime has two parallel operational lanes:
+the **Marketing+Blog runtime** and the **Essentials application**.
+Each has its own data flows but share the same underlying stores.
+
+##### Marketing+Blog Runtime
+
+**Reads:**
+
+* DO Spaces (images, banners, lead magnets).
+* Optional Redis keys for cached metadata.
+* Postgres for blog metadata and lead-capture summaries.
+
+**Writes:**
+
+* Lead-capture entries into Postgres (email, source, campaign).
+* Analytics events into Postgres or analytics sink.
+
+The site/blog must be able to fully operate independently of Essentials.
+
+##### Essentials Application
+
+**Reads:**
+
+* Postgres for tenants, controls, evidence descriptors, report metadata.
+* DO Spaces for evidence blobs and existing reports.
+* Redis for cache hints and rate-limit counters.
+
+**Writes:**
+
+* All domain data—tenants, mappings, audit entries—into Postgres.
+* Evidence blobs and reports into DO Spaces.
+* Worker-scheduled events (evaluations, batch report jobs) into Postgres or Redis.
+
+##### Inference API
+
+The inference service sits outside the platform’s persistence boundary.
+Only the following may be stored:
+
+* redacted prompt summaries,
+* inference results used as evaluation artefacts,
+* audit records referencing inference actions.
+
+No inference secrets or raw prompt material may be written unredacted.
+
+---
+
+#### 7.8.5 Retention and Provenance Linkage
+
+All structured and unstructured data must follow the provenance and retention rules in §4:
+
+* Evidence and audit logs are canonical and immutable.
+* Derived artefacts may be regenerated or expired.
+* Lead-capture data follows a commercial retention policy but must remain traceable.
+* Database backups and object storage lifecycle rules must not undermine provenance guarantees.
+* All write paths must produce audit events that map cleanly to stored artefacts and DB entries.
+
+---
+
+#### 7.8.6 Data Paths Diagram
+
+This diagram distils the full data-flow system into a single view.
+Labels contain **no parentheses**.
+
+```mermaid
+flowchart LR
+    VISITOR[Visitor Site Blog]
+    USER[Essentials User]
+    APP[Application Runtime]
+    PG[PostgreSQL]
+    SPACES[DO Spaces]
+    REDIS[Redis Cache]
+    CDN[DO CDN]
+    BACKUP[Backup Store]
+
+    VISITOR --> APP
+    USER --> APP
+
+    APP --> PG
+    APP --> SPACES
+    APP --> REDIS
+
+    SPACES --> CDN
+
+    PG --> BACKUP
+```
+
+---
 
 ### 7.9 Observability Plumbing
 
