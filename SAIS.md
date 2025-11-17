@@ -7064,8 +7064,232 @@ flowchart LR
 
 ### 7.9 Observability Plumbing
 
-Agents/collectors, log drains, metrics endpoints, trace sampling.
-Env-specific SLO targets and alert routes. Cross-env dashboard parity.
+Transcrypt uses a single observability pipeline for both the **Marketing+Blog runtime** and the **Essentials application**.
+Logs, metrics, and traces are emitted consistently from all components and collected into a small set of tools:
+
+* Structured logs to a central log sink.
+* Metrics to Prometheus.
+* Traces via OpenTelemetry into Jaeger.
+* Product analytics for the Marketing+Blog runtime via Umami and Google Analytics.
+
+This section defines how telemetry is emitted, where it flows in each environment, and how it underpins the SLOs in §6.8 and the acceptance criteria in §13.
+
+---
+
+#### 7.9.1 Logging and Log Drains
+
+All application components emit **structured JSON logs** to stdout. Systemd captures stdout/stderr and forms the first-level log store on the production droplet.
+
+##### Log Structure
+
+Log entries follow the conventions in §6.9 and must include:
+
+* timestamp in UTC
+* severity level
+* request identifiers (`request_id`, `trace_id`, `span_id`)
+* tenant identifiers for Essentials (`tenant_id`)
+* route or operation name
+* workflow identifiers where applicable (report, evidence, invitation, lead magnet)
+* structured `details` payload
+
+Marketing+Blog and Essentials logs share the same schema. Marketing-specific events (CTA clicks, lead-magnet requests, blog publishing) are represented as distinct `event` values, not a separate logging system.
+
+##### Environments
+
+**Local Development (MacBook)**
+
+* Logs written to console in JSON format.
+* Default level `debug` to aid development.
+* Developers may enable file logging if needed for long sessions.
+
+**Production (DigitalOcean)**
+
+* Logs captured by systemd journal from all processes.
+* Default level `info`, with `debug` enabled only under a feature-flagged diagnostic mode.
+* Log rotation configured to limit disk usage.
+* PII is never logged in raw form; hashes or tokens are used where correlation is required.
+
+Future evolution to a remote log store (for example, a managed log aggregation service) does not change application behaviour; the app always logs to stdout using the same structured format.
+
+---
+
+#### 7.9.2 Metrics Endpoints and Prometheus
+
+Metrics support the SLOs in §6.8 and operational analysis in §10.
+
+##### Metrics Exposure
+
+All runtime components expose Prometheus-compatible metrics:
+
+* The main application runtime exposes an HTTP `/metrics` endpoint, covering:
+
+  * HTTP request durations and counts for Marketing+Blog and Essentials routes.
+  * Background job durations and counts.
+  * Error rates by route and status code.
+
+* Worker processes expose their own `/metrics` endpoints where useful, reporting job processing durations, DLQ counts, and retry metrics.
+
+* Optional exporters may expose system-level metrics:
+
+  * node level CPU, memory, disk.
+  * Postgres health.
+  * Redis statistics.
+
+##### Prometheus Deployment
+
+**Local Development (MacBook)**
+
+* Running Prometheus is optional but supported.
+* A local Prometheus instance may be started via container tooling to scrape the dev `/metrics` endpoint and short-lived experiments.
+
+**Production (DigitalOcean)**
+
+* A Prometheus instance scrapes:
+
+  * the application `/metrics` endpoint on the droplet,
+  * any worker `/metrics` endpoints,
+  * system exporters (node, Postgres, Redis) when configured.
+
+* Scrape interval is tuned to balance freshness and overhead.
+
+* Metrics retention is sufficient to analyse incident windows and SLO compliance over time.
+
+Metrics names and labels follow the conventions in §6.9. High-cardinality labels are avoided.
+
+---
+
+#### 7.9.3 Distributed Tracing and Jaeger
+
+Distributed tracing provides end-to-end visibility across both Marketing+Blog and Essentials.
+OpenTelemetry is used to instrument the application and workers, in line with the context rules in §6.9.
+
+##### Trace Emission
+
+* Browser requests include or initiate trace context headers.
+* The application runtime starts spans for incoming requests, internal calls, queue interactions, and external calls (billing, email, inference).
+* Worker processes create spans linked back to the originating request using span links.
+* Errors, slow requests, and key workflows (sign-in, evaluation, report generation, billing, inference) emit spans with enriched attributes.
+
+##### Collection and Storage
+
+**Local Development (MacBook)**
+
+* Traces are exported to a local or tunnel-accessible OTEL collector and Jaeger instance.
+* Sampling is effectively 100 per cent to aid debugging.
+* Developers can inspect full traces for Marketing+Blog flows (CTA to lead capture to email send) and Essentials flows (control updates, report generation).
+
+**Production (DigitalOcean)**
+
+* Traces are exported from the application and workers to an OTEL collector running on the droplet.
+* The collector forwards traces to a Jaeger backend.
+* Baseline sampling is reduced (for example, 5 to 20 per cent), with:
+
+  * Always-on sampling for error traces.
+  * Biased sampling for key workflows.
+* Jaeger is accessible only via secured channels, not exposed publicly.
+
+Traces across Marketing+Blog and Essentials share the same `trace_id` semantics, enabling investigation of a full journey from marketing landing through to app usage where relevant.
+
+---
+
+#### 7.9.4 Marketing Analytics with Umami and Google Analytics
+
+The Marketing+Blog runtime additionally uses **product analytics** tools that operate alongside the core observability stack:
+
+* **Umami**
+
+  * Collects anonymised pageviews and events for the site and blog.
+  * Stores sessions, referrers, and conversion steps for lead magnets and CTAs.
+  * May run as a self-hosted instance (for example, on a separate droplet) or as a managed service.
+
+* **Google Analytics**
+
+  * Provides external benchmarking and campaign attribution across channels.
+  * Operates only on the Marketing+Blog runtime.
+
+These tools are distinct from the core telemetry pipeline:
+
+* They run client-side in the browser.
+* They send data directly to their own endpoints and databases.
+* They are used to analyse funnel health (sessions, bounce rates, CTA conversion) rather than to drive operational alerts.
+
+Where appropriate, identifiers such as `utm_source` and `magnet_id` are aligned with the internal event model so that marketing performance can be correlated with internal events and outcomes.
+
+---
+
+#### 7.9.5 SLO Wiring and Alert Routing
+
+Operational SLOs defined in §6.8 are expressed as Prometheus alert rules.
+
+Examples include:
+
+* Homepage and blog p95 latency thresholds.
+* Essentials sign-in and dashboard latency thresholds.
+* Error-rate thresholds per key route group.
+* Report generation and evidence ingestion duration thresholds.
+* Queue depth and DLQ size limits.
+
+Alert routing in production:
+
+* Alerts are grouped by severity and category (availability, latency, data path, queue health).
+* Notifications are delivered to designated operator channels (for example, email and chat tooling).
+* Error budget consumption, as defined in §6.8.7, is tracked through these alerts and associated dashboards.
+
+Local development uses the same metric and alert definitions where practical, but without mandatory alert routing. Developers may run synthetic checks and evaluate SLO performance in a non-critical context.
+
+---
+
+#### 7.9.6 Cross-Environment Dashboards
+
+Dashboards must be structurally identical across environments so that operators and developers can move between them without re-learning the views.
+
+A single Grafana (or equivalent) configuration defines panels for:
+
+* Marketing+Blog latency, availability, and error rates.
+* Essentials app latency, availability, and error rates.
+* Background job durations and success rates (reports, evidence, emails, billing).
+* System health (CPU, memory, disk, Postgres, Redis).
+* Queue depth and DLQ size.
+
+Each dashboard can switch between dev and prod data sources.
+The panel layout remains the same; only the underlying data set changes.
+
+Traces from Jaeger and logs from the log sink are linked where possible, allowing drill-down from dashboard panels into individual traces and log streams for investigation.
+
+---
+
+#### 7.9.7 Observability Plumbing Diagram
+
+The following diagram shows the overall observability plumbing across Marketing+Blog and Essentials:
+
+```mermaid
+flowchart LR
+    VISITOR[Visitor Browser]
+    USER[Essentials User]
+    APP[Transcrypt Runtime]
+    OTEL[OTEL Collector]
+    JAEGER[Jaeger Tracing]
+    PROM[Prometheus Metrics]
+    LOGS[Structured Log Store]
+    UMAMI[Umami Analytics]
+    GA[Google Analytics]
+
+    VISITOR --> APP
+    USER --> APP
+
+    APP --> LOGS
+    APP --> PROM
+    APP --> OTEL
+
+    OTEL --> JAEGER
+
+    VISITOR --> UMAMI
+    VISITOR --> GA
+```
+
+This diagram applies to both local development and production; only the concrete deployment locations of Prometheus, Jaeger, Umami, and log storage differ by environment.
+
+---
 
 ### 7.10 Access Control and Operational Safety
 
