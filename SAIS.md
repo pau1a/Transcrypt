@@ -11288,15 +11288,269 @@ flowchart LR
 
 ### 9.9 Data Retention, Cost, and Privacy
 
-Retention: traces 7 days (hot), 30 days (cold, sampled); logs 90 days; metrics 13 months (roll-ups).
-Cost caps per tenant; drop non-key labels if cardinality explodes.
-Privacy: no raw PII in telemetry; hashed IDs only. Telemetry exports are in scope for DSR discovery but not deletion unless they contain PII.
+Transcrypt’s observability stack is treated as production data in its own right. Telemetry must be retained long enough to support SLO verification, incident response, and compliance evidence, but not so long or at such fidelity that it becomes a cost sink or a privacy risk. This section defines retention by telemetry class, cost and cardinality controls, and how privacy and data subject rights apply.
+
+Telemetry from all runtimes is in scope: site and blog, edge, API gateway, backend services, workers, queues, database access, inference runtime, and IAM facing components.
+
+---
+
+#### 9.9.1 Telemetry Classes and Retention Windows
+
+Transcrypt distinguishes four categories of observability data:
+
+* **Traces**
+  End to end request and job traces for debugging, SLO exemplars, and forensic reconstruction.
+
+* **Logs**
+  Structured events as defined in §9.5, used for narrative evidence and incident timelines.
+
+* **Metrics**
+  Time series values used for SLO computation, dashboards, and alerting (§§9.3–9.7).
+
+* **Evidence bundles and incident artefacts**
+  Higher level weekly and monthly packages and incident bundles built from the raw telemetry (§9.6).
+
+Retention is purpose driven:
+
+* **Traces**
+
+  * Hot store for 7 days at configured sampling rates.
+  * Cold store for 30 days with additional downsampling and only exemplar traces retained.
+  * Exemplar traces attached to SLO breaches and major incidents are preserved in line with incident retention, not general trace retention.
+
+* **Logs**
+
+  * Retained for 90 days in compressed form.
+  * Older logs are purged unless they are part of a preserved incident bundle or evidence pack.
+
+* **Metrics**
+
+  * Retained for 13 months with time based roll ups.
+  * High resolution for recent weeks, progressively coarser roll ups for older periods, sufficient to compare year on year performance.
+
+* **Evidence and incident artefacts**
+
+  * Weekly and monthly evidence bundles and incident packs are retained according to governance policy and hash anchored per §4.5.
+  * These bundles become the long term record; raw telemetry beyond the retention horizon can be purged.
+
+This applies uniformly across all roles. For example, inference latency metrics and site render metrics follow the same 13 month policy as gateway metrics, and traces involving the site or inference runtime obey the same 7 plus 30 day rules as any other trace.
+
+**Retention ladder**
+
+```mermaid
+flowchart TD
+    TH[Traces hot 7 days] --> TC[Traces cold 30 days sampled]
+    TC --> TP[Traces purged]
+
+    LH[Logs retained 90 days] --> LP[Logs purged]
+
+    MH[Metrics full resolution recent] --> MR[Metrics rollups 13 months]
+    MR --> MP[Metrics purged]
+
+    EB[Evidence and incident bundles] --> HL[Hash anchored long term store]
+```
+
+---
+
+#### 9.9.2 Cost and Cardinality Control
+
+Telemetry storage and processing cost is driven less by raw time and more by label cardinality and per tenant volume. Transcrypt enforces cost and cardinality controls at multiple points.
+
+Metric label rules:
+
+* `tenant_id`, `region`, `component`, `version` and templated `route` are allowed labels for SLI series.
+* `user_id`, `trace_id`, `span_id`, raw IDs and free form text are forbidden as labels.
+* Model identifiers for inference metrics are constrained to a small set of model names and versions.
+* Site and blog metrics follow the same rules as app metrics; they may expose paths and regions but never user identifiers.
+
+Cardinality guardrails:
+
+* A runtime cardinality checker evaluates metric streams.
+* If label combinations exceed configured limits, high cardinality labels are dropped from those series.
+* When dropping labels, the system preserves core dimensions such as component and region so that SLOs remain computable.
+* Cardinality breaches generate internal warnings and are visible on observability dashboards.
+
+Per tenant protections:
+
+* Per tenant cost budgets are tracked using tenant labels on metrics and logs.
+* A single noisy tenant cannot indefinitely drive unbounded telemetry volume; if limits are exceeded, sampling and label dropping are applied preferentially to that tenant’s non critical series.
+* Critical SLI series remain protected from these caps to avoid losing SLO visibility.
+
+These controls apply across all runtimes. For example, an inference service that suddenly emits latency metrics per request identifier would be caught by the same cardinality checks as a misbehaving site runtime.
+
+**Cardinality and cost guardrail**
+
+```mermaid
+flowchart LR
+    MS[Metric sample] --> CC[Cardinality check]
+    CC -->|ok| ST[Store with labels]
+    CC -->|too high| LD[Drop high cardinality labels]
+    LD --> ST
+    ST --> CS[Cost and usage accounting]
+```
+
+Logs and traces are also subject to cost constraints via sampling and retention. Trace sampling rates can be adjusted per component and per tenant, with priority given to SLO relevant paths such as login, evidence ingestion, and inference assisted evaluations.
+
+---
+
+#### 9.9.3 Privacy, DSR Scope, and Telemetry Exports
+
+Telemetry is operational data, but it can still become sensitive if it contains identifiers or secrets. Transcrypt’s goal is that the vast majority of telemetry contains no personal data, so that it falls outside the scope of data subject erasure requests, while still serving as robust operational evidence.
+
+Privacy rules:
+
+* No raw PII in telemetry. Names, email addresses, phone numbers, postal addresses and free text fields are not logged or placed into labels.
+* No secrets in telemetry. Passwords, tokens, API keys, private keys, session identifiers and evidence payloads are never logged or exposed as metrics or trace attributes.
+* Identifiers used in telemetry are opaque and hashed. Tenant identifiers are opaque IDs. User references in traces are limited to opaque IDs and are avoided entirely in metrics.
+
+Inference specific rules:
+
+* Inference telemetry records only metadata such as model name, model version, duration, and error codes.
+* Prompts, completions, raw features or embeddings are never written to logs, metrics or traces.
+
+Data subject rights:
+
+* Telemetry that contains no PII is out of scope for erasure, though it remains subject to the retention and purge policies above.
+* If any telemetry stream is found to contain PII, it is reclassified as in scope. Those events are tagged and subject to targeted deletion when a data subject request applies.
+* Telemetry exports taken as part of investigations or evidence bundles are in scope for discovery, but only erased when they contain PII related to the subject.
+
+A scrubber and classifier layer enforces these rules:
+
+**Privacy and PII boundary**
+
+```mermaid
+flowchart TD
+    RE[Raw telemetry event] --> SC[Scrubber and normaliser]
+    SC --> NP[Telemetry without PII]
+    SC --> WP[Telemetry with PII marker]
+    NP --> SR[Standard retention policy]
+    WP --> DS[DSR aware retention and deletion]
+```
+
+All scrub and classification actions are logged via structured events so that changes in classification can be audited.
+
+Regional and tenant boundaries:
+
+* Telemetry is stored in region aligned backends, so EU data remains in EU aligned stores and UK data in UK aligned stores, consistent with the deployment model in §8.
+* Tenant data remains logically separated by tenant labels and encryption contexts. Telemetry aggregation is done over anonymised and hashed identifiers.
+
+Deletion and purge:
+
+* When retention windows expire, purge jobs remove old telemetry from all stores.
+* Purges are irreversible and generate structured log events summarising the volume and class of data removed.
+* Evidence bundles, incident packs and their hashes are not removed by the generic purge job; they follow their own governance schedule.
+
+This balance allows Transcrypt to keep enough telemetry to be accountable and auditable, without accumulating unnecessary privacy risk or uncontrolled cost.
+
+---
 
 ### 9.10 Testability and CI Hooks
 
-Contract tests assert: required spans emitted, logs conform to schema, key metrics increment on actions.
-Synthetic checks (login, upload, evaluate, report) run continuously and feed SLO dashboards.
-Pre-merge CI fails on: missing `request_id` propagation, unbound metrics, or log schema violations.
+Transcrypt treats observability as an explicit, testable contract. All components — site and blog runtime, edge, API Gateway, backend services, workers, queues, database access layer, inference runtime, and IAM-integrated paths — must emit consistent and verifiable telemetry. CI enforces these guarantees before merge, and post-deploy hooks validate them again before production traffic is admitted.
+
+Observability drift is considered a functional regression. Any loss of span attributes, schema deviations, missing metrics, broken request correlation, or failure of readiness semantics is grounds for CI rejection.
+
+#### 9.10.1 Contract Tests for Spans, Logs, and Metrics
+
+Contract tests MUST verify the invariants defined across §§9.1–9.9:
+
+* **Tracing**
+  Required spans are emitted with correct names, attributes (`tenant_id`, `request_id`, `region`, `route`, `status`), and parent–child relationships.
+  Site and blog runtime MUST propagate `traceparent` into the Gateway; Gateway MUST propagate onto backend services; backend MUST propagate into DB, queue, and inference spans.
+
+* **Logging**
+  All structured logs MUST conform to the schema defined in §9.5.
+  Forbidden fields (PII, secrets, raw SQL, raw inference prompts/outputs) MUST NOT appear.
+  Each action must produce at least one valid log event containing the mandatory header envelope.
+
+* **Metrics**
+  SLI metrics defined in §9.3 MUST exist, MUST increment under synthetic actions, and MUST include the required labels (`tenant`, `region`, `component`, `version`).
+  No new metric may introduce forbidden label dimensions (such as `user_id`).
+  Cardinality limits must be respected; CI blocks merges that introduce unbounded or unsafe metric cardinality.
+
+These tests apply uniformly to the site/blog runtime, inference runtime, API layer, and all backend and worker services.
+
+#### 9.10.2 Synthetic End-to-End Checks
+
+A synthetic test suite continuously exercises real tenant flows:
+
+* site/blog homepage and authentication redirects
+* login via OIDC
+* evidence upload
+* rule evaluation (local and inference-assisted)
+* report generation via the job pipeline
+* minimal inference invocation
+* basic read paths through the Gateway
+
+Synthetic checks propagate `traceparent` to produce complete traces across site → gateway → backend → DB/queue/inference. Results feed the SLO engine and must be visible on dashboards (§9.6). Any synthetic failure triggers alerts according to §9.7.
+
+#### 9.10.3 CI Enforcement on Merge
+
+CI MUST block a merge when:
+
+* required spans are missing or mis-named
+* required span attributes are absent
+* `request_id` or `traceparent` propagation fails at any hop
+* any log violates schema or contains forbidden fields
+* metrics are missing, unlabelled, or incorrectly labelled
+* cardinality checks detect unsafe labels
+* `/healthz`, `/readyz`, or `/metrics` behave incorrectly under controlled test conditions
+* inference or site/blog components do not emit the required telemetry
+
+CI tests run on isolated test containers of each service type to guarantee consistent behaviour before deployment.
+
+#### 9.10.4 Post-Deploy Verification
+
+After deployment, the platform executes a second observability accountability cycle:
+
+* readiness endpoints are polled until all instances are verifiably ready
+* synthetic checks run immediately on the new version
+* key SLO metrics are inspected for anomalies
+* traces from synthetic probes are validated for correct propagation
+* if any contract fails, rollout is halted or automatically rolled back
+
+Deployment is not considered complete until the observability contract is satisfied in the live environment.
+
+#### 9.10.5 Integration with SLO and Alerting Models
+
+Contract tests and synthetic checks feed the same SLO computation pipeline used in §9.3 and §9.7. Any observability regression directly reduces SLO accuracy, and is therefore treated as a service regression. The SLO dashboard includes a synthetic-health panel to show whether the CI and runtime checks are passing.
+
+#### 9.10.6 Privacy and Data Handling Tests
+
+All observability test harnesses must confirm:
+
+* no PII enters telemetry
+* no evidence contents or inference prompts/outputs leak into logs, traces, or metrics
+* inference metadata is safe and schema-conformant
+* site/blog telemetry is free of identifiers beyond opaque IDs
+* schema scrubbing logic behaves correctly under edge cases
+
+Telemetry tests MUST ensure compliance with the privacy guarantees in §9.9.
+
+---
+
+##### 9.10-A CI Observability Contract Flow
+
+```mermaid
+flowchart TD
+    CI[CI Pipeline] --> TC[Test Containers]
+    TC --> OT[Observability Tests]
+    OT -->|span check| SC[Span Contract]
+    OT -->|log schema| LS[Log Schema Validation]
+    OT -->|metrics| MC[Metric Contract]
+    OT -->|privacy| PC[Privacy Scrub Check]
+    SC --> GF[Gate Pass or Fail]
+    LS --> GF
+    MC --> GF
+    PC --> GF
+    GF -->|pass| DEP[Deploy]
+    GF -->|fail| BLK[Block Merge]
+
+    DEP --> PD[Post Deploy Synthetic Checks]
+    PD --> SLO[SLO Engine]
+```
+
+This single diagram captures the entire lifecycle: CI → observability contract → merge gate → deploy → synthetic verification → SLO integration.
 
 ---
 
