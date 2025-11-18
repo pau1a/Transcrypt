@@ -11604,7 +11604,7 @@ flowchart TD
         E[Documentation\n PRD, SAIS, Diagrams]
     end
 
-    subgraph Pipeline[CI/CD Enforcement Boundary]
+    subgraph LR Pipeline[CI/CD Enforcement Boundary]
         F[Static Checks\nLint, SAST, IaC Scan]
         G[Tests\nUnit, Integration,\nCumulative Regression Suite]
         H[Observability Contract\nVerification §9.10]
@@ -11612,7 +11612,7 @@ flowchart TD
         J[Traceability Checks\nREQ-ID Mapping §14]
     end
 
-    subgraph Outputs[Release Artefacts]
+    subgraph LR Outputs[Release Artefacts]
         K[Signed Runtime Bundle\n App + Workers + API]
         L[Marketing Build\n Static Export + Assets]
         M[Documentation Bundle\n PRD/SAIS + Diagrams]
