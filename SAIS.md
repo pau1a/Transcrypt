@@ -10504,25 +10504,341 @@ sequenceDiagram
 
 ### 9.5 Structured Logging Schema
 
-JSON logs only; one event per line. Required fields:
+Structured logging in Transcrypt provides an audit-grade, tenant-safe narrative of system behaviour. Logs are used for forensics, debugging, evidence reconstruction, and compliance reporting; they are **not** used as a primary alert source. All logs MUST be:
+
+* **JSON-formatted**
+* **One event per line**
+* **UTC timestamped (RFC3339/ISO 8601)**
+* **Machine-parseable without post-processing**
+
+Free-form, multi-line, or unstructured logs are prohibited.
+
+#### **9.5.1 Core Log Event Structure**
+
+Every log event MUST conform to a common envelope and be valid against the platform’s JSON schema. The core header fields are:
+
+* `ts` — event timestamp in UTC (e.g. `"2025-11-13T21:02:11Z"`)
+* `level` — one of `"DEBUG"`, `"INFO"`, `"WARN"`, `"ERROR"`, `"FATAL"`
+* `component` — canonical service name (e.g. `"api-gateway"`, `"rule-engine"`, `"site-runtime"`, `"inference-svc"`)
+* `version` — deployment version or Git SHA of the emitter
+* `region` — runtime locality/region
+* `tenant_id` — opaque tenant identifier when known; omitted for unauthenticated/public paths
+* `request_id` — identifier for the unit of work (see §9.2)
+* `trace_id` / `span_id` — correlation IDs linking logs to traces
+* `event` — stable event key (e.g. `"evidence.accepted"`, `"iam.login_failed"`)
+* `msg` — short human-readable description; MUST NOT carry additional semantics beyond `event`
+* `err` — structured error object or `null` (see §9.5.4)
+
+Domain-specific details MUST be captured in nested objects (e.g. `http`, `db`, `job`, `queue`, `inference`, `iam`) rather than unstructured strings.
+
+**Example (API evidence acceptance):**
 
 ```json
 {
-  "ts":"2025-11-13T21:02:11Z",
-  "level":"INFO",
-  "component":"api-gateway",
-  "version":"1.0.0",
-  "tenant_id":"t_9f3…",
-  "request_id":"r_12ab…",
-  "event":"evidence.accepted",
-  "msg":"Evidence stored",
-  "dur_ms":142,
-  "http":{"route":"/api/v1/evidence","status":201},
-  "err":null
+  "ts": "2025-11-13T21:02:11Z",
+  "level": "INFO",
+  "component": "api-gateway",
+  "version": "2025.11.13-abc123",
+  "region": "eu-west-1",
+  "tenant_id": "t_9f3ab1",
+  "request_id": "r_12ab34",
+  "trace_id": "tr_98ff...",
+  "span_id": "sp_11cc...",
+  "event": "evidence.accepted",
+  "msg": "Evidence stored successfully",
+  "http": {
+    "method": "POST",
+    "route": "/api/v1/evidence",
+    "status": 201,
+    "bytes_in": 1234,
+    "bytes_out": 4321
+  },
+  "dur_ms": 142,
+  "err": null
 }
 ```
 
-PII/secret scrubbing: token/secret patterns redacted at source; logs rejected by schema if unsanitised.
+#### **9.5.2 Domain-Specific Payloads**
+
+Each domain MUST use structured sub-objects with stable field names.
+
+**HTTP/API**
+
+```json
+"http": {
+  "method": "POST",
+  "route": "/api/v1/evidence",
+  "status": 201,
+  "bytes_in": 1234,
+  "bytes_out": 4321
+}
+```
+
+* `route` MUST be a templated route (e.g. `/api/v1/evidence/{id}`), not raw path segments with identifiers.
+
+**Database**
+
+```json
+"db": {
+  "system": "postgres",
+  "statement_hash": "s_9f3ab1",
+  "rows": 3,
+  "dur_ms": 61
+}
+```
+
+* `statement_hash` is a deterministic hash of the SQL; **raw SQL text MUST NOT be logged**.
+
+**Queue / Jobs**
+
+```json
+"job": {
+  "name": "generate_report",
+  "id": "job_123",
+  "retry_count": 2,
+  "scheduled_at": "2025-11-13T21:01:00Z"
+},
+"queue": {
+  "system": "sqs",
+  "destination": "report.jobs"
+}
+```
+
+**Inference**
+
+```json
+"inference": {
+  "model_name": "rules-llm-small",
+  "model_version": "v3.1",
+  "dur_ms": 187,
+  "result": "success"
+}
+```
+
+* No prompts, raw inputs, or completions are logged; only metadata.
+
+**IAM / OIDC**
+
+```json
+"iam": {
+  "provider": "keycloak",
+  "flow": "auth_code",
+  "result": "failure",
+  "reason": "invalid_credentials"
+}
+```
+
+* No usernames, email addresses, or token material are logged.
+
+#### **9.5.3 Event Taxonomy and Levels**
+
+The `event` field MUST be treated as a stable taxonomy, not free text. Example classes:
+
+* Evidence lifecycle:
+  `evidence.accepted`, `evidence.hash_stored`, `evidence.redacted`
+* Reports:
+  `report.scheduled`, `report.generated`, `report.delivery_failed`
+* IAM/auth:
+  `iam.login_succeeded`, `iam.login_failed`, `iam.token_refreshed`
+* Tenant/admin:
+  `tenant.created`, `tenant.config_updated`, `tenant.user_added`
+* Jobs:
+  `job.scheduled`, `job.started`, `job.completed`, `job.failed`
+* Inference:
+  `inference.invocation_failed`, `inference.fallback_used`
+
+Log levels MUST be used consistently:
+
+* `DEBUG` — highly verbose, disabled in production by default; enabled only via scoped feature flags.
+* `INFO` — normal state transitions and key events (evidence accepted, job started/completed, login success).
+* `WARN` — unexpected but recoverable conditions (transient timeouts, retries, fallback paths).
+* `ERROR` — failed operations with tenant or system impact.
+* `FATAL` — unrecoverable errors leading to process termination.
+
+Spammy per-request `INFO` logs in high-volume paths MUST be avoided or sampled; logging SHOULD focus on meaningful state transitions.
+
+#### **9.5.4 Error Representation**
+
+Errors MUST be represented structurally, not embedded in free-text messages.
+
+```json
+"err": {
+  "type": "TimeoutError",
+  "msg": "DB query exceeded 5000ms",
+  "stack_id": "stk_a91f23"
+}
+```
+
+* `stack_id` MAY reference a deduplicated stack trace stored separately; full stack traces SHOULD NOT be logged in production by default.
+* In non-production environments, an additional `stack` field MAY be present, subject to size limits.
+
+When `err` is non-null, `level` MUST be at least `ERROR`.
+
+#### **9.5.5 PII and Secret Scrubbing**
+
+Logs MUST NEVER contain:
+
+* passwords, tokens, API keys, private keys, or session identifiers
+* raw JWTs or OAuth tokens
+* email addresses, full names, phone numbers, or postal addresses
+* raw evidence payloads or document contents
+
+Any field that may plausibly hold sensitive data MUST either:
+
+* be excluded from logs, or
+* be passed through a scrubbing layer that redacts patterns (e.g. token-like strings) before emission.
+
+All log events MUST pass schema validation. Events failing validation due to unsanitised fields MUST be rejected or scrubbed and tagged, e.g.:
+
+```json
+"pii_redacted": true
+```
+
+Schema violations in production are treated as defects.
+
+#### **9.5.6 Correlation with Traces and Metrics**
+
+Logs are designed to correlate with traces and metrics, not replace them:
+
+* `trace_id` / `span_id` allow direct pivot from a log event to the corresponding trace in the trace explorer.
+* `tenant_id`, `region`, `component`, and `http.route` mirror metric label sets, enabling:
+
+  * drill-down from SLO breach → trace → logs
+  * tenant-scoped incident investigations
+
+Logs MUST NOT be used as primary alert sources; alerts are driven by metrics (§9.3, §9.7). Logs serve to explain and evidence metric- and trace-detected issues.
+
+#### **9.5.7 Validation and Testability**
+
+All log events MUST conform to a centrally maintained JSON schema. CI and integration tests MUST:
+
+* validate that critical code paths emit log events with required fields (`ts`, `level`, `component`, `event`, `tenant_id` where applicable),
+* enforce schema compliance on sample log output,
+* ensure no PII or forbidden fields are introduced by new code.
+
+Schema drift or introduction of PII-bearing fields is treated as a critical defect.
+
+---
+
+##### **9.5.A Diagrams**
+
+##### **Log Event Schema Overview**
+
+```mermaid
+classDiagram
+    class LogEvent {
+        string ts
+        string level
+        string component
+        string version
+        string region
+        string tenant_id
+        string request_id
+        string trace_id
+        string span_id
+        string event
+        string msg
+        Error err
+        Http http
+        Db db
+        Job job
+        Queue queue
+        Inference inference
+        Iam iam
+        number dur_ms
+        boolean pii_redacted
+    }
+
+    class Error {
+        string type
+        string msg
+        string stack_id
+    }
+
+    class Http {
+        string method
+        string route
+        int status
+        int bytes_in
+        int bytes_out
+    }
+
+    class Db {
+        string system
+        string statement_hash
+        int rows
+        int dur_ms
+    }
+
+    class Job {
+        string name
+        string id
+        int retry_count
+        string scheduled_at
+    }
+
+    class Queue {
+        string system
+        string destination
+    }
+
+    class Inference {
+        string model_name
+        string model_version
+        int dur_ms
+        string result
+    }
+
+    class Iam {
+        string provider
+        string flow
+        string result
+        string reason
+    }
+
+    LogEvent "1" o-- "0..1" Error
+    LogEvent "1" o-- "0..1" Http
+    LogEvent "1" o-- "0..1" Db
+    LogEvent "1" o-- "0..1" Job
+    LogEvent "1" o-- "0..1" Queue
+    LogEvent "1" o-- "0..1" Inference
+    LogEvent "1" o-- "0..1" Iam
+```
+
+##### **Log Scrubbing and Validation Pipeline**
+
+```mermaid
+flowchart TD
+    A[Application Code<br/>emit log event] --> B[Scrubber<br/>redact tokens/PII]
+    B --> C[Schema Validator<br/>(JSON Schema)]
+    C -->|valid| D[Log Sink<br/>(central log store)]
+    C -->|invalid| E[Reject or Scrub & Tag<br/>pii_redacted=true]
+    E --> D
+```
+
+##### **Correlation Between Metrics, Traces, and Logs**
+
+```mermaid
+flowchart LR
+    M[Metric Sample<br/>transcrypt.api.req_latency_ms{tenant,region,version,route}] 
+        -->|labels: tenant, region, route| SLO[SLO Evaluation]
+
+    SLO -->|breach| A[Alert]
+
+    T[Trace<br/>trace_id, span_id, tenant_id, request_id]
+        -->|trace_id, span_id| L[Log Event<br/>trace_id, span_id, event]
+
+    M -->|tenant, region, route| T
+    L -->|tenant_id, request_id, event| Investigator[Human / Forensic Tools]
+```
+
+These diagrams formalise:
+
+* the **schema** of a log event,
+* the **pipeline** that ensures redaction and schema compliance,
+* and how logs fit into the wider **metrics ↔ traces ↔ logs** correlation model.
+
+---
 
 ### 9.6 Dashboards and Reporting
 
