@@ -10990,21 +10990,301 @@ sequenceDiagram
 
 ### 9.7 Alerting Policy and Burn-Rate Rules
 
-Alerts must be actionable and route to on-call with runbook link. Multi-window/multi-burn-rate examples:
+Alerting in Transcrypt is strictly SLO-driven. Alerts protect error budgets, surface real tenant impact, and initiate runbook-guided recovery actions. Alerts are based exclusively on metrics derived from §§9.1–9.5; logs and traces are used for context, not as primary triggers. Alert definitions MUST be maintained as code, version-controlled, and consistent across all environments.
 
-* API latency SLO (p95): fire at 14× burn (5 min) and 6× (1 h)
-* Error rate: fire at 2× (12 h) and 4× (1 h)
-* Queue lag: threshold > 30 s for 10 min
-  Channels: PagerDuty (P1/P2), Slack (P3), email digest (P4). Silence windows require change ticket.
+#### **9.7.1 Alert Philosophy and Scope**
+
+Alerts exist to enforce reliability objectives, not to report incidental system behaviour. An alert MUST indicate one of the following:
+
+* active or imminent SLO breach
+* accelerated error-budget burn
+* tenant-impacting degradation (interactive or async)
+* critical dependency failure (DB, IAM, inference, queue)
+
+Every alert MUST link directly to a runbook entry in §12, enabling rapid, deterministic remediation.
+
+Alert scope covers all components: site/blog runtime, edge, API Gateway, rule engine, evidence service, report generator, inference runtime, IAM/OIDC flows, job processors, queues, DB access layer, and storage interfaces. Regional alerts MUST be region-scoped unless multiple regions degrade concurrently.
+
+#### **9.7.2 Multi-Window, Multi Burn-Rate Strategy**
+
+All SLO-based alerts MUST use multi-window burn-rate evaluation to balance early-warning detection with noise reduction. Fast windows detect acute failures; slow windows detect prolonged budget burn.
+
+Canonical policies:
+
+* **API latency SLO (p95):**
+
+  * Fire at **14× burn** over **5 minutes**
+  * Fire at **6× burn** over **1 hour**
+
+* **API error rate SLO:**
+
+  * Fire at **4× burn** over **1 hour**
+  * Fire at **2× burn** over **12 hours**
+
+* **Queue lag SLO:**
+
+  * Fire if **lag > 30 seconds** for **> 10 minutes**
+  * Fire immediately if DLQ depth increases non-trivially
+
+* **Inference latency/error SLO:**
+
+  * Fire at **6× burn** over **1 hour**
+  * Fire at **14× burn** over **5 minutes** if inference becomes unavailable
+
+* **DB slow-query SLO:**
+
+  * Fire if **slow_queries_total > 0** over any **1-hour window**
+
+These policies protect the monthly **0.1% error budget** defined in §9.3.
+
+#### **9.7.3 Alert Classes and Severity**
+
+Alerts MUST be categorised by impact:
+
+* **P1 — Critical, tenant-impacting failure**
+  Total or near-total loss of function:
+  IAM offline, gateway rejecting traffic, inference runtime down, queue starvation, DB lockout, SLO burn 14× fast-window.
+
+* **P2 — Sustained degradation**
+  SLO burn in slow windows, rising queue lag, inference fallback overuse, DB contention.
+
+* **P3 — Warning**
+  Trend-level degradation, region-specific slowness, elevated retry counts, partial IAM failures.
+
+* **P4 — Informational**
+  Daily digest of low-severity anomalies, minor SLO drift, non-blocking IAM or inference warnings.
+
+Severity determines routing (§9.7.6).
+
+#### **9.7.4 Alert Enrichment**
+
+Every alert MUST include:
+
+* SLO violated or metric threshold crossed
+* burn-rate multiplier and error-budget impact
+* `tenant_id` breakdown when relevant
+* direct links to exemplar traces (top outliers from §9.4)
+* rolled-up contextual fields (e.g., worst-offending routes, queues, or job types)
+* pointer to the appropriate runbook in §12
+* suggested immediate actions (e.g., rollback, scale-out, failover)
+
+Alerts MUST NOT rely on unstructured log scanning; enrichment is metric- and trace-driven.
+
+#### **9.7.5 Silence and Maintenance Windows**
+
+Alert silence windows MAY be applied only when:
+
+* a formally tracked change request exists
+* the silence is time-boxed
+* the scope is narrow (specific alerts, not global)
+* an automatic expiry is enforced
+
+Silence windows must be recorded and included in evidence bundles for audit (§9.6).
+
+#### **9.7.6 Routing and Escalation**
+
+Routing requirements:
+
+* **P1/P2:** escalate via PagerDuty to on-call rotation
+* **P3:** deliver to Slack engineering channel
+* **P4:** included in daily or weekly email digests
+
+Escalation path MUST allow automatic handoff and acknowledgement. Every alert MUST be closed explicitly or auto-resolved when the triggering condition clears.
+
+#### **9.7.7 Integration with Evidence and Compliance**
+
+All alert incidents MUST be included in the weekly and monthly evidence bundles (§9.6):
+
+* alert start/end time
+* severity
+* affected tenants
+* SLO impact
+* burn-rate history
+* linked trace IDs
+* remediation timeline
+* operator acknowledgement
+
+All alert history MUST be hash-anchored per §4.5 to ensure immutability for auditors.
+
+#### **9.7.8 Testability and Drift Prevention**
+
+Alert rules MUST be validated through:
+
+* CI syntax validation for alert definition files
+* synthetic load tests in staging that intentionally breach SLOs
+* periodic “burn-window” simulations
+* automated detection of stale or unreferenced runbook links
+
+Alerting behaviour MUST be reproducible and version-pinned to avoid configuration drift between regions.
+
+---
 
 ### 9.8 Health and Readiness Endpoints
 
-Every service exposes:
+Every Transcrypt runtime exposes a common trio of operational endpoints that govern liveness, readiness, and telemetry export. These endpoints form the contract between each service and the platform components responsible for scheduling, rollout, load balancing, uptime checks, and metrics scraping. Health endpoints determine whether a process should continue running, while readiness endpoints determine whether it should receive traffic. Metrics endpoints expose Prometheus compliant OpenMetrics data used across SLO computations and alerting.
 
-* `/healthz` (process up, deps optional)
-* `/readyz` (deps OK: DB, queue, object store)
-* `/metrics` (Prometheus/OpenMetrics)
-  Readiness gates deployments; health feeds uptime checks.
+Liveness and readiness MUST NOT be conflated. Liveness describes whether the process should be restarted; readiness describes whether it should be in rotation. A service MAY be healthy but not ready, for example when dependencies are unavailable or when a rollout is underway. Conversely, readiness failures MUST NOT trigger restarts unless the liveness probe also fails.
+
+#### **9.8.1 Liveness Endpoint: /healthz**
+
+The `/healthz` endpoint returns the minimal signal required to determine whether the process is alive, has not entered a fatal state, and is capable of continuing execution. It MUST NOT depend on upstream systems such as database, queue, object store, inference runtime, or OIDC provider. Failures indicate the process should be restarted.
+
+Checks may include:
+
+* internal event loop responsiveness
+* memory reservation sanity
+* thread pool responsiveness
+* no fatal error latch set by the runtime
+
+This endpoint is used by orchestrators to restart the process when required.
+
+#### **9.8.2 Readiness Endpoint: /readyz**
+
+The `/readyz` endpoint determines whether the instance is safe to receive live production traffic. It enforces dependency correctness and prevents bad versions or degraded services from entering rotation. It MUST verify the dependencies relevant to the specific service role:
+
+* **API Gateway and backend services**: database connectivity, queue connectivity, object store access, configuration load, dependency latency budget
+* **Workers and job processors**: queue consumption availability, lock acquisition, DB availability where required, non draining state
+* **Site runtime**: ability to render a minimal route, reachability of authentication and gateway endpoints
+* **Inference runtime**: model readiness, memory availability, minimal inference test vector success
+* **Any component relying on IAM**: introspection endpoint reachability or cached health status
+
+Readiness gates rollout. New instances MUST NOT serve traffic until `/readyz` returns OK.
+
+#### **9.8.3 Metrics Endpoint: /metrics**
+
+The `/metrics` endpoint exposes OpenMetrics formatted telemetry for Prometheus scraping. It MUST reflect the labels defined in §9.3 (`tenant`, `region`, `component`, `version`, and route labels where appropriate). It MUST NOT be accessible from public networks, and MUST NOT contain raw PII or secret material.
+
+Prometheus scraping of `/metrics` feeds:
+
+* SLO engines
+* dashboard series (§9.6)
+* alerting logic (§9.7)
+* weekly and monthly evidence bundles (§9.6)
+
+#### **9.8.4 Synthetic User Path Health**
+
+For components that do not expose meaningful internal readiness (such as edge functions or CDN-delivered content), synthetic probes MUST be used to validate end-to-end health. Synthetic checks MUST cover at a minimum:
+
+* anonymous load of the site root
+* login redirect initiation
+* API gateway reachability for site pages
+* representative dynamic content rendering
+
+Synthetic checks feed uptime metrics and tenant-visible availability surfaces.
+
+#### **9.8.5 Regional Behaviour and Failure Modes**
+
+Health and readiness MUST be evaluated per region. A degraded region MUST NOT cause global readiness loss unless multiple regions degrade concurrently. Readiness MUST fail when critical dependencies are unavailable locally.
+
+Failure behaviour MUST follow:
+
+* If a dependency fails: `/readyz` fails but `/healthz` remains OK
+* If the process fatally errors: both `/healthz` and `/readyz` fail
+* During rolling deploys: `/readyz` MUST remain failed until migrations and warmup complete
+
+#### **9.8.6 Security and Exposure**
+
+Exposure rules:
+
+* `/healthz` MAY be exposed to internal load balancers or orchestrators
+* `/readyz` MUST be internal only
+* `/metrics` MUST be restricted to the observability network or service mesh
+* synthetic checks MAY be performed externally but reveal no internal state
+
+Readiness MUST NOT leak dependency details to external callers.
+
+---
+
+##### **9.8-A Liveness Ready Metrics Wiring**
+
+```mermaid
+flowchart TD
+    O[Orchestrator] -->|poll| H[/healthz]
+    LB[Load Balancer] -->|poll| R[/readyz]
+    P[Prometheus] -->|scrape| M[/metrics]
+    S[Synthetic Check] --> U[User Path]
+
+    H --> SVC[Service]
+    R --> SVC
+    M --> SVC
+    U --> SVC
+```
+
+---
+
+##### **9.8-B Component Health Contract**
+
+```mermaid
+classDiagram
+    class ServiceBase {
+        /healthz
+        /readyz
+        /metrics
+    }
+
+    class GatewayService {
+        checks DB
+        checks Queue
+        checks ObjectStore
+    }
+
+    class WorkerService {
+        checks Queue
+        checks Dependencies
+    }
+
+    class SiteRuntime {
+        checks Render
+        checks GatewayReachability
+    }
+
+    class InferenceService {
+        checks ModelReady
+        checks MinimalInference
+    }
+
+    ServiceBase <|-- GatewayService
+    ServiceBase <|-- WorkerService
+    ServiceBase <|-- SiteRuntime
+    ServiceBase <|-- InferenceService
+```
+
+---
+
+##### **9.8-C Deployment Gating Using Readyz**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant D as DeploymentController
+    participant P as NewPod
+    participant L as LoadBalancer
+
+    D->>P: Start pod
+    P-->>D: /healthz OK
+    D->>P: Poll /readyz
+    P-->>D: Not ready
+    D->>P: Poll /readyz
+    P-->>D: Ready
+    D->>L: Add pod to rotation
+    L->>P: Begin routing traffic
+    P-->>L: Traffic served
+```
+
+---
+
+##### **9.8-D Site Blog Inference Health Coverage**
+
+```mermaid
+flowchart LR
+    SY[Synthetic Site Check] --> SR[SiteRuntime]
+    SR --> GR[Gateway Ready]
+    IR[Inference Ready] --> US[Upstream Services]
+    US --> GR
+    IR --> SR
+```
+
+---
 
 ### 9.9 Data Retention, Cost, and Privacy
 
