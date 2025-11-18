@@ -11199,9 +11199,9 @@ Readiness MUST NOT leak dependency details to external callers.
 
 ```mermaid
 flowchart TD
-    O[Orchestrator] -->|poll| H[/healthz]
-    LB[Load Balancer] -->|poll| R[/readyz]
-    P[Prometheus] -->|scrape| M[/metrics]
+    O[Orchestrator] -->|poll| H["/healthz"]
+    LB[Load Balancer] -->|poll| R["/readyz"]
+    P[Prometheus] -->|scrape| M["/metrics"]
     S[Synthetic Check] --> U[User Path]
 
     H --> SVC[Service]
