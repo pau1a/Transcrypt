@@ -11627,7 +11627,143 @@ flowchart TD
 
 ### 10.2 Branching, Versioning, and Tags
 
-Workflow (e.g., trunk-based with short-lived feature branches), tag format (`v1.x.y` for app, `v1.x.y-sais` for docs), and how tags map to releases and migrations.
+The repository follows a controlled model that keeps `main` permanently releasable, aligns releases with PRD/SAIS requirements, and ensures every deployment bundle — app, workers, inference, site/blog, infrastructure, and documentation — is tied to an immutable tag with a verifiable provenance chain.
+
+#### **Branching Model**
+
+Transcrypt uses trunk-based development:
+
+* `main` is always releasable.
+* Work happens in short-lived branches:
+
+  * `feat/<slug>`
+  * `fix/<slug>`
+  * `infra/<slug>`
+  * `docs/<slug>`
+  * `spike/<slug>` (experimental, never merged as-is)
+* No long-lived branches.
+* No per-environment branches.
+* All merges into `main` require a green cumulative regression run and approvals defined in §10.13.
+
+#### **Branching Workflow Diagram**
+
+```mermaid
+flowchart LR
+    A[feat/*  fix/*  infra/*  docs/*] --> B[Pull Request]
+    B --> C[Full CI\nCumulative Tests and Scans]
+    C -->|Approved| D[Merge to main]
+    D --> E[Release Pipeline\nTag Creation]
+```
+
+#### **Versioning Scheme**
+
+Tags represent complete product snapshots — Essentials runtime, workers, inference API, marketing site/blog, documentation, infrastructure scripts, migrations, and release evidence.
+
+Semantic versioning:
+
+* **MAJOR** — incompatible API, schema, auth, or evaluation changes.
+* **MINOR** — new capabilities, backward-compatible changes, site/blog additions, inference behaviour adjustments.
+* **PATCH** — safe fixes, non-breaking improvements, minor UI adjustments, documentation corrections.
+
+Documentation uses a linked tag:
+
+* `v1.2.3` — platform release
+* `v1.2.3-sais` — documentation and SAIS/PRD snapshot aligned to that release
+
+#### **Versioning Diagram**
+
+```mermaid
+flowchart LR
+    subgraph Platform
+        A[v1.2.3 Release]
+        B[Application and Workers]
+        C[Inference Contract]
+        D[Marketing Site and Blog]
+        E[Infrastructure and Deploy Scripts]
+    end
+
+    subgraph Documentation
+        F[v1.2.3-sais Bundle]
+        G[PRD, SAIS, Diagrams]
+    end
+
+    A --> B
+    A --> C
+    A --> D
+    A --> E
+    A --> F
+    F --> G
+```
+
+#### **Tagging Rules**
+
+* Tags are annotated and immutable.
+* Tags are created **only** on `main`.
+* Every production deployment corresponds to a tag produced by CI.
+* CI records for each tag:
+
+  * short SHA
+  * full cumulative regression results
+  * SBOM
+  * provenance signature
+  * inference model version
+  * marketing export hash
+  * schema level
+
+Each tag defines a deterministic rebuild blueprint.
+
+#### **Mapping Tags to Migrations**
+
+* Migrations are append-only and timestamped.
+* A tag defines a consistent code + schema + infra state.
+* CI enforces:
+
+  * forward-compatible migrations (one-release window)
+  * DDL linting and dry-run checks
+  * block on destructive schema operations
+* Applying a tag implies applying the schema level included in that tag’s release evidence.
+
+#### **Tag Lifecycle Diagram**
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant CI as CI System
+    participant Repo as Repository
+    participant Rel as Release Evidence
+
+    Dev->>Repo: Merge PR
+    Repo->>CI: Trigger Release Job
+    CI->>CI: Build Application
+    CI->>CI: Build Marketing Site
+    CI->>CI: Dry Run Migrations
+    CI->>CI: Generate SBOM
+    CI->>CI: Capture Inference Model Version
+    CI->>Rel: Store Evidence Bundle
+    CI->>Repo: Create Tag v1.x.y
+```
+
+#### **Inference Versioning**
+
+Inference is governed as part of the platform release:
+
+* The calling code is part of the main version tag.
+* The model or prompt version identifier is captured in release evidence.
+* Changing inference behaviour without breaking prior semantics triggers a MINOR bump.
+* Breaking semantics require a MAJOR bump.
+* The inference contract is tested through cumulative regression and observability rules.
+
+#### **Marketing Site / Blog Versioning**
+
+The site/blog is a first-class runtime component:
+
+* Built from the same commit as the app.
+* Versioned with the same `v1.x.y` tag.
+* Static export is included in the release bundle.
+* Behavioural changes follow semver rules.
+* The site/blog can be fully reproduced from the tag at any time.
+
+---
 
 ### 10.3 Build Stages (Canonical)
 
