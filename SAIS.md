@@ -10810,8 +10810,8 @@ classDiagram
 ```mermaid
 flowchart TD
     A[Application Code<br/>emit log event] --> B[Scrubber<br/>redact tokens/PII]
-    B --> C[Schema Validator<br/>(JSON Schema)]
-    C -->|valid| D[Log Sink<br/>(central log store)]
+    B --> C[Schema Validator<br/> JSON Schema]
+    C -->|valid| D[Log Sink<br/>central log store]
     C -->|invalid| E[Reject or Scrub & Tag<br/>pii_redacted=true]
     E --> D
 ```
