@@ -11596,7 +11596,7 @@ Scope boundaries:
 
 ```mermaid
 flowchart TD
-    subgraph Inputs[Sources of Truth]
+    subgraph LR Inputs[Sources of Truth]
         A[Application Code\n App, Workers, API]
         B[Infrastructure Code\n IaC, Deploy Scripts]
         C[Marketing Site / Blog]
