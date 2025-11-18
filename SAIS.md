@@ -11556,13 +11556,74 @@ This single diagram captures the entire lifecycle: CI → observability contract
 
 ## 10. Build and Delivery Pipeline
 
-CI/CD architecture — linting, test suites, security scans, release gating, artefact signing, and promotion between environments.
+Transcrypt’s CI/CD system is the enforcement layer for the entire architecture. It guarantees that every deliverable — the Marketing Site, Essentials runtime, inference components, worker processes, infrastructure scripts, and the PRD/SAIS documentation set — is built, tested, signed, and promoted in a deterministic and auditable way. The pipeline embodies the architectural rules defined in the SAIS: no manual mutations, no unverified artefacts, no drift between code and infrastructure, and no behaviour that cannot be traced back to a PRD requirement and a SAIS interface contract.
+
+The pipeline is the mechanism through which the platform proves security, correctness, reproducibility, and compliance. It ensures that releases are fast but governed, reversible without drama, and aligned with the deterministic rebuild model described in §7.6. Every change is validated end-to-end against cumulative regression tests, observability contracts (§9), and cross-links to requirement IDs (§14). Only artefacts built and signed by CI are permitted to run in any environment.
 
 ---
 
 ### 10.1 Pipeline Objectives and Scope
 
-What the pipeline must guarantee: reproducible builds, policy enforcement, traceability to PRD/SAIS, and fast, safe releases across `dev → staging → prod`.
+The pipeline is the enforcement boundary for all architectural guarantees defined in this SAIS. It governs every deliverable — the Marketing Site, Essentials runtime, inference components, background workers, infrastructure scripts, and the PRD/SAIS documentation set — ensuring that each is built, tested, signed, and promoted in a deterministic, measurable, and auditable manner.
+
+Its objectives are:
+
+* **Reproducible builds**
+  Any release can be rebuilt from Git, CI configuration, and secrets, producing byte-identical artefacts and an immutable provenance chain.
+
+* **Policy enforcement by construction**
+  Security scans, schema checks, observability contracts (§9.10), supply-chain rules (§7.6), and IaC hygiene are mechanically enforced. No human workflow can bypass them.
+
+* **Cumulative and append-only regression suite**
+  The test suite is singular, canonical, and monotonic. Each new piece of development must add tests, and those tests become part of the permanent regression pack.
+  On every merge to `main`, CI runs the **entire suite** (parallelised as required), re-proving all previously accepted behaviours: login, onboarding, tenant isolation, evidence ingestion, deterministic evaluation, reporting, site/blog routing, inference boundaries, and observability contracts.
+  Tests may only be removed or weakened when the underlying requirement is formally changed in the PRD and recorded in the Exception Register (§8.11).
+
+* **Traceability to PRD and SAIS**
+  Every test, artefact, migration, and diagram links to requirement IDs (§14). A release is only valid if its behavioural and architectural footprints align with both PRD commitments and SAIS interface contracts.
+
+* **Fast, safe, reversible releases**
+  Frequent small changes are encouraged. All changes must pass the cumulative suite, be signed, and must remain reversible via the deterministic blue/green model (§7.4).
+
+* **Single source of truth across all runtimes**
+  CI/CD governs and validates all product surfaces: Marketing Site / Blog, Essentials UI/API, workers, inference API, infrastructure code, deploy scripts, schema sources, and the documentation set itself.
+
+Scope boundaries:
+
+* CI/CD governs **everything Transcrypt ships**.
+* It does **not** govern the internal behaviours of external SaaS (Stripe, MXroute, DO Spaces, inference provider internals), but it validates schemas, client libraries, and configuration as part of the supply chain.
+* Production is **never** mutated manually; only CI-built, CI-signed artefacts may execute.
+
+```mermaid
+flowchart LR
+    subgraph Inputs[Sources of Truth]
+        A[Application Code\n(App, Workers, API)]
+        B[Infrastructure Code\n(IaC, Deploy Scripts)]
+        C[Marketing Site / Blog]
+        D[Inference Components\n(Models, Prompts, Contracts)]
+        E[Documentation\n(PRD, SAIS, Diagrams)]
+    end
+
+    subgraph Pipeline[CI/CD Enforcement Boundary]
+        F[Static Checks\nLint, SAST, IaC Scan]
+        G[Tests\nUnit, Integration,\nCumulative Regression Suite]
+        H[Observability Contract\nVerification (§9.10)]
+        I[SBOM + Provenance\nSigning & Attestation]
+        J[Traceability Checks\nREQ-ID Mapping (§14)]
+    end
+
+    subgraph Outputs[Release Artefacts]
+        K[Signed Runtime Bundle\n(App + Workers + API)]
+        L[Marketing Build\n(Static Export + Assets)]
+        M[Documentation Bundle\n(PRD/SAIS + Diagrams)]
+        N[Rebuild Blueprint\n(Deterministic Release Geometry)]
+        O[Release Evidence Pack\nSBOM, Attestations,\nCumulative Test Results]
+    end
+
+    Inputs --> Pipeline --> Outputs
+```
+
+---
 
 ### 10.2 Branching, Versioning, and Tags
 
@@ -11629,6 +11690,10 @@ Who can: merge, tag, approve prod deploys, override gates. Mandatory two-person 
 Each release produces: changelog (commits/issues), diffs to infrastructure modules, SBOM, scan summaries, test report, and links to PRD/SAIS requirement IDs touched (traceability table in §14).
 
 ### 10.15 Ephemeral Environments and Test Data
+
+### 10.16 Rebuild Blueprint and Deterministic Release Geometry
+
+### 10.17 Documentation, Diagram, and Spec Build Integration
 
 On PR open, spin an isolated stack with seeded, sanitised data. Auto-destroy on merge/close. Test data packs live in repo; no prod data outside prod.
 
@@ -11793,13 +11858,13 @@ Table mapping PRD requirements and acceptance criteria to implementing component
 
 ---
 
-### 14.1 Purpose and Method
+### 13.1 Purpose and Method
 
 Explain that this section provides a two-way mapping between **requirements (from PRD)** and their **implementation artefacts (in SAIS, code, and tests)**.
 Define the traceability model: each PRD item has a unique `REQ-ID`, mirrored in commits, code annotations, and CI test metadata.
 State that the table is regenerated automatically during release tagging to ensure coverage completeness.
 
-### 14.2 Traceability Table Structure
+### 13.2 Traceability Table Structure
 
 Introduce the canonical columns:
 
@@ -11813,7 +11878,7 @@ Define statuses:
 * **Verified** – passed automated and manual acceptance.
 * **Deferred** – explicitly postponed or superseded.
 
-### 14.3 Example Entries (MVP Slice)
+### 13.3 Example Entries (MVP Slice)
 
 Provide a representative sample for the MVP:
 
@@ -11826,34 +11891,110 @@ Provide a representative sample for the MVP:
 | CE-005 | 9.5         | Immutable audit trail                  | Audit Service, Object Store   | n/a                          | `audit_append_only_test.py`       | Verified          |
 | CE-006 | 8.7         | Blue/green deployment with rollback    | CI/CD, Infra                  | n/a                          | `pipeline_e2e_test.yaml`          | Implemented       |
 
-### 14.4 Coverage Analysis
+### 13.4 Coverage Analysis
 
 Summarise percentage of PRD requirements covered by implemented and verified artefacts.
 List any **unmapped** or **out-of-scope** PRD items with rationale.
 Include a short bar chart or Markdown table:
 `Total: 180 | Implemented: 163 | Verified: 155 | Deferred: 17 | Coverage: 91.6 %`.
 
-### 14.5 Acceptance Workflow
+### 13.5 Acceptance Workflow
 
 Describe who reviews and approves each requirement’s acceptance: Product Lead, QA Lead, Security Lead.
 Acceptance triggered automatically after passing CI tests, but final sign-off requires linked Jira ticket closure or Git tag annotation.
 
-### 14.6 Evidence Storage and Audit Trail
+### 13.6 Evidence Storage and Audit Trail
 
 All acceptance results stored as JSON in the evidence repository (`/evidence/traceability/`).
 Each entry contains hash of commit + test log.
 Auditors can verify by recomputing hash chain (linked to §9.5 Audit and Logging).
 
-### 14.7 Continuous Verification Hooks
+### 13.7 Continuous Verification Hooks
 
-Pipeline step (`verify-traceability`) validates that:
+PART COMPLETED
 
-* Every `REQ-ID` in PRD appears in this table.
-* Every implemented requirement has a corresponding test.
-* No orphan tests reference non-existent REQ-IDs.
-  Pipeline fails if coverage < threshold (default 90%).
 
-### 14.8 Change and Version History
+The delivery pipeline enforces a **continuous verification loop** that binds requirements, specifications, code artefacts, tests, and releases into a single measurable chain. Verification is cumulative, monotonic, and append-only in spirit: once a behaviour is accepted into the system, it must continue to be proved on every merge and every release.
+
+The following invariant checks run automatically on each PR and on every merge to `main`:
+
+##### **1. Requirement-to-Test Completeness**
+
+For every PRD/SAIS requirement marked *Implemented* or *Verified*:
+
+* at least one automated test must reference the associated `REQ-ID`;
+* the test must still exist in the canonical regression suite;
+* removal or weakening of a requirement-linked test is rejected unless:
+
+  * the underlying requirement has been formally updated in the PRD, and
+  * an approved exception entry is present in the Exception Register (§8.11).
+
+This prevents silent drift of behaviour or erosion of coverage.
+
+##### **2. Cumulative Regression Enforcement**
+
+The regression suite is **single and canonical**.
+Each merge to `main`:
+
+* runs the entire regression suite (sharded/parallelised as necessary);
+* re-proves all previously accepted behaviours across login, onboarding flows, evidence ingestion, evaluation determinism, report generation, observability contracts, and API invariants;
+* fails the pipeline if any historic contract regresses, regardless of changeset size.
+
+This ensures that new development cannot break earlier guarantees or UX-critical flows.
+
+##### **3. Traceability Integrity Checks**
+
+The pipeline validates that:
+
+* every merged PR references at least one PRD or SAIS requirement ID;
+* every requirement marked *Implemented* has corresponding commits, tests, and artefacts in the release record;
+* test files referencing REQ-IDs are internally consistent (no dead anchors, no orphaned requirements);
+* all REQ-IDs linked to the current release appear in the generated traceability table (§14.9).
+
+##### **4. Specification Synchronisation**
+
+The SAIS and PRD are treated as versioned artefacts:
+
+* Mermaid diagrams, schema references, and embedded examples must lint cleanly;
+* each release bundles the current SAIS/PRD snapshot;
+* changes to specifications must pass the same verification hooks as code changes;
+* drift between code reality and documented interfaces results in a failing verification step.
+
+##### **5. Observability Contract Verification**
+
+The verification loop checks that instrumentation rules in §9.10 remain intact:
+
+* required span names, metric keys, request/tenant IDs, and log schemas;
+* required redaction rules and PII boundaries;
+* no cardinality explosion in metrics.
+
+Any change breaking observability semantics is rejected.
+
+##### **6. Provenance and Supply Chain Consistency**
+
+Each verification cycle checks:
+
+* the build artefact is signed and matches its SBOM;
+* the SBOM contains no new critical CVEs;
+* the artefact hash matches the provenance attestation recorded in CI.
+
+Unsigned, unverified, or inconsistent artefacts cannot progress.
+
+##### **7. Release-Ready State Assertion**
+
+A merge is only allowed when:
+
+* cumulative regression is green;
+* traceability table updates cleanly;
+* SBOM + provenance checks pass;
+* documentation passes spec-linting;
+* no gating exceptions are active without explicit approval.
+
+This ensures that every commit merged into `main` is “release-ready” by construction, without requiring a late release heroics phase.
+
+---
+
+### 13.8 Change and Version History
 
 Each release tag appends a new table snapshot to `/docs/traceability/vX.Y.Z.md`.
 Changes between versions tracked by diff, signed and timestamped.
