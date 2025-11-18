@@ -11560,15 +11560,15 @@ CI/CD architecture — linting, test suites, security scans, release gating, art
 
 ---
 
-### 11.1 Pipeline Objectives and Scope
+### 10.1 Pipeline Objectives and Scope
 
 What the pipeline must guarantee: reproducible builds, policy enforcement, traceability to PRD/SAIS, and fast, safe releases across `dev → staging → prod`.
 
-### 11.2 Branching, Versioning, and Tags
+### 10.2 Branching, Versioning, and Tags
 
 Workflow (e.g., trunk-based with short-lived feature branches), tag format (`v1.x.y` for app, `v1.x.y-sais` for docs), and how tags map to releases and migrations.
 
-### 11.3 Build Stages (Canonical)
+### 10.3 Build Stages (Canonical)
 
 Stage graph with inputs/outputs:
 
@@ -11584,51 +11584,51 @@ Stage graph with inputs/outputs:
 10. **Manual/auto gate** →
 11. **Prod canary → full rollout**.
 
-### 11.4 Testing Pyramid and Coverage Bars
+### 10.4 Testing Pyramid and Coverage Bars
 
 Minimum bars: unit ≥ 80% critical paths, component/integration on every merge, E2E for MVP flows (login, org create, evidence upload, evaluate, report). Contract tests for every public endpoint (§5). Fail CI if bars regress.
 
-### 11.5 Security and Compliance Scans
+### 10.5 Security and Compliance Scans
 
 SAST/linters (per language), dependency scanning (allowlist/denylist), container scan (critical CVEs = gate), IaC scan (CIS), secrets detection (pre-receive + CI). All findings must link to tickets with SLAs.
 
-### 11.6 SBOM, Provenance, and Signing
+### 10.6 SBOM, Provenance, and Signing
 
 Generate SBOM (SPDX/CycloneDX). Sign build provenance (Sigstore/Cosign). Admission policy: only signed images with zero critical CVEs run in staging/prod. Store attestations with the release record.
 
-### 11.7 Artefact Management
+### 10.7 Artefact Management
 
 Registries, retention, and immutability. Naming: `svc-name:1.2.3+gitsha`. Keep last N builds; purge policy documented. Provenance and SBOM stored alongside.
 
-### 11.8 Database Migrations and Backward Compatibility
+### 10.8 Database Migrations and Backward Compatibility
 
 Rule: migrations are forward-compatible for one release; apply pre-deploy; roll back without data loss. Automate: lint DDL, dry-run in ephemeral env, block deploy if unsafe ops detected.
 
-### 11.9 Release Gating and Promotions
+### 10.9 Release Gating and Promotions
 
 Automated gates: tests green, scans clean, error budget healthy (§10), change freeze respected, approvals present. Promotions are pull-only (staging pulls from registry), never push.
 
-### 11.10 Deployment Strategies and Rollback
+### 10.10 Deployment Strategies and Rollback
 
 Default: canary (5% → 25% → 100%) with health checks; blue/green for risky changes. One-click rollback pinned to last known-good tag; DB rollback plan documented per release.
 
-### 11.11 Feature Flags and Config Drift
+### 10.11 Feature Flags and Config Drift
 
 Flags default-off, scoped per tenant. Config is code; drift detectors in CI block deploys if env deviates from repo defaults. Kill switch playbooks referenced.
 
-### 11.12 Pipeline Observability and SLAs
+### 10.12 Pipeline Observability and SLAs
 
 Metrics: pipeline duration, queue time, pass rate, flake rate, MTTR for failed builds. Alerts when median build > target, or flake rate > threshold. Logs and traces for each job with `request_id`/`commit_sha`.
 
-### 11.13 Access Control and Approvals
+### 10.13 Access Control and Approvals
 
 Who can: merge, tag, approve prod deploys, override gates. Mandatory two-person review for prod, with audited rationale. Break-glass path time-boxed and logged.
 
-### 11.14 Audit Trail and Release Notes
+### 10.14 Audit Trail and Release Notes
 
 Each release produces: changelog (commits/issues), diffs to infrastructure modules, SBOM, scan summaries, test report, and links to PRD/SAIS requirement IDs touched (traceability table in §14).
 
-### 11.15 Ephemeral Environments and Test Data
+### 10.15 Ephemeral Environments and Test Data
 
 On PR open, spin an isolated stack with seeded, sanitised data. Auto-destroy on merge/close. Test data packs live in repo; no prod data outside prod.
 
