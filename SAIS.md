@@ -11595,7 +11595,7 @@ Scope boundaries:
 * Production is **never** mutated manually; only CI-built, CI-signed artefacts may execute.
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph Inputs[Sources of Truth]
         A[Application Code\n App, Workers, API]
         B[Infrastructure Code\n IaC, Deploy Scripts]
