@@ -11767,19 +11767,179 @@ The site/blog is a first-class runtime component:
 
 ### 10.3 Build Stages (Canonical)
 
-Stage graph with inputs/outputs:
+The build pipeline follows a single canonical sequence. Every commit that enters CI travels through the same enforced path — static checks, cumulative tests, artefact construction, provenance signing, integration on an ephemeral environment, staging deployment, full E2E validation, and controlled promotion to production. These stages collectively guarantee deterministic rebuilds, architectural compliance, and traceability to PRD and SAIS requirements.
 
-1. **Source fetch & cache** →
-2. **Lint & static checks** (code + schemas) →
-3. **Unit tests** →
-4. **Build artefacts** (containers, wheels) →
-5. **SBOM + sign** →
-6. **Integration tests (ephemeral env)** →
-7. **Publish to registry** →
-8. **Deploy to staging** →
-9. **E2E + perf smoke** →
-10. **Manual/auto gate** →
-11. **Prod canary → full rollout**.
+#### **Stage Overview Diagram**
+
+```mermaid
+flowchart LR
+    A[Source Snapshot] --> B[Static Checks]
+    B --> C[Unit Tests]
+    C --> D[Build Artefacts]
+    D --> E[SBOM and Signing]
+    E --> F[Ephemeral Integration]
+    F --> G[Publish Artefacts]
+    G --> H[Staging Deploy]
+    H --> I[E2E and Perf Smoke]
+    I --> J[Release Gate]
+    J --> K[Canary then Full Rollout]
+```
+
+#### **Source Snapshot**
+
+CI fetches an exact snapshot of the commit, resolving all subtrees for:
+
+* Essentials runtime
+* workers
+* inference components
+* marketing site/blog
+* infrastructure
+* documentation (PRD/SAIS and diagrams)
+
+It records commit SHA, intended version, and build metadata.
+This forms the immutable starting context for deterministic rebuilds.
+
+#### **Static Checks**
+
+This stage enforces all architectural rules before any build is attempted:
+
+* code linting and type checks
+* schema validation
+* SAIS interface linting
+* PRD/SAIS diagram linting
+* IaC lint
+* redaction rule lint
+* inference contract schema lint
+* observability contract lint
+
+A failure here blocks the pipeline immediately.
+No artefacts are produced until the architecture is proven sound.
+
+#### **Unit Tests**
+
+Fast-path cumulative tests run:
+
+* pure unit coverage
+* deterministic evaluation-unit tests with inference mocked
+* static-site/unit tests for the marketing runtime
+* unit tests for workers and infra utilities
+
+Only fast-running, hermetic tests run here.
+Full cumulative behaviour is validated later.
+
+#### **Build Artefacts**
+
+CI produces all immutable artefacts:
+
+* app container
+* worker container
+* marketing site/blog static export
+* migration bundle
+* inference configuration bundle
+* documentation bundle (PRD, SAIS, diagrams)
+
+Each artefact is content-addressed and grouped into the build set.
+
+#### **SBOM and Signing**
+
+CI generates and signs all supply-chain artefacts:
+
+* SBOM covering all components
+* dependency trees
+* inference version identifiers
+* signing via Cosign
+* provenance attestation added to the release evidence
+
+Nothing can progress until all artefacts are signed and attestations recorded.
+
+#### **Ephemeral Integration**
+
+CI creates an isolated environment:
+
+* ephemeral tenant
+* seeded ephemeral database
+* ephemeral marketing domain
+* inference stub or controlled-mode inference
+* infrastructure activation using IaC
+* migrations applied for real
+* worker lifecycle validation
+* tenant isolation tests
+* blue/green directory geometry tested
+
+This stage validates that all subsystems operate together exactly as described in the SAIS.
+
+#### **Integration Diagram**
+
+```mermaid
+flowchart LR
+    A[Build Artefacts] --> B[Ephemeral Environment]
+    B --> C[Migrations Applied]
+    B --> D[Worker Startup]
+    B --> E[Marketing Runtime Active]
+    B --> F[Inference Contract Exercised]
+    F --> G[Integration Evidence Stored]
+```
+
+#### **Publish Artefacts**
+
+Signed artefacts, SBOMs, configuration bundles, and evidence are published to the registry and release store.
+Each artefact is named using the tag plus short SHA.
+The release evidence pack is bound to the tag.
+
+#### **Staging Deploy**
+
+CI performs a blue/green deploy into staging:
+
+* migrations applied
+* app and workers deployed
+* marketing runtime deployed
+* environment registered as belonging to the tag
+* drift detection ensures infra matches IaC
+
+Staging becomes a replica of production, isolated only by traffic.
+
+#### **E2E and Perf Smoke**
+
+Full cumulative validation runs:
+
+* login and onboarding flows
+* evidence upload
+* evaluation
+* inference calls
+* reporting
+* marketing site/blog rendering
+* observability contract checks
+* p95 latency checks for critical paths
+
+Any regression blocks promotion.
+
+#### **Release Gate**
+
+The gate enforces:
+
+* cumulative suite green
+* SBOM clean
+* attestations present
+* staging stable
+* no infra drift
+* PRD/SAIS requirements covered
+* manual approvals satisfied (per §10.13)
+
+Only then is the release promotable.
+
+#### **Canary then Full Rollout**
+
+Production activation follows the deterministic blue/green model:
+
+* promote to canary (5%)
+* observe health
+* promote to 25%
+* promote to full traffic
+* if any anomaly appears, flip immediately to the previous tag identity
+
+The canary’s success finalises the release evidence bundle.
+
+---
 
 ### 10.4 Testing Pyramid and Coverage Bars
 
