@@ -11597,26 +11597,26 @@ Scope boundaries:
 ```mermaid
 flowchart LR
     subgraph Inputs[Sources of Truth]
-        A[Application Code\n(App, Workers, API)]
-        B[Infrastructure Code\n(IaC, Deploy Scripts)]
+        A[Application Code\n App, Workers, API]
+        B[Infrastructure Code\n IaC, Deploy Scripts]
         C[Marketing Site / Blog]
-        D[Inference Components\n(Models, Prompts, Contracts)]
-        E[Documentation\n(PRD, SAIS, Diagrams)]
+        D[Inference Components\n Models, Prompts, Contracts]
+        E[Documentation\n PRD, SAIS, Diagrams]
     end
 
     subgraph Pipeline[CI/CD Enforcement Boundary]
         F[Static Checks\nLint, SAST, IaC Scan]
         G[Tests\nUnit, Integration,\nCumulative Regression Suite]
-        H[Observability Contract\nVerification (§9.10)]
+        H[Observability Contract\nVerification §9.10]
         I[SBOM + Provenance\nSigning & Attestation]
-        J[Traceability Checks\nREQ-ID Mapping (§14)]
+        J[Traceability Checks\nREQ-ID Mapping §14]
     end
 
     subgraph Outputs[Release Artefacts]
-        K[Signed Runtime Bundle\n(App + Workers + API)]
-        L[Marketing Build\n(Static Export + Assets)]
-        M[Documentation Bundle\n(PRD/SAIS + Diagrams)]
-        N[Rebuild Blueprint\n(Deterministic Release Geometry)]
+        K[Signed Runtime Bundle\n App + Workers + API]
+        L[Marketing Build\n Static Export + Assets]
+        M[Documentation Bundle\n PRD/SAIS + Diagrams]
+        N[Rebuild Blueprint\n Deterministic Release Geometry]
         O[Release Evidence Pack\nSBOM, Attestations,\nCumulative Test Results]
     end
 
