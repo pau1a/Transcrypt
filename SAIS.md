@@ -10820,7 +10820,7 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    M[Metric Sample<br/>transcrypt.api.req_latency_ms{tenant,region,version,route}] 
+    M[Metric Sample<br/>transcrypt.api.req_latency_ms tenant,region,version,route] 
         -->|labels: tenant, region, route| SLO[SLO Evaluation]
 
     SLO -->|breach| A[Alert]
@@ -10842,13 +10842,151 @@ These diagrams formalise:
 
 ### 9.6 Dashboards and Reporting
 
-Minimum dashboards:
+Dashboards provide the operational and compliance-facing visualisation layer for Transcrypt’s observability model. They aggregate metrics, traces, and log-derived indicators into a set of mandatory views used to run the platform safely, assess SLO compliance, verify tenant isolation, and generate audit-grade evidence. Dashboards are not product analytics; they are system-behaviour surfaces directly tied to the SLOs and telemetry defined in §§9.1–9.5.
 
-* **Golden Signals** (latency, errors, traffic, saturation) per service
-* **Jobs & Queues** (lag, retries, DLQ depth)
-* **DB Health** (connections, slow queries, locks)
-* **SLO Overview** with budget remaining and breach history
-  Export weekly PDF snapshots for audit evidence (hash stored per §4.5).
+Each dashboard MUST support filtering by `{tenant_id, region, component, version}` to enable per-tenant investigations, noisy-neighbour detection, and compliance verification. All dashboards are derived from canonical OpenMetrics, OpenTelemetry traces, and structured logs. Dashboards must render deterministically across regions and MUST be reproducible in exported evidence artefacts.
+
+#### **9.6.1 Mandatory Dashboards**
+
+The minimum dashboard inventory consists of six categories:
+
+**(1) Golden Signals (per service)**
+Latency (p50/p95/p99), error rate, request volume, and resource saturation for each runtime:
+edge, site/blog runtime, API Gateway, backend services, inference runtime, IAM interactions, workers, and job processors.
+
+**(2) Jobs & Queues**
+Queue lag, publish/consume rate, retry distribution, DLQ depth, job runtime histograms, job failure rates, and tenant-specific load patterns.
+
+**(3) DB Health**
+Slow query count, query latency histograms, client-side connection utilisation, lock/wait events, and replication lag (if applicable).
+
+**(4) IAM / Authentication Health**
+OIDC redirect latency, token introspection latency, login success/failure rate, token refresh errors, and region-specific IAM degradation.
+
+**(5) Inference Runtime**
+Model invocation latency, inference error rate (timeouts, fallbacks), model load failures, model-version drift, cold-start detection, and inference queue depth (if applicable).
+
+**(6) SLO Overview (governance surface)**
+For each SLO:
+target, current attainment, remaining error budget, burn-rate windows, historical breaches, per-tenant impact, and exemplar trace links for violations.
+
+#### **9.6.2 Reporting Requirements**
+
+Dashboards must support automated evidence generation. Three formal evidence artefacts are required:
+
+**Weekly Evidence Package**
+Contains:
+
+* SLO compliance summary
+* error budget consumption
+* uptime per critical component
+* IAM availability
+* inference stability
+* slow-query zero-breach confirmation
+* queue lag compliance
+* exemplar traces for SLO breaches
+* cryptographic hash anchored per §4.5
+
+**Monthly Governance Report**
+Contains:
+
+* SLO status for all windows
+* full breach list
+* root-cause summaries with trace references
+* version drift report
+* IAM uptime record
+* inference model-version drift
+* region-by-region latency and error trends
+
+**On-Demand Incident Bundle**
+Contains:
+
+* triggering event
+* SLO context
+* correlated metrics window
+* exemplar trace set
+* relevant structured logs
+* timeline summary
+* rollback/remediation confirmation
+
+All generated evidence MUST be deterministic and reproducible from telemetry stored during the relevant period.
+
+#### **9.6.3 Tenant-Scoped Visualisation**
+
+All dashboards MUST support filtering by `tenant_id` to prove tenant isolation and to surface per-tenant impact. Tenant filtering MUST apply uniformly across metrics, traces, logs, SLO surfaces, and evidence reports. When filtered, dashboards MUST reflect only the telemetry attributable to the selected tenant, without leakage or cross-contamination.
+
+#### **9.6.4 Diagram Inventory**
+
+The following diagrams are normative illustrations of the system’s dashboard and reporting architecture.
+
+---
+
+#### **Diagram 9.6-A — Dashboard Inventory Map**
+
+```mermaid
+flowchart LR
+    GS[Golden Signals<br/>per Service]
+    JQ[Jobs & Queues]
+    DB[DB Health]
+    IAM[IAM / Auth Health]
+    INF[Inference Runtime]
+    SLO[SLO Overview]
+
+    subgraph Dashboards
+        GS --> SLO
+        JQ --> SLO
+        DB --> SLO
+        IAM --> SLO
+        INF --> SLO
+    end
+```
+
+---
+
+#### **Diagram 9.6-B — Weekly Evidence Pipeline**
+
+```mermaid
+flowchart TD
+    A[Metrics<br/>Logs<br/>Traces] --> B[SLO Engine<br/>Burn-Rate Evaluation]
+    B --> C[Dashboard Views<br/>SLO, Jobs, DB, IAM, Inference]
+    C --> D[Evidence Generator<br/>Weekly PDF/JSON Bundle]
+    D --> E[Hash Anchor<br/>Chain-of-Custody Store]
+    E --> F[Audit / Compliance Consumption]
+```
+
+---
+
+#### **Diagram 9.6-C — Tenant-Scoped Visibility**
+
+```mermaid
+flowchart LR
+    T[Tenant Filter<br/>tenant_id=T87] --> M[Metrics View<br/>filtered]
+    T --> TR[Trace Explorer<br/>filtered]
+    T --> L[Log Viewer<br/>filtered]
+
+    M --> SLOS[SLO Dashboard<br/>Tenant-Specific]
+    TR --> SLOS
+    L --> SLOS
+```
+
+---
+
+#### **Diagram 9.6-D — SLO Burn-Rate Insight**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant P as SLO Engine
+    participant D as SLO Dashboard
+    participant R as Evidence Generator
+
+    P->>P: Evaluate SLO Windows<br/>Compute Burn-Rate
+    P->>D: Update SLO Panel<br/>(latency, error rate, budget)
+    D->>R: Include in Weekly Evidence
+    R-->>D: Evidence Pack Ready
+```
+
+---
 
 ### 9.7 Alerting Policy and Burn-Rate Rules
 
