@@ -10172,47 +10172,335 @@ Transcrypt records reality; it never fabricates completeness.
 
 ## 9. Observability and Telemetry
 
-Defines metrics, traces, structured logs, and SLOs. Specifies tenant/request correlation IDs and alert thresholds.
+Observability in Transcrypt is not about logging noise or grabbing telemetry “just because”.
+It is the **architecture’s self-reporting layer** — the mechanism by which every component proves what it did, for whom, and whether it behaved within the system’s defined reliability and isolation guarantees.
+
+The system spans multiple runtimes (edge, site/blog, gateway, services, workers, storage).
+Each is a real actor in the distributed execution path, and therefore each must emit **correlated logs, metrics, and traces** that carry tenant and request context from ingress to exit.
+This is how the architecture verifies correctness rather than assuming it.
+
+Metrics give the time-series signals needed to enforce SLOs and error budgets.
+Traces reveal causal chains for individual requests — the only way to validate end-to-end behaviour, identity propagation, and tenant boundary integrity.
+Logs capture the triggered consequences of significant events, supporting forensics, audit trails, and evidence lifecycle reconstruction.
+
+Alerts sit above these signals.
+They are part of the contingency layer, not part of observability itself:
+they fire only when metric-derived SLO rules are violated, and their lifecycle is logged by the alerting system for auditability.
+But they do not generate, consume, or alter application logs.
+
+The purpose of this section is to define the standards, schemas, propagation rules, and architectural invariants that allow the entire platform to be observable, measurable, and provable.
+Without this layer, multi-tenant isolation, SLO guarantees, system correctness, and compliance evidence all collapse into unverifiable claims — incompatible with Transcrypt’s design intention.
 
 ---
 
 ### 9.1 Objectives and Scope
 
-Define why we instrument: verify SLOs, shorten MTTR, and prove compliance evidence. Clarify scope (apps, workers, gateway, jobs, CDN/edge).
+Transcrypt instruments every executing component of the platform to provide a verifiable account of system behaviour. The objectives are threefold:
+**(1)** to measure and enforce service objectives through metrics-driven SLO verification,
+**(2)** to minimise MTTR by exposing clear causal chains across all runtimes, and
+**(3)** to generate audit-ready evidence of correctness, isolation, and operational integrity.
+Observability is therefore a mandatory architectural concern, not an operational add-on.
+
+Instrumentation applies to **all components enumerated in §3**, including the CDN and edge runtime, the Next.js site/blog runtime, the API Gateway, all backend services (rule evaluation, evidence ingestion, reporting, tenant metadata, admin), the inference runtime, the IAM/OIDC layer (Keycloak or equivalent), queue consumers, scheduled jobs, and all data-access layers (DB client, object store client, cache interfaces).
+Each component must emit correlated logs, metrics, and traces carrying consistent identifiers (`trace_id`, `request_id`, `tenant_id`) from ingress to exit, ensuring end-to-end context propagation and tenant-safe partitioning.
+
+Out of scope for this section are product analytics, marketing or engagement metrics, client-side browser telemetry, and vendor-internal datastore instrumentation. Observability focuses solely on **system correctness, reliability, and verifiable behaviour**, providing the substrate for SLO enforcement, alerting, debugging, and compliance evidence production.
+
+---
 
 ### 9.2 Telemetry Standards and Context Propagation
 
-Adopt OpenTelemetry for metrics, traces, and logs.
-W3C Trace Context headers (`traceparent`, `tracestate`) are mandatory end-to-end.
-Correlation keys carried on every event:
+Transcrypt standardises on **OpenTelemetry (OTel)** as the uniform instrumentation framework for metrics, traces, and structured logs across all executing components. All runtimes — including CDN/edge functions, the marketing site/blog runtime, the API Gateway, backend services, inference runtimes, IAM/OIDC flows, queue consumers, scheduled jobs, and storage-access layers — MUST emit OTel-compliant telemetry and MUST forward it unmodified to the platform’s collector. Divergent formats, custom correlation schemes, or partial adoption are prohibited.
 
-* `tenant_id` (opaque UUID)
-* `request_id` (`X-Request-ID`)
-* `user_id` (if authenticated)
-* `component` / `version` / `region`
+The platform adopts **W3C Trace Context** (`traceparent`, `tracestate`) as the mandatory mechanism for end-to-end correlation. Every inbound request, async task, background job, identity handshake, inference call, and data-access operation MUST extract incoming trace context, attach a new span, and propagate the context downstream. Any component that truncates, regenerates, or fails to forward trace context breaks distributed causality and is treated as an architectural defect.
+
+All telemetry artefacts — spans, log records, and applicable metric labels — MUST include the following correlation attributes:
+
+* **`tenant_id`** — opaque UUID used for tenant isolation and observability partitioning; MUST NOT expose customer identifiers.
+* **`request_id`** — stable identifier for the unit of work, generated at the API Gateway and propagated via `X-Request-ID` (or equivalent).
+* **`user_id`** — pseudonymous user reference when authenticated; omitted when unauthenticated.
+* **`component`** — canonical service identifier.
+* **`version`** — deployment version or build reference of the emitting component.
+* **`region`** — runtime locality for multi-region correctness.
+
+Asynchronous boundaries MUST preserve trace context. Queue producers MUST attach context to messages; consumers MUST resume the trace by linking spans to the originating context and increment a `retry_count` attribute on retries. Scheduled tasks SHOULD begin new traces but MUST retain linkage metadata where relevant to lineage and audit trails.
+
+Identity flows are equally in scope: OIDC redirects, token introspection, and session establishment MUST appear as spans within the originating trace to preserve identity provenance and ensure end-to-end visibility of authentication behaviour.
+
+Instrumentation MUST create spans deterministically; sampling policies are applied at the collector, not in application code. This ensures consistent propagation behaviour and guarantees that exemplar traces are available for SLO breach analysis.
+
+This standard establishes the mandatory telemetry and propagation rules required for end-to-end correlation, tenant-safe observability, SLO verification, MTTR reduction, and audit-grade traceability across the entire platform.
+
+---
 
 ### 9.3 Metrics (SLIs) and SLOs
 
-Define the canonical SLIs and targets; namespaced `transcrypt.<domain>.<metric>` with labels `{tenant, region, version}`.
+Transcrypt standardises a canonical metric namespace of the form
+`transcrypt.<domain>.<metric>` and a consistent label set `{tenant, region, version}` to ensure multi-tenant isolation, rollback clarity, and cross-component correlation. All metrics MUST emit through OpenTelemetry using OpenMetrics-compatible types (counters, gauges, histograms), and MUST avoid PII in labels.
 
-| Domain | Metric (SLI)                                             | Target SLO  | Notes                     |
-| ------ | -------------------------------------------------------- | ----------- | ------------------------- |
-| API    | `transcrypt.api.req_latency_ms{route,verb}` p95 ≤ 400 ms | Monthly     | Excluding async endpoints |
-| API    | `transcrypt.api.error_rate{route,verb}` ≤ 1%             | Rolling 28d | 5xx + policy 4xx          |
-| Jobs   | `transcrypt.job.runtime_ms{job}` p95 ≤ 120000            | Monthly     | Report generation         |
-| Queue  | `transcrypt.queue.lag_seconds{topic}` ≤ 10               | Daily       | Back-pressure signal      |
-| DB     | `transcrypt.db.slow_queries_total` = 0                   | Daily       | > 500 ms threshold        |
-| Uptime | `transcrypt.service.availability` ≥ 99.9%                | Monthly     | Per critical component    |
+Service Level Indicators (SLIs) define the measurements that represent the system’s reliability and behavioural correctness; Service Level Objectives (SLOs) define the target performance over a specified evaluation window. Error budgets quantify the permissible deviation from the SLO. All SLOs defined in this section are mandatory and apply to **every executing component** enumerated in §3, including the CDN/edge runtime, the marketing site/blog runtime, the API Gateway, backend services, inference runtime, IAM/OIDC flows, async job systems, and all data-access layers.
 
-Error budget policy: 0.1% monthly. Burn-rate alerts defined in §10.7.
+#### **Canonical SLIs and SLOs**
+
+| Domain        | SLI (Metric)                                            | Target SLO                         | Notes                                                        |
+| ------------- | ------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------ |
+| **API**       | `transcrypt.api.req_latency_ms{route,verb}` (histogram) | p95 ≤ 400 ms (monthly)             | Excludes async endpoints                                     |
+| **API**       | `transcrypt.api.error_rate{route,verb}` (counter)       | ≤ 1% (rolling 28 days)             | Includes 5xx and policy-driven 4xx                           |
+| **Jobs**      | `transcrypt.job.runtime_ms{job}` (histogram)            | p95 ≤ 120000 ms (monthly)          | Applies to report generation and evidence processing jobs    |
+| **Queue**     | `transcrypt.queue.lag_seconds{topic}` (gauge)           | ≤ 10 seconds (daily)               | Back-pressure indicator; includes retries                    |
+| **DB**        | `transcrypt.db.slow_queries_total` (counter)            | = 0 (daily)                        | Slow query threshold defined as > 500 ms                     |
+| **Uptime**    | `transcrypt.service.availability` (gauge)               | ≥ 99.9% (monthly)                  | Per critical component                                       |
+| **Inference** | `transcrypt.inference.latency_ms{model}` (histogram)    | p95 ≤ 250 ms (monthly)             | Applies to all model-driven evaluations and scoring          |
+| **Inference** | `transcrypt.inference.error_rate{model}` (counter)      | ≤ 0.5% (rolling 28 days)           | Includes timeouts and fallback failures                      |
+| **IAM**       | `transcrypt.iam.auth_latency_ms` (histogram)            | p95 ≤ 500 ms (monthly)             | Covers OIDC flows, token introspection, and session handling |
+| **IAM**       | `transcrypt.iam.error_rate` (counter)                   | ≤ 1% (rolling 28 days)             | Authentication and introspection failures                    |
+| **Site/Edge** | `transcrypt.site.render_latency_ms` (histogram)         | p95 ≤ 500 ms (monthly)             | SSR/RSC/ISR operations                                       |
+| **Edge**      | `transcrypt.edge.ttfb_ms` (histogram)                   | p95 ≤ 300 ms (monthly, per region) | CDN/edge execution and caching correctness                   |
+| **Edge**      | `transcrypt.edge.error_rate` (counter)                  | ≤ 0.5% (daily)                     | Includes cold-start and regional failover errors             |
+
+#### **Error Budget Policy**
+
+All SLOs operate under a strict **0.1% monthly error budget**.
+Burn-rate calculations, multi-window alerting thresholds, and escalation policies are defined in §9.7. Error budget exhaustion MUST trigger:
+
+* the capture of exemplar traces,
+* automated inclusion in weekly evidence packs (per §12), and
+* investigation according to the corresponding runbook.
+
+#### **Requirements**
+
+* Metrics MUST be labelled consistently across all runtimes, including `{tenant, region, version}` where applicable.
+* Metrics MUST be emitted before sampling and MUST use histogram buckets for all latency- and duration-based SLIs.
+* Async boundaries (queues, scheduled jobs) MUST emit their own metrics and link them to originating traces and tenant context.
+* SLO adherence MUST be exportable monthly as audit-ready artefacts, with hash-anchoring defined in §4.5.
+* No component may introduce metrics with conflicting names, types, or label semantics.
+
+These SLIs and SLOs define the quantitative reliability envelope of the platform and form the enforcement substrate for observability, alerting, tenant isolation, and audit-grade compliance evidence.
+
+---
 
 ### 9.4 Tracing Requirements
 
-Spans for UI→Gateway→Service→DB/Queue with consistent names:
-`svc:<component>.<operation>` (e.g., `svc:rule.evaluate`).
-Span attributes (must-have): `tenant_id`, `request_id`, `http.route`, `db.statement_hash`, `retry_count`.
-Sampling: head-based 10% in prod; tail-based for top-latency and error outliers.
-Store exemplar traces for all SLO breaches.
+Transcrypt uses distributed tracing to produce a verifiable, end-to-end record of system behaviour across all runtimes. Every request class — including CDN/edge execution, site/blog rendering, API calls, IAM/OIDC flows, backend services, inference operations, queue interactions, and job execution — MUST participate in a single coherent trace that preserves W3C Trace Context as defined in §9.2. Traces are mandatory for SLO verification, MTTR reduction, identity provenance, tenant isolation, and audit-grade evidence of execution.
+
+#### **Span Naming**
+
+All spans MUST follow a deterministic, component-oriented naming convention:
+
+* **Entry spans:**
+  `entry:<entrypoint>`
+  Examples:
+  `entry:site.http_request`, `entry:gateway.api_request`, `entry:worker.job_run`
+
+* **Service spans:**
+  `svc:<component>.<operation>`
+  Examples:
+  `svc:rule.evaluate`, `svc:evidence.ingest`, `svc:report.build`
+
+* **Infrastructure spans:**
+
+  * `db:postgres.query`
+  * `queue:publish`, `queue:consume`
+  * `objstore:put`, `objstore:get`
+
+* **IAM spans:**
+  `iam:<provider>.<step>`
+  Examples:
+  `iam:oidc.redirect`, `iam:token.introspect`
+
+* **Inference spans:**
+  `inf:model.invoke`, `inf:model.load`
+
+Span names MUST be stable, grep-friendly, and reflect both *what* is happening and *where* it occurred.
+
+#### **Mandatory Span Attributes**
+
+All spans MUST include:
+
+* `tenant_id`
+* `request_id`
+* `component`
+* `version`
+* `region`
+
+Domain-specific attributes include:
+
+* **HTTP/API:** `http.method`, `http.route`, `http.status_code`
+* **DB:** `db.system`, `db.statement_hash`, `db.error_code`
+* **Queue/Jobs:** `messaging.system`, `messaging.destination`, `job.name`, `retry_count`
+* **Inference:** `inference.model_name`, `inference.model_version`
+* **IAM:** `iam.provider`, `iam.flow`, `iam.result`
+
+Attributes MUST NOT contain PII, SQL text, credentials, or token material.
+
+#### **Trace Structure Requirements**
+
+Traces MUST form consistent hierarchical structures across all runtime boundaries. Representative patterns include:
+
+* **Site/Edge path:**
+  `entry:site.http_request` → `svc:site.render` → `iam:oidc.redirect` (if applicable) → gateway API call
+
+* **API path:**
+  `entry:gateway.api_request` → `svc:gateway.authenticate` → IAM introspection → downstream service spans → DB/queue/object store/inference spans
+
+* **Job path:**
+  `entry:worker.job_run` → `svc:report.build` → `db:*` and `objstore:*` spans
+
+These MUST render coherently in the system’s trace explorer.
+
+#### **Sampling Policy**
+
+Application code MUST create spans deterministically. Sampling MAY ONLY be applied at the collector:
+
+* **Head sampling:** ~10% baseline in production
+
+* **Tail sampling:** retain:
+
+  * slowest traces per route
+  * traces with errors, retries, or dependency timeouts
+
+* **Mandatory retention:**
+  Traces for SLO breaches, IAM failures, inference failures, and retry escalation MUST be retained.
+
+Sampling configuration MUST be centralised and version-controlled.
+
+#### **Exemplar Traces for SLO Breaches**
+
+For any SLO violation or burn-rate alert (per §9.7), the system MUST capture exemplar traces, including:
+
+* highest-latency requests,
+* failed requests,
+* retry cascades,
+* dependency timeout chains.
+
+Exemplar traces MUST be linkable from incident records and included in weekly audit evidence artefacts as defined in §12.
+
+#### **Trace Integrity and Testability**
+
+Automated tests MUST verify:
+
+* root span creation at all defined entrypoints,
+* preservation of `traceparent` across edge → site → gateway → service → DB/queue/inference,
+* presence of mandatory attributes,
+* correct publish→consume linkage at async boundaries,
+* correct span placement for IAM and inference paths.
+
+Missing spans, broken context propagation, or absent mandatory attributes constitute critical defects.
+
+---
+
+#### **Example Trace Diagrams**
+
+The following diagrams illustrate normative trace structure; they are not implementation-specific and MUST reflect the conventions defined above.
+
+##### **Diagram 1 — Interactive API Path**
+
+UI → Edge → Site → Gateway → Service → DB/Queue
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant E as Edge/CDN
+    participant S as Site Runtime (Next.js)
+    participant G as API Gateway
+    participant RE as Rule Engine Service
+    participant DB as Postgres (DB Client)
+    participant Q as Queue (Job Topic)
+
+    B->>E: HTTPS GET /app/evidence
+    activate E
+    Note right of E: entry:site.http_request<br/>component=edge
+
+    E->>S: Internal SSR/RSC request
+    activate S
+    Note right of S: svc:site.render<br/>tenant_id, request_id
+
+    S->>G: POST /api/v1/rule/evaluate
+    activate G
+    Note right of G: entry:gateway.api_request
+
+    G->>G: Authenticate (OIDC introspection)
+    Note right of G: svc:gateway.authenticate
+
+    G->>RE: rule.evaluate
+    activate RE
+    Note right of RE: svc:rule.evaluate<br/>inference.model_version
+
+    RE->>DB: Query (hashed)
+    activate DB
+    Note right of DB: db:postgres.query
+    DB-->>RE: Result
+    deactivate DB
+
+    RE->>Q: Publish report job
+    activate Q
+    Note right of Q: queue:publish
+    Q-->>RE: Ack
+    deactivate Q
+
+    RE-->>G: Evaluation result
+    deactivate RE
+
+    G-->>S: 200 OK
+    deactivate G
+
+    S-->>E: Rendered page/data
+    deactivate S
+
+    E-->>B: HTTP 200
+    deactivate E
+```
+
+---
+
+##### **Diagram 2 — Async Job Path**
+
+Queue → Worker → Report Service → Object Store / DB
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Q as Queue (report.jobs)
+    participant W as Worker
+    participant RS as Report Service
+    participant DB as Postgres
+    participant OS as Object Store
+
+    Q-->>W: Dequeue report job
+    activate W
+    Note right of W: entry:worker.job_run<br/>job.name="generate_report"
+
+    W->>RS: report.build
+    activate RS
+    Note right of RS: svc:report.build
+
+    RS->>DB: Load evidence & rule outputs
+    activate DB
+    Note right of DB: db:postgres.query
+    DB-->>RS: Result set
+    deactivate DB
+
+    RS->>OS: GET artefacts
+    activate OS
+    Note right of OS: objstore:get
+    OS-->>RS: Artefact blobs
+    deactivate OS
+
+    RS->>OS: PUT compiled report
+    activate OS
+    Note right of OS: objstore:put
+    OS-->>RS: OK
+    deactivate OS
+
+    RS-->>W: Job result
+    deactivate RS
+
+    W-->>Q: Ack message
+    deactivate W
+```
+
+---
 
 ### 9.5 Structured Logging Schema
 
