@@ -13859,16 +13859,314 @@ This doctrine binds runtime behaviour to Transcrypt’s identity:
 
 ### 11.2 Observability, On-Call, and Operational Execution Surface
 
-Transcrypt can only be operated if it can be seen.
-This section defines what “visibility” means: the mandatory metrics, traces, logs, alerts, dashboards, and chat-ops commands that form the eyes and hands of the platform.
-On-call is not firefighting—it is the disciplined execution of predefined responses using approved tooling.
+Transcrypt is only operable if it is fully visible.
+The operational execution surface defines the metrics, logs, traces, dashboards, alerts, synthetic probes, and chat-ops controls that allow the platform to be run without guesswork or heroics.
+On-call is the execution of deterministic, version-controlled runbooks—never improvisation.
 No undocumented operational paths are permitted.
+
+#### **Operational Visibility Diagram**
+
+```mermaid
+flowchart LR
+    A[Telemetry Surface] --> B[Alert Engine]
+    B --> C[Operator Console]
+    C --> D[Runbook Executor]
+    D --> E[Controlled Actions]
+```
+
+#### **Telemetry Surface**
+
+The core visibility plane consists of:
+
+* **Metrics**: availability, latency, throughput, queue depth, worker activity, inference latency, inference timeout rate, site/blog render latency, error rate per component
+* **Traces**: OTel spans across marketing → gateway → backend → worker → inference provider → report generator
+* **Logs**: structured JSON with `tenant_id`, `request_id`, `commit_sha`, severity, event type, and no sensitive payloads
+* **Dashboards**: SLO views, tenant-aware views, inference stability dashboards, marketing synthetic dashboards, queue saturation views
+* **Synthetic Checks**: login, signup, upload, evaluate, report generation, marketing site/blog routes, inference round-trip checks
+* **Drift Indicators**: config as code drift, inference config drift, marketing bundle drift, schema drift, IaC drift
+
+Nothing in operations relies on intuition. Everything is observable.
+
+#### **Alert Engine**
+
+Alerts must be:
+
+* actionable
+* low-noise
+* linked to SLOs
+* tied to a specific runbook
+* tenant-aware
+* correlated with telemetry
+
+Alert categories include:
+
+* availability drops
+* elevated latency
+* inference drift or output divergence
+* evaluation failure spikes
+* site/blog route failures
+* queue saturation
+* migration failures
+* config drift
+* worker stalls
+* signing or provenance mismatch
+* unexpected error ratios
+* loss of synthetic probe
+
+Alert rules are versioned in repo and enforced by CI.
+
+#### **Operator Console**
+
+Operators interact with the platform using:
+
+* log search (scoped by `tenant_id`, `request_id`, `commit_sha`)
+* trace explorer
+* metrics dashboards
+* drift analysis panels
+* feature flag and kill switch console
+* migration status viewer
+* queue depth inspector
+* marketing runtime inspector
+* inference manifest inspector
+* environment symmetry checker
+* chat-ops commands for controlled actions
+
+The console is the only valid operational interface.
+
+#### **Controlled Actions**
+
+On-call engineers may perform only the following actions:
+
+* controlled rollback to last known-good tag
+* redeploy from the artefact registry
+* toggle kill switches
+* enable/disable feature flags
+* run drift reconciliation
+* restart workers or pods via approved automation
+* re-run synthetic probes
+* activate break-glass operation with mandatory expiry and audit trail
+
+Prohibited:
+
+* manual container debugging
+* SSH into nodes
+* ad-hoc DB changes
+* editing cloud storage directly
+* bypassing CI/CD
+* modifying inference config manually
+* patching code in production
+
+All actions are logged with `actor`, `request_id`, and `commit_sha` and stored in the audit trail cited in §10.14.
+
+#### **Runbook Discipline**
+
+Every alert references a runbook that is:
+
+* deterministic
+* ≤ 15 steps
+* reversible
+* validated in staging
+* version-controlled
+* linked to SLOs and telemetry
+* free of guesswork or improvisation
+
+Runbooks describe resolution, not diagnosis.
+The system is expected to be diagnosable through telemetry alone.
+
+#### **Inference Observability**
+
+Inference is fully observable:
+
+* inference latency and error ratios
+* output divergence checks
+* nondeterminism detectors
+* prompt-template mismatch alerts
+* inference config drift
+* model-version mismatch
+* unexpected cost spikes
+* inference queue depth
+* OTel tracing across inference calls
+* regression-set validation during canary
+
+Inference drift is treated as a production incident.
+
+#### **Marketing Site and Blog Observability**
+
+Site/blog operational visibility includes:
+
+* synthetic probes for public pages
+* CDN health
+* SRI/hash mismatch
+* asset-bundle size drift
+* broken-link detection
+* contract tests for marketing API usage
+* latency and error rates on public endpoints
+
+Marketing is part of the product surface and must be fully monitored.
+
+#### **Operational Philosophy**
+
+Transcrypt’s operational stance:
+
+* no hidden behaviours
+* no manual hacks
+* on-call executes runbooks, not improvised debugging
+* telemetry first, interpretation second, action third
+* operators do not need tribal knowledge
+* every operational lever is visible, versioned, and constrained
+* every incident produces auditable evidence
+
+The operational execution surface defines how the platform is safely run.
+
+---
 
 ### 11.3 Backup, Restore, and Integrity Validation
 
-A backup is worthless unless the restore is deterministic.
-This section defines how data is captured, replicated, and restored without ambiguity—database snapshots, object store versioning, WAL shipping, and state verification via cryptographic hashes.
-Every restore must prove integrity by anchoring verification hashes into the audit log, ensuring no silent corruption is possible.
+Backups are only valuable if restores are deterministic, verifiable, and provably correct.
+This section defines how Transcrypt captures, replicates, and restores system state without ambiguity. Backups cover database snapshots, WAL shipping, object store versioning, inference configuration, marketing bundles, and operational metadata.
+Every restore must include integrity validation using cryptographic hashes anchored into the audit trail, preventing silent corruption or tampered backup sets.
+
+#### **Backup and Restore Diagram**
+
+```mermaid
+flowchart LR
+    A[Snapshot Source] --> B[WAL Stream]
+    A --> C[Object Store Versions]
+    B --> D[Integrity Validator]
+    C --> D
+    D --> E[Restore Engine]
+    E --> F[Verification Surface]
+```
+
+#### **Backup Taxonomy**
+
+Transcrypt captures a full system state composed of:
+
+* **Database Snapshots**: encrypted point-in-time images
+* **WAL Segments**: continuous write-ahead logs for point-in-time recovery
+* **Object Store Versions**: evidence files, report exports, marketing bundles
+* **Inference Configuration**: manifest, prompt templates, sampling parameters
+* **Marketing Bundle**: static export, content hashes, asset manifest
+* **Migration Metadata**: version stamps, schema digests
+* **Config as Code Snapshot**: feature-flag defaults, environment schema
+* **SBOM and Provenance**: dependency graph and build identity
+* **Audit Logs**: operational events, promotion decisions, incident metadata
+
+All backups are encrypted, versioned, immutable, and tenant-isolated.
+
+#### **Frequency and Retention**
+
+Backup policies include:
+
+* continuous WAL streaming
+* daily encrypted DB snapshots
+* hourly metadata index of object storage
+* marketing bundles archived per release
+* inference configuration stored per tag
+* retention driven by regulatory requirements and tenant preferences
+* long-term storage in multi-region redundant systems
+
+All retention rules follow “minimum necessary” constraints under UK GDPR.
+
+#### **Deterministic Restore Requirements**
+
+A restore must reconstruct a **perfect replica** of the pre-failure state:
+
+* identical schema version
+* identical migration level
+* identical feature-flag defaults
+* identical inference configuration
+* identical marketing bundle hash
+* identical digest set for evidence files
+* identical tenant-separation boundaries
+* no phantom or orphaned objects
+* no skipped or double-applied migrations
+* no drift between configuration and code
+
+If any deviation is detected, the restore is rejected.
+
+#### **Integrity Validation Pipeline**
+
+Restores perform cryptographic validation:
+
+* hash DB snapshot
+* hash full WAL chain
+* hash object-store artefacts
+* hash marketing bundles
+* hash inference manifest
+* hash config snapshot
+* compare all digests against:
+
+  * audit evidence (§10.14)
+  * release geometry (§10.16)
+  * SBOM
+  * provenance
+
+Mismatch → restore aborted → operator alerted → fallback restore attempted.
+
+All validation outputs are written to the audit trail.
+
+#### **Post-Restore Regression**
+
+After restore, the system automatically executes:
+
+* inference deterministic regression
+* evaluation E2E run
+* marketing site/blog synthetic probes
+* login/signup synthetic probe
+* schema drift check
+* config-as-code drift validation
+* cross-tenant access tests
+* migration integrity verification
+* object-store consistency sweep
+
+Only after passing all checks is the restored environment considered valid.
+
+#### **Cross-Tenant Isolation Guarantees**
+
+Tenant isolation is preserved through:
+
+* per-tenant encryption boundaries
+* per-tenant namespace separation
+* versioned object-store paths
+* no cross-tenant key reuse
+* per-tenant WAL offsets
+* drift detection that ensures no tenant receives another tenant’s data
+
+Any breach triggers immediate rollback and incident process.
+
+#### **Security Constraints**
+
+Backups must adhere to strict security:
+
+* encryption at rest
+* encryption in transit
+* immutability windows
+* strict RBAC for access
+* no production secrets included in snapshots
+* backup keys stored in HSM-backed vaults
+* restore operations require multi-party approval
+* all restore steps recorded in audit logs
+
+Security is inseparable from backup integrity.
+
+#### **Audit Anchoring**
+
+Every backup and restore operation anchors into the audit trail:
+
+* snapshot hash
+* WAL chain hash
+* object-store manifest hash
+* marketing bundle hash
+* inference configuration hash
+* operator identity
+* timestamps
+* runbook execution status
+* post-restore regression results
+
+This prevents silent tampering, enables full chain-of-custody tracking, and provides forensic-grade accountability.
+
+---
 
 ### 11.4 Key, Secret, and Credential Rotation
 
