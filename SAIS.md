@@ -12920,23 +12920,768 @@ Flag changes always re-run the cumulative regression suite.
 
 ### 10.12 Pipeline Observability and SLAs
 
-Metrics: pipeline duration, queue time, pass rate, flake rate, MTTR for failed builds. Alerts when median build > target, or flake rate > threshold. Logs and traces for each job with `request_id`/`commit_sha`.
+The pipeline emits complete visibility into build behaviour, reliability, security, and inference correctness. Observability ensures that regressions, slowdown, flakiness, or supply-chain anomalies are detected immediately. SLAs define acceptable performance and stability for the CI system. Violations of SLAs block promotion under §10.9.
+
+#### **Pipeline Observability Diagram**
+
+```mermaid
+flowchart LR
+    A[Metrics Collector] --> B[Flake Detector]
+    A --> C[Trace Exporter]
+    B --> D[SLA Enforcer]
+    C --> D
+    A --> E[Drift Sensor]
+```
+
+#### **Core Pipeline Metrics**
+
+The pipeline tracks detailed quantitative metrics:
+
+* pipeline duration (mean, median, p90, p99)
+* queue time and runner wait time
+* success rate and failure count
+* flake rate (intermittent failures)
+* MTTR for broken builds
+* MTTF between failures
+* time spent in SBOM generation, signing, scanning, and attestation storage
+* time for integration tests, E2E tests, inference deterministic regression, and marketing site and blog build
+* runner resource usage (CPU, memory, storage)
+* registry throughput during pull and publish
+
+All metrics are exported through OpenTelemetry and stored in the observability backend.
+
+#### **Inference-Specific Metrics**
+
+Inference introduces behavioural and dependency risk, so the pipeline monitors:
+
+* inference deterministic regression duration
+* output divergence across builds using a fixed regression set
+* timeout rate and error rate
+* latency stability for controlled calls
+* detection of nondeterministic behaviour
+* provider availability issues
+* prompt-path correctness
+* shape validation for inference requests and responses
+
+Any inference-related regression blocks promotion automatically.
+
+#### **Marketing Site and Blog Metrics**
+
+Static site/blog build paths are monitored:
+
+* build duration
+* bundle size drift
+* hash stability of asset bundles
+* API contract-test duration
+* failure rate for site/blog tests
+* flake rate in frontend script tests
+* SRI and content-hash verification
+
+Marketing runtime instability is treated as a pipeline regression.
+
+#### **Supply-Chain and Signing Metrics**
+
+The pipeline measures the reliability of supply-chain steps:
+
+* SBOM generation failures and duration
+* provenance recording reliability
+* signature verification failures
+* attestation store write/read latency
+* registry push/pull performance
+* dependency-scan throughput
+
+Any anomaly in supply-chain steps marks the build as unsafe.
+
+#### **Traceability and Logging**
+
+Every job emits:
+
+* `request_id`
+* `commit_sha`
+* component name
+* actor identity (human or automation)
+* environment (CI, staging, or production-bound checks)
+
+Logs and traces record:
+
+* flag decisions
+* environment variable evaluation
+* inference calls made during regression
+* site/blog API interactions
+* migration attempts in ephemeral environments
+
+Traces follow the OpenTelemetry model established in §9.
+
+#### **Alerts and SLA Enforcement**
+
+Alerts fire when:
+
+* median pipeline duration exceeds target
+* queue time exceeds threshold
+* flake rate exceeds the tolerance window
+* inference regression duration or stability degrades
+* site/blog build drifts significantly in size or time
+* signing or SBOM failures occur
+* drift detection fires repeatedly
+
+SLAs define:
+
+* maximum pipeline duration
+* maximum allowable flake rate
+* minimum coverage
+* maximum MTTR
+* inference latency targets
+* site/blog build time targets
+
+SLA violations block promotion according to §10.9.
+
+#### **Canary Feedback into Pipeline SLAs**
+
+Deployment telemetry from §10.10 feeds back into pipeline observability:
+
+* inference latency under real load
+* worker queueing under canary traffic
+* marketing render performance in partial rollout
+* error rates during canary increments
+
+The pipeline incorporates canary data to refine thresholds and detect regressions earlier.
+
+---
 
 ### 10.13 Access Control and Approvals
 
-Who can: merge, tag, approve prod deploys, override gates. Mandatory two-person review for prod, with audited rationale. Break-glass path time-boxed and logged.
+Access control governs who may merge, tag, release, promote, override gates, or operate break-glass mechanisms. Approvals ensure human oversight on production-bound actions. All permissions are defined declaratively in the repo (config as code), enforced by the CI/CD platform, and validated through drift detection.
+
+#### **Access and Approval Diagram**
+
+```mermaid
+flowchart LR
+    A[Role Model] --> B[Approval Engine]
+    B --> C[Promotion Control]
+    C --> D[Breakglass Path]
+```
+
+#### **Role Model**
+
+Roles are defined in version-controlled configuration and apply across code, pipeline, and infrastructure:
+
+* **Developer**
+  may create PRs, run tests, and merge with review.
+* **Reviewer**
+  may approve PRs and schema changes.
+* **Release Manager**
+  may tag releases, approve promotions, and validate release evidence.
+* **Operator**
+  may trigger controlled deployments and rollback paths.
+* **Security Reviewer**
+  required for supply-chain, signing, and inference-config changes.
+* **Break-Glass Approver**
+  may activate emergency paths; actions are always logged.
+
+Role assignments must pass drift detection; any discrepancy blocks promotion.
+
+#### **Merge and Tag Permissions**
+
+Rules:
+
+* merges to `main` require:
+
+  * CI passing
+  * reviewer approval
+  * schema changes reviewed by security reviewer
+* tags may be created only by release managers
+* tags must reference the commit used during the signed build
+* forged or manual tags outside CI are invalid and blocked by signing verification
+
+Tagging produces a signed, immutable artefact set.
+
+#### **Release and Promotion Approvals**
+
+Staging and production promotions require:
+
+* two-person approval
+* signed release evidence verified by the CI platform
+* explicit acknowledgement of gating results from §10.9
+* validation that:
+
+  * migrations are safe
+  * inference configuration matches the signed manifest
+  * marketing site and blog bundles are valid
+  * drift detection is clean
+  * SBOM and provenance are present and correct
+
+Approvals become part of the release evidence bundle.
+
+#### **Break-Glass Controls**
+
+A controlled break-glass path exists for emergency operations:
+
+* limited to a small set of operators
+* time-boxed with automatic expiry
+* actions logged with:
+
+  * who
+  * when
+  * why
+  * request_id
+  * commit_sha
+* break-glass cannot:
+
+  * bypass signing
+  * bypass provenance
+  * deploy unsigned artefacts
+  * skip inference or site/blog contract tests
+
+Break-glass permits necessary interventions without compromising supply-chain integrity.
+
+#### **Config as Code and Drift Enforcement**
+
+Access control, reviewer rules, and approval workflows are all stored in the repo:
+
+* validated by CI on PR
+* validated by drift detection in staging and production
+* drift blocks promotion
+* changes to role definitions require approval from a security reviewer
+
+This ensures governance is versioned, auditable, and reproducible.
+
+#### **Access Logging and Audit Trail**
+
+Every privileged action is logged:
+
+* merges
+* tag creation
+* staging promotions
+* production promotions
+* break-glass activations
+* configuration changes
+* inference-config updates
+* marketing site/blog release steps
+
+Logs include `request_id`, `actor`, `commit_sha`, and timestamp, and feed into the audit evidence in §10.14 and traceability in §14.
+
+---
 
 ### 10.14 Audit Trail and Release Notes
 
-Each release produces: changelog (commits/issues), diffs to infrastructure modules, SBOM, scan summaries, test report, and links to PRD/SAIS requirement IDs touched (traceability table in §14).
+Each release produces a complete, immutable audit trail and human-readable release notes. The audit trail is the authoritative record of what changed, why it changed, how it was built, and how it was validated. Release notes summarise the behaviour, improvements, and requirement mappings. All evidence is stored with the tagged artefact set and forms part of the platform’s compliance, supply-chain, and rollback guarantees.
+
+#### **Audit Trail Diagram**
+
+```mermaid
+flowchart LR
+    A[Release Artefact] --> B[Evidence Builder]
+    B --> C[Traceability Mapper]
+    C --> D[Notes Generator]
+    D --> E[Evidence Store]
+```
+
+#### **Audit Trail Contents**
+
+Each release generates an audit bundle including:
+
+* commit log and linked issues
+* schema diffs and migration list
+* infrastructure diffs (IaC, network, config templates)
+* marketing site and blog bundle hash and asset diffs
+* inference configuration diff and manifest hash
+* SBOM for all artefacts
+* provenance statements
+* signature metadata and digest manifests
+* cumulative test report (unit, component, integration, E2E)
+* inference deterministic regression results and drift analysis
+* contract-test outcomes for API and marketing site/blog
+* performance smoke results
+* scan summaries (SAST, dependency, container, IaC, secrets)
+* CVE list for the release window
+* licence changes
+* drift detection state at promotion
+* feature flag and kill-switch changes
+* exception register entries referenced by this release
+
+The audit bundle is immutable and stored with the release tag in the artefact store.
+
+#### **Release Notes**
+
+Release notes provide a curated summary of:
+
+* new features and improvements
+* behavioural changes to evaluation or inference flows
+* updates to the marketing site and blog
+* schema changes and migrations
+* performance improvements
+* dependency upgrades
+* fixes and resolved defects
+* known issues
+* deprecations or removed capabilities
+* changes to tenant-scoped behaviour
+* changes introduced by feature flags
+
+Release notes must be consistent with the audit trail and reference links in the evidence store.
+
+#### **Traceability to PRD and SAIS**
+
+Each release includes a mapping to:
+
+* PRD requirements touched
+* SAIS components modified
+* corresponding test evidence
+* updated traceability table entries from §14
+* rationale for requirement changes
+* links to any new architectural decisions
+
+Traceability ensures that every behavioural change is anchored to a documented requirement or architectural justification.
+
+#### **Supply-Chain and Integrity Evidence**
+
+The audit trail encapsulates all supply-chain transparency required by §10.6:
+
+* SBOM
+* provenance
+* signature metadata
+* CI identity
+* build environment identity
+* content hash of all artefacts
+* site/blog export hash
+* inference config hash
+* migration bundle hash
+
+This proves that the release artefacts were produced only by CI from approved sources.
+
+#### **Rollback Evidence**
+
+Rollback capability relies on recorded evidence:
+
+* down-migration scripts
+* schema snapshot before migration
+* backup references
+* prior tag’s artefact hashes
+* prior inference configuration
+* prior marketing site/blog bundle
+* previous configuration state
+* rollback plan included in evidence
+
+All rollback-relevant data must be present in the release evidence bundle.
+
+#### **Promotion Evidence**
+
+The audit trail records:
+
+* results of canary stages from §10.10
+* gating results from §10.9
+* inference stability measures
+* marketing runtime smoke tests
+* environment symmetry checks
+* error-budget state
+* human approval metadata
+
+Promotion evidence proves that the release satisfied all architectural and operational safety requirements.
+
+---
 
 ### 10.15 Ephemeral Environments and Test Data
 
+Ephemeral environments provide isolated, disposable, IaC-defined full-stack replicas of the platform for testing changes safely. They run on every PR and during critical pipeline stages. Test data is fully synthetic, sanitised, and versioned with the artefact set. Nothing persists beyond the lifetime of the environment, ensuring drift-free, reproducible, and privacy-safe validation.
+
+#### **Ephemeral Environment Diagram**
+
+```mermaid
+flowchart LR
+    A[Environment Builder] --> B[Test Data Loader]
+    B --> C[Inference Runner]
+    B --> D[Marketing Runner]
+    C --> E[Validator]
+    D --> E
+    E --> F[Destroyer]
+```
+
+#### **Environment Definition**
+
+Ephemeral environments mirror core platform elements:
+
+* backend services
+* workers and schedulers
+* database and isolated storage
+* marketing site and blog bundle
+* inference configuration manifest
+* routing, flags, and config as code
+* OpenTelemetry logging and tracing
+
+They are created automatically on PR open and destroyed on merge, close, or TTL expiry. No manual changes are allowed.
+
+#### **Lifecycle**
+
+The pipeline triggers ephemerals for:
+
+* pull requests
+* schema validation and migration dry-runs
+* contract tests for API and marketing site/blog
+* inference deterministic regression
+* E2E smoke and performance checks
+* drift detection
+* security scanning requiring running containers
+* feature-flag previews
+* UI/UX verification for Essentials and marketing routes
+
+Each environment is unique to its PR and never shared.
+
+#### **Test Data Requirements**
+
+Test data must be:
+
+* synthetic or sanitised
+* deterministic and reproducible
+* version-controlled inside the repo
+* suitable for cumulative regression
+* representative of multi-tenant behaviour
+* compatible with schema and access control models
+
+No production data or identifiers ever appear in ephemeral environments.
+
+Seeds include:
+
+* tenants with varied roles
+* synthetic evidence items
+* uploads for evaluation flows
+* sample reports
+* feature-flag configurations
+* marketing runtime forms and public pages
+* access control variants
+* invalid or edge-case submissions
+
+Sensitive data is forbidden.
+
+#### **Inference Test Data**
+
+Inference requires a dedicated deterministic dataset:
+
+* fixed input payloads
+* expected model outputs
+* redaction-heavy examples
+* malformed payload tests
+* multi-line and long-form inputs
+* adversarial and fuzz variants
+* evaluation tasks that catch behavioural drift
+
+The pack grows cumulatively with every feature added, providing a long-lived regression trail.
+
+The inference configuration manifest used in ephemerals must be the signed version from the artefact set.
+
+#### **Marketing Site and Blog Test Data**
+
+Marketing test data covers:
+
+* static pages
+* CTAs and forms
+* API interactions exposed to public routes
+* controlled mock replies for marketing flows
+* content hash and bundle-size checks
+* navigation and rendering correctness
+
+Ephemerals run contract tests that confirm compatibility with backend APIs and enforce schema stability.
+
+#### **Security and Isolation Requirements**
+
+Ephemeral environments must:
+
+* run with minimal permissions
+* never load production secrets
+* never connect to production storage
+* use restricted egress policies
+* use isolated buckets or local mocks
+* be fully auditable through OpenTelemetry
+* comply with secret-scanning rules in §10.5
+
+Security reviewers must approve any change that alters ephemeral environment definitions.
+
+#### **Drift Prevention**
+
+Drift detection compares:
+
+* config from repo
+* environment variables
+* inference config
+* marketing site/blog bundle hash
+* IaC module versions
+* database schema
+* feature-flag defaults
+
+Any drift blocks promotion under §10.9.
+
+#### **Destroy-on-Close Policy**
+
+Ephemerals auto-destroy:
+
+* on PR close
+* on merge
+* when TTL expires
+* on inactivity
+* when CI requests teardown
+
+No residual data, artefacts, or state survives. Destruction is logged as part of the audit evidence in §10.14.
+
+---
+
 ### 10.16 Rebuild Blueprint and Deterministic Release Geometry
+
+Deterministic release geometry guarantees that any tagged release can be rebuilt exactly—bit for bit—from the repository, dependency locks, and signed configuration manifests. This includes backend binaries, containers, inference settings, marketing site and blog bundles, migrations, SBOMs, documentation bundles, and the cumulative regression evidence.
+Nothing in the build may depend on nondeterministic inputs, mutable external dependencies, or wall-clock time.
+
+#### **Deterministic Geometry Diagram**
+
+```mermaid
+flowchart LR
+    A[Deterministic Inputs] --> B[Rebuild Engine]
+    B --> C[Artefact Generator]
+    C --> D[Digest Comparator]
+    D --> E[Release Geometry]
+```
+
+#### **Rebuild Blueprint**
+
+A rebuild from a release tag must produce an identical artefact set:
+
+* backend service binaries
+* worker binaries
+* container images
+* database migration bundle
+* static marketing site and blog assets
+* inference configuration manifest
+* SBOM
+* provenance
+* signatures and digest manifests
+* PRD and SAIS documentation bundles
+* cumulative regression test evidence
+
+A rebuild must succeed in a clean runner without any cached artefacts or preloaded state.
+
+#### **Deterministic Inputs**
+
+Rebuild determinism requires all inputs to be fixed, pinned, and versioned:
+
+* repo commit
+* IaC modules
+* dependency locks (Python, Node, system packages)
+* pinned container bases
+* pinned OS-level packages
+* toolchain versions
+* static marketing configuration
+* inference manifest and prompt templates
+* feature-flag defaults
+* environment variable schema
+* migration files
+* schema definitions
+* evaluation logic
+* deterministic ordering of tasks
+
+Any mutable, externally controlled, or implicitly versioned input invalidates determinism.
+
+#### **Release Geometry**
+
+Release geometry defines the shape of a release:
+
+* one commit corresponds to one full artefact set
+* one tag corresponds to one immutable world-state
+* artefacts reference each other by digest
+* marketing bundle hash stored in audit trail (§10.14)
+* inference manifest hash stored with release artefacts
+* SBOM and provenance reconstruct the entire dependency graph
+* migrations pinned and versioned with the release
+* configuration included as signed, immutable code
+
+Geometry enforces a one-to-one mapping between code, artefacts, configuration, and behaviour.
+
+#### **Repeatable Build Rules**
+
+Builds must not vary based on:
+
+* timestamps
+* flaky ordering of filesystem reads
+* nondeterministic compilers
+* randomised test ordering
+* external network dependencies
+* environmental state outside defined variables
+
+CI enforces:
+
+* deterministic container builds
+* deterministic marketing bundle generation
+* deterministic inference behaviour controlled by manifest
+* deterministic schema processing
+
+If a build cannot be reproduced in a clean runner, the release is invalid.
+
+#### **Reproducibility Tests**
+
+The pipeline executes reproducibility checks:
+
+* rebuild artefact set from the same commit
+* compare container digests
+* compare marketing bundle hashes
+* compare inference manifest hash
+* compare SBOM
+* compare signatures
+* compare cumulative regression output
+* compare PRD/SAIS doc bundles
+* compare migration bundle
+
+Mismatch between original and rebuilt artefacts blocks promotion under §10.9.
+
+#### **Inference Determinism**
+
+Inference must obey deterministic geometry:
+
+* fixed model selection
+* fixed prompt templates
+* fixed post-processing logic
+* fixed sampling parameters
+* fixed regression test inputs
+* fixed expected outputs
+* provider drift detection
+* reproducible evaluation behaviour
+
+A release with nondeterministic inference behaviour cannot pass reproducibility checks.
+
+#### **Marketing Site and Blog Determinism**
+
+The marketing runtime must also be reproducible:
+
+* deterministic static export
+* deterministic asset hashing
+* deterministic contract-test outcomes
+* deterministic dependency resolution
+* deterministic content-hash ordering
+
+If the same commit does not produce the same site/blog bundle hash, the build geometry is broken.
+
+---
 
 ### 10.17 Documentation, Diagram, and Spec Build Integration
 
-On PR open, spin an isolated stack with seeded, sanitised data. Auto-destroy on merge/close. Test data packs live in repo; no prod data outside prod.
+Documentation, diagrams, and specifications are first-class build artefacts. They are generated, validated, and versioned alongside code, with full provenance, SBOM entries, and deterministic outputs.
+Specs include the PRD, SAIS, OpenAPI definitions, schema docs, inference configuration references, role/permission maps, and marketing API descriptions. Diagram generation is deterministic and part of CI; documentation bundles participate in release evidence and reproducibility checks.
+
+#### **Documentation Build Diagram**
+
+```mermaid
+flowchart LR
+    A[Doc Source] --> B[Diagram Renderer]
+    B --> C[Spec Compiler]
+    C --> D[Doc Bundle]
+    D --> E[Signed Export]
+```
+
+#### **Deterministic Doc and Diagram Builds**
+
+Documentation is generated using a pinned toolchain with deterministic output:
+
+* reproducible Markdown rendering
+* deterministic Mermaid rendering
+* fixed versions of pandoc, diagram engines, or export tools
+* stable ordering of diagram assets
+* stable CSS and script bundles for embedded diagrams
+* deterministic HTML and PDF exports
+
+If a rebuild from the same commit produces a different documentation bundle, the release geometry in §10.16 is violated.
+
+All documentation artefacts are included in the SBOM and provenance chain.
+
+#### **Specs as Artefacts**
+
+The build produces a complete specification bundle:
+
+* PRD
+* SAIS
+* database schema reference
+* OpenAPI definitions
+* tenancy, role, and permission models
+* inference manifest reference
+* evaluation logic description
+* marketing site/blog API documentation
+* CI/CD specification (Chapter 10)
+
+The output bundle is:
+
+* versioned
+* signed
+* stored with the release artefact
+* referenced in audit evidence (§10.14)
+
+Specs are immutable once tagged.
+
+#### **Diagram Integration**
+
+Diagrams are defined in-source and generated during CI:
+
+* sequence diagrams
+* flowcharts
+* dataflow diagrams
+* schema diagrams
+* tenant/role model diagrams
+* evaluation and inference flow diagrams
+* site/blog interaction diagrams
+
+Rules:
+
+* diagrams are never manually exported
+* diagrams are rendered via deterministic pipeline
+* diagram assets are included in the artefact bundle
+* diagram changes are diffable through PR reviews
+* syntax errors block builds
+
+This ensures diagrams match the real architecture, not a local editor’s quirks.
+
+#### **PR Build Integration**
+
+On PR open, CI must:
+
+* spin up an ephemeral environment (§10.15)
+* generate the full documentation and diagram bundle
+* attach previews to the PR
+* run diagram lints and syntax checks
+* run doc-drift detection to ensure uncommitted changes are not discarded
+* validate consistency with migrations, OpenAPI schemas, and inference config
+
+This enables reviewers to catch architectural mismatches before merge.
+
+#### **Inference Alignment**
+
+Documentation that references inference behaviour must align with the signed inference configuration manifest:
+
+* model name and version
+* prompt templates
+* post-processing logic
+* deterministic regression inputs and outputs
+* constraints around tenant-level inference settings
+* evaluation engine behaviour
+
+CI checks that inference-related documentation is consistent with the actual configuration included in the release artefact set.
+
+#### **Marketing Site and Blog Consistency**
+
+Marketing-facing docs must be included and validated:
+
+* deterministic generation of public docs
+* stable asset bundling
+* content-hash verification of embedded diagrams
+* contract tests ensuring public documentation pages render correctly
+* no divergence between docs and the marketing runtime
+
+The marketing site is part of the release artefact set, and its documentation must follow deterministic rules.
+
+#### **Spec Rebuild and Drift Detection**
+
+CI rebuilds the documentation and diagrams from a clean environment and compares:
+
+* doc bundle digest
+* diagram asset digests
+* embedded OpenAPI schema
+* inference manifest reference
+* marketing API doc section
+* migration references
+* schema diagrams
+
+Mismatch blocks promotion under §10.9.
 
 ---
 
@@ -12945,66 +13690,231 @@ On PR open, spin an isolated stack with seeded, sanitised data. Auto-destroy on 
 Day-two procedures: monitoring, backup cadence, rotation, incident response, recovery validation, and change windows.
 
 ---
+### 11.1 Operating Doctrine
 
-### 12.1 Purpose and Scope
+Transcrypt’s operational doctrine defines how the platform behaves once deployed.
+No improvisation, no silent drift, no human shortcuts, no untracked state.
+Every operational action must be **predictable**, **auditable**, **reversible**, and **provable**.
+This doctrine safeguards deterministic builds, sealed tenancy, cryptographic integrity, and unbroken evidence lineage.
 
-Defines “day-two” coverage — everything required to operate Transcrypt safely after deployment.
-Outlines which systems are in scope (API, workers, database, storage, queue, CI/CD, observability) and which are delegated to hosting provider SLAs.
+---
 
-### 12.2 Monitoring and On-Call Responsibilities
+#### 11.1.1 Philosophy of Deterministic Operations
 
-Identifies who monitors what, escalation levels, and coverage hours.
-Specifies on-call rotation, hand-off cadence, and paging policy tiers (P1-P4).
-Links alerts (§10.7) to owners and runbooks.
+Transcrypt treats operations as mathematics, not folklore.
+Runtime is a proof engine, not a playground.
 
-### 12.3 Backup and Snapshot Cadence
+Key assertions:
 
-Defines schedules per store:
+* Nothing runs without declared inputs, outputs, and side-effects.
+* No state change proceeds without an audit event.
+* Human intervention is last resort and strictly constrained.
+* Reversibility is mandatory; irreversible actions are not permitted.
 
-* **PostgreSQL:** full daily snapshot, 5-minute WAL shipping.
-* **Object Store:** versioning + weekly lifecycle archive.
-* **Redis:** hourly RDB snapshot.
-  Include validation job verifying restore integrity every 7 days.
-  Describe cross-region replication, encryption, and retention windows.
+---
 
-### 12.4 Key, Secret, and Credential Rotation
+#### 11.1.2 The Four Operational Laws
 
-Rotation intervals (API keys 90 days, access tokens 24 h, KMS keys 1 year).
-Explain automation (CI/CD hooks or vault-driven renewal) and audit log entries required.
-Emergency-revoke procedure and blast-radius expectations.
+##### Law 1: Determinism
 
-### 12.5 Incident Detection and Response
+Identical inputs must always yield identical outputs.
+Build artefacts, inference paths, and tenant flows all depend on this.
 
-Defines the detection sources (alerts, anomaly logs, user reports).
-Incident lifecycle: *Detect → Triage → Contain → Eradicate → Recover → Review.*
-Include severity matrix, SLA to first response, communication templates, and NIS2 / ICO notification paths.
-Each incident must produce a post-mortem within 5 working days.
+##### Law 2: Isolation
 
-### 12.6 Recovery and Validation Procedures
+No action may undermine tenant separation.
+If isolation is uncertain, the operation aborts.
 
-Step-by-step restore guides: database, object store, queue.
-Checklist: validate hash → restore snapshot → repoint service → verify health → record verification hash in audit log.
-State RPO / RTO targets (e.g., RPO ≤ 15 min, RTO ≤ 60 min) and test cadence (quarterly full DR drill).
+##### Law 3: Auditability
 
-### 12.7 Change Management and Maintenance Windows
+If it cannot emit an immutable audit event, it does not run.
 
-Define how changes are proposed, approved, and executed.
-Maintenance window timing, communication requirements, rollback plan, and mandatory pre-change backups.
-All changes tracked via issue ID and signed commit.
+##### Law 4: Reversibility
 
-### 12.8 Service Health Reviews and Continuous Improvement
+No change is allowed without a validated rollback path.
 
-Monthly service review: incident metrics, alert fatigue analysis, backup reliability, patch compliance.
-Track actions via backlog items.
-Feed recurring findings into pipeline gates (§11) and PRD revisions.
+---
 
-### 12.9 Compliance and Audit Evidence
+#### 11.1.3 Forbidden Operational Actions
 
-Every runbook action generates an immutable audit record (operator ID, timestamp, outcome).
-Export quarterly as evidence pack for Cyber Essentials / NIS2 audits.
-Store hash in evidence repository (§4.5).
+The following actions introduce drift, unprovable state, or cross-tenant risk and are explicitly banned:
 
-### 12.10 Tooling and Automation Interfaces
+* Direct shell access to production
+* Manual DB edits or schema mutations
+* Hot-fixes to live containers
+* Untracked configuration edits
+* Out-of-band migrations
+* Ad-hoc “quick queries”
+* Manual file or key manipulation
+* Bypassing CI/CD verifiers
+* Quietly modifying alert thresholds
+
+---
+
+#### 11.1.4 Automation Supremacy
+
+Automation is a correctness requirement.
+
+Principles:
+
+* All operations run through approved pipelines or chat-ops.
+* Pipelines enforce signature checks, dependency pinning, and environment parity.
+* Manual actions are emergency-only and must emit audit events.
+* Drift detection is continuous; detected drift is a fault requiring review.
+
+---
+
+#### 11.1.5 Blast Radius and Tenant Boundary Guarantees
+
+Rules:
+
+* No cross-tenant access at any layer.
+* Keys must remain strictly tenant-bound.
+* Logs must never reveal identifiers across tenants.
+* Restores, rebuilds, and migrations must revalidate isolation before completion.
+
+---
+
+#### 11.1.6 Audit-First Behaviour
+
+Operational work is meaningless without evidence.
+
+Requirements:
+
+* Every step emits an immutable audit event.
+* Missing events are treated as high-severity incidents.
+* Audit logs are append-only and hash-anchored.
+* Operators must confirm audit emission before runbook closure.
+
+---
+
+#### 11.1.7 Proof-Driven Operations
+
+Transcrypt treats proof as the core operational artefact.
+
+Rules:
+
+* Backups require proof-of-restore.
+* Deployments emit artefact lineage proofs.
+* DR drills produce before/after hash comparisons.
+* Inference executions emit deterministic traces.
+* Evidence flows must be mathematically verifiable end-to-end.
+
+##### Mermaid — Operational Proof Flow
+
+```
+flowchart TD
+    A[Start Operation] --> B[Declare Inputs]
+    B --> C[Execute Through Approved Tooling]
+    C --> D[Emit Audit Event]
+    D --> E[Generate Proof Artifact]
+    E --> F[Store In Evidence Log]
+    F --> G[Operation Complete]
+```
+
+---
+
+#### 11.1.8 Reversibility and Recovery Guarantees
+
+Every action must be safely undoable.
+
+Requirements:
+
+* Pre-change snapshots
+* Validated rollback scripts
+* Defined blast-radius mapping
+* Automated restore tests
+* Verification hashes confirming integrity
+
+---
+
+#### 11.1.9 Operational Minimalism
+
+Operational simplicity protects determinism.
+
+Constraints:
+
+* No exotic services unless justified
+* Minimal runtime components
+* Use battle-tested technology
+* Avoid novelty for novelty’s sake
+* Stability over fashion
+
+---
+
+#### 11.1.10 Doctrinal Summary
+
+This doctrine binds runtime behaviour to Transcrypt’s identity:
+
+* deterministic execution
+* cryptographic trust
+* sealed tenancy
+* audit certainty
+* automation-first operations
+* reversible change
+* minimal blast radius
+* proofs for every action
+
+---
+
+### 11.2 Observability, On-Call, and Operational Execution Surface
+
+Transcrypt can only be operated if it can be seen.
+This section defines what “visibility” means: the mandatory metrics, traces, logs, alerts, dashboards, and chat-ops commands that form the eyes and hands of the platform.
+On-call is not firefighting—it is the disciplined execution of predefined responses using approved tooling.
+No undocumented operational paths are permitted.
+
+### 11.3 Backup, Restore, and Integrity Validation
+
+A backup is worthless unless the restore is deterministic.
+This section defines how data is captured, replicated, and restored without ambiguity—database snapshots, object store versioning, WAL shipping, and state verification via cryptographic hashes.
+Every restore must prove integrity by anchoring verification hashes into the audit log, ensuring no silent corruption is possible.
+
+### 11.4 Key, Secret, and Credential Rotation
+
+Transcrypt’s trust boundaries depend on disciplined cryptographic hygiene.
+Rotation is not an afterthought: keys, tokens, and credentials all follow strict renewal cycles, automated where possible and dual-controlled where required.
+This section describes the renewal cadence, emergency-revoke procedures, and the resulting audit artefacts that prove the blast radius stayed contained.
+
+### 11.5 Incident Detection, Containment, and Resolution
+
+Incidents are treated as controlled failures, not surprises.
+This section defines the pathways for detection (alerts, behaviour anomalies, user reports), the containment model, and the lifecycle from triage to eradication and post-mortem.
+Each step must produce evidence of action and timing.
+Nothing is “fixed quietly”—every incident yields artefacts required by Cyber Essentials, NIS2, or ICO reporting paths.
+
+### 11.6 Deterministic Rebuild Path
+
+A system that cannot be rebuilt is a system that cannot be trusted.
+This section documents how any environment—staging, tenant space, or entire region—can be torn down and recreated identically from infrastructure-as-code, signed artefacts, and pinned versions.
+Rebuilds must produce the same topology, same policies, same hashes, and same behaviour as before the failure.
+No drift, no snowflakes.
+
+### 11.7 Tenancy Boundary Validation
+
+Transcrypt’s credibility depends on provable isolation.
+This section defines the operational tests performed before and after changes, restores, rebuilds, and incidents to guarantee tenants remain cryptographically sealed off.
+Validation includes key-binding checks, namespace separation, data access tests, and integrity-of-artefact boundaries.
+No change is complete until isolation has been re-proven.
+
+### 11.8 Evidence Lineage Protection
+
+Evidence cannot be allowed to mutate, drift, or become ambiguous.
+This section defines how evidence lineage is preserved, re-validated, and reconstructed if required.
+Integrity hashes, lineage graphs, and tamper-evident logs ensure that every artefact remains provably identical to its original submission.
+This protects tenants during audits and is a core differentiator for Transcrypt.
+
+### 11.9 Change Windows and Service Health
+
+Change is allowed only within a controlled, observable, reversible boundary.
+This section lays out maintenance window scheduling, communication requirements, pre-change backups, rollback plans, and the health checks that define “safe to proceed.”
+Monthly service-health reviews quantify alert fatigue, patch lateness, backup reliability, and operational entropy.
+
+### 11.10 Compliance Clock and Regulatory Operations
+
+Transcrypt operates within legal time constraints—deadlines for evidence retention, breach notification, and audit reporting.
+This section defines the “compliance clock”: the timers, reminders, and runbooks governing how the platform aligns with Cyber Essentials, NIS2, UK GDPR, and ICO expectations.
+Operational decisions must respect these timers; changes or incidents affecting a tenant during an audit period must follow stricter controls.
 
 List operational tooling (runbook executor, pager platform, metrics dashboard, chat-ops commands).
 Define minimal manual steps; everything else automated.
@@ -13018,12 +13928,12 @@ Quantitative targets: performance, scalability, reliability, and resource budget
 
 ---
 
-### 13.1 Purpose and Scope
+### 12.1 Purpose and Scope
 
 Define which cross-cutting qualities are considered non-functional for the MVP and how they are verified (test, telemetry, or audit).
 Explain that these metrics are **release-blocking** and traceable through §10 (Observability) and §11 (Pipeline).
 
-### 13.2 Performance Targets
+### 12.2 Performance Targets
 
 Quantitative latency and throughput budgets per critical path:
 
@@ -13034,54 +13944,54 @@ Quantitative latency and throughput budgets per critical path:
 | Report Generation (async)                                       | ≤ 2 min     | n/a         | batch         |
 | All limits measured under 80 % nominal load with 20 % headroom. |             |             |               |
 
-### 13.3 Scalability and Capacity
+### 12.3 Scalability and Capacity
 
 State horizontal-scaling behaviour: stateless services autoscale on CPU > 70 % / queue lag > 10 s.
 Database scaling via read-replicas; object store unlimited.
 Document maximum tested tenant count and evidence volume per tenant before degradation.
 Define cost ceilings per environment (links to §8.13).
 
-### 13.4 Reliability and Availability
+### 12.4 Reliability and Availability
 
 Availability ≥ 99.9 % monthly for all customer-facing endpoints.
 Planned maintenance ≤ 1 h / month.
 Mean Time To Recovery (MTTR) ≤ 30 min for P1 incidents (§12).
 List dependency SLAs (auth 99.9 %, storage 99.95 %) and composite uptime math.
 
-### 13.5 Resilience and Fault Tolerance
+### 12.5 Resilience and Fault Tolerance
 
 Describe retry, back-off, and circuit-breaker defaults.
 Each service must degrade gracefully (queue → process later, UI → show “processing”).
 Document chaos-test cadence and pass criteria (no data loss, ≤ 2× latency spike).
 
-### 13.6 Security and Privacy Benchmarks
+### 12.6 Security and Privacy Benchmarks
 
 All network traffic TLS 1.3+; encryption-at-rest AES-256.
 Secrets rotation verified ≤ 90 days (§12.4).
 Zero critical CVEs allowed at deploy (§11.5).
 Data leak probability = 0 tolerated events; monitor redaction success rate ≥ 99.99 %.
 
-### 13.7 Maintainability and Operability
+### 12.7 Maintainability and Operability
 
 CI cycle ≤ 10 min median; pipeline success ≥ 95 %.
 Static-analysis debt < 5 critical findings.
 All services observable (§10); logs parseable 100 %.
 Define target time for new engineer to deploy = ≤ 1 day (full environment setup scripted).
 
-### 13.8 Accessibility and UX Responsiveness
+### 12.8 Accessibility and UX Responsiveness
 
 WCAG 2.2 AA compliance.
 UI interaction response ≤ 200 ms for click-to-feedback on broadband, ≤ 500 ms on 3G.
 Critical flows must be operable with keyboard only.
 
-### 13.9 Sustainability and Resource Efficiency
+### 12.9 Sustainability and Resource Efficiency
 
 CPU utilisation ≤ 70 % average; memory ≤ 80 %.
 Idle instance auto-scale to zero after 30 min no traffic.
 CI/CD runners powered by shared compute where possible.
 Track CO₂-equivalent cost per build in observability dashboard (optional metric).
 
-### 13.10 Verification and Acceptance Methods
+### 12.10 Verification and Acceptance Methods
 
 Specify how each target is validated:
 
