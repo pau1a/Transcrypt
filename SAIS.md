@@ -12082,31 +12082,841 @@ All bars are recorded in the release evidence bundle and tracked across tags.
 
 ### 10.5 Security and Compliance Scans
 
-SAST/linters (per language), dependency scanning (allowlist/denylist), container scan (critical CVEs = gate), IaC scan (CIS), secrets detection (pre-receive + CI). All findings must link to tickets with SLAs.
+Security and compliance scans are enforced automatically by the pipeline and gate every merge and release. These checks guarantee that every artefact — app, workers, inference components, site/blog build, infrastructure scripts, and documentation — meets the security and supply chain requirements defined in the PRD and SAIS. No build may progress if any critical issue is detected, and all findings are traceable to tickets with SLAs.
+
+#### **Scan Overview Diagram**
+
+```mermaid
+flowchart LR
+    A[Source Snapshot] --> B[SAST]
+    B --> C[Dependency Scan]
+    C --> D[Container Scan]
+    D --> E[IaC Scan]
+    E --> F[Secrets Detection]
+    F --> G[Compliance Mapping]
+    G --> H[Release Gate]
+```
+
+#### **SAST and Static Analysis**
+
+Static analysis covers all languages and artefacts in the repo:
+
+* Python backend and workers
+* JavaScript and TypeScript for the marketing site/blog
+* shell scripts, deployment helpers, and infra utilities
+* inference client code for request construction, timeout handling, and error paths
+* redaction and PII-handling logic
+* tenancy and auth flows
+
+Rulesets enforce:
+
+* no unsafe eval or dynamic execution
+* correct use of isolation boundaries
+* safe handling of evidence data
+* correct inference request construction
+* no unauthorised access to tenant-scoped data
+
+SAST must be clean before merge.
+
+#### **Dependency Scanning**
+
+All direct and transitive dependencies are scanned:
+
+* Python requirements
+* npm dependencies for the marketing runtime
+* inference client libraries
+* build tooling dependencies
+* infrastructure scripts and IaC modules
+
+Rules:
+
+* zero critical CVEs allowed
+* high-severity CVEs block merge unless an Exception Register entry exists
+* failed scans produce CI-blocking reports
+* results feed into the SBOM generated in §10.6
+
+#### **Container and Artefact Scanning**
+
+Every built artefact is scanned for vulnerabilities and misconfigurations:
+
+* app container
+* worker container
+* inference configuration layer
+* marketing site/blog build container (if used for prerendering)
+* build utility images
+
+Findings:
+
+* critical → pipeline stops
+* high → must be resolved or explicitly excepted
+* medium/low → ticketed with SLA
+
+Scanning results are preserved in the release evidence bundle.
+
+#### **IaC and Environment Scanning**
+
+Infrastructure code is scanned for configuration issues:
+
+* droplet config
+* firewall rules
+* blue/green directory geometry
+* deployment scripts
+* storage access rules
+* SSH access configuration
+* environment variable shape validation
+
+Checks enforce CIS-aligned baselines and validate that environments cannot drift from the IaC definitions.
+
+#### **Secrets Detection**
+
+Secrets scanning is applied:
+
+* in pre-receive hooks
+* in CI across the entire tree
+* across commit history for accidental exposure
+* across inference API keys
+* across DO Spaces keys
+* across SMTP/email provider keys
+* across marketing runtime env files
+
+A detected secret halts the pipeline immediately.
+
+#### **Compliance Alignment**
+
+Scans support compliance frameworks referenced in the PRD and SAIS:
+
+* Cyber Essentials
+* high-level NCSC principles
+* internal supply-chain rules from §7
+* redaction boundary validation
+* evidence handling constraints
+
+Scan results are tied to PRD/SAIS requirements so that every security check maps to an architectural obligation.
+
+#### **Ticketing and SLAs**
+
+All scan findings generate tracked tasks:
+
+* critical: must be resolved before merge
+* high: must be resolved before release
+* medium/low: ticketed with defined SLA
+* exceptions require approval and must appear in the Exception Register (§8.11)
+
+No artefact can be promoted if any unapproved critical or high-severity finding remains.
+
+---
 
 ### 10.6 SBOM, Provenance, and Signing
 
-Generate SBOM (SPDX/CycloneDX). Sign build provenance (Sigstore/Cosign). Admission policy: only signed images with zero critical CVEs run in staging/prod. Store attestations with the release record.
+This stage produces the supply-chain artefacts that define the integrity, traceability, and reproducibility of each release. SBOMs describe the complete dependency graph. Provenance captures how artefacts were built, with what inputs, and under which tests and scans. Signing ensures that only CI-constructed and CI-verified artefacts can run in staging or production. Together they enforce the supply-chain guarantees in the PRD and SAIS.
+
+#### **SBOM, Provenance, and Signing Diagram**
+
+```mermaid
+flowchart LR
+    A[Build Outputs] --> B[SBOM Generator]
+    B --> C[Provenance Recorder]
+    C --> D[Signer]
+    D --> E[Attestation Store]
+```
+
+#### **SBOM Generation**
+
+The CI pipeline generates a complete SBOM for each build artefact using SPDX or CycloneDX:
+
+* Python dependencies for app and workers
+* npm dependencies for the marketing site and blog
+* system packages included in containers
+* inference client libraries
+* infrastructure modules and deployment scripts
+* documentation build tooling
+
+The SBOM records:
+
+* component names and versions
+* dependency relationships
+* build source URLs
+* licence metadata where available
+
+The SBOM is stored in the release evidence bundle, keyed by the tag for reproducibility and security scanning.
+
+#### **Provenance Capture**
+
+CI records a structured provenance statement for every artefact:
+
+* commit SHA and branch
+* build environment identity
+* source trees used:
+
+  * application
+  * workers
+  * inference client and configuration
+  * marketing site/blog
+  * infrastructure code
+  * PRD/SAIS documentation
+* outputs:
+
+  * container digests
+  * static export hash for site/blog
+  * doc bundle hash
+  * migration bundle
+* cumulative regression results
+* vulnerability scan outcomes
+* secrets scan outcomes
+* inference provider version and model identifiers
+
+Provenance allows deterministic reconstruction of any past release and supports investigation, compliance, and incident response.
+
+#### **Signing of Artefacts**
+
+The CI system signs all runtime artefacts with its controlled signing identity:
+
+* app container
+* worker container
+* build utility containers
+* marketing site/blog static export manifest
+* documentation bundle manifest
+* inference configuration manifest
+
+Signatures are verified before any artefact is admitted into staging or production.
+
+Rules:
+
+* only CI-signed artefacts are admissible
+* unsigned artefacts are rejected unconditionally
+* signature identity must match the trusted CI issuer
+* signature metadata is preserved in the attestation store
+
+#### **Admission Control**
+
+Staging and production accept only artefacts that satisfy all of the following:
+
+* valid CI signature
+* SBOM present and complete
+* zero critical CVEs
+* high-severity CVEs only if explicitly excepted and recorded in the Exception Register
+* provenance matches the commit SHA and tag
+* inference configuration matches the signed manifest
+* marketing site/blog assets match their signed content hash
+* infrastructure definitions match IaC state
+
+If any of these checks fail, the deploy is blocked until remediation.
+
+#### **Attestation Storage**
+
+The CI system records all SBOMs, provenance statements, signatures, and metadata in the release evidence bundle for the tag. This evidence is immutable and forms the basis for:
+
+* release audits
+* rebuild validation
+* incident reconstruction
+* change management
+* compliance submissions
+
+The attestation store is the authoritative source of truth for what was shipped and how it was produced.
+
+---
 
 ### 10.7 Artefact Management
 
-Registries, retention, and immutability. Naming: `svc-name:1.2.3+gitsha`. Keep last N builds; purge policy documented. Provenance and SBOM stored alongside.
+Artefact management defines how all build outputs are stored, versioned, promoted, and retained. It ensures every release is immutable, reproducible, auditable, and fully aligned with the SBOM, provenance, and signing rules defined in §10.6. Staging and production only fetch artefacts from this store; nothing is pushed into environments directly. Artefacts include backend services, workers, the marketing site and blog, inference configuration, migrations, documentation bundles, SBOMs, provenance statements, and signatures.
+
+#### **Artefact Management Diagram**
+
+```mermaid
+flowchart LR
+    A[Build Outputs] --> B[Artefact Store]
+    B --> C[SBOM Attached]
+    B --> D[Provenance Attached]
+    B --> E[Signatures Attached]
+    B --> F[Promotion Engine]
+```
+
+#### **Artefact Taxonomy**
+
+The system treats the following as first-class release artefacts:
+
+* backend application container
+* worker container
+* inference client and configuration manifest
+* marketing site and blog static export bundle
+* migrations bundle
+* documentation bundle for PRD and SAIS
+* SBOM for every artefact
+* provenance for every artefact
+* CI signatures and attestation metadata
+
+All artefacts are produced by CI during the canonical build and are stored as one atomic release set.
+
+#### **Registry Layout**
+
+Artefacts are stored in an immutable registry and object store:
+
+* container registry for backend and worker images
+* object store for:
+
+  * site/blog bundles
+  * documentation bundles
+  * migration bundles
+  * SBOMs
+  * provenance statements
+  * signatures and attestations
+
+Naming follows the canonical format:
+
+* `svcname:vX.Y.Z+gitsha`
+* `sitebundle:vX.Y.Z+gitsha`
+* `inferenceconfig:vX.Y.Z+gitsha`
+
+Every component of a release shares the same tag version prefix.
+
+#### **Immutability Rules**
+
+Once published under a tag:
+
+* artefacts cannot be overwritten
+* manifest files cannot change
+* no force-retagging is allowed
+* no manual uploads to the registry
+* no mutation of documentation or inference config after signing
+* staging and production can only **pull** artefacts, never receive pushed updates
+
+This enforces the supply-chain integrity guarantees in the PRD and SAIS.
+
+#### **Retention and Purge Policy**
+
+Retention applies only to untagged, intermediate builds:
+
+* keep the last N completed CI builds
+* purge older untagged artefacts on a rolling window
+* keep all tagged releases indefinitely
+* preserve SBOMs, provenance, and signatures forever for tagged releases
+
+This keeps storage manageable without compromising auditability.
+
+#### **SBOM and Provenance Binding**
+
+Every artefact in the store must be accompanied by:
+
+* its SBOM
+* its provenance statement
+* its signature and digest metadata
+
+These form a release-level “triplet of truth”, allowing any future rebuild, audit, post-incident reconstruction, or compliance check to verify exactly what was shipped.
+
+#### **Artefact Integrity Checks**
+
+Any attempt to consume an artefact in CI or deployment triggers:
+
+* signature verification
+* digest comparison with provenance
+* SBOM hash validation
+* inference configuration manifest check
+* site/blog hash tree check
+* migration bundle integrity check
+
+If any mismatch is detected, the build or deploy is immediately blocked.
+
+#### **Promotion Logic**
+
+Promotion from build → staging → production occurs through the Artefact Store:
+
+* staging pulls the tagged artefact set
+* E2E and performance smoke tests validate the running system
+* production promotion pulls the exact same artefact set
+* if any artefact is missing, unsigned, or mutated, promotion is denied
+
+This guarantees deterministic releases and prevents configuration drift between environments.
+
+---
 
 ### 10.8 Database Migrations and Backward Compatibility
 
-Rule: migrations are forward-compatible for one release; apply pre-deploy; roll back without data loss. Automate: lint DDL, dry-run in ephemeral env, block deploy if unsafe ops detected.
+Database migrations must be safe, reversible, forward-compatible for one release, and validated automatically. They form part of the deterministic artefact set defined in the PRD and SAIS: a release is not complete unless its migrations have SBOM, provenance, signatures, and tests. Migrations are applied in staging before any production rollout, and promotion is blocked if any regression, contract break, or inference inconsistency arises.
+
+#### **Migration Flow Diagram**
+
+```mermaid
+flowchart LR
+    A[Migration Proposal] --> B[Safety Checker]
+    B --> C[Ephemeral Dry Run]
+    C --> D[Staging Apply]
+    D --> E[Rollback Path]
+```
+
+#### **Migration Taxonomy**
+
+All schema-changing operations are classified explicitly:
+
+* schema changes such as new tables, columns, indexes
+* data transformations such as backfills
+* initialisation and seed data for new subsystems
+* sanitised fixtures for ephemeral environments
+* reversible and non-reversible migrations
+
+Non-reversible migrations require explicit approval and must be recorded in the Exception Register with justification, risk, and mitigation.
+
+#### **Forward Compatibility Window**
+
+Each release must operate safely against the schema of the immediate prior release:
+
+* release `vX.Y.Z` must run correctly on schema from `vX.Y.(Z-1)`
+* this enables:
+
+  * canary deploys
+  * gradual rollout
+  * safe rollback
+
+No release may introduce schema assumptions that break this one-release window.
+
+#### **Automated Safety Checks**
+
+Every migration PR triggers automated validation:
+
+* DDL linting
+* detection of destructive operations such as column drops, type shrinkage, cascade deletes
+* index verification
+* foreign key and constraint checks
+* multi-tenant boundary enforcement
+* migration ordering and dependency checks
+* expected shape validation for inference payload generation
+* contract tests to ensure API shape remains compatible for the marketing site and blog
+
+If safety checks fail, the pipeline blocks merge.
+
+#### **Ephemeral Dry-Run Execution**
+
+Migrations are executed inside an ephemeral environment before merge:
+
+* applied to a clean schema
+* applied to a sanitised schema that reflects production’s shape
+* reversed using down-migration scripts
+* validated against the cumulative regression suite
+* validated with inference deterministic test set
+* validated with contract tests for the marketing site and blog
+
+This dry-run ensures schema, data, inference, and API changes remain consistent before any release artefact is created.
+
+#### **Staging Application**
+
+When staging promotion occurs:
+
+* migrations are applied automatically
+* E2E test pack executes in full
+* deterministic inference regression executes
+* marketing site/blog tests run against the post-migration API
+* cumulative regression suite runs to confirm no behavioural drift
+
+If staging fails at any point, promotion halts and no artefact may advance to production.
+
+#### **Rollback Strategy**
+
+Rollback must be deterministic and tested:
+
+* reversible migrations include explicit down-migration scripts
+* non-reversible migrations require pre-migration backups
+* rollback restores:
+
+  * schema
+  * data
+  * inference payload behaviour
+  * API shape for the marketing runtime
+
+Rollback steps are included in the release evidence bundle so post-incident recovery is auditable and reproducible.
+
+#### **Cross-Component Compatibility**
+
+Migrations must not break:
+
+* API contracts defined in §5
+* marketing site/blog rendering flows
+* inference request construction
+* evaluation pipeline logic
+* cumulative regression guarantees
+
+If any new field affects inference prompt construction or evaluation paths, the deterministic inference suite must be updated and must pass pre-merge.
+
+#### **Schema Drift Prevention**
+
+Production and staging schemas are compared automatically:
+
+* drift detection runs before deploy
+* mismatches block promotion
+* schema state is captured in provenance
+* schema hash is recorded with the release artefact set
+
+This keeps all environments aligned with IaC and prevents unauthorised schema changes.
+
+---
 
 ### 10.9 Release Gating and Promotions
 
-Automated gates: tests green, scans clean, error budget healthy (§10), change freeze respected, approvals present. Promotions are pull-only (staging pulls from registry), never push.
+Release gating ensures that only safe, verified, signed, fully tested artefacts progress from build to staging and from staging to production. Promotions are strictly pull-only: environments fetch tagged artefact sets from the immutable store and may not be pushed to directly. All gates must pass — test, security, drift, provenance, SBOM, signature, error budget, approvals — before any release advances.
+
+#### **Gating and Promotion Diagram**
+
+```mermaid
+flowchart LR
+    A[Gate Aggregator] --> B[Evidence Validator]
+    B --> C[Drift Detector]
+    C --> D[Canary Scheduler]
+    D --> E[Promotion Engine]
+```
+
+#### **Gate Composition**
+
+A release advances only when every gate is green:
+
+* cumulative regression suite
+* contract tests for API, inference, and marketing site and blog
+* full E2E flow pack
+* performance smoke for login, evidence upload, evaluate, and report
+* security scans and zero critical CVEs
+* SBOM and provenance verification
+* signature verification for all artefacts
+* migration safety and reversibility checks
+* error-budget guardrails from observability
+* drift detection on IaC and schema
+* change freeze rules
+* human approvals
+
+No single gate may be skipped or bypassed except through break-glass, which is time-boxed and logged.
+
+#### **Pull-Only Promotion**
+
+Promotion is strictly pull-based:
+
+* staging pulls artefacts from the immutable store
+* production pulls the exact same artefacts used in staging
+* no manual modification of registries or environments
+* no hot-patching or re-tagging
+* no direct pushes into servers
+
+This enforces the immutability and supply-chain integrity defined in the PRD and SAIS.
+
+#### **Release Bundling**
+
+A release consists of the entire artefact set:
+
+* backend container
+* worker container
+* inference configuration manifest
+* marketing site and blog bundle
+* migrations bundle
+* documentation bundle
+* SBOMs
+* provenance statements
+* signatures and attestations
+
+These move together as one atomic unit. Fragmented or partial upgrades are prohibited.
+
+#### **Environment Symmetry Enforcement**
+
+Staging and production must mirror each other exactly:
+
+* same IaC version
+* same configuration
+* same inference settings
+* same feature flag defaults
+* same schema version
+* same environment variable schema
+* same routing and network geometry
+
+Drift blocks promotion until corrected.
+
+#### **Error Budget Gate**
+
+If the service has exhausted the error budget for the rolling window:
+
+* promotion is automatically blocked
+* override requires explicit, logged dual approval
+* canary deploys cannot proceed until stability returns
+
+This prevents destabilising a degraded system.
+
+#### **Change Freeze Gate**
+
+When change freeze is active:
+
+* promotions require two-person approval
+* automated promotion is disabled
+* only security or outage-related updates may proceed
+* all overrides are logged and included in the release evidence bundle
+
+The freeze state is part of the gating decision.
+
+#### **Human Approval Gate**
+
+Production promotion always requires:
+
+* two independent approvers
+* documented rationale
+* attached evidence links
+* self-approval is forbidden
+* approvals are stored in the release evidence pack
+
+No production release proceeds without this step.
+
+#### **Canary and Full Rollout Rules**
+
+Promotion from staging to production follows controlled rollout:
+
+* 5% → 25% → 100%
+* health checks at each increment
+* inference performance and correctness monitored
+* marketing site/blog render paths tested
+* automatic rollback on health degradation
+
+This ensures safe rollout of behavioural changes, especially inference-driven paths.
+
+---
 
 ### 10.10 Deployment Strategies and Rollback
 
-Default: canary (5% → 25% → 100%) with health checks; blue/green for risky changes. One-click rollback pinned to last known-good tag; DB rollback plan documented per release.
+Deployments follow controlled strategies that ensure safe, reversible, and observable rollouts. All deployment paths consume the same immutable, signed artefact set produced in §§10.3–10.7. Rollouts validate the behaviour of the backend, workers, inference subsystem, and marketing site and blog. Rollback must be deterministic and tied to the last known-good tag.
+
+#### **Deployment Flow Diagram**
+
+```mermaid
+flowchart LR
+    A[Artefact Set] --> B[Canary Stage]
+    A --> C[Blue Stage]
+    A --> D[Green Stage]
+    B --> E[Rollback Path]
+    C --> E
+    D --> E
+```
+
+#### **Canary Deployment**
+
+The default deployment method:
+
+* rollout progression: 5 percent → 25 percent → 100 percent
+* health checks at each increment for:
+
+  * API latency and error rate
+  * worker throughput and queue depth
+  * inference timeout rate and deterministic result checks
+  * marketing site and blog render flows
+  * DB performance and migration validity
+* automatic halt on any SLO breach
+* automatic rollback if health degrades
+* requires all gates in §10.9 to be satisfied before initiation
+
+Canary deploys provide behavioural safety, particularly for inference-driven components where model calls and evaluation logic can shift output sensitivity.
+
+#### **Blue and Green Deployment**
+
+Reserved for higher-risk changes:
+
+* two production-grade environments maintained in parallel
+* the green environment receives the new artefact set
+* full suite of pre-promotion checks runs against green:
+
+  * cumulative regression
+  * inference deterministic baseline
+  * contract tests for marketing site and blog
+  * performance smoke tests
+* traffic switches from blue to green only if all checks are clean
+* rollback simply switches traffic back to blue
+
+Blue/green protects against schema-heavy releases, inference behaviour changes, and other updates with high blast radius.
+
+#### **Zero-Downtime Guarantees**
+
+Deployment strategies must not interrupt core flows:
+
+* login
+* organisation creation
+* evidence upload
+* evaluation (inference-backed)
+* report generation
+* marketing landing pages
+
+Zero-downtime is achieved through:
+
+* forward-compatible schema window from §10.8
+* incremental instance rotation
+* atomic reload of inference configuration
+* serving static site/blog assets from both colours during transition
+* graceful draining of long-lived connections
+
+#### **Telemetry-Driven Rollout Control**
+
+Rollouts are governed by real-time signals:
+
+* p95 and p99 latency
+* error rates per endpoint
+* worker queue pressure
+* inference latency and timeout rate
+* inference regression pass/fail flags
+* marketing site/blog request success
+* DB migration completeness
+* infra-level resource saturation
+
+Rollouts pause automatically if any monitored metric crosses its threshold.
+
+#### **One-Click Rollback**
+
+Rollback restores the prior release reliably:
+
+* reverts to previous tagged artefact set
+* restores previous site/blog static bundle
+* restores prior inference configuration manifest
+* reverses migrations (down scripts) or restores pre-deploy snapshot
+* restores prior IaC state
+* reapplies feature flag defaults
+* validates via a reduced regression pass
+
+The rollback plan — including down-migration steps — is stored in the release evidence bundle.
+
+#### **Rollback Triggers**
+
+Rollback is initiated when:
+
+* canary health degrades
+* inference deviates from deterministic baseline
+* marketing site/blog render paths fail
+* migration issues appear
+* contract tests fail during rollout
+* drift detected between IaC and environment
+* error budget is breached
+* an operator executes manual rollback
+
+All rollbacks are logged, evidenced, and tied to the tag restored.
+
+#### **Environment Synchronisation**
+
+Successful promotion requires:
+
+* identical IaC versions
+* identical inference configuration
+* identical environment variable schema
+* identical schema version and migration state
+* identical networking and routing
+
+Any drift between staging and production blocks deployment.
+
+---
 
 ### 10.11 Feature Flags and Config Drift
 
-Flags default-off, scoped per tenant. Config is code; drift detectors in CI block deploys if env deviates from repo defaults. Kill switch playbooks referenced.
+Feature flags and configuration form part of the platform’s behavioural control plane. All configuration is treated as code, stored in the repo, versioned with the release artefact set, and subject to SBOM, provenance, and signature requirements. Flags default off, are tenant-scoped by design, and must not alter runtime behaviour unless explicitly enabled. Drift detection ensures that staging and production environments match the repo’s configuration exactly.
+
+#### **Flag and Config Flow Diagram**
+
+```mermaid
+flowchart LR
+    A[Config Repo] --> B[Drift Detector]
+    B --> C[Flag Evaluator]
+    C --> D[Kill Switch]
+    D --> E[Runtime Behaviour]
+```
+
+#### **Feature Flag Model**
+
+Flags control the activation of new features and behavioural changes:
+
+* default-off for all environments
+* may be global or tenant-scoped
+* must be fully reversible without deploy
+* evaluated per request with `request_id` and `tenant_id` logged
+* must never bypass security, tenancy, or audit boundaries
+* flag evaluations must be deterministic and included in test coverage
+
+Flags enable progressive rollout without fragmenting the codebase or violating supply-chain controls.
+
+#### **Flags and Inference Behaviour**
+
+Flags that influence inference must be included in the signed configuration manifest:
+
+* inference model selection
+* inference provider parameters such as temperature or max tokens
+* prompt template variations
+* feature-gated evaluation logic
+* inference-dependent scoring or report behaviour
+
+All inference-affected flags must:
+
+* participate in deterministic inference regression
+* be validated in staging before production promotion
+* be versioned with artefacts
+* remain reversible
+* not break cumulative regression guarantees
+
+Inference correctness is part of release gating.
+
+#### **Flag Lifecycle**
+
+Each flag must have:
+
+* an explicit owner
+* clear rollout criteria
+* a sunset date
+* test coverage
+* staging validation before production enablement
+* removal once fully deployed
+
+Long-lived flags are prohibited unless documented in the Exception Register.
+
+#### **Config as Code**
+
+Configuration is stored in version control and shipped as part of the artefact set:
+
+* static application settings
+* tenant defaults
+* feature flag definitions
+* inference configuration manifest
+* marketing site and blog config
+* environment variable schema
+* routing and API host definitions
+
+Configuration changes require PR, review, and full CI validation.
+
+#### **Drift Detection**
+
+CI and deployment pipelines validate that environment configuration matches the repo:
+
+* hash validation of config files
+* inference configuration manifest comparison
+* environment variable shape and allowed values
+* marketing bundle mapping
+* feature flag defaults
+* schema version comparison
+* IaC version comparison
+
+If staging or production deviates from the repo’s configuration, promotion is blocked until the drift is resolved.
+
+#### **Kill Switches**
+
+Kill switches provide rapid deactivation of high-risk capabilities:
+
+* global or tenant-level
+* reversible instantly
+* logged with context and timestamp
+* included in release evidence if activated
+* must not bypass supply-chain integrity or signing rules
+* may disable:
+
+  * new evaluation logic
+  * inference-backed features
+  * marketing runtime enhancements
+  * risky experimental user flows
+
+Kill switches protect operational stability without requiring emergency deploys.
+
+#### **Protection Against Behavioural Drift**
+
+Flags must not cause:
+
+* divergence between staging and production
+* silent behavioural changes in inference
+* inconsistencies in marketing site/blog API usage
+* unintended schema expectations
+* regressions in deterministic evaluation
+
+Flag changes always re-run the cumulative regression suite.
+
+---
 
 ### 10.12 Pipeline Observability and SLAs
 
