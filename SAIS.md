@@ -14502,9 +14502,148 @@ Every incident strengthens the system.
 ### 11.6 Deterministic Rebuild Path
 
 A system that cannot be rebuilt is a system that cannot be trusted.
-This section documents how any environment—staging, tenant space, or entire region—can be torn down and recreated identically from infrastructure-as-code, signed artefacts, and pinned versions.
-Rebuilds must produce the same topology, same policies, same hashes, and same behaviour as before the failure.
-No drift, no snowflakes.
+This section defines how any environment—staging, tenant space, or full region—can be torn down and recreated identically from infrastructure-as-code, pinned artefacts, and signed provenance.
+A rebuild must produce the same topology, same policies, same digests, and the same runtime behaviour as before the failure.
+No drift, no snowflakes, no hidden state.
+
+#### **Deterministic Rebuild Flow**
+
+```mermaid
+flowchart LR
+    A[IaC Source] --> B[Environment Builder]
+    B --> C[Artefact Loader]
+    C --> D[Verification Engine]
+    D --> E[Deterministic Geometry]
+```
+
+#### **Rebuild Philosophy**
+
+A rebuild must be fully declarative.
+Everything that constitutes an environment—compute, network, policies, images, migrations, inference config, marketing bundle, secrets, feature flags—is recreated from version-controlled inputs.
+No step depends on manual tweaks or undocumented operator behaviour.
+If two rebuilds produce different results, the architecture is considered compromised.
+
+#### **IaC-First Reconstruction**
+
+All environments originate exclusively from IaC:
+
+* Terraform modules for services, networks, IAM, ingress
+* Kubernetes manifests for workloads
+* Helm charts pinned to exact versions
+* object store layout defined in code
+* CDN metadata for marketing runtime
+* inference worker topology under version control
+* tenant isolation boundaries represented as code
+
+Any run-time deviation from IaC is treated as drift and must be corrected before rebuild.
+
+#### **Deterministic Inputs**
+
+Rebuild determinism requires strict immutability of inputs:
+
+* pinned containers by digest
+* pinned OS images
+* pinned Python and Node runtimes
+* pinned dependency locks
+* pinned migrations
+* pinned inference configuration
+* pinned marketing static bundle
+* pinned secrets manifests (encrypted)
+* pinned operational flags
+
+No “latest” tags.
+No floating versions.
+No environment-specific defaults.
+
+#### **Rebuild Procedure**
+
+A deterministic rebuild executes a fixed sequence:
+
+1. Destroy the environment or isolate a tenant space.
+2. Recreate infra from IaC.
+3. Pull containers and artefacts from registry by digest.
+4. Apply migrations to the expected version.
+5. Deploy services and control planes.
+6. Load inference configuration and pin behaviour.
+7. Redeploy the marketing bundle and verify digests.
+8. Reconstruct queues and state where allowed.
+9. Execute synthetic probes for login, signup, upload, evaluate, report.
+10. Execute inference regression for deterministic correctness.
+11. Check every reported hash against expected values.
+
+If any stage produces mismatched digests or behaviour, the rebuild is invalid.
+
+#### **Post-Rebuild Verification**
+
+A rebuild is not complete until automated verification confirms:
+
+* topology matches expected service graph
+* schema version and migration stamps match
+* configuration matches repo defaults
+* inference outputs match deterministic regression
+* marketing bundle matches last known digest
+* encryption boundaries match the tenant model
+* SLOs return to expected ranges
+* SBOM dependency graph matches
+* provenance chain validates for all artefacts
+* logs/traces/metrics are emitted correctly
+
+If verification fails, the environment remains quarantined.
+
+#### **Routine Versus Disaster Rebuild**
+
+Transcrypt supports two rebuild modes:
+
+* **Routine rebuilds**: periodic re-creation of staging to detect drift early
+* **Disaster rebuilds**: recreate a corrupted region, cluster, or environment
+
+Both modes use the same deterministic machinery.
+Disaster rebuilds include additional identity and key-rotation checks.
+
+#### **Tenant-Scoped Rebuilds**
+
+Tenant space rebuilds must:
+
+* preserve envelope encryption
+* reapply tenant IAM and RBAC
+* restore evidence metadata
+* regenerate tenant API keys if required
+* validate the integrity of tenant-specific inference behaviour
+* reapply isolation boundaries identical to pre-rebuild state
+
+Tenant isolation must never change between rebuilds.
+
+#### **Cryptographic Anchoring**
+
+Each rebuild produces a manifest of critical digests:
+
+* IaC module hash digest
+* container image digests
+* dependency lockfile digests
+* inference configuration digest
+* marketing bundle hash
+* object store manifest hash
+* migration set hash
+* SBOM fingerprint
+
+The rebuild is only accepted if all digests match the expected release geometry.
+
+#### **Rebuild Evidence**
+
+Every rebuild yields artefacts captured in the audit system:
+
+* timestamps
+* operator identity
+* digest comparison
+* verification results
+* drift notes
+* regression outputs
+* post-rebuild metrics
+* provenance signatures
+
+These artefacts integrate with §10.14 and §14.
+
+---
 
 ### 11.7 Tenancy Boundary Validation
 
