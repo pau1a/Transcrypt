@@ -11943,34 +11943,142 @@ The canary’s success finalises the release evidence bundle.
 
 ### 10.4 Testing Pyramid and Coverage Bars
 
-Minimum bars: unit ≥ 80% critical paths, component/integration on every merge, E2E for MVP flows (login, org create, evidence upload, evaluate, report). Contract tests for every public endpoint (§5). Fail CI if bars regress.
+The testing model defines the required layers of validation and the minimum coverage bars enforced by CI. These bars are monotonic: they never decrease unless the underlying PRD requirements change and the Exception Register is updated. All layers participate in the cumulative regression suite that runs on every merge to `main`.
 
+#### **Testing Pyramid Diagram**
 
+```mermaid
+flowchart TD
+    A[Unit] --> B[Component and Contract]
+    B --> C[Integration]
+    C --> D[E2E and System]
+    D --> E[Non Functional]
+```
 
+#### **Unit Layer**
 
+Fast, deterministic, isolated tests covering critical logic:
 
+* evaluation engine logic
+* evidence transformation
+* report templating
+* tenancy and auth helpers
+* inference client wrappers (mocked)
+* utility functions for the marketing site/blog
+* worker utilities and queue helpers
 
+**Bars:**
 
+* ≥ 80 percent coverage on critical modules
+* ≥ 60–70 percent overall project coverage
+* unit coverage may never fall below the threshold without a formal PRD/SAIS change
 
+Unit tests form the broadest layer of the cumulative suite.
 
+#### **Component and Contract Layer**
 
+Tests that validate interfaces, boundaries, and public surfaces:
 
+* contract tests for **every** public API endpoint
+* contract tests for inference request and response structure
+* contract tests for site/blog rendering primitives
+* header, auth, tenant boundary, and shape checks
+* DB model and schema contracts
 
+**Bars:**
 
+* every public endpoint must have at least:
 
+  * one happy-path contract test
+  * one auth/tenant boundary test
+* every inference-facing call must have at least:
 
+  * a shape test
+  * an error-handling test
+* addition of a new endpoint requires immediate contract tests
 
+Contract failures block promotion.
 
+#### **Integration Layer**
 
+Full subsystem integration running inside CI’s ephemeral environment:
 
+* app + DB + workers + storage + routing
+* marketing site/blog export served from the build
+* migrations applied for real
+* inference stub or controlled inference mode exercised
+* tenant lifecycle tested end-to-end
+* infra geometry validated (blue/green directories, IaC drift checks)
 
+**Bars:**
 
+* integration suite must run on **every** merge to `main`
+* no integration test may be removed without PRD/SAIS alignment
+* integration failures are treated as architectural violations
 
+#### **Integration Diagram**
 
+```mermaid
+flowchart LR
+    A[Build Artefacts] --> B[Ephemeral Environment]
+    B --> C[Migrations Applied]
+    B --> D[Workers Running]
+    B --> E[Marketing Runtime Active]
+    B --> F[Inference Contract Exercised]
+```
 
+#### **E2E and System Layer**
 
+Black-box validation of full user-visible flows:
 
+* login
+* organisation creation
+* evidence upload
+* evaluation (deterministic test set)
+* inference pathway exercised with controlled inputs
+* report creation and delivery
+* essential marketing flows such as home → CTA → signup
 
+**Bars:**
+
+* the full MVP flow pack must run on **every** merge
+* any failure blocks promotion
+* E2E coverage may **never** be reduced without PRD change approval
+* new user-visible flows must add new E2E tests
+
+These tests verify correctness across the entire platform bundle.
+
+#### **Non-Functional Layer**
+
+Light-weight performance and safety checks:
+
+* p95 performance smoke for login, evidence upload, evaluate, report
+* basic load checks for high-risk paths
+* authz leakage checks
+* tenant-isolation pressure tests
+
+These are small in quantity but mandatory.
+
+#### **Coverage Governance**
+
+CI enforces the following invariants:
+
+* coverage bars are **monotonic**: never lowered silently
+* removal or weakening of requirement-linked tests:
+
+  * must correspond to a PRD update
+  * must create an entry in the Exception Register
+* any regression in:
+
+  * unit coverage
+  * contract coverage
+  * integration coverage
+  * E2E flow completeness
+    immediately fails CI
+
+All bars are recorded in the release evidence bundle and tracked across tags.
+
+---
 
 ### 10.5 Security and Compliance Scans
 
