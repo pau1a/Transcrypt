@@ -14170,9 +14170,169 @@ This prevents silent tampering, enables full chain-of-custody tracking, and prov
 
 ### 11.4 Key, Secret, and Credential Rotation
 
-Transcrypt’s trust boundaries depend on disciplined cryptographic hygiene.
-Rotation is not an afterthought: keys, tokens, and credentials all follow strict renewal cycles, automated where possible and dual-controlled where required.
-This section describes the renewal cadence, emergency-revoke procedures, and the resulting audit artefacts that prove the blast radius stayed contained.
+Transcrypt’s trust boundaries rely on strict cryptographic hygiene.
+Keys, secrets, and credentials rotate on fixed schedules, with automated renewal for low-privilege secrets and dual-control for high-impact cryptographic material.
+Emergency revocation must be immediate, auditable, and proven safe through automated validation.
+Rotation is a supply-chain and operational control, not an auxiliary task.
+
+#### **Rotation Pipeline Diagram**
+
+```mermaid
+flowchart LR
+    A[Secret Store] --> B[Rotation Engine]
+    B --> C[Reissue Path]
+    C --> D[Validator]
+    D --> E[Audit Anchor]
+```
+
+#### **Key and Secret Classes**
+
+Rotation applies to multiple secret domains:
+
+* platform signing keys
+* artefact-signing keys
+* inference provider API keys
+* envelope encryption roots
+* per-tenant encryption keys
+* session signing keys
+* database credentials
+* object-store access keys
+* CI/CD tokens
+* marketing site/blog build tokens
+* webhook secrets
+* OIDC client secrets
+* ephemeral operator tokens
+* break-glass credentials
+
+Each category has a defined rotation cadence and isolation boundary.
+
+#### **Rotation Cadences**
+
+Rotation schedules must be encoded in config-as-code:
+
+* **frequent rotation**: CI tokens, ephemeral runtime keys
+* **monthly or quarterly**: inference provider keys, object-store keys, database credentials
+* **semiannual**: encryption roots, platform signing keys
+* **per release**: marketing build tokens, inference configuration signatures
+* **on demand**: break-glass and emergency credentials
+
+No key is “long-lived” without justification.
+
+#### **Automated vs Dual-Control Rotation**
+
+Automated rotation applies to:
+
+* CI/CD secrets
+* webhook tokens
+* database credentials (via IAM or managed identity)
+* object-store keys
+* marketing tokens
+* inference provider secondary keys
+
+Dual-control rotation applies to:
+
+* artefact-signing keys
+* platform signing keys
+* audit-log signing keys
+* envelope encryption roots
+* break-glass credentials
+* tenant-root encryption keys
+
+Dual-control requires two authorised operators and mandatory audit logging.
+
+#### **Emergency Revoke Procedure**
+
+Emergency revocation must:
+
+* be callable via approved chat-ops command
+* invalidate compromised keys instantly
+* generate new keys and propagate them via the secrets pipeline
+* trigger controlled redeploy where required
+* record operator identity, request_id, and commit_sha
+* re-run all drift detectors
+* trigger inference deterministic regression
+* trigger marketing synthetic probes
+* re-run authentication and session tests
+* anchor evidence in audit logs (§10.14)
+
+Emergency rotation must complete within defined RTO and not break tenant boundaries.
+
+#### **Blast Radius Minimisation**
+
+Rotation mechanisms enforce isolation between:
+
+* tenants
+* services
+* environments
+* build-time and run-time credentials
+* inference provider keys
+* marketing/runtime access tokens
+
+Blast radius is minimised through:
+
+* per-tenant envelope encryption
+* non-reuse of root keys
+* strict IAM scoping
+* short-lived tokens
+* environment-isolated secrets
+* automatic revocation of old paths
+* immutable history for key transitions
+
+A single compromised key must never compromise another boundary.
+
+#### **Post-Rotation Validation**
+
+After any rotation:
+
+* inference deterministic regression must succeed
+* marketing site/blog synthetic probes must pass
+* login/session flows must succeed
+* DB access tests must validate new credentials
+* object-store write/read tests must confirm access
+* signing integrity must match SBOM/provenance
+* configuration drift checks must be clean
+* migration read/write permissions must remain intact
+* cross-tenant access tests must confirm isolation
+
+If validation fails, the rotation is rolled back safely.
+
+#### **Secrets and Config Drift Detection**
+
+Drift detection catches:
+
+* orphaned old secrets
+* mismatched IAM scopes
+* out-of-sync inference keys
+* marketing/runtime tokens that fail to propagate
+* inconsistent session signing keys
+* missing revocation events
+* stale secret replicas in cache or edge layers
+
+Drift must block promotions under §10.9.
+
+#### **Audit Artefacts**
+
+Every rotation produces an audit entry containing:
+
+* key type rotated
+* trigger reason (scheduled or emergency)
+* hash of new public key (if applicable)
+* expiry timestamp for old key
+* operator identity and approval path
+* evidence of reissue propagation
+* validation results for:
+
+  * inference regression
+  * marketing runtime probes
+  * authentication tests
+  * DB/object-store validation
+  * drift checks
+* blast-radius analysis
+* immutable timestamp
+
+This evidence forms part of the compliance trail referenced in §14.
+
+---
 
 ### 11.5 Incident Detection, Containment, and Resolution
 
