@@ -14336,10 +14336,168 @@ This evidence forms part of the compliance trail referenced in §14.
 
 ### 11.5 Incident Detection, Containment, and Resolution
 
-Incidents are treated as controlled failures, not surprises.
-This section defines the pathways for detection (alerts, behaviour anomalies, user reports), the containment model, and the lifecycle from triage to eradication and post-mortem.
-Each step must produce evidence of action and timing.
-Nothing is “fixed quietly”—every incident yields artefacts required by Cyber Essentials, NIS2, or ICO reporting paths.
+Incidents are controlled failures, not surprises.
+This section defines how Transcrypt detects anomalies, triages issues, contains blast radius, resolves root causes, and records evidence for regulatory and architectural compliance.
+Every step is observable, documented, and produces artefacts required by Cyber Essentials, NIS2, and ICO reporting.
+Nothing is fixed silently. Nothing bypasses runbooks.
+
+#### **Incident Flow Diagram**
+
+```mermaid
+flowchart LR
+    A[Detection Surface] --> B[Triage Engine]
+    B --> C[Containment Layer]
+    C --> D[Resolution Engine]
+    D --> E[Audit Recorder]
+```
+
+#### **Detection Surface**
+
+Incidents are detected through multiple independent channels:
+
+* **Metrics**: latency, availability, queue depth, inference timeout rate, site/blog bundle errors
+* **Logs**: structured events showing failure patterns, auth anomalies, evaluation errors
+* **Traces**: long spans, broken spans, unusual inference graph behaviour
+* **Synthetic Probes**: login, signup, upload, evaluate, report, marketing site/blog probes
+* **Drift Detectors**: config drift, migration drift, inference config drift, marketing bundle drift
+* **Security Signals**: unexpected access attempts, suspicious OIDC flows, secret-scanning hits
+* **User Reports**: structured into incident intake queue
+* **Pipeline Signals**: failed promotions, failed reproducibility checks
+
+No single detection path is trusted alone. Redundancy eliminates blind spots.
+
+#### **Incident Classification**
+
+Once detected, an incident is classified immediately:
+
+* availability degradation
+* latency/SLO breach
+* inference drift or nondeterminism
+* evaluation correctness anomalies
+* marketing runtime failure
+* data-integrity issue
+* tenant isolation breach
+* identity/authentication incident
+* security anomaly or suspected compromise
+* configuration drift
+* dependency/library incident
+* infrastructure/cloud degradation
+
+Classification determines containment strategy and urgency.
+
+#### **Containment Layer**
+
+Containment prevents expansion of the blast radius.
+The system must support:
+
+* toggling kill switches
+* rolling back to last-known-good tags
+* disabling feature flags that cause misbehaviour
+* pausing inference or evaluation flows during drift
+* quarantining affected tenants
+* forcing config-as-code reconciliation
+* revoking compromised secrets (§11.4)
+* blocking new traffic to degraded components
+* reinstating stable marketing bundle
+* enforcing canary isolation
+
+Containment is always recorded in the audit trail and must never be improvised.
+
+#### **Resolution Engine**
+
+After containment, operators execute deterministic steps:
+
+* review telemetry across logs, metrics, traces
+* inspect migrations, config, inference manifests
+* validate object-store and DB integrity
+* reissue credentials if required
+* apply code or configuration fixes
+* re-run migrations safely
+* rebuild and redeploy corrective artefacts
+* perform targeted operational actions (restart worker pool, rehydrate queues, etc.)
+* verify recovery through probes and regression
+
+Resolution must follow approved runbooks and produce no untracked changes.
+
+#### **Post-Containment Validation**
+
+Validation ensures the platform is truly healthy:
+
+* inference deterministic regression
+* evaluation E2E flow
+* synthetic marketing route checks
+* full login/signup probe
+* schema/version drift check
+* tenant isolation verification
+* config-as-code sync validation
+* signature and SBOM verification
+
+No incident is considered resolved until validation passes end-to-end.
+
+#### **Special Handling for Inference Incidents**
+
+Inference issues receive their own lifecycle:
+
+* freeze inference to last-known-good outputs
+* pin prompt templates
+* validate inference manifest integrity
+* compare current inference outputs with regression baselines
+* disable new evaluations if drift persists
+* rotate inference keys if required
+* reconstruct deterministic geometry for upstream provider
+* validate behaviour with synthetic examples
+* re-anchor inference state in audit logs
+
+Inference drift is treated as a correctness incident, not an uptime incident.
+
+#### **Special Handling for Marketing Incidents**
+
+Marketing incidents may include bundle corruption, CDN issues, or API incompatibilities.
+Containment includes:
+
+* reverting to last-known-good bundle
+* validating content-hash match
+* verifying SRI integrity
+* rebuilding static export deterministically
+* checking all public routes via probes
+* ensuring marketing API compatibility
+
+Broken marketing runtimes must never mislead prospects or existing tenants.
+
+#### **Audit Recorder**
+
+Every incident yields immutable artefacts:
+
+* detection timestamp
+* triggering signal and category
+* operator identities
+* full timeline of events
+* containment actions
+* rollback or revoke events
+* inference drift snapshots (if relevant)
+* marketing route failures
+* DB/WAL/object-store hash evidence
+* SLO impact analysis
+* recovery validation results
+* root cause explanation
+* preventative fixes and added controls
+
+Audit records become part of compliance evidence referenced in §14.
+
+#### **Post-Mortem Discipline**
+
+Post-mortems are:
+
+* blameless
+* factual
+* evidence-backed
+* version-controlled
+* linked to PRD/SAIS components involved
+* tied to architectural changes (where required)
+
+Every incident strengthens the system.
+
+---
 
 ### 11.6 Deterministic Rebuild Path
 
