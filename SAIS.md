@@ -14647,10 +14647,143 @@ These artefacts integrate with §10.14 and §14.
 
 ### 11.7 Tenancy Boundary Validation
 
-Transcrypt’s credibility depends on provable isolation.
-This section defines the operational tests performed before and after changes, restores, rebuilds, and incidents to guarantee tenants remain cryptographically sealed off.
-Validation includes key-binding checks, namespace separation, data access tests, and integrity-of-artefact boundaries.
-No change is complete until isolation has been re-proven.
+Transcrypt’s credibility depends on *provable* isolation.
+This section defines the operational tests applied before and after deployments, migrations, restores, rebuilds, and incident recovery to guarantee that every tenant remains cryptographically sealed and behaviourally isolated.
+Validation includes key-binding checks, namespace separation, access enforcement, object-store boundary confirmation, and artefact-integrity tests.
+No change is considered complete until isolation has been re-proven.
+
+#### **Tenancy Boundary Validation Flow**
+
+```mermaid
+flowchart LR
+    A[Identity Boundary] --> D[Verification Engine]
+    B[Data Boundary] --> D
+    C[Inference Boundary] --> D
+    E[Infrastructure Boundary] --> D
+    D --> F[Isolation Proven]
+```
+
+#### **Identity Boundary Validation**
+
+Identity is the first boundary.
+Validation ensures:
+
+* every token binds to exactly one tenant using non-overlapping identifiers
+* claims include no foreign tenant metadata
+* Keycloak or external IdP mappings enforce tenant-scoped audience and groups
+* access roles cannot escalate across tenant boundaries
+* marketing runtime performs zero cross-tenant lookups
+
+Attempted cross-tenant identity use must fail cryptographically, not just logically.
+
+#### **Data Boundary Validation**
+
+Data isolation is enforced through:
+
+* envelope encryption with per-tenant data keys
+* decryption attempts across tenants producing deterministic failure
+* row-level access checks validating tenant predicates
+* object-store prefix segregation with strict deny on cross-tenant lists
+* evidence artefacts embedding tenant-bound digests
+* schema and migration tests ensuring no table leaks multi-tenant aggregates
+
+Every rebuild and restore must re-run data boundary tests before promotion.
+
+#### **Inference Boundary Validation**
+
+Inference introduces unique isolation risks.
+Validation ensures:
+
+* inference configuration manifests are tenant-scoped
+* prompt templates cannot reference another tenant’s rulepacks, labels, or metadata
+* worker queues process jobs strictly within tenant context
+* inference outputs from one tenant never reveal patterns from another
+* regression baselines include cross-tenant leak tests
+* drift detectors compare outputs against tenant-specific expected responses
+
+Inference isolation must remain intact even during provider degradation or retraining.
+
+#### **Infrastructure Boundary Validation**
+
+Infrastructure separation guarantees no accidental lateral movement:
+
+* Kubernetes namespaces are tenant-sealed
+* network policies prevent cross-tenant pod communication
+* no shared mutable volumes or filepaths
+* service accounts and IAM roles are isolated per tenant
+* no cross-tenant sidecar, daemon, or shared process
+* node-level access ensures strict compartmentalisation
+
+Infrastructure must faithfully reflect the tenant boundary model defined in IaC.
+
+#### **Operational Boundary Validation**
+
+Operational tools and human actions must remain tenant-scoped:
+
+* on-call commands enforce tenant context validation
+* rebuild workflows reinstate isolation rules from §11.6
+* snapshot and WAL fragments carry tenant-bound integrity hashes
+* incident containment (§11.5) must re-prove isolation before recovery
+* config-as-code reconciliation ensures no operator drift leaks boundaries
+
+Boundary checks must pass before any tenant-facing service is restored.
+
+#### **Cross-Tenant Penetration Tests**
+
+Transcrypt maintains a cumulative validation pack including:
+
+* foreign decryption attempts
+* cross-tenant API access attempts
+* namespace traversal checks
+* inference cross-contamination probes
+* object-store prefix traversal denial proofs
+* RBAC escalation attempts
+* marketing surface injection attempts
+
+Any failure marks the change as unsafe and blocks promotion.
+
+#### **Artefact Boundary Integrity**
+
+Artefacts carry tenant-specific digests:
+
+* SBOM fingerprints recorded per tenant
+* rulepack bundles must include tenant signatures
+* inference manifest digests must match expected tenant-scope geometry
+* evidence bundles include tenant-bound hash anchors
+* provenance metadata must validate per tenant
+
+No artefact from tenant A can ever be accepted in tenant B.
+
+#### **Pre- and Post-Change Validation**
+
+Boundary validation runs:
+
+* before migrations
+* before release promotion
+* before inference manifest update
+* after restore
+* after rebuild
+* after incident containment
+* during drift detection
+* during disaster reconstruction of a region
+
+Isolation must be *continuously proven*, not periodically assumed.
+
+#### **Evidence of Isolation**
+
+The validation outputs include:
+
+* boundary probe logs
+* access-denial traces
+* decryption-failure proofs
+* namespace and policy manifests
+* inferred behaviour snapshots
+* prefix and artefact digest results
+* SBOM and provenance checks
+
+All evidence is stored in the audit subsystem and linked to §14.
+
+---
 
 ### 11.8 Evidence Lineage Protection
 
