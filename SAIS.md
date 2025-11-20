@@ -16063,33 +16063,632 @@ Security is binary: it is either correct or it is not.
 
 ### 12.7 Maintainability and Operability
 
-CI cycle ≤ 10 min median; pipeline success ≥ 95 %.
-Static-analysis debt < 5 critical findings.
-All services observable (§10); logs parseable 100 %.
-Define target time for new engineer to deploy = ≤ 1 day (full environment setup scripted).
+Maintainability and operability define how consistently and predictably Transcrypt can be built, run, debugged, and improved without human improvisation.
+These requirements ensure that engineers experience the platform as **deterministic**, **observable**, and **reproducible**, mirroring the guarantees provided to customers.
+
+All benchmarks here are **release-blocking**, validated through telemetry (§10), enforced through pipeline geometry (§11), and designed to uphold the PRD doctrines of **sealed tenancy**, **boring infrastructure**, and **no silent drift**.
+
+---
+
+#### **12.7.1 CI and Pipeline Behaviour**
+
+The CI pipeline must behave predictably, fail fast, and produce bit-identical builds.
+
+* **Cycle time:** median ≤ 10 minutes
+* **Pipeline success:** ≥ 95%
+* **Failure mode:** failures must be deterministic and attributable
+* **Tasks included:**
+
+  * schema checks
+  * static analysis
+  * redaction regression tests
+  * dependency scanning for CVEs
+  * reproducible build checks
+* **Trigger behaviour:** only changed components are retested; full builds run before deploy
+* **No flaky tests:** any non-deterministic test is a release blocker
+
+##### Diagram — CI Execution Path
+
+```mermaid
+flowchart LR
+    CodePush[Push] --> CIStart[CI Start]
+    CIStart --> Static[Static Analysis]
+    CIStart --> Tests[Unit and Integration Tests]
+    Tests --> Redaction[Redaction Tests]
+    Static --> SCA[CVE Scan]
+    SCA --> Build[Deterministic Build]
+    Redaction --> Build
+    Build --> Deploy[Deploy Only if All Green]
+```
+
+---
+
+#### **12.7.2 Static Analysis and Code Health**
+
+Static analysis enforces code correctness, prevents silent drift, and guards long-term maintainability.
+
+* **Critical findings:** < 5 allowed
+* **High severity:** must be resolved or time-boxed via §9.11
+* **Reporting:** results published automatically in CI
+* **Consistency:** rulesets version-controlled and stable across environments
+* **Security alignment:** static checks include secret leakage detection, unsafe patterns, and permission misuse
+
+##### Diagram — Static Analysis Flow
+
+```mermaid
+flowchart LR
+    Source[Source Code] --> Lint[Static Analysis Engine]
+    Lint --> Findings[Findings Report]
+    Findings --> Gate[Pipeline Gate]
+    Gate -->|Fail| Block[Block Release]
+    Gate -->|Pass| Continue[Continue Pipeline]
+```
+
+---
+
+#### **12.7.3 Observability and Log Parseability**
+
+All services must produce **fully parseable**, **schema-validated**, **tenant-scoped** telemetry as defined in §10.
+
+* **Log parseability:** 100% — malformed logs are not permitted
+* **Structured logs:** strict schema; schema drift treated as a failure
+* **Trace coverage:** every critical operation produces a trace span
+* **Request correlation:** IDs propagate through gateway → workers → storage
+* **Redaction:** logs must be pre-redacted; raw evidence is forbidden
+* **Alerting:** log schema violations and dropped spans generate audit events
+
+##### Diagram — Observability Contract
+
+```mermaid
+flowchart LR
+    Services[Services] --> Logs[Structured Logs]
+    Services --> Traces[Traces]
+    Services --> Metrics[Metrics]
+    Logs --> Collector[Collector]
+    Traces --> Collector
+    Metrics --> Collector
+    Collector --> Dashboards[Dashboards]
+```
+
+---
+
+#### **12.7.4 Environment Reproducibility**
+
+Environment setup must be deterministic and fully scripted.
+
+* **Local → staging parity:** identical configs except secrets
+* **Setup:** one-script bootstrapping for dev environment
+* **Dependencies:** pinned; no mutable fetches
+* **DB:** seeded with deterministic fixture packs
+* **Containers:** version-locked images; rebuilds must be reproducible
+* **No manual steps:** any undocumented manual action is a defect
+
+##### Diagram — Environment Reproduction Path
+
+```mermaid
+flowchart LR
+    Script[Setup Script] --> LocalEnv[Local Environment]
+    Script --> StagingEnv[Staging Environment]
+    LocalEnv --> Match[Parity Check]
+    StagingEnv --> Match
+```
+
+---
+
+#### **12.7.5 Onboarding and Developer Productivity**
+
+New engineers must become effective rapidly without tribal knowledge.
+
+* **Onboarding time:** ≤ 1 day from repo clone to first successful deploy (local or staging)
+* **Documentation:** included in repo; build + deploy steps immutable
+* **Dev tooling:** preconfigured scripts for linting, seeding, and running services
+* **Smoke tests:** engineers can run them locally with one command
+* **Dashboards:** access granted immediately on onboarding
+
+##### Diagram — Onboarding Flow
+
+```mermaid
+flowchart LR
+    Clone[Clone Repo] --> Setup[Run Setup Script]
+    Setup --> LocalRun[Run Local Services]
+    LocalRun --> Tests[Run Tests]
+    Tests --> Deploy[Deploy to Staging]
+```
+
+---
+
+#### **12.7.6 Operational Determinism**
+
+Operational behaviour must be stable, reproducible, and free of surprises.
+
+* **Configuration drift:** forbidden — pipeline checks enforce config parity
+* **Runtime inference:** none; eliminates model skew, cold starts, and stochastic failures
+* **Release behaviour:** predictable rollout with health checks and audit events
+* **Operational invariants:**
+
+  * same inputs → same outputs
+  * same deploy → same behaviour across all environments
+* **Incident response:** runbook-driven; no improvisation
+* **Scripting:** all operational activities automated and version-controlled
+
+##### Diagram — Deterministic Operations
+
+```mermaid
+flowchart LR
+    Config[Config and Scripts] --> DeployA[Deploy Env A]
+    Config --> DeployB[Deploy Env B]
+    DeployA --> BehaviourA[Same Behaviour]
+    DeployB --> BehaviourB[Same Behaviour]
+```
+
+---
 
 ### 12.8 Accessibility and UX Responsiveness
 
-WCAG 2.2 AA compliance.
-UI interaction response ≤ 200 ms for click-to-feedback on broadband, ≤ 500 ms on 3G.
-Critical flows must be operable with keyboard only.
+Accessibility and responsiveness define how reliably and predictably users can interact with Transcrypt across devices, network conditions, and ability levels.
+These requirements ensure the interface remains **calm, deterministic, and operable** even during degraded backend conditions, directly supporting the PRD commitment to boring, safe, predictable infrastructure.
+
+All targets in this section are **release-blocking**, verifiable through telemetry (§10), enforced by pipeline gates (§11), and aligned with the principles of sealed tenancy and deterministic behaviour.
+
+---
+
+#### **12.8.1 Accessibility Guarantees**
+
+Accessibility is a platform-level invariant. Critical paths must remain operable to all users without exception.
+
+* **Baseline:** WCAG 2.2 AA compliance
+* **Semantic correctness:** consistent aria-labels, roles, headings, and focus order
+* **Colour contrast:** meets AA minimum at all zoom levels
+* **Screen reader paths:** deterministic, no hidden elements or shifting hierarchy
+* **Error surfaces:** screen-reader readable; predictable DOM structure
+* **Motion:** no animations essential for navigation or meaning
+
+##### Diagram — Accessibility Flow
+
+```mermaid
+flowchart LR
+    UI[UI Components] --> Semantics[Semantic Markup]
+    Semantics --> Readers[Screen Readers]
+    Semantics --> Keyboard[Keyboard Navigation]
+    UI --> Visuals[Visual Presentation]
+```
+
+---
+
+#### **12.8.2 Interaction Responsiveness Budgets**
+
+Responsiveness guarantees ensure that users experience the platform as stable and trustworthy.
+
+* **Click-to-feedback:**
+
+  * ≤ 200 ms on broadband
+  * ≤ 500 ms on 3G or equivalent
+* **Navigation transition:** ≤ 300 ms median
+* **Skeletons:** appear within ≤ 100 ms; no layout shift
+* **Jitter:** ≤ 20% deviation from median interaction latency
+* **Heavy views (tables, charts):** must maintain responsiveness budgets through virtualization or staged rendering
+
+##### Diagram — Interaction Timing
+
+```mermaid
+flowchart LR
+    Click[User Click] --> Measure[Measure Latency]
+    Measure --> Feedback[Visual Feedback]
+```
+
+---
+
+#### **12.8.3 Keyboard-only Operability**
+
+Every critical workflow must be fully operable using the keyboard alone.
+
+* **Navigation:** Tab, Shift+Tab, Enter, Space, Escape
+* **Focus behaviour:** visible at all times; no hidden traps
+* **Interactive components:**
+
+  * dropdowns operable via keyboard
+  * modals trap and restore focus correctly
+* **Global shortcuts:** optional, but must be deterministic
+* **No mouse-exclusive affordances:** hover-only interaction is forbidden for required steps
+
+##### Diagram — Keyboard Flow
+
+```mermaid
+flowchart LR
+    Tab[Tab Order] --> Focus[Focus State]
+    Focus --> Action[Action via Enter or Space]
+    Action --> Next[Next Focus Target]
+```
+
+---
+
+#### **12.8.4 Graceful Degradation in the UI Layer**
+
+UI behaviour must remain predictable even during backend delays, saturation, or partial outage.
+
+* **State display:** always show “processing” or skeletons; never freeze
+* **Avoid duplicate actions:** disable buttons or throttle client-side events
+* **Consistency:** no jittery transitions; no vanishing focus
+* **Isolation:** degraded behaviour for one tenant must not affect another
+* **Retry visibility:** UI clearly communicates when an action is queued
+
+##### Diagram — UI Degradation Path
+
+```mermaid
+flowchart LR
+    Request[User Action] --> Backend[Backend Check]
+    Backend -->|Healthy| Update[Immediate Update]
+    Backend -->|Delayed| Pending[Show Processing State]
+    Pending --> Telemetry[Emit UX Metrics]
+```
+
+---
+
+#### **12.8.5 UX Telemetry and Measuring Responsiveness**
+
+Responsiveness must be **measured**, not assumed.
+
+* **Metrics gathered:**
+
+  * click-to-render
+  * first contentful paint
+  * interactive load time
+  * route change latency
+  * CPU cost of heavy components
+* **Collection:** telemetry emitted from client to §10 pipeline
+* **Synthetic checks:** simulate low-end devices and throttled networks
+* **Regression detection:** any increase in interaction latency beyond jitter thresholds blocks release
+* **Failure surface:** degraded UX triggers audit events and error-budget burn
+
+##### Diagram — UX Telemetry Loop
+
+```mermaid
+flowchart LR
+    Browser[Browser Events] --> Metrics[UX Metrics]
+    Metrics --> Collector[Collector]
+    Collector --> Dashboards[Dashboards and SLOs]
+```
+
+---
 
 ### 12.9 Sustainability and Resource Efficiency
 
-CPU utilisation ≤ 70 % average; memory ≤ 80 %.
-Idle instance auto-scale to zero after 30 min no traffic.
-CI/CD runners powered by shared compute where possible.
-Track CO₂-equivalent cost per build in observability dashboard (optional metric).
+Sustainability and resource efficiency ensure that Transcrypt operates within stable, predictable limits across compute, storage, energy usage, and cost.
+These requirements preserve deterministic behaviour, avoid drift, and maintain the integrity of both performance envelopes (§12.2) and capacity ceilings (§12.3).
+
+All constraints here are **release-blocking**, continuously measured via §10 telemetry, and enforced via §11 pipeline geometry.
+
+---
+
+#### **12.9.1 Compute Efficiency Guarantees**
+
+Compute efficiency ensures stable latency, predictable scaling physics, and zero jitter induced by resource exhaustion.
+
+* **CPU utilisation:** ≤ 70% sustained average
+* **Memory utilisation:** ≤ 80% sustained average
+* **Jitter control:** compute spikes must not push critical-path latencies outside §12.2 budgets
+* **Concurrency bands:** worker concurrency capped to prevent CPU starvation
+* **Tenant safety:** heavy tenants cannot push system utilisation above defined ceilings
+* **Frontend efficiency:** minimise excessive JS parsing, heavy re-render loops, and chatty polling
+
+##### Diagram — Compute Envelope
+
+```mermaid
+flowchart LR
+    Load[Incoming Load] --> Scheduler[Worker Scheduler]
+    Scheduler --> CPU[CPU Budget\n<= 70%]
+    Scheduler --> Memory[Memory Budget\n<= 80%]
+    CPU --> Telemetry[Telemetry]
+    Memory --> Telemetry
+```
+
+---
+
+#### **12.9.2 Storage Growth and Evidence Lifecycle Boundaries**
+
+Storage sustainability ensures evidence and artefacts grow predictably and never overload the droplet’s resources.
+
+* **Evidence growth:** tracked per tenant; bounded by plan tier
+* **Object lifecycle rules:** archival or tiering for stale artefacts where applicable
+* **Database growth:** indexing and partitioning rules must prevent runaway bloat
+* **No infinite retention:** optional data retention policies must be supported
+* **Redaction stores:** tracked and rotation-cleaned
+* **Disk utilisation thresholds:** alerts at 70%, 85%, 95% with progressive gating
+
+##### Diagram — Storage Lifecycle
+
+```mermaid
+flowchart LR
+    Evidence[Evidence Items] --> Store[Object Store]
+    Store --> Lifecycle[Lifecycle Rules]
+    Lifecycle --> Archive[Archive or Retain]
+    Lifecycle --> Delete[Safe Delete]
+```
+
+---
+
+#### **12.9.3 Idle Resource Reclamation**
+
+Idle environments must release compute to prevent drift, cost creep, and long-running side effects.
+
+* **Scale-to-zero:** non-critical workers auto-scale to zero after 30 minutes idle
+* **Cold-start guarantees:** resume within deterministic windows aligned with §12.2 budgets
+* **Memory hygiene:** prevents unseen long-lived leaks
+* **Queue hygiene:** idle queues cleared and health-checked on wake
+* **Environment parity:** dev/staging follow same reclamation behaviours where possible
+
+##### Diagram — Idle Reclamation Flow
+
+```mermaid
+flowchart LR
+    Idle[No Traffic] --> Timer[Idle Timer 30m]
+    Timer --> ScaleZero[Scale to Zero]
+    ScaleZero --> Wake[Wake on Demand]
+    Wake --> Ready[Ready State]
+```
+
+---
+
+#### **12.9.4 CI/CD Resource Efficiency**
+
+Build-time sustainability ensures reproducible builds, stable CI performance, and no unnecessary energy or compute usage.
+
+* **Shared compute:** CI runners operate on shared, predictable compute to ensure reproducible timings
+* **Build weight tracking:** monitor container image sizes and dependency inflation
+* **Test cost metrics:** track CPU and memory per test suite
+* **Artifact pruning:** prevent accumulation of stale build outputs
+* **Cold-path consistency:** cold rebuilds must match warm rebuilds with no behavioural drift
+* **Budget alerts:** pipeline reports on growing compute cost over time
+
+##### Diagram — Build Resource Loop
+
+```mermaid
+flowchart LR
+    Pipeline[CI Pipeline] --> Compute[Shared Compute]
+    Compute --> Metrics[Build Metrics]
+    Metrics --> Dashboards[Dashboards]
+    Dashboards --> Alerts[Resource Drift Alerts]
+```
+
+---
+
+#### **12.9.5 Sustainability Metrics and Drift Detection**
+
+All sustainability targets must be measurable, continuously monitored, and auditable.
+
+* **Telemetry:** CPU, memory, storage, queue depth, evidence growth
+* **CO₂-equivalent metric:** optional; derived from compute cost as drift indicator
+* **Budget thresholds:** alerts when envelopes move beyond tolerance
+* **Historical baselines:** week-over-week growth tracked and visualised
+* **Pipeline enforcement:** resource regressions can block release
+* **Zero silent drift:** any deviation triggers audit events and investigation
+
+##### Diagram — Drift Detection
+
+```mermaid
+flowchart LR
+    Metrics[Resource Metrics] --> Baseline[Historical Baseline]
+    Baseline --> Compare[Compare]
+    Compare -->|Deviation| Alert[Drift Alert]
+    Compare -->|Stable| OK[Within Envelope]
+```
+
+---
 
 ### 12.10 Verification and Acceptance Methods
 
-Specify how each target is validated:
+Verification and acceptance methods define how all NFRs in §12 are **proven**, **audited**, and **enforced**.
+A release may not proceed unless **all critical NFRs** meet their thresholds or are formally and time-boxed via §9.11.
 
-* Automated load tests in CI (staging).
-* Synthetic monitors for p95 latency.
-* Chaos drills for resilience.
-* Accessibility scanner reports.
-  A release may not proceed unless all “critical” NFRs are green or formally waived in §9.11 (Exception Register).
+Verification must be **machine-evaluated**, **repeatable**, **deterministic**, and **recorded as immutable artefacts**.
+Acceptance is the strict gateway controlling whether Transcrypt can be deployed.
+
+---
+
+#### **12.10.1 Verification Plan**
+
+Verification spans pipeline execution, staging with synthetic tenants, and production observability gates.
+
+* **CI verification:**
+
+  * static analysis
+  * redaction regression
+  * CVE scanning
+  * log-schema validation
+  * configuration drift checks
+  * secret age checks
+  * deterministic build verification
+  * load micro-benchmarks
+
+* **Staging verification:**
+
+  * synthetic tenant behaviour
+  * rule-eval latency and jitter
+  * queue fairness and slice correctness
+  * multi-tenant isolation tests
+  * resilience and chaos drills
+  * accessibility scans
+  * keyboard-only path checks
+
+* **Production verification:**
+
+  * pre-deploy SLO/saturation checks
+  * canary latency + error-rate stability
+  * resource envelope alignment
+  * secret age alarms
+  * redaction error counter = 0
+
+##### Diagram — Verification Plan Overview
+
+```mermaid
+flowchart LR
+    CI[CI Verification] --> Staging[Staging Verification]
+    Staging --> Production[Production Gates]
+    Production --> Decision[Deployment Decision]
+```
+
+---
+
+#### **12.10.2 Acceptance Criteria**
+
+Acceptance criteria define which conditions must be green to allow a release.
+
+* **Performance (§12.2):**
+
+  * p95 latency thresholds
+  * jitter ceilings
+  * throughput budgets
+
+* **Scalability (§12.3):**
+
+  * tenant concurrency bands
+  * worker capacity limits
+  * queue-lag thresholds
+
+* **Reliability (§12.4):**
+
+  * synthetic checks pass
+  * MTTR predictions stable
+  * dependency SLA coverage
+
+* **Resilience (§12.5):**
+
+  * chaos scenarios produce no data loss
+  * back-pressure flows behave deterministically
+
+* **Security and privacy (§12.6):**
+
+  * zero critical CVEs
+  * secret age ≤ 90 days
+  * TLS config match
+  * redaction ≥ 99.99%
+
+* **Maintainability and operability (§12.7):**
+
+  * CI ≤ 10 minutes median
+  * logs parseable 100%
+  * build reproducibility
+
+* **Accessibility and UX responsiveness (§12.8):**
+
+  * WCAG 2.2 AA scanner score
+  * click-to-feedback ≤ budget
+  * keyboard paths pass
+
+* **Sustainability (§12.9):**
+
+  * CPU ≤ 70%
+  * memory ≤ 80%
+  * storage thresholds green
+
+##### Diagram — Acceptance Flow
+
+```mermaid
+flowchart LR
+    Verify[Verification Results] --> Criteria[Acceptance Criteria Check]
+    Criteria -->|Pass| Approve[Approved for Release]
+    Criteria -->|Fail| Block[Blocked Release]
+```
+
+---
+
+#### **12.10.3 Pipeline Enforcement**
+
+Pipeline gates enforce non-negotiable certification points.
+
+* **Critical NFRs:** zero tolerance
+* **Failure visibility:** all failures logged as structured artefacts
+* **No flaky tests:** nondeterministic tests must be fixed or disabled explicitly
+* **Immutable evidence:** all reports stored in artefact vault with hash anchors
+* **Configuration validation:** environment configs must match approved Build Geometry
+* **Dependency enforcement:** pinned version drift = pipeline fail
+
+##### Diagram — Pipeline Gate
+
+```mermaid
+flowchart LR
+    PipelineStart[Pipeline Start] --> Checks[Critical NFR Checks]
+    Checks -->|Fail| Stop[Fail Pipeline]
+    Checks -->|Pass| Release[Proceed to Deploy]
+```
+
+---
+
+#### **12.10.4 Staging and Synthetic Tenants**
+
+Staging must behave as the **truth environment**, containing deterministic, seeded tenant states.
+
+* **Seeded tenants:** configuration, evidence, rule sets, and usage patterns
+* **Load profiles:** synthetic load matching real-world distributions
+* **Chaos drills:** executed against isolated staging tenants
+* **UI degradation tests:** skeletons, progress states, recovery flow
+* **Multi-tenant fairness tests:** queue slicing, worker isolation
+* **Cold-start tests:** ensures predictable start behaviour
+
+These results are captured as immutable artefacts with structured metrics.
+
+##### Diagram — Staging Verification Loop
+
+```mermaid
+flowchart LR
+    Seed[Seed Tenants] --> Load[Apply Synthetic Load]
+    Load --> Tests[Run NFR Tests]
+    Tests --> Artefacts[Store Artefacts]
+```
+
+---
+
+#### **12.10.5 Production Observability Gates**
+
+Before and after deployment, production must meet strict observability requirements.
+
+* **Pre-deploy gates:**
+
+  * SLO dashboards green
+  * error budgets intact
+  * resource ceilings under budget
+  * secret rotation age valid
+  * redaction miss counter = 0
+
+* **Post-deploy canary:**
+
+  * p95 stability
+  * no error-rate spikes
+  * no concurrency imbalance
+  * queue fairness maintained
+  * UX telemetry stable (click-to-feedback within budget)
+
+##### Diagram — Production Gate
+
+```mermaid
+flowchart LR
+    Pre[Pre Deploy Checks] --> Deploy[Deploy]
+    Deploy --> Canary[Canary Observation]
+    Canary -->|Stable| Promote[Promote Release]
+    Canary -->|Unstable| Rollback[Rollback]
+```
+
+---
+
+#### **12.10.6 Exception Handling and Waivers**
+
+Some NFR failures may be acceptable under explicit, time-boxed conditions.
+
+* **Exception register:** §9.11 governs all waivers
+* **Owner required:** a named engineering owner
+* **Expiry:** hard expiry date
+* **Rollback plan:** must exist and be tested
+* **Audit visibility:** exceptions are logged as immutable artefacts
+* **Limited scope:** critical NFRs generally cannot be waived
+
+##### Diagram — Exception Handling
+
+```mermaid
+flowchart LR
+    Failure[NFR Failure] --> Review[Exception Review]
+    Review -->|Approved| Register[Add to Exception Register]
+    Review -->|Rejected| Block[Block Release]
+```
 
 ---
 
