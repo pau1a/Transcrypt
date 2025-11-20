@@ -1,5 +1,15 @@
 # **Product Design Specification (PDS)**
 
+This document defines the design behaviour of Transcrypt’s MVP. It translates the product intent described in the PRD and the system boundaries defined in the SAIS into concrete, testable user-facing design rules. Where the PRD establishes purpose and constraints, and the SAIS describes the architecture that realises them, the PDS specifies how the product presents, behaves, and communicates in the user’s hands.
+
+The PDS is not a branding guide or a high-fidelity visual spec. It defines structure, hierarchy, interaction patterns, layout systems, states, and flows that are invariant across surfaces. Every screen, component, and journey described here is directly constrained by requirements already set in the PRD and implemented in the SAIS. No part of the visual or interaction model may contradict those documents. The PDS expresses them in the language of design rather than engineering.
+
+This is the definitive reference for how Transcrypt should *feel* to use: predictable, calm, unambiguous, and deterministic. All interactions must support the platform’s core commitments — clarity, auditability, and trust — while ensuring that users always understand what state they are in, what they can do, and what happens next.
+
+The PDS is authoritative for all design decisions and remains stable unless the PRD or SAIS undergo material change. Any modification to behaviour, layout, or interface patterns must maintain traceability back to those documents. The PDS ensures that Transcrypt is implemented consistently across Marketing, Essentials, and all authenticated or unauthenticated surfaces.
+
+---
+
 # **1. Purpose and Scope**
 
 # **2. Relationship to PRD and SAIS**
