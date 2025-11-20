@@ -104,11 +104,11 @@ Every state transition must have a visible reason. Whether a field is required, 
 
 ### **3.1.4 Calm Interfaces**
 
-Transcrypt’s interface must feel stable, quiet, and measured. Calm interfaces use generous spacing, clear typographic hierarchy, restrained motion, and predictable component behaviour. Noise, visual clutter, aggressive cues, and decorative animations are forbidden. Calmness also applies to timing: feedback is immediate but not frantic; changes are visible but not flashy. The UI must reflect the product’s purpose — controlled, methodical, and trustworthy.
+Transcrypt’s interface must feel stable, quiet, and measured. Calm interfaces use generous spacing, clear typographic hierarchy, restrained motion, and predictable component behaviour. Noise, visual clutter, aggressive cues, and decorative animations are forbidden. Calmness also applies to timing: feedback is immediate but not frantic; changes are visible but not flashy. The UI must reflect the product’s purpose — controlled, methodical, and trustworthy. Marketing surfaces may use expressive visual composition, including elevated hero cards, expanded spacing, and attention-oriented emphasis, provided behaviour remains deterministic and semantic meaning is unchanged.
 
 ### **3.1.5 Cross-Surface Consistency**
 
-Marketing and Essentials are two expressions of the same system and must behave accordingly. Buttons, forms, spacing rules, validation patterns, navigation structures, and interaction logic must be consistent across both surfaces. A user switching from reading a blog article to managing evidence should feel continuity rather than transition. Consistency is a signal of competence and a prerequisite for trust.
+Marketing and Essentials share the same behavioural contract, semantic meaning, and determinism. Visual expressiveness may diverge: Marketing may employ higher elevation, stronger typographic hierarchy, and expanded spacing for storytelling and conversion, while Essentials remains calm and restrained. Buttons, forms, spacing rules, validation patterns, navigation structures, and interaction logic must be consistent across both surfaces. A user switching from reading a blog article to managing evidence should feel continuity rather than transition. Consistency is a signal of competence and a prerequisite for trust.
 
 ### **3.1.6 Progressibility**
 
@@ -153,6 +153,7 @@ Users must always have a path back. Mistakes should not trap them. If a workflow
 ### **3.2.6 Cross-Surface Predictability**
 
 Marketing and Essentials must follow the same behavioural logic. Forms behave the same way. Validation behaves the same way. Navigation timing behaves the same way. Progress indicators behave the same way. A user switching surfaces should experience continuity, not contrast. Two runtimes, one behavioural contract.
+Predictability applies to behaviour and meaning, not visual emphasis. Marketing may diverge visually but must not diverge semantically or behaviourally.
 
 ### **3.2.7 Honest Timing**
 
@@ -202,9 +203,9 @@ All system-driven behaviour must be visible. No silent saves, silent retries, si
 
 Internal structures such as microservices, pipelines, rule-engine internals, evidence hashing, inference routing, or architectural topology must never surface in the UI. Users must not encounter technical terminology, abstractions, or concepts that belong within system design rather than user experience.
 
-### **3.3.7 No Marketing–Essentials Divergence**
+### **3.3.7 Controlled Marketing Divergence**
 
-The Marketing and Essentials runtimes must not diverge in tone, behaviour, hierarchy, spacing, interaction patterns, or validation logic. Both surfaces must follow the same behavioural contract. Marketing is not permitted louder, brighter, or more stylistically permissive patterns.
+Marketing surfaces may use expressive layouts, mid-level elevation, asymmetrical compositions, and stronger typographic hierarchy for clarity and conversion. These divergences must never alter semantic meaning, determinism, system state, or behavioural consistency. Essentials retains a calm, neutral, tightly controlled visual system.
 
 ### **3.3.8 No Funnel or Manipulative Behaviour**
 
@@ -309,7 +310,7 @@ Cerulean is the sole brand accent, used sparingly and with explicit purpose:
 * Occasional highlights in hero sections.
 * Selected focus states.
 
-Essentials may use cerulean **only** where interaction genuinely requires visibility, not as decoration. It must never appear:
+Essentials use cerulean only for explicit interaction affordances. Marketing may use cerulean more broadly for hero emphasis, CTAs, narrative blocks, and scannability, provided semantic colours remain untouched. It must never appear:
 
 * As a semantic signal (success, warning, error, info).
 * As a background for data-heavy views.
@@ -351,7 +352,7 @@ To maintain determinism and prevent drift:
 5. **No new hues** added at implementation time.
 6. **Accessibility first** — contrast must precede aesthetic considerations.
 7. **Inference neutrality** — model outputs use muted neutrals, never cerulean or semantics.
-8. **Cross-surface identity** — Marketing does not get a “fun” variant of the colour system.
+8. **Cross-surface identity** — Marketing may employ expressive composition of approved tokens, including accent-forward CTAs and hero treatments, but may not introduce new hues or semantic-adjacent colours.
 
 Any future rebrand must respect this system. Changes to hue, scale, or usage require explicit revision of §4.1 and must be logged as a system modification, not a marketing decision.
 
@@ -392,6 +393,8 @@ Typographic usage is governed by strict behavioural rules:
 * **Semantic state reinforcement** — success, warning, error, and info regions must not rely exclusively on colour; typography must signal severity through structure.
 * **Cross-surface consistency** — the same component uses identical type values in Marketing pages, Essentials screens, and verifier mode.
 
+Marketing surfaces may use enhanced hierarchy, increased type scale, and bold display patterns for hero sections, while Essentials retains a restrained typographic structure.
+
 Links are styled with cerulean only when interactive and never as general emphasis.
 CTA buttons derive their typographic identity from their component class, not from context.
 
@@ -416,12 +419,11 @@ Breakpoints adjust layout, not type scale.
 To maintain clarity and avoid drift:
 
 1. **No expressive fonts.** The visual identity is calm, technical, and minimal.
-2. **No decorative typography** in Marketing headers — identity comes from clarity, not spectacle.
+2. Marketing may use expressive typography within the approved ramp; Essentials must remain strictly structural.
 3. **No bold accents** for anything other than explicit interactive components.
-4. **No typographic “play”** in blog posts — long-form content must remain steady and accessible.
-5. **No using larger or heavier type** to imply system authority or “AI intelligence”.
-6. **No typographic variability** between roles (owner, advisor, verifier). Typography is a constant.
-7. **No shrinking type below accessibility thresholds**, regardless of density.
+4. **No using larger or heavier type** to imply system authority or “AI intelligence”.
+5. **No typographic variability** between roles (owner, advisor, verifier). Typography is a constant.
+6. **No shrinking type below accessibility thresholds**, regardless of density.
 
 Typography becomes part of Transcrypt’s operational truth: precise, legible, and identical across contexts.
 
@@ -464,6 +466,7 @@ Transcrypt employs a stable vertical rhythm so that content flows with calm pred
 
 Vertical rhythm prevents the jagged, restless appearance common in SaaS dashboards.
 It allows users to skim comfortably, even when processing dense information such as evaluation breakdowns.
+Marketing may expand spacing scales and use asymmetrical hero layouts to create narrative emphasis, provided spacing tokens are still used.
 
 Marketing pages use the same rhythm with slightly expanded spacing — never different spacing rules, simply different composition.
 
@@ -492,12 +495,11 @@ If a layout changes, it is always due to breakpoint logic, never content volume.
 To protect structural clarity:
 
 1. **No arbitrary whitespace increases or reductions** for aesthetic balance.
-2. **No unique layouts** created for “special” pages or promotional content.
+2. Essentials must use strict layout patterns. Marketing may use expressive spacing, asymmetry, negative space, and editorial layout patterns for storytelling and attention capture.
 3. **No component resizing based on role** — owner, advisor, and verifier views share identical spacing.
 4. **No inference-generated content** may introduce new spacing patterns, padding, or alignment behaviour.
-5. **No negative space used for emotional effect** — spacing must remain functional, not expressive.
-6. **No collapsed padding** allowed unless explicitly defined within a component’s own rules.
-7. **No asymmetrical gutters** unless the layout pattern specifically calls for them.
+5. **No collapsed padding** allowed unless explicitly defined within a component’s own rules.
+6. **No asymmetrical gutters** unless the layout pattern specifically calls for them.
 
 Spacing becomes part of the product’s operational consistency. It creates a feeling of solidity, trustworthiness, and calm. When layouts never behave erratically, users understand the product more quickly and remain anchored even under audit pressure.
 
@@ -518,7 +520,7 @@ Key properties:
 
 * A fixed **maximum content width** keeps reading comfortable and prevents “enterprise dashboard sprawl”.
 * All layouts derive from **one grid**, not variations invented per page.
-* Marketing pages use the same grid but with different composition, never different rules.
+* Marketing uses the same grid primitives but may employ asymmetric compositions, extended max-width containers, and editorial hero structures. Essentials uses stricter, fixed-layout patterns.
 * Essentials uses the grid for evidence lists, evaluation summaries, control breakdowns, tenant settings, and PDF export layouts.
 * Advisor and verifier views inherit identical constraints; role changes the data, not the geometry.
 
@@ -567,7 +569,7 @@ Marketing reflows with the same logic — the only difference is breathing room.
 
 To maintain system integrity:
 
-1. **No bespoke grid overrides** for “unique” pages or special content.
+1. Essentials may not override grid rules. Marketing may use expanded or editorial container layouts as long as tokens and breakpoint logic remain intact.
 2. **No alternate max-width containers** — the grid must feel like the same architecture everywhere.
 3. **No custom breakpoints** added by designers or developers in isolation.
 4. **No asymmetric layouts** unless explicitly defined as a supported pattern.
@@ -667,10 +669,10 @@ Illustrations in Transcrypt follow strict constraints:
 * Flat vector
 * Two-tone (neutral + cerulean)
 * No characters, mascots, faces, hands, or “infographic humans”
-* No metaphorical imagery
-* Geometric abstractions only
 * At most two shapes + one motion cue (e.g., upward arrow)
 * Must never imply live automation
+
+Essentials uses minimal, functional illustrations only. Marketing may use expressive, editorial illustrations provided they remain professional, tokenised, and non-semantic.
 
 Allowed locations:
 
@@ -712,7 +714,7 @@ Every symbol reinforces the same message:
 
 Elevation and depth in Transcrypt define how components stack, interact, and establish hierarchy. They communicate priority, focus, and interaction boundaries without theatrics or emotional expression. Depth is not visual flair — it is structural geometry, an invariant behavioural contract enforced across Marketing, Essentials, advisor surfaces, verifier mode, and any future inference-assisted contexts.
 
-Nothing floats arbitrarily. Nothing hovers for show. Nothing casts decorative shadows. Elevation exists **only** to clarify interaction and state, reflecting Transcrypt’s identity as calm, boring, deterministic infrastructure.
+Nothing floats arbitrarily. Nothing hovers for show. Nothing casts decorative shadows. Elevation exists to clarify interaction and state for Essentials while giving Marketing a controlled channel for expressive visual hierarchy. Essentials remains calm, boring, deterministic infrastructure; Marketing may create attention and storytelling depth without altering meaning or behaviour.
 
 ---
 
@@ -731,8 +733,8 @@ Tokens:
 Rules:
 
 * Tokens cannot be created ad hoc; new levels require a PDS amendment.
-* Marketing uses far fewer elevation points (mostly 0 and 1).
-* Essentials uses all, with modals representing the structural apex.
+* Essentials uses elevation strictly for interactional hierarchy, with modals representing the structural apex.
+* Marketing may use elevation 0–3 for expressive visual hierarchy but not for functional overlays.
 * No token alters colour or shadow softness — all shadows are minimal, crisp, and neutral.
 
 Shadows (for elevation indication):
@@ -764,6 +766,8 @@ Navigation follows similar rules:
 * **Header bar:** elevation 1 (fixed)
 * **Left sidebar:** elevation 1 (persistent)
 * **Right advisor panel:** elevation 2 (contextual)
+
+Marketing may use elevation levels 0–3 for expressive visual hierarchy, including raised cards, hover lifts, and layered hero compositions. Essentials uses elevation strictly for interaction and state (menus, drawers, modals). Marketing may not use functional elevation components such as modals, popovers, drawers, or overlays.
 
 No screen may override these defaults without explicitly updating the system.
 
@@ -810,9 +814,9 @@ Exports ignore elevation entirely — depth is interaction-only, never baked int
 
 Depth states carry interaction meaning:
 
-* **Hover** may only lighten borders or background; it must not uplift the component.
+* **Hover** may lighten borders or background; Marketing cards and CTAs may use a micro-elevation (up to Elevation 1) for emphasis, while Essentials hover states remain flat.
 * **Focus** must use a clear, thick (2px) cerulean outline — never elevation.
-* **Active state** may use a micro-elevation (Elevation 1) *only on components that are inherently interactive* (menus, dropdowns).
+* **Active state** may use a micro-elevation (Elevation 1) *only on components that are inherently interactive* (menus, dropdowns) or Marketing hero/CTA treatments that require emphasis.
 
 Elements that **must not** use depth:
 
@@ -823,8 +827,6 @@ Elements that **must not** use depth:
 * Form fields
 
 These rely on colour, border, and spacing — not elevation.
-
-Hover/active elevation is forbidden on Marketing CTAs, which remain flat to avoid ornamental behaviour.
 
 ---
 
@@ -838,7 +840,7 @@ This is where the system draws hard boundaries:
 4. **No neumorphism, glassmorphism, parallax, or modernist “soft UI”.**
 5. **No deep shadows exceeding elevation 3 rules.**
 6. **No inference-driven UI that appears on a separate “plane” or implies AI magic.**
-7. **No elevation in Marketing beyond level 1.**
+7. Essentials retains strict elevation rules; Marketing uses expressive depth for visual storytelling but must not mimic application-state behaviours or functional overlays.
 8. **No stacked modals for any reason.**
 9. **No shadow changes on viewport resize.**
 
