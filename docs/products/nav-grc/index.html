@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Transcrypt – Boring, Safe Infrastructure for Cyber Essentials</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg-page: #0f172a;
+      --bg-hero: #020617;
+      --bg-section: #f5f7fa;
+      --bg-card: #ffffff;
+      --border-subtle: #d1d5db;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --text-invert: #f9fafb;
+      --brand-accent: #3b82f6;   /* Cerulean */
+      --brand-accent-soft: #93c5fd;
+      --brand-accent-deep: #1d4ed8;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --shadow-soft: 0 14px 40px rgba(15, 23, 42, 0.3);
+      --shadow-card: 0 10px 28px rgba(15, 23, 42, 0.12);
+
+      --success-bg: #ecfdf5;
+      --success-border: #bbf7d0;
+      --success-text: #166534;
+
+      --warn-bg: #fffbeb;
+      --warn-border: #fed7aa;
+      --warn-text: #92400e;
+
+      --err-bg: #fef2f2;
+      --err-border: #fecaca;
+      --err-text: #b91c1c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1f2937 0, #020617 52%, #020617 100%);
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+      scroll-behavior: smooth;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* Layout wrappers */
+    .page {
+      min-height: 100vh;
+      color: var(--text-main);
+    }
+
+    .max-w {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+    }
+
+    section {
+      padding: 80px 0;
+    }
+
+    @media (min-width: 1024px) {
+      section {
+        padding: 100px 0;
+      }
+    }
+
+    /* NAVBAR */
+
+    .nav-shell {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .nav {
+      position: relative;
+      z-index: 40;
+      transition: background 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .nav-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .nav-logo-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: radial-gradient(circle at 20% 0%, var(--brand-accent-soft) 0, var(--brand-accent-deep) 45%, #020617 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.65);
+      color: var(--text-invert);
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .nav-logo-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    .nav-logo-text span:first-child {
+      color: var(--text-invert);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+    }
+
+    .nav-logo-text span:last-child {
+      color: #9ca3af;
+      font-size: 0.7rem;
+    }
+
+    .nav-links {
+      display: none;
+      align-items: center;
+      gap: 1.5rem;
+      font-size: 0.85rem;
+    }
+
+    @media (min-width: 860px) {
+      .nav-links {
+        display: flex;
+      }
+    }
+
+    .nav-link {
+      color: #e5e7eb;
+      position: relative;
+      padding-bottom: 0.15rem;
+      cursor: pointer;
+    }
+
+    .nav-link span {
+      opacity: 0.85;
+    }
+
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -3px;
+      width: 0;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(to right, var(--brand-accent-soft), var(--brand-accent));
+      transition: width 0.2s ease;
+    }
+
+    .nav-link.active span,
+    .nav-link:hover span {
+      opacity: 1;
+      color: #f9fafb;
+    }
+
+    .nav-link.active::after,
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    .nav-cta-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .nav-cta {
+      border-radius: 999px;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.95rem;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      color: #e5e7eb;
+      cursor: pointer;
+      background: radial-gradient(circle at top, rgba(148,163,184,0.16), rgba(15,23,42,0.8));
+      display: none;
+    }
+
+    @media (min-width: 860px) {
+      .nav-cta {
+        display: inline-flex;
+      }
+    }
+
+    .nav-cta-primary {
+      border-radius: 999px;
+      font-size: 0.8rem;
+      padding: 0.45rem 1.2rem;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--brand-accent), var(--brand-accent-deep));
+      color: #f9fafb;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.65);
+      white-space: nowrap;
+    }
+
+    .nav-cta-primary span.icon {
+      font-size: 0.9rem;
+    }
+
+    .nav-mobile-toggle {
+      display: inline-flex;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      align-items: center;
+      justify-content: center;
+      color: #e5e7eb;
+      cursor: pointer;
+    }
+
+    @media (min-width: 860px) {
+      .nav-mobile-toggle {
+        display: none;
+      }
+    }
+
+    .nav-mobile {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 1.25rem 0.9rem;
+      display: none;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .nav-mobile.open {
+      display: flex;
+    }
+
+    .nav-mobile-link {
+      font-size: 0.85rem;
+      color: #e5e7eb;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.7);
+      cursor: pointer;
+    }
+
+    .nav-mobile-cta {
+      margin-top: 0.3rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-scrolled {
+      background: rgba(15, 23, 42, 0.96);
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+      box-shadow: 0 14px 40px rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(10px);
+    }
+
+    /* HERO */
+
+    .hero {
+      background: radial-gradient(circle at top, #1f2937 0, #020617 52%, #020617 100%);
+      color: var(--text-invert);
+      padding-top: 40px;
+      padding-bottom: 80px;
+    }
+
+    @media (min-width: 1024px) {
+      .hero {
+        padding-top: 50px;
+        padding-bottom: 100px;
+      }
+    }
+
+    .hero-grid {
+      display: grid;
+      gap: 2rem;
+    }
+
+    @media (min-width: 960px) {
+      .hero-grid {
+        grid-template-columns: 1.3fr 1fr;
+        align-items: center;
+      }
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      padding: 0.15rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #e5e7eb;
+      background: rgba(15, 23, 42, 0.7);
+      margin-bottom: 0.9rem;
+    }
+
+    .hero-title {
+      font-size: clamp(1.9rem, 3.2vw, 2.4rem);
+      font-weight: 650;
+      line-height: 1.1;
+      margin-bottom: 0.6rem;
+    }
+
+    .hero-title span.accent {
+      background: linear-gradient(135deg, var(--brand-accent-soft), var(--brand-accent-deep));
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 0.95rem;
+      color: #d1d5db;
+      max-width: 34rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .hero-ctas-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-cta-primary {
+      border-radius: 999px;
+      padding: 0.6rem 1.4rem;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--brand-accent), var(--brand-accent-deep));
+      color: #f9fafb;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      box-shadow: 0 18px 45px rgba(37, 99, 235, 0.65);
+    }
+
+    .hero-cta-secondary {
+      border-radius: 999px;
+      padding: 0.55rem 1.3rem;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      cursor: pointer;
+      background: rgba(15, 23, 42, 0.8);
+      color: #e5e7eb;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .hero-footnote {
+      font-size: 0.78rem;
+      color: #9ca3af;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.9rem;
+    }
+
+    .hero-stat {
+      border-radius: 12px;
+      padding: 0.7rem 0.8rem;
+      background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.3), rgba(15,23,42,0.9));
+      border: 1px solid rgba(148,163,184,0.5);
+      font-size: 0.75rem;
+      color: #e5e7eb;
+    }
+
+    .hero-stat-number {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.1rem;
+    }
+
+    .hero-right {
+      position: relative;
+    }
+
+    .hero-panel {
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(15, 23, 42, 0.96));
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-panel-tag {
+      font-size: 0.75rem;
+      color: #e5e7eb;
+      margin-bottom: 0.4rem;
+      opacity: 0.9;
+    }
+
+    .hero-panel-headline {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #e5e7eb;
+      margin-bottom: 0.2rem;
+    }
+
+    .hero-panel-sub {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 0.7rem;
+    }
+
+    .hero-panel-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid rgba(55, 65, 81, 0.8);
+      color: #e5e7eb;
+    }
+
+    .hero-panel-row:last-child {
+      border-bottom: none;
+    }
+
+    .hero-chip {
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: rgba(15, 118, 110, 0.2);
+      color: #a5f3fc;
+      border: 1px solid rgba(45, 212, 191, 0.5);
+    }
+
+    .hero-chip-warn {
+      background: rgba(250, 204, 21, 0.1);
+      color: #facc15;
+      border-color: rgba(234, 179, 8, 0.7);
+    }
+
+    .hero-chip-ok {
+      background: rgba(34, 197, 94, 0.08);
+      color: #4ade80;
+      border-color: rgba(74, 222, 128, 0.6);
+    }
+
+    .hero-panel-footer {
+      margin-top: 0.8rem;
+      font-size: 0.76rem;
+      color: #9ca3af;
+    }
+
+    .hero-glow-orbit {
+      position: absolute;
+      right: -60px;
+      top: 40px;
+      width: 260px;
+      height: 260px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(59,130,246,0.38), rgba(15,23,42,0));
+      opacity: 0.8;
+      pointer-events: none;
+      filter: blur(0);
+    }
+
+    .hero-floating-pill {
+      position: absolute;
+      bottom: -6px;
+      left: 30px;
+      border-radius: 999px;
+      padding: 0.3rem 0.7rem;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      font-size: 0.72rem;
+      color: #e5e7eb;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    /* SECTION: HOW IT WORKS */
+
+    .section-light {
+      background: var(--bg-section);
+    }
+
+    .section-heading {
+      text-align: center;
+      margin-bottom: 1.9rem;
+    }
+
+    .section-heading-eyebrow {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .section-heading-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: var(--text-main);
+    }
+
+    .section-heading-sub {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      max-width: 36rem;
+      margin: 0 auto;
+    }
+
+    .pill-tabs {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 0.2rem;
+      border: 1px solid var(--border-subtle);
+      background: #e5e7eb;
+      margin: 0 auto 1.5rem;
+    }
+
+    .pill-tab {
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.8rem;
+      border: none;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .pill-tab.active {
+      background: #ffffff;
+      color: var(--text-main);
+      box-shadow: 0 4px 12px rgba(148,163,184,0.45);
+    }
+
+    .how-grid {
+      display: grid;
+      gap: 1.2rem;
+    }
+
+    @media (min-width: 960px) {
+      .how-grid {
+        grid-template-columns: 1.4fr 1fr;
+      }
+    }
+
+    .how-flow {
+      border-radius: var(--radius-md);
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      padding: 1rem;
+      box-shadow: var(--shadow-card);
+      font-size: 0.83rem;
+    }
+
+    .how-step {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+    }
+
+    .how-step-index {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      background: #eff6ff;
+      color: #1d4ed8;
+      flex-shrink: 0;
+      border: 1px solid #bfdbfe;
+    }
+
+    .how-step-body-title {
+      font-weight: 600;
+      margin-bottom: 0.1rem;
+    }
+
+    .how-step-body-text {
+      color: var(--text-muted);
+    }
+
+    .how-quick-stats {
+      border-radius: var(--radius-md);
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      padding: 1rem;
+      box-shadow: var(--shadow-card);
+      font-size: 0.83rem;
+    }
+
+    .how-stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.35rem 0;
+      color: var(--text-muted);
+    }
+
+    .how-stat-row span:first-child {
+      font-size: 0.8rem;
+    }
+
+    .how-stat-row span:last-child {
+      font-size: 0.83rem;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .chip-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28rem;
+      border-radius: 999px;
+      padding: 0.12rem 0.5rem;
+      font-size: 0.73rem;
+      border: 1px solid var(--border-subtle);
+      background: #f9fafb;
+      color: var(--text-muted);
+    }
+
+    .chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--brand-accent);
+    }
+
+    /* FEATURES GRID */
+
+    .features {
+      background: #0b1220;
+      color: #e5e7eb;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .features::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(59,130,246,0.35), transparent 55%);
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .features-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .feature-grid {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1.8rem;
+    }
+
+    @media (min-width: 960px) {
+      .feature-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .feature-card {
+      border-radius: var(--radius-md);
+      background: radial-gradient(circle at top left, rgba(148,163,184,0.24), rgba(15,23,42,0.96));
+      border: 1px solid rgba(148,163,184,0.7);
+      padding: 0.9rem 1rem 1rem;
+      font-size: 0.83rem;
+      box-shadow: 0 16px 35px rgba(15,23,42,0.7);
+      transform: translateY(0);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 22px 55px rgba(15,23,42,0.85);
+      border-color: var(--brand-accent-soft);
+      background: radial-gradient(circle at top left, rgba(59,130,246,0.22), rgba(15,23,42,0.96));
+    }
+
+    .feature-tag {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #9ca3af;
+      margin-bottom: 0.2rem;
+    }
+
+    .feature-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .feature-text {
+      font-size: 0.8rem;
+      color: #cbd5f5;
+    }
+
+    .feature-foot {
+      margin-top: 0.5rem;
+      font-size: 0.76rem;
+      color: #9ca3af;
+    }
+
+    /* PRICING SNAPSHOT */
+
+    .pricing-grid {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1.8rem;
+    }
+
+    @media (min-width: 880px) {
+      .pricing-grid {
+        grid-template-columns: 1.1fr 1fr;
+      }
+    }
+
+    .pricing-card-main {
+      border-radius: var(--radius-lg);
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      padding: 1.2rem 1.4rem;
+      box-shadow: var(--shadow-card);
+      font-size: 0.85rem;
+    }
+
+    .pricing-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 0.2rem;
+    }
+
+    .pricing-price {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 0.1rem;
+    }
+
+    .pricing-sub {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 0.6rem;
+    }
+
+    .pricing-list {
+      list-style: none;
+      padding: 0;
+      margin: 0.4rem 0 0.7rem;
+    }
+
+    .pricing-list li {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .pricing-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #16a34a;
+      flex-shrink: 0;
+    }
+
+    .pricing-cta-wrap {
+      margin-top: 0.5rem;
+    }
+
+    .pricing-cta {
+      border-radius: 999px;
+      padding: 0.55rem 1.3rem;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--brand-accent), var(--brand-accent-deep));
+      color: #f9fafb;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      box-shadow: 0 14px 32px rgba(37,99,235,0.6);
+    }
+
+    .pricing-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    .pricing-side {
+      border-radius: var(--radius-md);
+      background: #ffffff;
+      border: 1px dashed var(--border-subtle);
+      padding: 1rem 1.1rem;
+      font-size: 0.82rem;
+    }
+
+    .pricing-side-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .pricing-side-item {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    /* FAQ */
+
+    .faq-grid {
+      max-width: 720px;
+      margin: 1.8rem auto 0;
+    }
+
+    .faq-item {
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      background: #ffffff;
+      margin-bottom: 0.6rem;
+      overflow: hidden;
+    }
+
+    .faq-header {
+      padding: 0.6rem 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .faq-header-title {
+      max-width: 85%;
+    }
+
+    .faq-toggle {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .faq-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.2s ease;
+      padding: 0 0.8rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .faq-body-inner {
+      padding-bottom: 0.7rem;
+    }
+
+    .faq-item.open .faq-body {
+      max-height: 200px;
+    }
+
+    /* FOOTER */
+
+    .footer {
+      background: #020617;
+      color: #9ca3af;
+      padding: 1.5rem 0 2rem;
+      font-size: 0.78rem;
+    }
+
+    .footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.8rem;
+      align-items: center;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: #9ca3af;
+    }
+
+    /* BACK TO TOP */
+
+    .back-to-top {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 28px rgba(15,23,42,0.7);
+      z-index: 50;
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    /* SCROLL REVEAL */
+    .reveal {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* MODAL */
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(600px, 90vw);
+      background: #0b1220;
+      border-radius: 16px;
+      border: 1px solid rgba(148,163,184,0.7);
+      box-shadow: 0 24px 60px rgba(15,23,42,0.9);
+      padding: 1rem 1.1rem 1.1rem;
+      color: #e5e7eb;
+      font-size: 0.85rem;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+
+    .modal-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.8);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .modal-body {
+      font-size: 0.82rem;
+      color: #cbd5f5;
+    }
+
+    .modal-flow {
+      margin-top: 0.6rem;
+      border-radius: 10px;
+      border: 1px solid rgba(148,163,184,0.7);
+      padding: 0.6rem 0.7rem;
+      background: radial-gradient(circle at top left, rgba(59,130,246,0.18), rgba(15,23,42,0.98));
+      font-size: 0.8rem;
+    }
+
+    .modal-flow-step {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .modal-flow-step-index {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      flex-shrink: 0;
+    }
+
+    .modal-footer {
+      margin-top: 0.7rem;
+      font-size: 0.76rem;
+      color: #9ca3af;
+    }
+
+  </style>
+</head>
+<body>
+<div class="page" id="top">
+
+  <!-- NAV -->
+  <div class="nav-shell">
+    <nav class="nav" id="mainNav">
+      <div class="nav-inner">
+        <div class="nav-left">
+          <div class="nav-logo-mark">T</div>
+          <div class="nav-logo-text">
+            <span>Transcrypt</span>
+            <span>Boring, safe infra for compliance</span>
+          </div>
+        </div>
+        <div class="nav-links">
+          <div class="nav-link" data-scroll="#hero"><span>Overview</span></div>
+          <div class="nav-link" data-scroll="#how"><span>How it works</span></div>
+          <div class="nav-link" data-scroll="#features"><span>Why Transcrypt</span></div>
+          <div class="nav-link" data-scroll="#pricing"><span>Pricing</span></div>
+          <div class="nav-link" data-scroll="#faq"><span>FAQ</span></div>
+        </div>
+        <div class="nav-cta-row">
+          <button class="nav-cta" data-scroll="#pricing">Pricing</button>
+          <button class="nav-cta-primary" id="navTourBtn">
+            <span>Product tour</span>
+            <span class="icon">↗</span>
+          </button>
+          <button class="nav-mobile-toggle" id="navMobileToggle">☰</button>
+        </div>
+      </div>
+      <div class="nav-mobile" id="navMobile">
+        <div class="nav-mobile-link" data-scroll="#hero">Overview</div>
+        <div class="nav-mobile-link" data-scroll="#how">How it works</div>
+        <div class="nav-mobile-link" data-scroll="#features">Why Transcrypt</div>
+        <div class="nav-mobile-link" data-scroll="#pricing">Pricing</div>
+        <div class="nav-mobile-link" data-scroll="#faq">FAQ</div>
+        <div class="nav-mobile-cta">
+          <button class="nav-cta" data-scroll="#pricing">View pricing</button>
+          <button class="nav-cta-primary" data-scroll="#hero">Start Essentials trial</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <!-- HERO -->
+  <section id="hero" class="hero">
+    <div class="max-w hero-grid reveal">
+      <div>
+        <div class="hero-tag">Cyber Essentials, without the drama</div>
+        <h1 class="hero-title">
+          Evidence, evaluations, and exports you can <span class="accent">sign your name to</span>.
+        </h1>
+        <p class="hero-subtitle">
+          Transcrypt turns Cyber Essentials from a once-a-year panic into a predictable,
+          boring piece of your infrastructure. Owners, advisors, and auditors see the same thing.
+        </p>
+        <div class="hero-ctas-row">
+          <button class="hero-cta-primary" data-scroll="#pricing">
+            Start Essentials trial
+            <span>→</span>
+          </button>
+          <button class="hero-cta-secondary" id="heroTourBtn">
+            Watch a 2-minute walkthrough
+          </button>
+        </div>
+        <div class="hero-footnote">
+          No funnels. No mystery dashboards. Just a quiet workspace that keeps you out of trouble.
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-number" data-counter="12">0</div>
+            <div>months of evidence retained in a sealed vault</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-number" data-counter="3">0</div>
+            <div>hours to go from empty to “evaluation-ready”</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-number" data-counter="1">0</div>
+            <div>place where everything lives – no spreadsheets</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-right reveal">
+        <div class="hero-panel">
+          <div class="hero-panel-tag">Live snapshot · Tenant “Acme Manufacturing”</div>
+          <div class="hero-panel-headline">Compliance clock – Cyber Essentials 2025</div>
+          <div class="hero-panel-sub">
+            Owner view. Everything they need, nothing they don’t.
+          </div>
+          <div class="hero-panel-row">
+            <span>Evidence coverage</span>
+            <span class="hero-chip-ok">68% ready</span>
+          </div>
+          <div class="hero-panel-row">
+            <span>Evaluation status</span>
+            <span class="hero-chip">Ready to run</span>
+          </div>
+          <div class="hero-panel-row">
+            <span>Exceptions</span>
+            <span class="hero-chip-warn">2 open · expiring in 30 days</span>
+          </div>
+          <div class="hero-panel-row">
+            <span>Latest export</span>
+            <span>PDF signed 3 days ago</span>
+          </div>
+          <div class="hero-panel-footer">
+            Same truth, three views: owner, advisor, verifier. Everyone stays aligned.
+          </div>
+          <div class="hero-floating-pill">
+            <span style="width:7px;height:7px;border-radius:999px;background:#4ade80;"></span>
+            Immutable evidence vault online
+          </div>
+          <div class="hero-glow-orbit"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how" class="section-light">
+    <div class="max-w">
+      <div class="section-heading reveal">
+        <div class="section-heading-eyebrow">How it works</div>
+        <h2 class="section-heading-title">One workspace, three perspectives</h2>
+        <p class="section-heading-sub">
+          Transcrypt is a single pipeline from “we should sort Cyber Essentials” to
+          “here is our signed report and all the evidence behind it”. The only thing that changes is who is looking at it.
+        </p>
+      </div>
+
+      <div class="pill-tabs reveal" id="howTabs">
+        <button class="pill-tab active" data-role="owner">Owner</button>
+        <button class="pill-tab" data-role="advisor">Advisor</button>
+        <button class="pill-tab" data-role="auditor">Verifier</button>
+      </div>
+
+      <div class="how-grid">
+        <!-- Flow -->
+        <div class="how-flow reveal" id="howFlow">
+          <!-- Owner steps by default -->
+          <div class="how-step">
+            <div class="how-step-index">1</div>
+            <div>
+              <div class="how-step-body-title">Create tenant and invite your advisor</div>
+              <div class="how-step-body-text">
+                Owner signs in, names the tenant, and invites whoever actually handles the technical side.
+                Single entry, no duplicate accounts.
+              </div>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="how-step-index">2</div>
+            <div>
+              <div class="how-step-body-title">Answer plain-language prompts</div>
+              <div class="how-step-body-text">
+                Instead of a wall of controls, you see simple prompts and upload slots.
+                Transcrypt does the mapping to Cyber Essentials in the background.
+              </div>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="how-step-index">3</div>
+            <div>
+              <div class="how-step-body-title">Lock evidence, run evaluation</div>
+              <div class="how-step-body-text">
+                Once everything looks right, you lock the evidence, run the evaluation, and get a signed report you can send to
+                your assessor or insurer.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick stats -->
+        <div class="how-quick-stats reveal">
+          <div class="section-label">Signals, not surprises</div>
+          <div class="how-stat-row">
+            <span>Evidence items</span>
+            <span>32 of 46 uploaded</span>
+          </div>
+          <div class="how-stat-row">
+            <span>Controls covered</span>
+            <span>83% mapped</span>
+          </div>
+          <div class="how-stat-row">
+            <span>Evaluation readiness</span>
+            <span>“Proceed with advisor review”</span>
+          </div>
+          <div style="margin-top:0.7rem;font-size:0.8rem;color:var(--text-muted);">
+            <span class="chip-inline">
+              <span class="chip-dot"></span>
+              All changes signed, timestamped, and tied to a user.
+            </span>
+            <div style="margin-top:0.4rem;">
+              When you push the big button, everyone knows exactly what went into the report.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" class="features">
+    <div class="max-w features-inner">
+      <div class="section-heading">
+        <div class="section-heading-eyebrow">Why Transcrypt</div>
+        <h2 class="section-heading-title" style="color:#f9fafb;">Not another dashboard. A boring piece of infra.</h2>
+        <p class="section-heading-sub" style="color:#cbd5f5;">
+          Designed to be unexciting in exactly the right ways.
+          No magic. No “AI insights”. Just deterministic behaviour and clear evidence, every time.
+        </p>
+      </div>
+
+      <div class="feature-grid reveal">
+        <div class="feature-card">
+          <div class="feature-tag">Tenancy</div>
+          <div class="feature-title">Sealed tenants for each customer</div>
+          <div class="feature-text">
+            Each tenant is logically and cryptographically isolated. Evidence, evaluations, and exports all live within a sealed boundary.
+          </div>
+          <div class="feature-foot">
+            No “global view” of customer data. Even admins respect the wall.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-tag">Evidence</div>
+          <div class="feature-title">Immutable vault, human-friendly surface</div>
+          <div class="feature-text">
+            Files live in a write-once store. Above that, a simple list of “things we said we did” and the documents that back it up.
+          </div>
+          <div class="feature-foot">
+            You can always see what changed, who changed it, and why.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-tag">Evaluations</div>
+          <div class="feature-title">Deterministic runs, repeatable results</div>
+          <div class="feature-text">
+            Same inputs, same outputs. Evaluations are pure functions of evidence and rulepack, not mood or guesswork.
+          </div>
+          <div class="feature-foot">
+            If the result changes, something upstream changed. And we show you exactly what.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-tag">Exports</div>
+          <div class="feature-title">Signed PDFs that match the on-screen truth</div>
+          <div class="feature-text">
+            Reports are generated from the same view you see on screen. No hidden logic, no off-by-one differences.
+          </div>
+          <div class="feature-foot">
+            You can hand them to an assessor with a straight face.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-tag">Audit trail</div>
+          <div class="feature-title">Every change leaves a footprint</div>
+          <div class="feature-text">
+            Evidence edits, user invites, evaluation runs, exports – all captured and queryable. Not as marketing copy, but as real state.
+          </div>
+          <div class="feature-foot">
+            When someone asks “who changed this”, you actually have an answer.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-tag">Calmness</div>
+          <div class="feature-title">No sales theatre, no funnel tricks</div>
+          <div class="feature-text">
+            Marketing and product share the same design language. The screenshots match reality. The flows are the same.
+          </div>
+          <div class="feature-foot">
+            What you see here is what you get in the product.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING + FAQ -->
+  <section id="pricing" class="section-light">
+    <div class="max-w">
+      <div class="section-heading reveal">
+        <div class="section-heading-eyebrow">Pricing</div>
+        <h2 class="section-heading-title">One product, one simple plan</h2>
+        <p class="section-heading-sub">
+          No per-user games. No feature gating. You pay for a tenant that stays boring and reliable while your evidence and evaluations change.
+        </p>
+      </div>
+
+      <div class="pricing-grid reveal">
+        <div class="pricing-card-main">
+          <div class="pricing-label">Essentials tenant</div>
+          <div class="pricing-price">£<span id="priceNumber">79</span> / month</div>
+          <div class="pricing-sub">
+            Per tenant, billed monthly. Cancel any time. No extra charges for exports or users.
+          </div>
+          <ul class="pricing-list">
+            <li><span class="pricing-dot"></span>Unlimited users within a tenant</li>
+            <li><span class="pricing-dot"></span>Immutable evidence vault with 12-month history</li>
+            <li><span class="pricing-dot"></span>Deterministic evaluation runs with signed reports</li>
+            <li><span class="pricing-dot"></span>Read-only links for assessors and insurers</li>
+          </ul>
+          <div class="pricing-cta-wrap">
+            <button class="pricing-cta" data-scroll="#hero">
+              Start trial and set up your first tenant
+              <span>→</span>
+            </button>
+            <div class="pricing-note">
+              Need help deciding if this fits your organisation? We can walk your real scenario through the product in under an hour.
+            </div>
+          </div>
+        </div>
+        <div class="pricing-side">
+          <div class="pricing-side-title">For advisors and MSPs</div>
+          <div class="pricing-side-item">
+            You can sit alongside your customers inside their tenant, not in a mysterious “partner portal”.
+          </div>
+          <div class="pricing-side-item">
+            Every tenant is separate. You never leak data across customers.
+          </div>
+          <div class="pricing-side-item">
+            Multi-tenant view, where it exists, is just a boring list; we keep all the interesting bits tenant-side.
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div id="faq" class="faq-grid reveal">
+        <div class="section-heading" style="margin-bottom:1.2rem;">
+          <div class="section-heading-eyebrow">FAQ</div>
+          <h2 class="section-heading-title">Questions people actually ask</h2>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-header">
+            <div class="faq-header-title">Is this just for Cyber Essentials, or can it grow with us?</div>
+            <div class="faq-toggle">+</div>
+          </div>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              For now, it is deliberately just for Cyber Essentials. The product, the docs, and the workflows are all optimised
+              for doing one thing well. The architecture is ready for more rulepacks, but the UI will not pretend they exist until they actually do.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-header">
+            <div class="faq-header-title">Can my assessor or insurer log in and see what we see?</div>
+            <div class="faq-toggle">+</div>
+          </div>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              Yes – but only as a read-only guest on your tenant. They can inspect evidence, see evaluations, and download reports,
+              but they cannot change your state or your data.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-header">
+            <div class="faq-header-title">Do you use “AI” for any of this?</div>
+            <div class="faq-toggle">+</div>
+          </div>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              We use models to make prompts and mapping less awful, but nothing important is hidden or hand-wavy.
+              If a model helps, you see it. If it fails, you see that too. The evaluation path itself remains deterministic.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-header">
+            <div class="faq-header-title">What happens if we stop paying?</div>
+            <div class="faq-toggle">+</div>
+          </div>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              We stop running new evaluations and uploads, but you will always get a safe way to export or retrieve your existing evidence and reports.
+              No ransom, no “sorry, that’s locked behind a plan”.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="max-w footer-inner">
+      <div>© <span id="year"></span> Transcrypt. Boring, safe infrastructure is the point.</div>
+      <div class="footer-links">
+        <a href="#hero" data-scroll="#hero">Overview</a>
+        <a href="#how" data-scroll="#how">How it works</a>
+        <a href="#pricing" data-scroll="#pricing">Pricing</a>
+        <a href="#faq" data-scroll="#faq">FAQ</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- BACK TO TOP -->
+  <div class="back-to-top" id="backToTop">↑</div>
+
+  <!-- MODAL -->
+  <div class="modal-backdrop" id="tourModalBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Two-minute product walkthrough</div>
+        <div class="modal-close" id="tourModalClose">✕</div>
+      </div>
+      <div class="modal-body">
+        <p>
+          Imagine this as the calmest loom recording you have ever watched.
+          No sales script. Just the real product going from “empty tenant” to “signed export”.
+        </p>
+        <div class="modal-flow">
+          <div class="modal-flow-step">
+            <div class="modal-flow-step-index">1</div>
+            <div>Owner creates a tenant and invites their tech helper.</div>
+          </div>
+          <div class="modal-flow-step">
+            <div class="modal-flow-step-index">2</div>
+            <div>They walk through prompts together, dropping in evidence where it belongs.</div>
+          </div>
+          <div class="modal-flow-step">
+            <div class="modal-flow-step-index">3</div>
+            <div>They lock evidence, run an evaluation, and export a signed report.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          In the real product, this tour would be a short video plus a guided “sandbox” tenant you can click around in.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  (function() {
+    const nav = document.getElementById('mainNav');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const mobileToggle = document.getElementById('navMobileToggle');
+    const mobileNav = document.getElementById('navMobile');
+    const scrollElems = document.querySelectorAll('[data-scroll]');
+    const backToTop = document.getElementById('backToTop');
+    const yearSpan = document.getElementById('year');
+    const counters = document.querySelectorAll('[data-counter]');
+    const howTabs = document.getElementById('howTabs');
+    const howFlow = document.getElementById('howFlow');
+    const revealElems = document.querySelectorAll('.reveal');
+    const tourModalBackdrop = document.getElementById('tourModalBackdrop');
+    const tourModalClose = document.getElementById('tourModalClose');
+    const navTourBtn = document.getElementById('navTourBtn');
+    const heroTourBtn = document.getElementById('heroTourBtn');
+
+    yearSpan.textContent = new Date().getFullYear();
+
+    /* NAV SCROLL + ACTIVE LINK */
+
+    function handleNavScroll() {
+      if (window.scrollY > 24) {
+        nav.classList.add('nav-scrolled');
+      } else {
+        nav.classList.remove('nav-scrolled');
+      }
+    }
+
+    window.addEventListener('scroll', handleNavScroll);
+    handleNavScroll();
+
+    function smoothScrollTo(target) {
+      const el = document.querySelector(target);
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const offset = window.scrollY + rect.top - 72;
+      window.scrollTo({ top: offset, behavior: 'smooth' });
+    }
+
+    scrollElems.forEach(elem => {
+      elem.addEventListener('click', () => {
+        const target = elem.getAttribute('data-scroll');
+        if (mobileNav.classList.contains('open')) {
+          mobileNav.classList.remove('open');
+        }
+        if (target) {
+          smoothScrollTo(target);
+        }
+      });
+    });
+
+    mobileToggle.addEventListener('click', () => {
+      mobileNav.classList.toggle('open');
+    });
+
+    function updateActiveNavLink() {
+      const sections = ['hero', 'how', 'features', 'pricing', 'faq'];
+      let current = 'hero';
+      const scrollY = window.scrollY;
+      sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (scrollY >= el.offsetTop - 120) {
+          current = id;
+        }
+      });
+      navLinks.forEach(link => {
+        const target = link.getAttribute('data-scroll');
+        if (target === '#' + current) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+    }
+
+    window.addEventListener('scroll', updateActiveNavLink);
+    updateActiveNavLink();
+
+    /* BACK TO TOP */
+
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) {
+        backToTop.classList.add('visible');
+      } else {
+        backToTop.classList.remove('visible');
+      }
+    });
+
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    /* COUNTERS */
+
+    let countersStarted = false;
+    function startCounters() {
+      if (countersStarted) return;
+      const triggerPoint = window.innerHeight * 0.85;
+      counters.forEach(counter => {
+        const rect = counter.getBoundingClientRect();
+        if (rect.top < triggerPoint) {
+          const target = parseInt(counter.getAttribute('data-counter'), 10);
+          let current = 0;
+          const duration = 900;
+          const startTime = performance.now();
+          function tick(now) {
+            const progress = Math.min((now - startTime) / duration, 1);
+            current = Math.floor(progress * target);
+            counter.textContent = current;
+            if (progress < 1) {
+              requestAnimationFrame(tick);
+            } else {
+              counter.textContent = target;
+            }
+          }
+          requestAnimationFrame(tick);
+        }
+      });
+      countersStarted = true;
+    }
+
+    window.addEventListener('scroll', startCounters);
+    startCounters();
+
+    /* HOW IT WORKS TABS */
+
+    const flowContent = {
+      owner: [
+        {
+          title: 'Create tenant and invite your advisor',
+          text: 'Owner signs in, names the tenant, and invites whoever actually handles the technical side. Single entry, no duplicate accounts.'
+        },
+        {
+          title: 'Answer plain-language prompts',
+          text: 'Instead of a wall of controls, you see simple prompts and upload slots. Transcrypt does the mapping to Cyber Essentials in the background.'
+        },
+        {
+          title: 'Lock evidence, run evaluation',
+          text: 'Once everything looks right, you lock the evidence, run the evaluation, and get a signed report you can send to your assessor or insurer.'
+        }
+      ],
+      advisor: [
+        {
+          title: 'Log in as a collaborator on the customer’s tenant',
+          text: 'You do not get your own weird “partner portal”. You sit beside the owner, inside their tenant, with clear roles and audit trails.'
+        },
+        {
+          title: 'Help gather and normalise evidence',
+          text: 'You upload configs, screenshots, and notes. The system keeps everything traceable so you do not become the single point of failure.'
+        },
+        {
+          title: 'Sanity-check evaluation and export',
+          text: 'You review the evaluation run, adjust where needed, and help the customer push a report they can stand over.'
+        }
+      ],
+      auditor: [
+        {
+          title: 'Receive a read-only link to the tenant',
+          text: 'No more stitched PDFs and random ZIP files. You see the live evidence and evaluations, but you cannot change anything.'
+        },
+        {
+          title: 'Drill into controls and underlying files',
+          text: 'For each “we say we do this”, you see the documents, notes, and timestamps that back it up.'
+        },
+        {
+          title: 'Sign off with a clear, consistent view',
+          text: 'Your view, the owner’s view, and the advisor’s view all line up. If something changes later, you can see what and when.'
+        }
+      ]
+    };
+
+    howTabs.addEventListener('click', (e) => {
+      const btn = e.target.closest('.pill-tab');
+      if (!btn) return;
+      const role = btn.getAttribute('data-role');
+      if (!role || !flowContent[role]) return;
+
+      // activate tab
+      howTabs.querySelectorAll('.pill-tab').forEach(tab => {
+        tab.classList.toggle('active', tab === btn);
+      });
+
+      // rebuild steps
+      howFlow.innerHTML = '';
+      flowContent[role].forEach((step, index) => {
+        const stepDiv = document.createElement('div');
+        stepDiv.className = 'how-step';
+        stepDiv.innerHTML = `
+          <div class="how-step-index">${index + 1}</div>
+          <div>
+            <div class="how-step-body-title">${step.title}</div>
+            <div class="how-step-body-text">${step.text}</div>
+          </div>
+        `;
+        howFlow.appendChild(stepDiv);
+      });
+    });
+
+    /* FAQ ACCORDIONS */
+
+    const faqItems = document.querySelectorAll('.faq-item');
+
+    faqItems.forEach(item => {
+      const header = item.querySelector('.faq-header');
+      header.addEventListener('click', () => {
+        const open = item.classList.contains('open');
+        faqItems.forEach(i => i.classList.remove('open'));
+        if (!open) item.classList.add('open');
+      });
+    });
+
+    /* SCROLL REVEAL */
+
+    if ('IntersectionObserver' in window) {
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.2 });
+
+      revealElems.forEach(el => obs.observe(el));
+    } else {
+      // fallback: just show everything
+      revealElems.forEach(el => el.classList.add('visible'));
+    }
+
+    /* TOUR MODAL */
+
+    function openTourModal() {
+      tourModalBackdrop.classList.add('open');
+    }
+
+    function closeTourModal() {
+      tourModalBackdrop.classList.remove('open');
+    }
+
+    navTourBtn.addEventListener('click', openTourModal);
+    heroTourBtn.addEventListener('click', openTourModal);
+    tourModalClose.addEventListener('click', closeTourModal);
+    tourModalBackdrop.addEventListener('click', (e) => {
+      if (e.target === tourModalBackdrop) closeTourModal();
+    });
+
+  })();
+</script>
+</body>
+</html>

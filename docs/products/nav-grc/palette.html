@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Transcrypt – Brand Direction Demo</title>
+  <style>
+    :root {
+      --neutral-bg: #f5f7fa;
+      --neutral-surface: #ffffff;
+      --neutral-border: #d1d5db;
+      --neutral-text: #111827;
+      --muted-text: #4b5563;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 2rem;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #e5e7eb;
+      color: var(--neutral-text);
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-size: 1.8rem;
+    }
+
+    p {
+      margin: 0.25rem 0;
+    }
+
+    .page-intro {
+      max-width: 960px;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+      color: var(--muted-text);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .palette-card {
+      background: var(--neutral-surface);
+      border-radius: 10px;
+      border: 1px solid var(--neutral-border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    .palette-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--neutral-border);
+    }
+
+    .palette-title {
+      font-weight: 600;
+      margin: 0 0 0.1rem 0;
+    }
+
+    .palette-subtitle {
+      font-size: 0.85rem;
+      color: var(--muted-text);
+    }
+
+    .palette-body {
+      padding: 0.75rem 1rem 1rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    .swatches {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 0.1rem;
+    }
+
+    .swatch {
+      flex: 1;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted-text);
+      margin-bottom: 0.25rem;
+    }
+
+    .demo-row {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .hero-demo {
+      border-radius: 8px;
+      padding: 0.85rem 0.9rem;
+      color: #f9fafb;
+    }
+
+    .hero-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .hero-text {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      margin-bottom: 0.6rem;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.78rem;
+      border-radius: 999px;
+      border: none;
+      cursor: default;
+      font-weight: 500;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+    }
+
+    .hero-cta-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(249, 250, 251, 0.65);
+      margin-left: 0.35rem;
+      background: rgba(15, 23, 42, 0.2);
+      cursor: default;
+    }
+
+    .essentials-demo {
+      border-radius: 8px;
+      padding: 0.8rem 0.9rem;
+      background: var(--neutral-bg);
+      border: 1px solid var(--neutral-border);
+      color: var(--neutral-text);
+    }
+
+    .essentials-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .essentials-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.3rem 0;
+      font-size: 0.78rem;
+      color: var(--muted-text);
+    }
+
+    .essentials-badge {
+      padding: 0.1rem 0.35rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      border: 1px solid var(--neutral-border);
+      background: #ffffff;
+      color: var(--muted-text);
+    }
+
+    .tiny-note {
+      font-size: 0.75rem;
+      color: var(--muted-text);
+      margin-top: 0.2rem;
+    }
+
+    /* Palette-specific colours */
+
+    /* 1. Deep Navy & Steel */
+    .palette-1 .swatch-brand-main { background: #0b1f3b; }
+    .palette-1 .swatch-brand-accent { background: #526377; }
+    .palette-1 .swatch-neutral { background: #f5f7fa; }
+    .palette-1 .hero-demo {
+      background: radial-gradient(circle at top left, #1f3b63 0, #0b1f3b 45%, #050816 100%);
+    }
+    .palette-1 .hero-cta {
+      background: #f59e0b;
+      color: #111827;
+    }
+
+    /* 2. Slate Grey & Muted Teal */
+    .palette-2 .swatch-brand-main { background: #1f2933; }
+    .palette-2 .swatch-brand-accent { background: #2c7a7b; }
+    .palette-2 .swatch-neutral { background: #f5f7fa; }
+    .palette-2 .hero-demo {
+      background: linear-gradient(135deg, #1f2933, #2c7a7b);
+    }
+    .palette-2 .hero-cta {
+      background: #2c7a7b;
+      color: #f9fafb;
+    }
+
+    /* 3. Charcoal & Electric Blue */
+    .palette-3 .swatch-brand-main { background: #111827; }
+    .palette-3 .swatch-brand-accent { background: #2563eb; }
+    .palette-3 .swatch-neutral { background: #f5f7fa; }
+    .palette-3 .hero-demo {
+      background: radial-gradient(circle at top, #2563eb 0, #111827 55%, #020617 100%);
+    }
+    .palette-3 .hero-cta {
+      background: #2563eb;
+      color: #f9fafb;
+    }
+
+    /* 4. Graphite & Cool Mint */
+    .palette-4 .swatch-brand-main { background: #111827; }
+    .palette-4 .swatch-brand-accent { background: #6ee7b7; }
+    .palette-4 .swatch-neutral { background: #f5f7fa; }
+    .palette-4 .hero-demo {
+      background: linear-gradient(135deg, #111827, #0f172a 55%, #6ee7b7 100%);
+    }
+    .palette-4 .hero-cta {
+      background: #6ee7b7;
+      color: #064e3b;
+    }
+
+    /* 5. Warm Grey & Soft Burgundy */
+    .palette-5 .swatch-brand-main { background: #3f3a3a; }
+    .palette-5 .swatch-brand-accent { background: #8b4b5a; }
+    .palette-5 .swatch-neutral { background: #f9fafb; }
+    .palette-5 .hero-demo {
+      background: radial-gradient(circle at top left, #8b4b5a 0, #3f3a3a 55%, #1f2933 100%);
+    }
+    .palette-5 .hero-cta {
+      background: #8b4b5a;
+      color: #fdf2f8;
+    }
+
+    /* 6. Cool Grey & Petrol Green */
+    .palette-6 .swatch-brand-main { background: #111827; }
+    .palette-6 .swatch-brand-accent { background: #14532d; }
+    .palette-6 .swatch-neutral { background: #f5f7fa; }
+    .palette-6 .hero-demo {
+      background: linear-gradient(135deg, #111827, #14532d);
+    }
+    .palette-6 .hero-cta {
+      background: #16a34a;
+      color: #022c22;
+    }
+
+    /* 7. Neutral Sand & Marine Blue */
+    .palette-7 .swatch-brand-main { background: #e5dfcf; }
+    .palette-7 .swatch-brand-accent { background: #1d4f91; }
+    .palette-7 .swatch-neutral { background: #fdfcf8; }
+    .palette-7 .hero-demo {
+      background: linear-gradient(135deg, #1d4f91, #0b264e);
+    }
+    .palette-7 .hero-cta {
+      background: #facc15;
+      color: #0b1120;
+    }
+
+    /* 8. Silver & Subdued Violet */
+    .palette-8 .swatch-brand-main { background: #d4d4dc; }
+    .palette-8 .swatch-brand-accent { background: #7c3aed; }
+    .palette-8 .swatch-neutral { background: #f5f5f7; }
+    .palette-8 .hero-demo {
+      background: radial-gradient(circle at top left, #7c3aed 0, #4c1d95 40%, #111827 100%);
+    }
+    .palette-8 .hero-cta {
+      background: #7c3aed;
+      color: #f9fafb;
+    }
+
+    /* 9. Off-Black & Ice Blue */
+    .palette-9 .swatch-brand-main { background: #020617; }
+    .palette-9 .swatch-brand-accent { background: #7dd3fc; }
+    .palette-9 .swatch-neutral { background: #f5f7fa; }
+    .palette-9 .hero-demo {
+      background: linear-gradient(135deg, #020617, #0f172a 40%, #7dd3fc 100%);
+    }
+    .palette-9 .hero-cta {
+      background: #7dd3fc;
+      color: #0f172a;
+    }
+
+    /* 10. True Grey & Cerulean Accent */
+    .palette-10 .swatch-brand-main { background: #4b5563; }
+    .palette-10 .swatch-brand-accent { background: #3b82f6; }
+    .palette-10 .swatch-neutral { background: #f5f7fa; }
+    .palette-10 .hero-demo {
+      background: linear-gradient(135deg, #111827, #1f2937 50%, #3b82f6 100%);
+    }
+    .palette-10 .hero-cta {
+      background: #3b82f6;
+      color: #f9fafb;
+    }
+  </style>
+</head>
+<body>
+  <h1>Transcrypt – Brand Direction Demo</h1>
+  <div class="page-intro">
+    <p>This page shows ten <strong>directional brand palettes</strong> for Transcrypt. Each card is a rough demo, not a final design:</p>
+    <ul>
+      <li>Top row: brand swatches (main, accent, neutral)</li>
+      <li>Left panel: example Marketing “hero” strip with CTA</li>
+      <li>Right panel: Essentials-style neutral panel using the same system</li>
+    </ul>
+    <p>Everything is kept calm and neutral so you can focus on the relative feel of each direction.</p>
+  </div>
+
+  <div class="grid">
+    <!-- 1 -->
+    <div class="palette-card palette-1">
+      <div class="palette-header">
+        <div class="palette-title">1. Deep Navy &amp; Steel</div>
+        <div class="palette-subtitle">Serious, engineering-forward, enterprise cybersecurity.</div>
+      </div>
+      <div class="palette-body">
+        <div>
+          <div class="label">Brand swatches</div>
+          <div class="swatches">
+            <div class="swatch swatch-brand-main"></div>
+            <div class="swatch swatch-brand-accent"></div>
+            <div class="swatch swatch-neutral"></div>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div class="hero-demo">
+            <div class="hero-title">Marketing hero example</div>
+            <div class="hero-text">Dark navy base with steel highlights. Feels like a control room, not a startup pitch.</div>
+            <button class="hero-cta">Start Essentials trial</button>
+            <button class="hero-cta-secondary">View features</button>
+          </div>
+          <div class="essentials-demo">
+            <div class="essentials-title">Essentials example</div>
+            <div class="essentials-item">
+              <span>Evidence set – Cyber Essentials</span>
+              <span class="essentials-badge">4 items</span>
+            </div>
+            <div class="essentials-item">
+              <span>Evaluation status</span>
+              <span class="essentials-badge">Ready to run</span>
+            </div>
+            <div class="tiny-note">Brand colour appears only in Marketing CTA, not in core tooling.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="palette-card palette-2">
+      <div class="palette-header">
+        <div class="palette-title">2. Slate Grey &amp; Muted Teal</div>
+        <div class="palette-subtitle">Modern, technical, slightly fresher but still calm.</div>
+      </div>
+      <div class="palette-body">
+        <div>
+          <div class="label">Brand swatches</div>
+          <div class="swatches">
+            <div class="swatch swatch-brand-main"></div>
+            <div class="swatch swatch-brand-accent"></div>
+            <div class="swatch swatch-neutral"></div>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div class="hero-demo">
+            <div class="hero-title">Marketing hero example</div>
+            <div class="hero-text">Slate base with a muted teal signal. Clean and technical rather than corporate heavy.</div>
+            <button class="hero-cta">Explore product</button>
+            <button class="hero-cta-secondary">Read blog</button>
+          </div>
+          <div class="essentials-demo">
+            <div class="essentials-title">Essentials example</div>
+            <div class="essentials-item">
+              <span>Open actions</span>
+              <span class="essentials-badge">7</span>
+            </div>
+            <div class="essentials-item">
+              <span>Control coverage</span>
+              <span class="essentials-badge">62%</span>
+            </div>
+            <div class="tiny-note">Teal reads as smart, not playful, and stays mostly out of the core UI.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="palette-card palette-3">
+      <div class="palette-header">
+        <div class="palette-title">3. Charcoal &amp; Electric Blue</div>
+        <div class="palette-subtitle">Minimal, high-contrast, very “security product”.</div>
+      </div>
+      <div class="palette-body">
+        <div>
+          <div class="label">Brand swatches</div>
+          <div class="swatches">
+            <div class="swatch swatch-brand-main"></div>
+            <div class="swatch swatch-brand-accent"></div>
+            <div class="swatch swatch-neutral"></div>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div class="hero-demo">
+            <div class="hero-title">Marketing hero example</div>
+            <div class="hero-text">Charcoal base punctuated by an electric blue accent. Feels precise and focused.</div>
+            <button class="hero-cta">Book a walkthrough</button>
+            <button class="hero-cta-secondary">Download sample report</button>
+          </div>
+          <div class="essentials-demo">
+            <div class="essentials-title">Essentials example</div>
+            <div class="essentials-item">
+              <span>Latest run</span>
+              <span class="essentials-badge">Passing</span>
+            </div>
+            <div class="essentials-item">
+              <span>Evidence changes pending</span>
+              <span class="essentials-badge">3</span>
+            </div>
+            <div class="tiny-note">Electric blue is strong; powerful but must be handled carefully.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="palette-card palette-4">
+      <div class="palette-header">
+        <div class="palette-title">4. Graphite &amp; Cool Mint</div>
+        <div class="palette-subtitle">Dark, grounded base with a clinical mint accent.</div>
+      </div>
+      <div class="palette-body">
+        <div>
+          <div class="label">Brand swatches</div>
+          <div class="swatches">
+            <div class="swatch swatch-brand-main"></div>
+            <div class="swatch swatch-brand-accent"></div>
+            <div class="swatch swatch-neutral"></div>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div class="hero-demo">
+            <div class="hero-title">Marketing hero example</div>
+            <div class="hero-text">Graphite foundation with a clean mint highlight. Slightly clinical, high-precision feel.</div>
+            <button class="hero-cta">See how it works</button>
+            <button class="hero-cta-secondary">View pricing</button>
+          </div>
+          <div class="essentials-demo">
+            <div class="essentials-title">Essentials example</div>
+            <div class="essentials-item">
+              <span>Tenancy</span>
+              <span class="essentials-badge">Isolated</span>
+            </div>
+            <div class="essentials-item">
+              <span>Evidence vault</span>
+              <span class="essentials-badge">Signed</span>
+            </div>
+            <div class="tiny-note">Mint reads as hygienic; good for “clean security” narrative.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="palette-card palette-5">
+      <div class="palette-header">
+        <div class="palette-title">5. Warm Grey &amp; Soft Burgundy</div>
+        <div class="palette-subtitle">More human and warm, still controlled and serious.</div>
+      </div>
+      <div class="palette-body">
+        <div>
+          <div class="label">Brand swatches</div>
+          <div class="swatches">
+            <div class="swatch swatch-brand-main"></div>
+            <div class="swatch swatch-brand-accent"></div>
+            <div class="swatch swatch-neutral"></div>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div class="hero-demo">
+            <div class="hero-title">Marketing hero example</div>
+            <div class="hero-text">Warm greys with a burgundy accent. Slightly more editorial, but still sober.</div>
+            <button class="hero-cta">Talk to us</button>
+            <button class="hero-cta-secondary">Security overview</button>
+          </div>
+          <div class="essentials-demo">
+            <div class="essentials-title">Essentials example</div>
+            <div class="essentials-item">
+              <span>Report state</span>
+              <span class="essentials-badge">Signed off</span>
+            </div>
+            <div class="essentials-item">
+              <span>Next review</span>
+              <span class="essentials-badge">90 days</span>
+            </div>
+            <div class="tiny-note">Soft red accent must be carefully separated from the error red in semantics.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 -->
+    <div class="palette-card palette-6">
+      <div class="palette-header">
+        <div class="palette-title">6. Cool Grey &amp; Petrol Green</div>
+        <div class="palette-subtitle">Industrial, grounded, resilient.</div>
+      </div>
+      <div class="palette-body">
+        <div>
+          <div class="label">Brand swatches</div>
+          <div class="swatches">
+            <div class="swatch swatch-brand-main"></div>
+            <div class="swatch swatch-brand-accent"></div>
+            <div class="swatch swatch-neutral"></div>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div class="hero-demo">
+            <div class="hero-title">Marketing hero example</div>
+            <div class="hero-text">Cool grey with a deep petrol green accent. Feels like engineered robustness.</div>
+            <button class="hero-cta">See control mapping</button>
+            <button class="hero-cta-secondary">Architecture view</button>
+          </div>
+          <div class="essentials-demo">
+            <div class="essentials-title">Essentials example</div>
+            <div class="essentials-item">
+              <span>Asset coverage</span>
+              <span class="essentials-badge">78%</span>
+            </div>
+            <div class="essentials-item">
+              <span>Exceptions</span>
+              <span class="essentials-badge">2 active</span>
+            </div>
+            <div class="tiny-note">Petrol feels OT/industrial, aligns with your real-world background.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 -->
+    <div class="palette-card palette-7">
+      <div class="palette-header">
+        <div class="palette-title">7. Neutral Sand &amp; Marine Blue</div>
+        <div class="palette-subtitle">Slightly warmer, friendlier, but still professional.</div>
+      </div>
+      <div class="palette-body">
+        <div>
+          <div class="label">Brand swatches</div>
+          <div class="swatches">
+            <div class="swatch swatch-brand-main"></div>
+            <div class="swatch swatch-brand-accent"></div>
+            <div class="swatch swatch-neutral"></div>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div class="hero-demo">
+            <div class="hero-title">Marketing hero example</div>
+            <div class="hero-text">Warm sand neutrals plus a marine blue accent. A bit more human without losing focus.</div>
+            <button class="hero-cta">Get started</button>
+            <button class="hero-cta-secondary">See customer stories</button>
+          </div>
+          <div class="essentials-demo">
+            <div class="essentials-title">Essentials example</div>
+            <div class="essentials-item">
+              <span>Primary tenant</span>
+              <span class="essentials-badge">CE-only</span>
+            </div>
+            <div class="essentials-item">
+              <span>Storage usage</span>
+              <span class="essentials-badge">19%</span>
+            </div>
+            <div class="tiny-note">Warmer neutrals shift tone subtly; needs care with your “boring, safe infra” positioning.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8 -->
+    <div class="palette-card palette-8">
+      <div class="palette-header">
+        <div class="palette-title">8. Silver &amp; Subdued Violet</div>
+        <div class="palette-subtitle">High-end, slightly more stylised, but still quiet.</div>
+      </div>
+      <div class="palette-body">
+        <div>
+          <div class="label">Brand swatches</div>
+          <div class="swatches">
+            <div class="swatch swatch-brand-main"></div>
+            <div class="swatch swatch-brand-accent"></div>
+            <div class="swatch swatch-neutral"></div>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div class="hero-demo">
+            <div class="hero-title">Marketing hero example</div>
+            <div class="hero-text">Silver neutrals with a violet accent. Edges slightly toward “design-y” if overused.</div>
+            <button class="hero-cta">View live demo</button>
+            <button class="hero-cta-secondary">Platform overview</button>
+          </div>
+          <div class="essentials-demo">
+            <div class="essentials-title">Essentials example</div>
+            <div class="essentials-item">
+              <span>Run history</span>
+              <span class="essentials-badge">5 completed</span>
+            </div>
+            <div class="essentials-item">
+              <span>Evidence age</span>
+              <span class="essentials-badge">All &lt; 12 months</span>
+            </div>
+            <div class="tiny-note">Violet can easily feel “startup” if not tightly controlled.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9 -->
+    <div class="palette-card palette-9">
+      <div class="palette-header">
+        <div class="palette-title">9. Off-Black &amp; Ice Blue</div>
+        <div class="palette-subtitle">Dark, surgical, slightly sci-fi if pushed.</div>
+      </div>
+      <div class="palette-body">
+        <div>
+          <div class="label">Brand swatches</div>
+          <div class="swatches">
+            <div class="swatch swatch-brand-main"></div>
+            <div class="swatch swatch-brand-accent"></div>
+            <div class="swatch swatch-neutral"></div>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div class="hero-demo">
+            <div class="hero-title">Marketing hero example</div>
+            <div class="hero-text">Off-black base with an ice-blue accent. Very controlled, slightly futuristic.</div>
+            <button class="hero-cta">Inspect a sample tenant</button>
+            <button class="hero-cta-secondary">Download whitepaper</button>
+          </div>
+          <div class="essentials-demo">
+            <div class="essentials-title">Essentials example</div>
+            <div class="essentials-item">
+              <span>Latest incident</span>
+              <span class="essentials-badge">None</span>
+            </div>
+            <div class="essentials-item">
+              <span>Compliance clock</span>
+              <span class="essentials-badge">Green</span>
+            </div>
+            <div class="tiny-note">Dark aesthetic needs careful use to avoid feeling like a SOC tool, not SME-friendly.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10 -->
+    <div class="palette-card palette-10">
+      <div class="palette-header">
+        <div class="palette-title">10. True Grey &amp; Cerulean Accent</div>
+        <div class="palette-subtitle">Balanced, modern, very neutral with a calm blue accent.</div>
+      </div>
+      <div class="palette-body">
+        <div>
+          <div class="label">Brand swatches</div>
+          <div class="swatches">
+            <div class="swatch swatch-brand-main"></div>
+            <div class="swatch swatch-brand-accent"></div>
+            <div class="swatch swatch-neutral"></div>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div class="hero-demo">
+            <div class="hero-title">Marketing hero example</div>
+            <div class="hero-text">True grey neutrals with a cerulean accent. Clean and timeless, very aligned with “calm infra”.</div>
+            <button class="hero-cta">Launch Essentials</button>
+            <button class="hero-cta-secondary">Learn how it works</button>
+          </div>
+          <div class="essentials-demo">
+            <div class="essentials-title">Essentials example</div>
+            <div class="essentials-item">
+              <span>Control set</span>
+              <span class="essentials-badge">Cyber Essentials</span>
+            </div>
+            <div class="essentials-item">
+              <span>Evaluation history</span>
+              <span class="essentials-badge">3 cycles</span>
+            </div>
+            <div class="tiny-note">Probably the safest direction: calm, clear, and future-proof.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

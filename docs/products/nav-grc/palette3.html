@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Transcrypt – Top 3 Brand Directions (Tabbed)</title>
+  <style>
+    :root {
+      --neutral-bg: #f5f7fa;
+      --neutral-surface: #ffffff;
+      --neutral-border: #d1d5db;
+      --neutral-text: #111827;
+      --muted-text: #4b5563;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --error: #dc2626;
+      --info: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 1.5rem 2rem 2.5rem;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #e5e7eb;
+      color: var(--neutral-text);
+    }
+
+    h1 {
+      margin: 0 0 0.5rem;
+      font-size: 1.9rem;
+    }
+
+    .intro {
+      max-width: 960px;
+      font-size: 0.95rem;
+      color: var(--muted-text);
+      margin-bottom: 1.5rem;
+    }
+
+    .intro p {
+      margin: 0.25rem 0;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .tab-button {
+      border-radius: 999px;
+      border: 1px solid #cbd5f5;
+      background: #e5e7eb;
+      padding: 0.4rem 1.1rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: #111827;
+    }
+
+    .tab-button span.code {
+      font-size: 0.75rem;
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      opacity: 0.8;
+    }
+
+    .tab-button.active {
+      background: #111827;
+      color: #f9fafb;
+      border-color: #111827;
+    }
+
+    .tab-content {
+      display: none;
+      border-radius: 14px;
+      border: 1px solid var(--neutral-border);
+      background: var(--neutral-surface);
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+      padding-bottom: 1.5rem;
+      overflow: hidden;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .tab-header {
+      padding: 1rem 1.4rem 0.75rem;
+      border-bottom: 1px solid var(--neutral-border);
+    }
+
+    .tab-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+
+    .tab-subtitle {
+      font-size: 0.9rem;
+      color: var(--muted-text);
+    }
+
+    .tab-inner {
+      padding: 1.2rem 1.4rem 1.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #6b7280;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .layout-two {
+      display: grid;
+      gap: 1rem;
+    }
+
+    @media (min-width: 960px) {
+      .layout-two {
+        grid-template-columns: 1.4fr 1fr;
+      }
+    }
+
+    /* Hero (A) – big strip */
+    .hero-full {
+      border-radius: 12px;
+      padding: 1.4rem 1.6rem;
+      color: #f9fafb;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(249,250,251,0.65);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.6rem;
+      opacity: 0.92;
+    }
+
+    .hero-heading {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+
+    .hero-sub {
+      font-size: 0.9rem;
+      max-width: 36rem;
+      opacity: 0.9;
+      margin-bottom: 1rem;
+    }
+
+    .hero-ctas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .hero-cta {
+      padding: 0.6rem 1.3rem;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: default;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      box-shadow: 0 10px 25px rgba(15,23,42,0.35);
+    }
+
+    .hero-cta-secondary {
+      padding: 0.55rem 1.2rem;
+      border-radius: 999px;
+      border: 1px solid rgba(249,250,251,0.7);
+      background: rgba(15,23,42,0.30);
+      font-size: 0.83rem;
+      cursor: default;
+    }
+
+    .hero-meta {
+      font-size: 0.8rem;
+      opacity: 0.85;
+    }
+
+    .hero-accent-pill {
+      position: absolute;
+      right: -40px;
+      bottom: -40px;
+      width: 260px;
+      height: 260px;
+      border-radius: 999px;
+      opacity: 0.25;
+      filter: blur(0px);
+    }
+
+    /* Brand system block */
+    .brand-system {
+      border-radius: 10px;
+      border: 1px dashed var(--neutral-border);
+      padding: 0.9rem 1rem 1rem;
+      background: #f9fafb;
+    }
+
+    .brand-system-row {
+      display: grid;
+      grid-template-columns: 1.1fr 1.2fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 800px) {
+      .brand-system-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .swatches {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .swatch {
+      flex: 1;
+      height: 40px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .swatch-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--muted-text);
+    }
+
+    .type-sample {
+      font-size: 0.8rem;
+    }
+
+    .type-heading {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .type-body {
+      font-size: 0.82rem;
+      color: var(--muted-text);
+      margin-bottom: 0.25rem;
+    }
+
+    .type-meta {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+    }
+
+    .btn-sample {
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      cursor: default;
+      border: 1px solid transparent;
+    }
+
+    .btn-outline {
+      background: #ffffff;
+      border-color: var(--neutral-border);
+      color: var(--neutral-text);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: transparent;
+      color: var(--muted-text);
+    }
+
+    /* Marketing + Essentials layout (B) */
+    .marketing-essentials {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 900px) {
+      .marketing-essentials {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .marketing-card {
+      border-radius: 10px;
+      border: 1px solid var(--neutral-border);
+      background: #f9fafb;
+      padding: 0.9rem 1rem 1rem;
+    }
+
+    .marketing-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .marketing-copy {
+      font-size: 0.8rem;
+      color: var(--muted-text);
+      margin-bottom: 0.4rem;
+    }
+
+    .marketing-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .marketing-pill {
+      font-size: 0.75rem;
+      border-radius: 999px;
+      border: 1px solid var(--neutral-border);
+      padding: 0.25rem 0.6rem;
+      background: #ffffff;
+      color: var(--muted-text);
+    }
+
+    .essentials-card {
+      border-radius: 10px;
+      border: 1px solid var(--neutral-border);
+      background: var(--neutral-bg);
+      padding: 0.9rem 1rem 1rem;
+    }
+
+    .essentials-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .essentials-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      padding: 0.23rem 0;
+      color: var(--muted-text);
+    }
+
+    .badge {
+      padding: 0.12rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      background: #ffffff;
+      border: 1px solid var(--neutral-border);
+    }
+
+    .tone-note {
+      font-size: 0.78rem;
+      color: var(--muted-text);
+      margin-top: 0.4rem;
+    }
+
+    /* UI module grid (D/E) */
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 0.8rem;
+    }
+
+    .module-card {
+      border-radius: 9px;
+      border: 1px solid var(--neutral-border);
+      background: #f9fafb;
+      padding: 0.7rem 0.8rem;
+      font-size: 0.78rem;
+    }
+
+    .module-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.3rem;
+    }
+
+    .small-pill {
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      border: 1px solid var(--neutral-border);
+      font-size: 0.72rem;
+      background: #fff;
+      color: var(--muted-text);
+    }
+
+    .table-demo {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.76rem;
+      margin-top: 0.25rem;
+    }
+
+    .table-demo th,
+    .table-demo td {
+      border: 1px solid var(--neutral-border);
+      padding: 0.25rem 0.4rem;
+      text-align: left;
+    }
+
+    .input-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-top: 0.3rem;
+    }
+
+    .label-small {
+      font-size: 0.72rem;
+      color: var(--muted-text);
+    }
+
+    .input-demo {
+      border-radius: 6px;
+      border: 1px solid var(--neutral-border);
+      padding: 0.35rem 0.45rem;
+      font-size: 0.78rem;
+      background: #ffffff;
+    }
+
+    .chip-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      background: #ecfdf5;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+
+    .chip-status.warn {
+      background: #fffbeb;
+      border-color: #fed7aa;
+      color: #92400e;
+    }
+
+    .chip-status.err {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #b91c1c;
+    }
+
+    .chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .sub-note {
+      font-size: 0.74rem;
+      color: var(--muted-text);
+      margin-top: 0.2rem;
+    }
+
+    /* PALETTE 1 – True Grey & Cerulean */
+    .p1-hero {
+      background: linear-gradient(135deg, #111827 0%, #1f2937 40%, #3b82f6 100%);
+    }
+    .p1-cta-primary {
+      background: #3b82f6;
+      color: #f9fafb;
+    }
+    .p1-accent-pill {
+      background: #93c5fd;
+    }
+    .p1-main-swatch { background: #4b5563; }
+    .p1-accent-swatch { background: #3b82f6; }
+    .p1-neutral-swatch { background: #f5f7fa; }
+
+    /* PALETTE 2 – Slate & Muted Teal */
+    .p2-hero {
+      background: linear-gradient(135deg, #1f2933 0%, #2c7a7b 100%);
+    }
+    .p2-cta-primary {
+      background: #2c7a7b;
+      color: #f9fafb;
+    }
+    .p2-accent-pill {
+      background: #81e6d9;
+    }
+    .p2-main-swatch { background: #1f2933; }
+    .p2-accent-swatch { background: #2c7a7b; }
+    .p2-neutral-swatch { background: #f5f7fa; }
+
+    /* PALETTE 3 – Deep Navy & Steel */
+    .p3-hero {
+      background: radial-gradient(circle at top left, #526377 0%, #0b1f3b 55%, #020617 100%);
+    }
+    .p3-cta-primary {
+      background: #f59e0b;
+      color: #111827;
+    }
+    .p3-accent-pill {
+      background: #64748b;
+    }
+    .p3-main-swatch { background: #0b1f3b; }
+    .p3-accent-swatch { background: #526377; }
+    .p3-neutral-swatch { background: #f5f7fa; }
+
+  </style>
+</head>
+<body>
+  <h1>Transcrypt – Brand Direction: Top 3 (Tabbed)</h1>
+  <div class="intro">
+    <p>Three candidate brand directions, each shown with:</p>
+    <ul>
+      <li>A. Full-width Marketing hero</li>
+      <li>B. Marketing + Essentials side-by-side</li>
+      <li>C. Brand system preview (colour, type, buttons)</li>
+      <li>D/E. UI module grid: cards, table, form, status chips</li>
+    </ul>
+    <p>Everything here is directional and conceptual, not final design.</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-button active" data-tab="tab1">
+      <span class="code">#1</span> True Grey &amp; Cerulean
+    </button>
+    <button class="tab-button" data-tab="tab2">
+      <span class="code">#2</span> Slate Grey &amp; Muted Teal
+    </button>
+    <button class="tab-button" data-tab="tab3">
+      <span class="code">#3</span> Deep Navy &amp; Steel
+    </button>
+  </div>
+
+  <!-- TAB 1 -->
+  <div id="tab1" class="tab-content active">
+    <div class="tab-header">
+      <div class="tab-title">True Grey &amp; Cerulean Accent</div>
+      <div class="tab-subtitle">Calm, timeless, very SME friendly. Probably the safest long-term choice.</div>
+    </div>
+    <div class="tab-inner">
+
+      <!-- A. Full hero -->
+      <div>
+        <div class="section-label">A. Full-width marketing hero</div>
+        <div class="hero-full p1-hero">
+          <div class="hero-tag">Transcrypt Essentials</div>
+          <div class="hero-heading">Boring, safe infrastructure for Cyber Essentials compliance.</div>
+          <div class="hero-sub">
+            A calm, deterministic workspace for owners and advisors to gather evidence, run evaluations, and deliver signed reports
+            without drama or guesswork.
+          </div>
+          <div class="hero-ctas">
+            <button class="hero-cta p1-cta-primary">Start Essentials trial</button>
+            <button class="hero-cta-secondary">View sample report</button>
+          </div>
+          <div class="hero-meta">
+            No funnels. No sales theatre. Just a quiet, competent product that does what it says.
+          </div>
+          <div class="hero-accent-pill p1-accent-pill"></div>
+        </div>
+      </div>
+
+      <!-- B. Marketing + Essentials side-by-side -->
+      <div>
+        <div class="section-label">B. Marketing vs Essentials surfaces</div>
+        <div class="marketing-essentials">
+          <div class="marketing-card">
+            <div class="marketing-title">Marketing surface – home page slice</div>
+            <div class="marketing-copy">
+              True greys carry most of the layout. Cerulean accent only appears in CTA and subtle highlights.
+            </div>
+            <div class="marketing-row">
+              <div class="marketing-pill">Blog – evidence patterns</div>
+              <div class="marketing-pill">Product – Essentials</div>
+              <div class="marketing-pill">Docs – how it works</div>
+              <div class="marketing-pill">Security – cryptography</div>
+            </div>
+          </div>
+          <div class="essentials-card">
+            <div class="essentials-title">Essentials – evidence slice</div>
+            <div class="essentials-item">
+              <span>Evidence: Firewall config</span>
+              <span class="badge">Uploaded</span>
+            </div>
+            <div class="essentials-item">
+              <span>Evidence: Asset inventory</span>
+              <span class="badge">Pending</span>
+            </div>
+            <div class="essentials-item">
+              <span>Evaluation status</span>
+              <span class="badge">Ready to run</span>
+            </div>
+            <div class="tone-note">
+              The product UI remains mostly grey and neutral. Cerulean appears sparingly (links, CTAs), never in semantic states.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- C. Brand system -->
+      <div>
+        <div class="section-label">C. Brand system – colour, type, buttons</div>
+        <div class="brand-system">
+          <div class="brand-system-row">
+            <div>
+              <div class="section-label">Colour swatches</div>
+              <div class="swatches">
+                <div class="swatch p1-main-swatch"></div>
+                <div class="swatch p1-accent-swatch"></div>
+                <div class="swatch p1-neutral-swatch"></div>
+              </div>
+              <div class="swatch-label-row">
+                <span>Main grey</span>
+                <span>Cerulean accent</span>
+                <span>Neutral surface</span>
+              </div>
+            </div>
+            <div>
+              <div class="section-label">Type + buttons</div>
+              <div class="type-sample">
+                <div class="type-heading">H1 – Essentials workspace</div>
+                <div class="type-body">
+                  Body text stays mid-grey on white/very light backgrounds. Everything is calm and highly readable.
+                </div>
+                <div class="type-meta">
+                  No decorative typeface. Just a modern system font stack and clear sizing rules.
+                </div>
+                <div class="button-row">
+                  <button class="btn-sample p1-cta-primary">Primary action</button>
+                  <button class="btn-sample btn-outline">Secondary</button>
+                  <button class="btn-sample btn-ghost">Text link</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sub-note">
+            This direction lets the atomic neutrals do most of the work; the accent never fights with error/warning/info colours.
+          </div>
+        </div>
+      </div>
+
+      <!-- D/E. UI modules -->
+      <div>
+        <div class="section-label">D/E. UI module grid</div>
+        <div class="module-grid">
+          <div class="module-card">
+            <div class="module-title">Evidence cards</div>
+            <div class="pill-row">
+              <span class="small-pill">Firewall rules – uploaded</span>
+              <span class="small-pill">Endpoint list – missing</span>
+              <span class="small-pill">Backup proof – uploaded</span>
+            </div>
+            <div class="sub-note">Mostly neutral; accent may appear in “view details” links.</div>
+          </div>
+          <div class="module-card">
+            <div class="module-title">Status chips</div>
+            <div class="pill-row">
+              <span class="chip-status"><span class="chip-dot"></span> Passing</span>
+              <span class="chip-status warn"><span class="chip-dot"></span> Needs review</span>
+              <span class="chip-status err"><span class="chip-dot"></span> Failing</span>
+            </div>
+            <div class="sub-note">Semantic colours remain independent of cerulean brand accent.</div>
+          </div>
+          <div class="module-card">
+            <div class="module-title">Mini table</div>
+            <table class="table-demo">
+              <thead>
+              <tr><th>Control</th><th>State</th><th>Last change</th></tr>
+              </thead>
+              <tbody>
+              <tr><td>Boundary firewall</td><td>Passing</td><td>3 days ago</td></tr>
+              <tr><td>Malware protection</td><td>Needs review</td><td>14 days ago</td></tr>
+              <tr><td>Access control</td><td>Passing</td><td>28 days ago</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="module-card">
+            <div class="module-title">Form input</div>
+            <div class="input-row">
+              <label class="label-small">Evidence note</label>
+              <input class="input-demo" placeholder="Describe how this evidence satisfies the control…" />
+              <span class="sub-note">Form design stays completely neutral. No brand colour in validation.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TAB 2 -->
+  <div id="tab2" class="tab-content">
+    <div class="tab-header">
+      <div class="tab-title">Slate Grey &amp; Muted Teal</div>
+      <div class="tab-subtitle">More modern, technical, and slightly fresher than the cerulean option.</div>
+    </div>
+    <div class="tab-inner">
+
+      <!-- A. Full hero -->
+      <div>
+        <div class="section-label">A. Full-width marketing hero</div>
+        <div class="hero-full p2-hero">
+          <div class="hero-tag">Transcrypt Essentials</div>
+          <div class="hero-heading">Modern, precise infrastructure for compliance without guesswork.</div>
+          <div class="hero-sub">
+            Slate and teal frame the product as contemporary but serious.
+            The platform behaves like reliable infrastructure, not “AI magic”.
+          </div>
+          <div class="hero-ctas">
+            <button class="hero-cta p2-cta-primary">Explore Essentials</button>
+            <button class="hero-cta-secondary">Read the docs</button>
+          </div>
+          <div class="hero-meta">
+            This direction feels technical and current, but still calm and non-flashy.
+          </div>
+          <div class="hero-accent-pill p2-accent-pill"></div>
+        </div>
+      </div>
+
+      <!-- B. Marketing + Essentials side-by-side -->
+      <div>
+        <div class="section-label">B. Marketing vs Essentials surfaces</div>
+        <div class="marketing-essentials">
+          <div class="marketing-card">
+            <div class="marketing-title">Marketing surface – hero + cards</div>
+            <div class="marketing-copy">
+              Teal emphasises interactive elements: navigation, CTAs, and selected states. The rest remains slate &amp; neutral.
+            </div>
+            <div class="marketing-row">
+              <div class="marketing-pill">Why SMEs use Transcrypt</div>
+              <div class="marketing-pill">How Cyber Essentials works</div>
+              <div class="marketing-pill">Pricing</div>
+              <div class="marketing-pill">Security deep dive</div>
+            </div>
+          </div>
+          <div class="essentials-card">
+            <div class="essentials-title">Essentials – evaluation slice</div>
+            <div class="essentials-item">
+              <span>Active evaluation</span>
+              <span class="badge">Cyber Essentials 2025</span>
+            </div>
+            <div class="essentials-item">
+              <span>Evaluator</span>
+              <span class="badge">Owner / advisor</span>
+            </div>
+            <div class="essentials-item">
+              <span>Evidence completeness</span>
+              <span class="badge">68%</span>
+            </div>
+            <div class="tone-note">
+              Teal appears as a helpful accent (links, CTAs, highlights) but never replaces semantic or structural neutrals.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- C. Brand system -->
+      <div>
+        <div class="section-label">C. Brand system – colour, type, buttons</div>
+        <div class="brand-system">
+          <div class="brand-system-row">
+            <div>
+              <div class="section-label">Colour swatches</div>
+              <div class="swatches">
+                <div class="swatch p2-main-swatch"></div>
+                <div class="swatch p2-accent-swatch"></div>
+                <div class="swatch p2-neutral-swatch"></div>
+              </div>
+              <div class="swatch-label-row">
+                <span>Slate base</span>
+                <span>Muted teal accent</span>
+                <span>Neutral surface</span>
+              </div>
+            </div>
+            <div>
+              <div class="section-label">Type + buttons</div>
+              <div class="type-sample">
+                <div class="type-heading">H1 – Teal signals interaction</div>
+                <div class="type-body">
+                  Body copy remains neutral; teal is used for key actions and interactive affordances, not decoration.
+                </div>
+                <div class="type-meta">
+                  Slightly more contemporary feel than the cerulean palette, with the same accessibility requirements.
+                </div>
+                <div class="button-row">
+                  <button class="btn-sample p2-cta-primary">Primary action</button>
+                  <button class="btn-sample btn-outline">Secondary</button>
+                  <button class="btn-sample btn-ghost">Link-style</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sub-note">
+            If you want “modern infrastructure” as the vibe, this is a strong direction without becoming playful.
+          </div>
+        </div>
+      </div>
+
+      <!-- D/E. UI modules -->
+      <div>
+        <div class="section-label">D/E. UI module grid</div>
+        <div class="module-grid">
+          <div class="module-card">
+            <div class="module-title">Evaluation cards</div>
+            <div class="pill-row">
+              <span class="small-pill">Cyber Essentials – in progress</span>
+              <span class="small-pill">IASME – future</span>
+              <span class="small-pill">Internal controls – draft</span>
+            </div>
+            <div class="sub-note">Teal can be used carefully in “active” evaluation states in Marketing, not in core semantics.</div>
+          </div>
+          <div class="module-card">
+            <div class="module-title">Status chips</div>
+            <div class="pill-row">
+              <span class="chip-status"><span class="chip-dot"></span> Passing</span>
+              <span class="chip-status warn"><span class="chip-dot"></span> Partial</span>
+              <span class="chip-status err"><span class="chip-dot"></span> Failed</span>
+            </div>
+            <div class="sub-note">Semantic palette remains unchanged. Teal is a brand accent, not a status colour.</div>
+          </div>
+          <div class="module-card">
+            <div class="module-title">Mini table</div>
+            <table class="table-demo">
+              <thead>
+              <tr><th>Path</th><th>SLO</th><th>State</th></tr>
+              </thead>
+              <tbody>
+              <tr><td>Login</td><td>&lt; 400ms p95</td><td>Meeting</td></tr>
+              <tr><td>Evidence POST</td><td>&lt; 800ms p95</td><td>Meeting</td></tr>
+              <tr><td>Evaluate</td><td>&lt; 1.5s sync</td><td>Meeting</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="module-card">
+            <div class="module-title">Form input</div>
+            <div class="input-row">
+              <label class="label-small">Teal usage note</label>
+              <input class="input-demo" placeholder="Where this accent may appear (links, CTAs, focus outlines)..." />
+              <span class="sub-note">Form and validation stay neutral. Focus outlines can optionally use a desaturated teal.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TAB 3 -->
+  <div id="tab3" class="tab-content">
+    <div class="tab-header">
+      <div class="tab-title">Deep Navy &amp; Steel</div>
+      <div class="tab-subtitle">The classic enterprise-cybersecurity feel: heavy, serious, very credible.</div>
+    </div>
+    <div class="tab-inner">
+
+      <!-- A. Full hero -->
+      <div>
+        <div class="section-label">A. Full-width marketing hero</div>
+        <div class="hero-full p3-hero">
+          <div class="hero-tag">Transcrypt Essentials</div>
+          <div class="hero-heading">Evidence, evaluations, and exports you can sign your name to.</div>
+          <div class="hero-sub">
+            Deep navy and steel send a strong “security product” signal. This feels like tooling for people who run real systems.
+          </div>
+          <div class="hero-ctas">
+            <button class="hero-cta p3-cta-primary">Book a walkthrough</button>
+            <button class="hero-cta-secondary">Security overview</button>
+          </div>
+          <div class="hero-meta">
+            Heavier than the other two, but extremely authoritative if you lean fully into “critical infrastructure” positioning.
+          </div>
+          <div class="hero-accent-pill p3-accent-pill"></div>
+        </div>
+      </div>
+
+      <!-- B. Marketing + Essentials side-by-side -->
+      <div>
+        <div class="section-label">B. Marketing vs Essentials surfaces</div>
+        <div class="marketing-essentials">
+          <div class="marketing-card">
+            <div class="marketing-title">Marketing surface – “security-first” emphasis</div>
+            <div class="marketing-copy">
+              Navy and steel strongly signal security, operations, and control.
+              This is the closest to a classic security vendor palette.
+            </div>
+            <div class="marketing-row">
+              <div class="marketing-pill">Security architecture</div>
+              <div class="marketing-pill">Evidence integrity</div>
+              <div class="marketing-pill">Multi-tenant isolation</div>
+              <div class="marketing-pill">Audit trails</div>
+            </div>
+          </div>
+          <div class="essentials-card">
+            <div class="essentials-title">Essentials – operations slice</div>
+            <div class="essentials-item">
+              <span>Tenancy isolation</span>
+              <span class="badge">Sealed</span>
+            </div>
+            <div class="essentials-item">
+              <span>Evidence vault</span>
+              <span class="badge">Immutable</span>
+            </div>
+            <div class="essentials-item">
+              <span>Last export</span>
+              <span class="badge">2 days ago</span>
+            </div>
+            <div class="tone-note">
+              The product UI should still be neutral. Navy is heavy; overuse inside Essentials would quickly feel oppressive.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- C. Brand system -->
+      <div>
+        <div class="section-label">C. Brand system – colour, type, buttons</div>
+        <div class="brand-system">
+          <div class="brand-system-row">
+            <div>
+              <div class="section-label">Colour swatches</div>
+              <div class="swatches">
+                <div class="swatch p3-main-swatch"></div>
+                <div class="swatch p3-accent-swatch"></div>
+                <div class="swatch p3-neutral-swatch"></div>
+              </div>
+              <div class="swatch-label-row">
+                <span>Deep navy base</span>
+                <span>Steel accent</span>
+                <span>Neutral surface</span>
+              </div>
+            </div>
+            <div>
+              <div class="section-label">Type + buttons</div>
+              <div class="type-sample">
+                <div class="type-heading">H1 – Heavier security tone</div>
+                <div class="type-body">
+                  Copy and layout reinforce “operations-grade security”.
+                  This has a strong SOC/critical-infrastructure vibe.
+                </div>
+                <div class="type-meta">
+                  Very credible for security buyers; potentially intimidating for very small SMEs if not softened elsewhere.
+                </div>
+                <div class="button-row">
+                  <button class="btn-sample p3-cta-primary">Primary action</button>
+                  <button class="btn-sample btn-outline">Secondary</button>
+                  <button class="btn-sample btn-ghost">Subtle link</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sub-note">
+            This direction doubles down on “security vendor”. If you want Transcrypt to feel like infra, this is powerful but heavy.
+          </div>
+        </div>
+      </div>
+
+      <!-- D/E. UI modules -->
+      <div>
+        <div class="section-label">D/E. UI module grid</div>
+        <div class="module-grid">
+          <div class="module-card">
+            <div class="module-title">Ops-style cards</div>
+            <div class="pill-row">
+              <span class="small-pill">Tenant – CE-only</span>
+              <span class="small-pill">Evidence vault – online</span>
+              <span class="small-pill">Exports – normal</span>
+            </div>
+            <div class="sub-note">Works very well if you lean into a slightly “control room” aesthetic on Marketing.</div>
+          </div>
+          <div class="module-card">
+            <div class="module-title">Status chips</div>
+            <div class="pill-row">
+              <span class="chip-status"><span class="chip-dot"></span> Healthy</span>
+              <span class="chip-status warn"><span class="chip-dot"></span> At risk</span>
+              <span class="chip-status err"><span class="chip-dot"></span> Action needed</span>
+            </div>
+            <div class="sub-note">You must be strict that navy never bleeds into semantic signalling.</div>
+          </div>
+          <div class="module-card">
+            <div class="module-title">Mini table</div>
+            <table class="table-demo">
+              <thead>
+              <tr><th>Stream</th><th>State</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+              <tr><td>Auth</td><td>Stable</td><td>OIDC config checked</td></tr>
+              <tr><td>Evidence</td><td>Stable</td><td>Vault signed</td></tr>
+              <tr><td>Exports</td><td>Stable</td><td>Downloads verified</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="module-card">
+            <div class="module-title">Form input</div>
+            <div class="input-row">
+              <label class="label-small">Ops note</label>
+              <input class="input-demo" placeholder="Describe this tenant’s operating environment…" />
+              <span class="sub-note">
+                Works if the narrative is “you are running part of your security stack here”.
+                Less ideal if you want a soft, hand-holding SME vibe.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const buttons = document.querySelectorAll('.tab-button');
+      const tabs = document.querySelectorAll('.tab-content');
+
+      function activateTab(id) {
+        tabs.forEach(t => t.classList.toggle('active', t.id === id));
+        buttons.forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+      }
+
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+      });
+    })();
+  </script>
+</body>
+</html>
