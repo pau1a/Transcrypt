@@ -15239,32 +15239,347 @@ This ensures external auditors can independently verify Transcrypt’s regulator
 
 ## 12. Non-Functional Requirements
 
-Quantitative targets: performance, scalability, reliability, and resource budgets. Links directly to observability metrics.
+Transcrypt treats non-functional requirements as operating physics, not supplementary guidance.
+They define how the platform behaves under all conditions — normal, degraded, and adversarial — and they apply uniformly across every tenant, every environment, and every lifecycle stage.
+
+These requirements enforce the core doctrines established in the PRD and SAIS:
+deterministic execution, sealed tenancy, predictable performance, boring infrastructure, and no silent drift at any boundary.
+Every target in this section is release-blocking and is continuously validated through the observability fabric defined in §10 and the pipeline gates defined in §11.
+
+All metrics in this section derive from machine-verifiable signals: traces, logs, metrics, audit events, and synthetic checks.
+A requirement is only considered valid if it can be measured without human judgement.
+Any violation generates an audit event and must be resolved or formally waived through the exception workflow described in §9.11.
+
+The constraints defined here ensure that Transcrypt’s behaviour is stable, repeatable, and tenant-isolated, preserving user trust and guaranteeing the integrity of evidence, rule evaluation, and all derived artefacts.
 
 ---
 
 ### 12.1 Purpose and Scope
 
-Define which cross-cutting qualities are considered non-functional for the MVP and how they are verified (test, telemetry, or audit).
-Explain that these metrics are **release-blocking** and traceable through §10 (Observability) and §11 (Pipeline).
+This section defines the **cross-cutting qualities** that determine how Transcrypt behaves as a live, multi-tenant compliance platform.
+These qualities are considered non-functional because they do not describe user features; they describe the **operational invariants** the system must uphold to remain trustworthy: performance envelopes, scaling behaviour, reliability guarantees, resilience under stress, resource ceilings, and the integrity of every boundary.
+
+Only qualities that can be **measured automatically**, **continuously**, and **without human interpretation** are included.
+Every requirement in §12 must be verifiable through at least one of the following:
+
+* **Test** — deterministic checks executed in CI and pre-production.
+* **Telemetry** — metrics, traces, logs, and redaction counters collected through the observability fabric defined in §10.
+* **Audit** — events that assert violations, degradations, or waiver actions.
+
+These constraints apply to **all tenants**, **all environments**, and **all interactions**, including degraded modes.
+A requirement is only considered satisfied if it can be proven through telemetry or test; absence of evidence is treated as a failure.
+
+All targets defined in this section are **release-blocking** and enforced through the build and deployment geometry described in §11.
+If any non-functional requirement exceeds its defined tolerances, the pipeline must halt, surface the failure, and require either remediation or a formally logged, time-bounded exception as defined in §9.11.
+
+By bounding system behaviour in this way, §12 guarantees that Transcrypt remains **deterministic**, **tenant-isolated**, and **free of silent drift**, ensuring that rule evaluations, evidence handling, reporting, and all derived artefacts behave consistently across releases, environments, and time.
+
+---
 
 ### 12.2 Performance Targets
 
-Quantitative latency and throughput budgets per critical path:
+Performance targets define the **deterministic execution envelopes** for all critical paths in the platform.
+These envelopes guarantee predictable behaviour under normal and degraded load, enforce sealed tenancy, and prevent drift, jitter, or cross-tenant interference.
+All measurements are taken at **p95**, with **bounded jitter**, under **80% nominal system load with 20% reserved headroom**.
 
-| Path                                                            | p95 Latency | Throughput  | Notes         |
-| :-------------------------------------------------------------- | :---------- | :---------- | :------------ |
-| API Gateway → Rule Eval                                         | ≤ 400 ms    | > 200 req/s | sync requests |
-| Evidence Upload                                                 | ≤ 800 ms    | I/O-bound   | streamed      |
-| Report Generation (async)                                       | ≤ 2 min     | n/a         | batch         |
-| All limits measured under 80 % nominal load with 20 % headroom. |             |             |               |
+Telemetry from §10 and pipeline gates from §11 enforce these targets continuously and block release on any deviation.
+
+---
+
+#### **12.2.1 Rule Evaluation**
+
+Rule evaluation is deterministic and free of runtime inference.
+It must remain stable regardless of tenant volume, rule-pack complexity, or evaluation frequency.
+
+* **Latency:** p95 ≤ 400 ms
+* **Jitter:** ≤ 20% deviation from median
+* **Throughput:** ≥ 200 evaluations per second across pooled workers
+* **Cold start:** ≤ 1.5 s worker spin-up with deterministic queuing
+* **Concurrency:** per-tenant ceilings enforced to prevent noisy neighbours
+* **Determinism:** zero stochastic components; deviations raise audit events
+
+---
+
+#### **12.2.2 Evidence Upload**
+
+Evidence ingestion is streamed, hashed, and integrity-checked.
+This path is I/O-bound but must behave predictably across file sizes and concurrent uploads.
+
+* **Initial acknowledgement:** p95 ≤ 800 ms
+* **Chunk ingestion:** stable behaviour across fixed chunk sizes
+* **Max file size:** platform-defined; over-limit files rejected deterministically
+* **I/O fairness:** per-tenant quotas enforced
+* **Hashing cost:** ≤ 10% jitter across normal volume range
+* **Back-pressure:** deterministic and isolated to the tenant causing load
+
+---
+
+#### **12.2.3 Report Generation**
+
+Reports are batch tasks executed asynchronously through the queue system.
+The process must remain predictable under varying load.
+
+* **Completion time:** p95 ≤ 2 minutes
+* **Queue delay:** bounded and observable
+* **Tenant fairness:** per-tenant queue slices ensure predictable throughput
+* **Integrity operations:** hashing and anchoring operate with < 20% jitter
+* **Degradation:** must not affect rule evaluation or evidence ingestion
+
+---
+
+#### **12.2.4 UI Responsiveness**
+
+UI responsiveness forms part of the non-functional trust boundary.
+The interface must behave calmly and predictably.
+
+* **Click-to-render:** ≤ 200 ms on broadband, ≤ 500 ms on 3G
+* **Bundle size ceiling:** enforced at build-time
+* **Skeleton behaviour:** consistent across views
+* **Stutter tolerance:** zero; any jank constitutes an NFR breach
+
+---
+
+#### **12.2.5 Global Performance Invariants**
+
+These invariants govern the behaviour of all services.
+
+* **No runtime inference:** ensures stable latency envelopes
+* **Autoscaling:** deterministic thresholds; no oscillation or thrash
+* **Headroom:** core services remain below 80% utilisation under load tests
+* **Isolation:** concurrency, CPU, and I/O budgets sliced per tenant
+* **Telemetry:** structured latency and jitter metrics emitted continuously
+* **Release gating:** any breach blocks deployment unless formally exempted under §9.11
+
+---
 
 ### 12.3 Scalability and Capacity
 
-State horizontal-scaling behaviour: stateless services autoscale on CPU > 70 % / queue lag > 10 s.
-Database scaling via read-replicas; object store unlimited.
-Document maximum tested tenant count and evidence volume per tenant before degradation.
-Define cost ceilings per environment (links to §8.13).
+Scalability for the MVP is about **staying comfortably inside a small, fixed footprint** while proving early revenue, not about chasing infinite horizontal scale.
+
+Transcrypt runs on:
+
+* A single DigitalOcean droplet for app, workers, and PostgreSQL.
+* DigitalOcean Spaces + CDN for static assets and evidence artefacts.
+* External SaaS for inference, email, and billing.
+
+None of these resources autoscale. Capacity changes are **deliberate, manual operations** governed by the guardrails in §7.13. This section defines the **capacity envelopes**, **tenant/workload limits**, and **degradation rules** that must be true before a release is accepted.
+
+#### 12.3.1 Capacity Model – Single Droplet, Many Tenants
+
+The MVP capacity model is:
+
+* **One production droplet**
+
+  * Modest vCPU and RAM, sized for:
+
+    * early adopter tenant base in the **low tens to low fifties**,
+    * **concurrent signed in users in the low tens**,
+    * **human scale** evidence and report volumes, not bulk ingestion.
+* **Elastic-but-budgeted providers**
+
+  * DigitalOcean Spaces and CDN for artefacts and marketing assets.
+  * External inference API, MXroute, Stripe.
+
+Targets:
+
+* The system must handle at least **2–3×** the initial expected tenant count and traffic before any droplet resize or topology change is required.
+* Under this envelope, p95 latencies in §12.2 remain within budget and error rates stay below SLO thresholds.
+
+Scaling path (MVP):
+
+1. **Optimise within the existing droplet**: query tuning, worker concurrency, caching, quotas.
+2. **Vertical resize** when metrics and cost thresholds justify it.
+3. Only later, **topology change** (separate DB, workers, extra nodes) when growth makes it unavoidable.
+
+#### 12.3.2 Tenant and Workload Envelopes
+
+Capacity is expressed as **explicit envelopes** that must be validated in staging and tracked in production.
+
+For the MVP:
+
+* **Tenant envelope**
+
+  * Supported tenants: at least **50 active Essentials tenants** without breaching CPU, memory, or storage guardrails defined in §7.13.
+  * At least **10 concurrently active tenants** (users interacting in the app) without p95 latency breach on the critical paths in §12.2.
+
+* **User activity envelope**
+
+  * Concurrent signed in users in the low tens performing:
+
+    * navigation across dashboards,
+    * evidence upload at human speed (no automated bulk upload),
+    * report generation at a steady but not abusive rate.
+  * SLO: for this concurrency level, p95 latency targets in §12.2 remain satisfied.
+
+* **Evidence and report envelope**
+
+  * Per tenant:
+
+    * Evidence metadata in the **tens of thousands of items**.
+    * Evidence storage in **tens of gigabytes** per tenant at most for the MVP tier.
+    * A steady stream of report generation jobs with per tenant limits from §7.13.5 enforced.
+  * Aggregated across all tenants, droplet CPU, memory, and disk remain within safe thresholds.
+
+These envelopes must be backed by:
+
+* Load tests that simulate realistic tenant mixes.
+* Metrics that show steady operation under **80 % nominal load with 20 % headroom**, per §12.2.
+
+#### 12.3.3 Quotas, Rate Limits, and Fairness
+
+Scalability is enforced by **containing abuse and outliers** rather than assuming infinite headroom.
+
+* **HTTP rate limits**
+
+  * Per IP and per tenant limits on:
+
+    * sign in endpoints,
+    * report request endpoints,
+    * evidence upload initiation,
+    * inference backed endpoints.
+  * Excess traffic is **rejected cleanly** (appropriate HTTP error) instead of stretching the droplet beyond safe utilisation.
+
+* **Per tenant quotas**
+
+  * Maximum number of:
+
+    * active users per tenant (plan bound),
+    * reports per period,
+    * invitations per period,
+    * evidence items per tenant during the MVP.
+  * Quotas configurable upwards for specific tenants once their usage and billing justify it.
+
+* **Job and queue limits**
+
+  * Long running jobs (reports, heavy evaluations) are:
+
+    * limited per tenant,
+    * bounded per time window,
+    * scheduled so no single tenant can monopolise workers or queues.
+
+These limits ensure:
+
+* **One noisy tenant cannot starve others.**
+* The shared droplet remains within the CPU, memory, and queue depth guardrails in §7.13.2–7.13.3.
+
+##### Diagram — Quotas and Capacity Shields
+
+```mermaid
+flowchart LR
+    Traffic[Tenant traffic\nSite App Api] --> Limits[Rate limits\nQuotas]
+    Limits --> Droplet[DO droplet\nApp Workers Db]
+    Droplet --> Queues[Job queues\nReports Evidence]
+    Droplet --> Metrics[Metrics Logs Traces]
+    Queues --> Metrics
+    Metrics --> Alerts[Capacity alerts]
+    Alerts --> Actions[Operator actions\nResize droplet\nAdjust quotas\nFlip flags]
+```
+
+#### 12.3.4 Site and Blog Load vs Essentials Load
+
+The **site/blog runtime shares the same droplet** but follows rules that prevent marketing spikes from harming Essentials.
+
+* **Assets**
+
+  * Blog and landing page assets are served via DO Spaces + CDN, not from droplet disk.
+  * Assets are immutable; new versions produce new filenames.
+
+* **Workload profile**
+
+  * Marketing traffic is **read heavy** and largely cacheable.
+  * Essentials traffic is **metadata and write heavy** but limited to authenticated users.
+
+* **Isolation rules**
+
+  * HTTP rate limits and WAF style rules apply separately to:
+
+    * public site/blog routes,
+    * authenticated Essentials routes.
+  * Even in the presence of a traffic spike to `/` or `/blog/*`, Essentials routes must maintain:
+
+    * p95 latency budgets from §12.2,
+    * error rates within SLO tolerances.
+
+The NFR for the MVP: a marketing spike that stays inside agreed traffic bounds must **not** cause Essentials users to experience sustained SLO breach.
+
+#### 12.3.5 Inference and External Capacity Constraints
+
+External SaaS (inference, email, billing) scales at provider level but **Transcrypt treats them as cost constrained**.
+
+* **Inference capacity**
+
+  * Monthly budget for inference calls defined and tracked.
+  * Per tenant and per feature usage measured via metrics.
+  * Per tenant quotas on inference backed features may be enforced.
+
+* **Degradation behaviour**
+
+  * Approaching inference budget:
+
+    * non critical inference flows are disabled first.
+  * Budget hit:
+
+    * `inference_api_enabled` flag is switched off,
+    * evaluation falls back to **deterministic rule based behaviour** only.
+  * Behaviour in degraded mode remains deterministic and reproducible as per §§3.2.3 and 6.x.
+
+* **Other external services**
+
+  * MXroute, Stripe and similar are monitored for unusual volume.
+  * System design prevents uncontrolled loops of outbound traffic.
+
+The NFR: **inference loss or budget exhaustion must never take the platform down**. It only reduces assistance, keeping the core rule based engine intact.
+
+##### Diagram — Inference Budget and Degradation
+
+```mermaid
+flowchart LR
+    Eval[Evaluation requests\nEssentials app] --> InferenceGate[Inference guard\nBudget quotas]
+    InferenceGate -->|Budget ok| Inference[Inference api]
+    InferenceGate -->|Budget hit| RulesOnly[Rules engine only\nDeterministic path]
+    Inference --> Metrics[Metrics Logs]
+    RulesOnly --> Metrics
+    Metrics --> BudgetAlerts[Budget alerts]
+    BudgetAlerts --> Flags[Flip flags\nDisable helpers]
+```
+
+#### 12.3.6 Degradation Under Saturation
+
+When the droplet approaches its capacity limits, behaviour must be **predictable, non destructive, and reversible**.
+
+* **Under CPU or memory pressure**
+
+  * Non critical background tasks (tidy up, low priority jobs) are deferred.
+  * Queues absorb spikes; concurrency caps prevent oversubscription.
+  * Requests that exceed rate limits are rejected cleanly rather than served with unbounded latency.
+
+* **When guardrails fire**
+
+  * Alerts on:
+
+    * sustained CPU above target,
+    * memory usage near capacity,
+    * disk usage approaching limits,
+    * DB connection pool exhaustion,
+    * growing report or evidence queues.
+  * Operator actions are:
+
+    * temporarily disable non essential flows via feature flags,
+    * review per tenant quotas and adjust where needed,
+    * resize droplet class if sustained load justifies it.
+
+* **Invariants**
+
+  * No single tenant or feature can saturate the platform.
+  * Degraded modes are **coded**, not improvised on the day.
+  * All behaviour remains consistent with:
+
+    * determinism and tenancy isolation,
+    * evidence integrity and audit requirements.
+
+These guarantees close the loop between the **raw capacity guardrails** of §7.13 and the **release blocking NFRs** in this section: if the envelopes, quotas, and degradation rules described here are not demonstrably in place, the release does not ship.
+
+---
 
 ### 12.4 Reliability and Availability
 
