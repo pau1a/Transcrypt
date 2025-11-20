@@ -509,7 +509,7 @@ Spacing becomes part of the product’s operational consistency. It creates a fe
 
 The grid and breakpoint system defines the spatial logic of Transcrypt’s interface. It ensures that every screen — Marketing, Essentials, advisor workspace, verifier mode, documentation, and future inference-assisted views — follows the same structural rules. This is not a visual style; it is the geometry of the product. If spacing is the local physics, the grid is the cosmology.
 
-Transcrypt rejects bespoke or expressive layouts. Every element sits inside a predictable framework, so users never feel lost or disoriented, regardless of screen size or role. The grid is intentionally simple, intentionally repeatable, and intentionally boring — because boring is safe, and safe is the point.
+Transcrypt rejects bespoke or expressive layouts in the app. Every element sits inside a predictable framework, so users never feel lost or disoriented, regardless of screen size or role. The grid is intentionally simple, intentionally repeatable, and intentionally boring — because boring is safe, and safe is the point.
 
 ---
 
@@ -570,7 +570,7 @@ Marketing reflows with the same logic — the only difference is breathing room.
 To maintain system integrity:
 
 1. Essentials may not override grid rules. Marketing may use expanded or editorial container layouts as long as tokens and breakpoint logic remain intact.
-2. **No alternate max-width containers** — the grid must feel like the same architecture everywhere.
+2. **No alternate max-width containers** — the grid must feel like the same architecture everywhere in the app.
 3. **No custom breakpoints** added by designers or developers in isolation.
 4. **No asymmetric layouts** unless explicitly defined as a supported pattern.
 5. **No inference-driven layouts** — AI may supply content, not geometry.
