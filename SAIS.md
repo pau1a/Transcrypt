@@ -14787,16 +14787,284 @@ All evidence is stored in the audit subsystem and linked to §14.
 
 ### 11.8 Evidence Lineage Protection
 
-Evidence cannot be allowed to mutate, drift, or become ambiguous.
-This section defines how evidence lineage is preserved, re-validated, and reconstructed if required.
-Integrity hashes, lineage graphs, and tamper-evident logs ensure that every artefact remains provably identical to its original submission.
-This protects tenants during audits and is a core differentiator for Transcrypt.
+Evidence is immutable.
+It must never drift, mutate, or become ambiguous.
+This section defines how Transcrypt preserves, validates, and reconstructs evidence lineage using integrity hashes, lineage graphs, and tamper-evident logs.
+Every artefact must remain provably identical to its original submission.
+This protects tenants during audits and gives Transcrypt its differentiating trust model.
+
+#### **Evidence Lineage Flow**
+
+```mermaid
+flowchart LR
+    A[Evidence Root] --> B[Derived Artefact]
+    B --> C[Lineage Log]
+    C --> D[Verification Engine]
+    D --> E[Lineage Proven]
+```
+
+#### **Evidence Integrity Anchoring**
+
+Each evidence item is anchored with multiple cryptographic guarantees:
+
+* root content hash at upload
+* metadata hash
+* object-store digest
+* envelope encryption with tenant-scoped keys
+* schema version hash
+* migration-protection hash linking evidence to its database state
+* inference-analysis digest where applicable
+
+These anchors combine to form a tamper-evident lineage root.
+
+#### **Lineage Graph Construction**
+
+For every evidence item, Transcrypt constructs an append-only lineage graph capturing:
+
+* original upload
+* derived artefacts (OCR, thumbnails, extracted text, parsed JSON)
+* rulepack evaluation inputs
+* inference transformations
+* compression or archival variants
+* operator or system actions
+* strict parent-child relationships
+* time-sequenced event chain
+
+The graph is immutable, tenant-scoped, and reconstructible at any point in time.
+
+#### **Tamper-Evident Audit Log**
+
+Every lineage event is written to a tamper-evident log including:
+
+* evidence ID
+* tenant ID
+* event type (UPLOAD, TRANSFORM, VIEW, DELETE, EXPORT)
+* timestamp
+* operator/system identity
+* digest of the artefact
+* hash-of-hash anchor
+
+Any attempt to alter the lineage is provably detectable through mismatch in anchors.
+
+#### **Transformation Recording**
+
+All transformations must be recorded without overwriting the source:
+
+* OCR extraction
+* metadata annotation
+* text extraction
+* rulepack evaluation
+* inference analysis
+* PDF flattening
+* thumbnail generation
+* any normalisation action
+
+Each transformation produces a new digest and lineage node, preserving strict historical integrity.
+
+#### **Evidence Drift Detection**
+
+Evidence drift is a critical failure scenario.
+Drift detection compares:
+
+* stored content hash
+* reconstructed hash
+* object-store hash
+* metadata digest
+* lineage digest
+* SBOM and provenance context
+
+Any mismatch triggers an incident under §11.5 and blocks further processing.
+
+#### **Evidence Rebuild and Rehydration**
+
+Rehydration aligns with §11.6 and must:
+
+* reload evidence from object store
+* verify all digests
+* rebind to tenant keys
+* reconstruct all derived artefacts
+* reapply lineage nodes
+* rerun inference baselines
+* revalidate rulepack contexts
+
+If the rebuilt lineage diverges from the original, the rebuild is rejected.
+
+#### **Deletion Lineage**
+
+Deletion is a lineage event, not a mutation.
+Deletion records include:
+
+* timestamp
+* tenant ID
+* original digest
+* deletion reason code
+* operator identity
+
+All data is removed per GDPR, but the lineage entry remains to preserve auditability.
+
+#### **Export and Third-Party Verification**
+
+When a tenant requests an export for audit, the package includes:
+
+* evidence roots
+* derived artefacts
+* lineage graph
+* digest manifest
+* provenance signatures
+* SBOM context
+* inference-analysis digests (optional)
+
+Auditors can independently verify every hash and chain.
+
+#### **Lineage Evidence Integration**
+
+All lineage evidence flows into the audit system defined in §10.14:
+
+* digest history
+* transformation history
+* drift detections
+* rebuild verifications
+* operator actions
+* cryptographic anchors
+
+This creates a complete, legally defensible evidence chain.
+
+---
 
 ### 11.9 Change Windows and Service Health
 
-Change is allowed only within a controlled, observable, reversible boundary.
-This section lays out maintenance window scheduling, communication requirements, pre-change backups, rollback plans, and the health checks that define “safe to proceed.”
-Monthly service-health reviews quantify alert fatigue, patch lateness, backup reliability, and operational entropy.
+Change is only permitted within controlled, observable, and reversible boundaries.
+This section defines how Transcrypt schedules change windows, communicates impact, validates backups, enforces rollback plans, and measures service health over time.
+A change is not “done” until it has passed preconditions, executed within an approved window, cleared post-change validation, and produced evidence that the platform remains safe and predictable.
+
+#### Change Window Flow
+
+```mermaid
+flowchart LR
+    A[Change Preconditions] --> B[Approved Window]
+    B --> C[Execute Change]
+    C --> D[Post Change Validation]
+    D --> E[Stable Service]
+    D --> F[Rollback Path]
+```
+
+#### Change Window Types
+
+Transcrypt recognises several classes of change window:
+
+* **Standard windows**: recurring, pre-published slots for routine releases, dependency updates, and infrastructure changes.
+* **Emergency windows**: incident-driven changes that must still respect preconditions, evidence capture, and rollback discipline.
+* **Blackout windows**: periods where changes are prohibited except for critical security fixes (for example audits, peak-usage periods, or regulatory deadlines).
+
+Each window type has explicit scoping: which components may change, which tenants may be affected, and what level of approval is required.
+
+#### Preconditions Before Change
+
+Before any change begins, the platform enforces automated preconditions:
+
+* Error budgets are within agreed thresholds.
+* No open P1 or P2 incidents related to the affected components.
+* Last scheduled backup and integrity validation (§11.3) have succeeded within the defined window.
+* Drift detectors for configuration, infrastructure, inference, and marketing bundles are green.
+* Pipeline status is green for the release artefacts to be deployed.
+* Staging or pre-prod has passed synthetic probes for core flows (login, organisation creation, evidence upload, evaluate, report).
+* Inference regression checks are passing for the current configuration.
+* Tenancy boundary validation (§11.7) has passed for the candidate build.
+
+If any precondition fails, the change window is automatically blocked until the underlying issue is resolved.
+
+#### Communication Requirements
+
+Every change that may affect tenants or external consumers must be communicated:
+
+* Publication of planned maintenance windows on tenant-facing channels, with clear indication of scope and risk.
+* Internal notification to operations, support, and engineering teams, with links to work items and runbooks.
+* Real-time status updates during the window for significant changes.
+* Post-change confirmation that the system is stable or that rollback has been applied.
+
+Silent, undocumented change is not permitted.
+
+#### Pre-Change Backups and Restore Readiness
+
+Before a change that affects data, infrastructure, or core control paths:
+
+* Database snapshots and WAL chains are verified via hashes against their expected manifests.
+* Object-store manifests for critical artefacts (evidence, reports, configuration packs, marketing bundles) are validated.
+* Backup encryption and tenant-scoped boundaries are rechecked.
+* Restore drills or dry-run restore validations are executed periodically to prove readiness.
+
+No high-impact change is allowed unless backups are both recent and demonstrably restorable.
+
+#### Rollback Plans and Reversibility
+
+Every change must have a defined rollback plan that is:
+
+* Pinned to explicit tags or digests for containers, infrastructure modules, inference manifests, and marketing bundles.
+* Documented as a runbook with a bounded number of steps.
+* Tested in staging or a representative environment prior to use in production.
+* Linked to synthetic probes and inference regressions that confirm rollback success.
+
+If post-change validation fails or unexpected behaviour appears, rollback is the default action, not a last resort.
+
+#### Health Checks During Change Windows
+
+During a change window, continuous health checks monitor:
+
+* Service availability and latency for core flows.
+* Inference latency and error rates.
+* Queue depth and worker saturation.
+* Database replica health and replication lag.
+* Object-store error rates.
+* Marketing site and blog synthetic checks.
+* Error rates per service and per tenant.
+
+If health indicators breach defined thresholds, the change is paused and either rolled back or escalated for incident handling under §11.5.
+
+#### Post-Change Validation
+
+After each change, the system automatically executes:
+
+* Full synthetic probes for login, organisation creation, evidence upload, evaluation, and report generation.
+* Inference regression tests against the current configuration to detect drift.
+* Tenancy boundary validation (§11.7) for a representative set of tenants.
+* Evidence lineage spot checks (§11.8) to ensure no corruption or unexpected mutation.
+* Config-as-code drift detection to confirm that live state matches the repository.
+* Marketing runtime checks to confirm correct bundles, hashes, and public routes.
+
+Only after these validations pass is the change marked as complete and the window closed.
+
+#### Monthly Service-Health Reviews
+
+Operational health is reviewed on a regular cadence (at least monthly) using quantitative indicators, including:
+
+* Alert volume, noise ratio, and evidence of alert fatigue.
+* SLO burn rate and frequency of SLO breaches.
+* Patch and dependency update lateness across services and runtimes.
+* Backup success rates and restore drill outcomes.
+* Frequency and success rate of deterministic rebuilds (§11.6).
+* Number and severity of incidents attributed to change management issues.
+* Inference drift events requiring intervention.
+* Marketing runtime defects linked to deployment practices.
+* Manual interventions and unplanned operational work.
+
+The review outputs a service-health score and a set of corrective actions, which feed back into changes to window policy, automation, and runbooks.
+
+#### Evidence and Auditability
+
+Every change window generates auditable artefacts:
+
+* Window type, scope, planned start and end times.
+* Approvals, operator identities, and associated work items.
+* Precondition checks and their outcomes.
+* Backups and restore-readiness validation results.
+* Health metrics sampled before, during, and after change.
+* Rollback execution (if applied) and its validation.
+* Links to any incidents raised during or after the window.
+* Summary of the monthly service-health review where relevant.
+
+These records form part of the operational evidence set referenced in §10.14 and §14, demonstrating that change is always controlled, observable, and reversible.
+
+---
 
 ### 11.10 Compliance Clock and Regulatory Operations
 
