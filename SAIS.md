@@ -16694,143 +16694,516 @@ flowchart LR
 
 ## 13. Traceability and Acceptance Mapping
 
-Table mapping PRD requirements and acceptance criteria to implementing components, APIs, and tests.
+Transcrypt does not permit free-floating requirements or unverifiable claims.
+Every behaviour defined in the PRD must correspond to concrete implementation artefacts in the SAIS, the codebase, and the automated tests that prove it.
+This section establishes the formal mapping between **intent** and **evidence**. It defines how each requirement is identified, where it is implemented, how it is tested, and how its acceptance is recorded and re-proven throughout the product’s lifecycle.
+
+Traceability here is bi-directional.
+From PRD → SAIS → component → interface → test → acceptance record;
+and from test → requirement → specification → release tag.
+The mapping ensures that the architecture cannot drift from the documented system, and the documented system cannot drift from the running implementation.
+
+The table in this section is the product’s truth-index.
+It is regenerated automatically during release tagging and validated during every merge.
+Missing entries, stale mappings, orphaned requirements, or implementation artefacts without requirement anchors all produce hard failures in the verification pipeline.
+Once a requirement is accepted, its associated tests must continue to pass on every run: acceptance is monotonic and continuously proved.
+
+All acceptance records created from these mappings are stored in the evidence repository as append-only artefacts.
+Each entry is linked to commit hashes, test logs, and provenance attestations so auditors — internal or external — can independently verify lineage and completeness at any time.
+
+This section therefore serves two purposes:
+
+* it guarantees that Transcrypt’s published system behaviour matches its implemented behaviour, and
+* it ensures that no part of the platform can evolve without explicit, verifiable linkage back to the product’s governing requirements.
+
+Traceability and acceptance mapping are not documentation features.
+They are operational controls that maintain integrity, prevent silent drift, and enforce the platform’s core doctrines of determinism, reproducibility, and sealed-boundary correctness.
 
 ---
 
 ### 13.1 Purpose and Method
 
-Explain that this section provides a two-way mapping between **requirements (from PRD)** and their **implementation artefacts (in SAIS, code, and tests)**.
-Define the traceability model: each PRD item has a unique `REQ-ID`, mirrored in commits, code annotations, and CI test metadata.
-State that the table is regenerated automatically during release tagging to ensure coverage completeness.
+This subsection defines how requirements from the PRD become verifiable system artefacts and how Transcrypt enforces a bi-directional mapping between intent and implementation. Every requirement receives a unique `REQ-ID` at the PRD level. This identifier propagates through the SAIS, into component specifications, interface contracts, code annotations, commits, and automated test metadata. No behaviour is permitted to exist without an associated `REQ-ID`, and no `REQ-ID` may exist without an implementation and a verification path.
+
+**Traceability model**
+The mapping is two-way:
+Top-down from PRD → SAIS → component → interface → test → acceptance artefact.
+Bottom-up from any test result → `REQ-ID` → specification anchor → PRD origin.
+This prevents undocumented behaviours, shadow logic, silent deprecation, and architectural drift.
+
+**Release-time regeneration**
+During release tagging, CI regenerates the full traceability table by walking the PRD, SAIS, codebase, tests, and the evidence repository. The process is deterministic and reproducible. Any missing requirement, stale reference, broken link, or orphaned ID halts the release. Acceptance artefacts include commit hashes, test logs, and provenance attestations, providing verifiable lineage for auditors.
+
+**Doctrinal alignment**
+The method enforces Transcrypt’s architectural doctrines:
+
+* deterministic execution — all requirement-linked tests must yield identical results across runs
+* sealed tenancy — requirement mappings respect tenant boundaries
+* reproducibility — the traceability table is regenerable from source
+* no runtime inference — AI-generated artefacts tied to `REQ-ID`s are produced at build time
+* no drift — inconsistencies between documentation, code, and behaviour are CI-blocking
+
+This subsection defines the operational mechanism that binds the PRD, SAIS, and implementation into a single, self-verifying system. Traceability here is not descriptive documentation but a hard enforcement layer that preserves correctness, stability, and trustworthiness.
+
+---
 
 ### 13.2 Traceability Table Structure
 
-Introduce the canonical columns:
+The traceability table is the canonical, machine-generated index linking PRD requirements to their implementing components, interfaces, tests, and acceptance artefacts. It is regenerated deterministically during release tagging and forms part of the product’s verifiable evidence chain. The structure defined in this subsection is fixed, reproducible, and enforced by CI.
 
-| REQ-ID | PRD Section | Requirement Summary | Implementing Component(s) | API / Interface | Test / Evidence | Acceptance Status |
-| :----- | :---------- | :------------------ | :------------------------ | :-------------- | :-------------- | :---------------- |
+#### 13.2.1 Canonical Columns
 
-Define statuses:
+**13.2.1.1 REQ-ID**
+Globally unique, immutable identifier assigned at PRD definition time.
+Propagates through SAIS specifications, code annotations, commit metadata, and test definitions.
 
-* **Planned** – defined in PRD, not yet implemented.
-* **Implemented** – code merged and test exists.
-* **Verified** – passed automated and manual acceptance.
-* **Deferred** – explicitly postponed or superseded.
+**13.2.1.2 PRD Section**
+Exact section anchor where the requirement originates.
+Ensures direct auditability and prevents requirement aliasing or duplication.
+
+**13.2.1.3 Requirement Summary**
+Single-line deterministic phrasing.
+Never free-form.
+Must remain stable across releases.
+
+**13.2.1.4 Implementing Component(s)**
+SAIS components responsible for implementing the requirement.
+Must reference canonical component labels defined in Sections 3.x and 7.x.
+
+**13.2.1.5 API / Interface**
+Specific endpoint, interface contract, or internal service boundary.
+Absent only when requirement maps exclusively to infrastructure or non-API behaviour.
+
+**13.2.1.6 Test / Evidence**
+Path to automated tests, evidence artefacts, or run-log proofs.
+Must resolve deterministically in the repository.
+
+**13.2.1.7 Acceptance Status**
+Machine-interpretable state reflecting requirement lifecycle.
+
+---
+
+#### 13.2.2 Acceptance Status Model
+
+The status model is monotonic and enforced by CI.
+Status transitions require proof artefacts.
+
+**13.2.2.1 Planned**
+Defined in PRD.
+No implementation exists.
+Automatically appears upon PRD definition.
+
+**13.2.2.2 Implemented**
+Component and interface exist.
+At least one test referencing the `REQ-ID` exists.
+Test need not be green yet; existence is the criterion.
+
+**13.2.2.3 Verified**
+Behaviour proven through deterministic automated testing and manual acceptance where required.
+Evidence artefacts linked.
+Provenance chain intact.
+
+**13.2.2.4 Deferred**
+Requirement remains in PRD but is formally postponed.
+Requires explicit entry in the Exception Register.
+Cannot appear silently.
+
+---
+
+#### 13.2.3 Deterministic Generation Rules
+
+**13.2.3.1 Source-of-Truth Inputs**
+The generator consumes PRD, SAIS, commit metadata, code annotations, test metadata, and acceptance artefacts.
+
+**13.2.3.2 Reproducible Output**
+Given identical inputs, the generator must produce the same table bit-for-bit.
+Any nondeterminism is a CI-blocking failure.
+
+**13.2.3.3 Completeness Enforcement**
+Missing `REQ-ID`s, missing tests, stale mappings, or inconsistencies between documentation and implementation halt the release.
+
+---
+
+#### 13.2.4 Alignment With PRD and SAIS
+
+**13.2.4.1 PRD Downward Flow**
+Requirements must resolve cleanly to SAIS specifications and implementing components.
+
+**13.2.4.2 SAIS Upward Resolution**
+SAIS components and interfaces must map back to originating PRD requirements.
+No orphaned functionality is permitted.
+
+**13.2.4.3 Build Geometry Consistency**
+Mappings must align with the layering defined in Section 3.
+No cross-layer ambiguity allowed.
+
+**13.2.4.4 Inference API Integrity**
+No requirement may map to a behaviour involving runtime inference.
+All AI-produced artefacts must be build-time fixed and referenced deterministically in the table.
+
+---
+
+#### 13.2.5 Enforcement and Validation
+
+**13.2.5.1 CI Validation**
+CI ensures all required fields are populated and consistent.
+
+**13.2.5.2 Table as Release Artefact**
+Generated table is stored as versioned evidence under `/evidence/traceability/`.
+
+**13.2.5.3 Hard Failure on Drift**
+Any divergence between PRD, SAIS, implementation, or tests forces a pipeline stop.
+
+---
+
+#### 13.2.6 Stability of the Structure
+
+**13.2.6.1 Contractual Schema**
+The column schema and status model are part of the platform’s compatibility contract.
+They cannot be altered without explicit PRD and SAIS revision.
+
+**13.2.6.2 Versioned Evolution**
+Any permitted schema evolution must be versioned, diffed, and recorded in the traceability history.
+
+---
 
 ### 13.3 Example Entries (MVP Slice)
 
-Provide a representative sample for the MVP:
+This subsection presents representative traceability rows drawn from the MVP scope. Each entry demonstrates a complete requirement lineage: PRD origin, SAIS-mapped component, concrete interface or internal path, deterministic test artefact, and current acceptance status. These examples form a thin but accurate cross-section of the platform’s operational, security, privacy, determinism, and deployment guarantees.
 
-| REQ-ID | PRD Section | Requirement Summary                    | Implementing Component(s)     | API / Interface              | Test / Evidence                   | Acceptance Status |
-| :----- | :---------- | :------------------------------------- | :---------------------------- | :--------------------------- | :-------------------------------- | :---------------- |
-| CE-001 | 3.1.5.4     | Data minimisation + GDPR DSR endpoints | API Gateway, Evidence Service | `/dsr/export`, `/dsr/delete` | `test_dsr_endpoints.py`           | Verified          |
-| CE-002 | 4.1.2       | Essentials onboarding flow             | UI, Org Service               | `/org`                       | `test_onboarding_flow.py`         | Verified          |
-| CE-003 | 5.1         | Rule engine deterministic evaluation   | Rule Service                  | `/evaluate`                  | `test_rule_engine_determinism.py` | Implemented       |
-| CE-004 | 7.3         | Encryption at rest/in transit          | Storage, DB                   | n/a                          | `vault_rotation_test.yaml`        | Verified          |
-| CE-005 | 9.5         | Immutable audit trail                  | Audit Service, Object Store   | n/a                          | `audit_append_only_test.py`       | Verified          |
-| CE-006 | 8.7         | Blue/green deployment with rollback    | CI/CD, Infra                  | n/a                          | `pipeline_e2e_test.yaml`          | Implemented       |
+#### 13.3.1 Representative MVP Rows
+
+The following rows illustrate how PRD requirements translate into verifiable implementation artefacts:
+
+| REQ-ID | PRD Section | Requirement Summary                      | Implementing Component(s)      | API / Interface              | Test / Evidence                   | Acceptance Status |
+| :----- | :---------- | :--------------------------------------- | :----------------------------- | :--------------------------- | :-------------------------------- | :---------------- |
+| CE-001 | 3.1.5.4     | Data minimisation and GDPR DSR endpoints | API Gateway, Evidence Service  | `/dsr/export`, `/dsr/delete` | `test_dsr_endpoints.py`           | Verified          |
+| CE-002 | 4.1.2       | Essentials onboarding flow               | UI, Org Service                | `/org`                       | `test_onboarding_flow.py`         | Verified          |
+| CE-003 | 5.1         | Deterministic rule evaluation            | Rule Service                   | `/evaluate`                  | `test_rule_engine_determinism.py` | Implemented       |
+| CE-004 | 7.3         | Encryption at rest and in transit        | Storage, Database              | n/a                          | `vault_rotation_test.yaml`        | Verified          |
+| CE-005 | 9.5         | Immutable audit trail                    | Audit Service, Object Store    | n/a                          | `audit_append_only_test.py`       | Verified          |
+| CE-006 | 8.7         | Blue/green deployment with rollback      | CI/CD Pipeline, Infrastructure | n/a                          | `pipeline_e2e_test.yaml`          | Implemented       |
+
+#### 13.3.2 Rationale for Selection
+
+These entries are chosen to demonstrate the breadth of guarantees enforced in the MVP:
+
+* **Privacy invariants:** CE-001 proves GDPR-aligned behaviour with deterministic export/delete flows.
+* **Tenant creation and UX determinism:** CE-002 anchors first-run critical paths.
+* **Inference-free deterministic computation:** CE-003 reflects the core rule-evaluation contract.
+* **Security fundamentals:** CE-004 covers cryptographic guarantees at rest and in transit.
+* **Evidence integrity:** CE-005 demonstrates append-only audit semantics.
+* **Operational resilience:** CE-006 asserts correct blue/green state transitions and rollback behaviour.
+
+Each row satisfies sealed-tenancy constraints and maps to deterministic, reproducible tests.
+
+#### 13.3.3 Deterministic Testability
+
+Every example is paired with test artefacts that:
+
+* run deterministically across environments;
+* produce stable, reproducible outputs;
+* contain no runtime inference or stochastic behaviour;
+* embed the corresponding `REQ-ID` for CI traceability.
+
+Rows lacking deterministic validation cannot appear here.
+
+#### 13.3.4 Alignment With SAIS and PRD
+
+Each entry reflects:
+
+* the PRD requirement as formally written;
+* the SAIS component model defined in Sections 3–12;
+* the Build Geometry and isolation boundaries;
+* Transcrypt’s doctrine of boring, predictable, sealed-boundary behaviour;
+* the inference API invariant prohibiting runtime inference.
+
+Only requirements that cleanly map through that chain appear in the MVP slice.
+
+---
 
 ### 13.4 Coverage Analysis
 
-Summarise percentage of PRD requirements covered by implemented and verified artefacts.
-List any **unmapped** or **out-of-scope** PRD items with rationale.
-Include a short bar chart or Markdown table:
-`Total: 180 | Implemented: 163 | Verified: 155 | Deferred: 17 | Coverage: 91.6 %`.
+This subsection summarises traceability coverage for the MVP release. The figures are generated deterministically by CI during release tagging, using the PRD as the source of truth and the SAIS mappings as the structural frame. Coverage reflects only requirements with complete lineage: PRD origin, SAIS anchor, implementation, interface (where applicable), test artefacts, and acceptance state. No dynamic behaviour, no inference-side effects, and no manual overrides are permitted.
+
+#### 13.4.1 Coverage Summary
+
+The following values represent the canonical output for the MVP slice:
+
+```
+Total requirements:       180
+Implemented:              163
+Verified:                 155
+Deferred:                 17
+Coverage (Verified/Total): 91.6%
+```
+
+These figures are reproducible from the traceability generator and form part of the versioned evidence set for the release.
+
+#### 13.4.2 Unmapped or Out-of-Scope Requirements
+
+Unmapped requirements fall into one of the following categories:
+
+* **Intentionally deferred** — requirements documented in the PRD but explicitly postponed through the Exception Register. These remain visible and traceable but do not contribute to coverage.
+* **Out-of-scope for MVP** — items belonging to post-MVP phases (e.g., extended rule-packs, supply-chain attestations, or advanced reporting flows). Their `REQ-ID`s exist, but no implementation binding is expected for this release.
+* **Pending PRD revision** — requirements flagged for rewording or consolidation. CI enforces that these cannot be silently dropped; they remain in the traceability table with a `Deferred` state until the PRD update is complete.
+
+No requirement may be unmapped without a formal reason. “Unknown,” “unclassified,” or “not yet reviewed” states are prohibited.
+
+#### 13.4.3 Deterministic Verification Constraints
+
+Coverage numbers reflect only behaviours proven through deterministic, reproducible tests. A requirement cannot achieve “Verified” unless:
+
+* its test artefacts yield identical results across environments;
+* no stochastic model or runtime inference is involved;
+* its behaviour respects tenant boundaries;
+* its SAIS component and interface mappings are consistent with Sections 3–12;
+* evidence artefacts (logs, signatures, hashes) pass provenance checks.
+
+Tests that produce variable outputs are rejected by CI and cannot contribute to coverage.
+
+#### 13.4.4 Interpretation and Stability
+
+Coverage is not a measure of project velocity or progress. It is the mechanical reflection of the system’s traceability integrity:
+
+* **Implemented** confirms structural binding between PRD → SAIS → code → tests.
+* **Verified** confirms behavioural validity proven through deterministic test execution.
+* **Deferred** confirms explicit exception-management discipline.
+
+This subsection therefore expresses the release’s objective completeness and ensures Transcrypt’s traceability model remains auditable, sealed, and reproducible across releases.
+
 
 ### 13.5 Acceptance Workflow
 
-Describe who reviews and approves each requirement’s acceptance: Product Lead, QA Lead, Security Lead.
-Acceptance triggered automatically after passing CI tests, but final sign-off requires linked Jira ticket closure or Git tag annotation.
+Acceptance formalises when a PRD requirement becomes part of Transcrypt’s guaranteed behaviour. A requirement may not enter the “Verified” state until deterministic tests, structural mappings, and human review gates all align. This process ensures that implementation never drifts from PRD intent, SAIS architecture, or the platform’s operational doctrines.
+
+#### 13.5.1 Roles and Responsibilities
+
+Acceptance requires sign-off from the following roles, each representing a distinct invariant:
+
+* **Product Lead** — confirms the implementation matches PRD intent and has not accumulated behavioural drift or scope deformation.
+* **QA Lead** — confirms deterministic, reproducible test coverage, regression stability, and absence of nondeterminism; ensures the requirement can be re-proved on every merge.
+* **Security Lead** — confirms boundary correctness, tenant isolation, no redaction regressions, and adherence to cryptographic and audit requirements defined in the SAIS.
+
+No other role may approve acceptance. This constraint prevents informal, undocumented, or subjective decisions from entering the release lineage.
+
+#### 13.5.2 Automatic Acceptance Trigger
+
+A requirement becomes **eligible** for acceptance when CI confirms:
+
+* all deterministic tests linked to its `REQ-ID` pass;
+* traceability metadata is complete and matches PRD and SAIS anchors;
+* no requirement-linked exception is active;
+* provenance, SBOM, and build-signature checks are clean;
+* no drift exists between documentation and implementation.
+
+Eligibility is computed automatically by CI but does **not** constitute acceptance. It merely indicates the requirement has met the mechanical prerequisites.
+
+#### 13.5.3 Final Sign-Off Mechanism
+
+Final acceptance requires an immutable human-controlled record, created through one of:
+
+* **closure of the corresponding Jira ticket**, referencing one or more `REQ-ID`s;
+* **annotated Git tag**, signed and pushed, referencing the validated `REQ-ID`s.
+
+These artefacts are incorporated into the evidence repository, ensuring that acceptance decisions are visible, auditable, and historically reconstructable. Automated mechanisms alone may not finalise acceptance to prevent accidental or opaque approvals.
+
+#### 13.5.4 Evidence Storage and Lineage
+
+Upon sign-off, CI stores an acceptance artefact under:
+
+```
+/evidence/acceptance/<release>/<REQ-ID>.json
+```
+
+This record includes:
+
+* the accepted `REQ-ID`;
+* the commit hash of the implementation;
+* the commit hash of the test artefact;
+* test logs and provenance attestations;
+* the identity of the approving leads;
+* the timestamp and tag reference.
+
+The record is append-only and participates in the audit chain described in §9.5.
+
+#### 13.5.5 Doctrinal Alignment
+
+The acceptance process reinforces Transcrypt’s architectural doctrines:
+
+* **deterministic execution** — only requirements with reproducible tests may enter Verified;
+* **sealed tenancy** — acceptance confirms that behaviour respects tenant boundaries;
+* **reproducibility** — acceptance artefacts must be regenerable using the same inputs;
+* **no runtime inference** — behaviours involving stochastic or inference-time variability are ineligible for acceptance;
+* **no silent drift** — acceptance locks behaviour into the regression suite, preventing later degradation.
+
+This workflow ensures that acceptance is not a symbolic milestone but a structural guarantee that the platform’s declared behaviours are correct, verifiable, and permanently enforceable.
+
 
 ### 13.6 Evidence Storage and Audit Trail
 
-All acceptance results stored as JSON in the evidence repository (`/evidence/traceability/`).
-Each entry contains hash of commit + test log.
-Auditors can verify by recomputing hash chain (linked to §9.5 Audit and Logging).
+Acceptance artefacts form part of Transcrypt’s permanent audit surface. Each requirement that reaches the Verified state produces an evidence record that is immutable, reproducible, and independently verifiable by auditors. These records bind PRD intent, SAIS architecture, implementation commits, and deterministic test outputs into a single chain of proof.
+
+#### 13.6.1 Evidence Location and Structure
+
+All acceptance artefacts are stored under a deterministic, versioned path:
+
+```
+/evidence/traceability/<release>/<REQ-ID>.json
+```
+
+Each JSON file contains:
+
+* the `REQ-ID`;
+* the commit hash referencing the implementation;
+* the commit hash referencing the test artefact;
+* deterministic test logs;
+* provenance and build attestations;
+* approval details from Product, QA, and Security Leads;
+* timestamp of acceptance;
+* the cryptographic hash linking this evidence node into the audit chain defined in §9.5.
+
+No field may contain environment-specific or non-deterministic values. All entries must be reproducible from source and CI artefacts.
+
+#### 13.6.2 Append-Only Semantics
+
+Evidence records are append-only. New releases generate new evidence files without modifying historical entries. This mirrors the audit log invariants in §9.5 and ensures that requirement lineage can be reconstructed precisely for any release in the product’s history.
+
+Modification or deletion of evidence is prohibited. CI rejects any attempt to overwrite historical artefacts.
+
+#### 13.6.3 Auditor Verification
+
+Auditors must be able to verify evidence independently using standard cryptographic operations. Verification consists of:
+
+* recomputing the hash of the evidence JSON;
+* validating the hash chain linking to previous entries;
+* confirming that test logs match deterministic expectations;
+* verifying commit signatures and provenance attestations;
+* reconstructing traceability from PRD to SAIS to implementation to test without external tooling.
+
+The design ensures external auditors can validate Transcrypt’s behavioural guarantees without relying on proprietary processes.
+
+#### 13.6.4 Determinism and Inference Constraints
+
+Evidence cannot include:
+
+* runtime inference outputs;
+* stochastic model behaviour;
+* environment-variant logs;
+* unstable timestamps beyond the acceptance event marker.
+
+Tests contributing to evidence must be deterministic, reproducible, and invariant across environments. Any requirement relying on non-deterministic behaviour is ineligible for the Verified state and cannot produce evidence.
+
+#### 13.6.5 Alignment With Audit and Logging Architecture
+
+Evidence storage follows the same architectural principles described in §9.5:
+
+* cryptographic hash chains;
+* sealed-tenancy boundaries;
+* immutable, append-only artefact storage;
+* deterministic redaction rules;
+* verifiable provenance.
+
+This ensures acceptance evidence and operational audit logs form a coherent, unified audit plane.
+
+---
 
 ### 13.7 Continuous Verification Hooks
 
-PART COMPLETED
+The continuous verification system ensures that Transcrypt’s declared behaviours remain correct, deterministic, and traceable across every pull request, every merge, and every release. Verification is cumulative and monotonic: once a behaviour is accepted, it must continue to pass all checks indefinitely. The loop is automated, non-negotiable, and enforces alignment between PRD requirements, SAIS specifications, implementation artefacts, and release outputs.
 
+```mermaid
+flowchart LR
+    PR[Pull Request] --> CI[Verification Pipeline]
+    CI --> Checks[Invariant Checks]
+    Checks --> Pass{All Checks Pass}
+    Pass -->|Yes| Merge[Merge to Main]
+    Pass -->|No| Reject[Reject PR]
+    Merge --> Loop[Re-run Full Verification]
+    Loop --> CI
+```
 
-The delivery pipeline enforces a **continuous verification loop** that binds requirements, specifications, code artefacts, tests, and releases into a single measurable chain. Verification is cumulative, monotonic, and append-only in spirit: once a behaviour is accepted into the system, it must continue to be proved on every merge and every release.
+#### 13.7.1 Requirement-to-Test Completeness
 
-The following invariant checks run automatically on each PR and on every merge to `main`:
+Every PRD or SAIS requirement in the *Implemented* or *Verified* state must have at least one deterministic test referencing its `REQ-ID`. CI enforces:
 
-##### **1. Requirement-to-Test Completeness**
+* existence of the test in the canonical regression suite;
+* internal consistency of metadata (no orphaned `REQ-ID`s, no stale anchors);
+* rejection of any PR that weakens, removes, or bypasses requirement-linked tests unless accompanied by both:
 
-For every PRD/SAIS requirement marked *Implemented* or *Verified*:
+  * a formal PRD update, and
+  * an approved entry in the Exception Register (§8.11).
 
-* at least one automated test must reference the associated `REQ-ID`;
-* the test must still exist in the canonical regression suite;
-* removal or weakening of a requirement-linked test is rejected unless:
+This prevents silent behavioural drift and ensures every requirement remains provable.
 
-  * the underlying requirement has been formally updated in the PRD, and
-  * an approved exception entry is present in the Exception Register (§8.11).
+#### 13.7.2 Cumulative Regression Enforcement
 
-This prevents silent drift of behaviour or erosion of coverage.
+Transcrypt uses a single, canonical regression suite.
+Every merge to `main` must:
 
-##### **2. Cumulative Regression Enforcement**
+* run the entire suite (parallelised where needed);
+* re-prove all previously accepted behaviours across authentication, onboarding, evaluation determinism, evidence ingestion, reporting, observability, and interface invariants;
+* block the merge if **any** historical contract regresses.
 
-The regression suite is **single and canonical**.
-Each merge to `main`:
+New development cannot degrade or mutate earlier guarantees.
 
-* runs the entire regression suite (sharded/parallelised as necessary);
-* re-proves all previously accepted behaviours across login, onboarding flows, evidence ingestion, evaluation determinism, report generation, observability contracts, and API invariants;
-* fails the pipeline if any historic contract regresses, regardless of changeset size.
+#### 13.7.3 Traceability Integrity Checks
 
-This ensures that new development cannot break earlier guarantees or UX-critical flows.
+CI validates that:
 
-##### **3. Traceability Integrity Checks**
+* every merged PR references at least one PRD or SAIS `REQ-ID`;
+* each requirement marked *Implemented* has linked commits, interfaces, and test artefacts;
+* all test files referencing `REQ-ID`s are internally consistent;
+* all `REQ-ID`s associated with the release appear in the regenerated traceability table (§14.9).
 
-The pipeline validates that:
+Any inconsistency halts the pipeline.
 
-* every merged PR references at least one PRD or SAIS requirement ID;
-* every requirement marked *Implemented* has corresponding commits, tests, and artefacts in the release record;
-* test files referencing REQ-IDs are internally consistent (no dead anchors, no orphaned requirements);
-* all REQ-IDs linked to the current release appear in the generated traceability table (§14.9).
+#### 13.7.4 Specification Synchronisation
 
-##### **4. Specification Synchronisation**
+The PRD and SAIS are versioned artefacts subject to the same verification constraints as code:
 
-The SAIS and PRD are treated as versioned artefacts:
+* diagrams, schemas, and embedded examples must lint cleanly;
+* each release bundles the current PRD/SAIS snapshot;
+* changes to specifications must pass verification just like code changes;
+* documentation–implementation drift results in a failing verification step.
 
-* Mermaid diagrams, schema references, and embedded examples must lint cleanly;
-* each release bundles the current SAIS/PRD snapshot;
-* changes to specifications must pass the same verification hooks as code changes;
-* drift between code reality and documented interfaces results in a failing verification step.
+This ensures specifications remain authoritative and aligned with implementation.
 
-##### **5. Observability Contract Verification**
+#### 13.7.5 Observability Contract Verification
 
-The verification loop checks that instrumentation rules in §9.10 remain intact:
+Instrumentation rules defined in §9.10 must remain intact.
+Verification checks:
 
-* required span names, metric keys, request/tenant IDs, and log schemas;
-* required redaction rules and PII boundaries;
-* no cardinality explosion in metrics.
+* presence and correctness of required span names and metric keys;
+* correct propagation of request and tenant identifiers;
+* adherence to log schemas and redaction rules;
+* enforced PII boundaries;
+* no metric cardinality explosions.
 
-Any change breaking observability semantics is rejected.
+Any breach of observability semantics is rejected.
 
-##### **6. Provenance and Supply Chain Consistency**
+#### 13.7.6 Provenance and Supply Chain Consistency
 
-Each verification cycle checks:
+Each verification cycle confirms:
 
-* the build artefact is signed and matches its SBOM;
+* build artefacts are signed;
 * the SBOM contains no new critical CVEs;
-* the artefact hash matches the provenance attestation recorded in CI.
+* the artefact hash matches the provenance attestation stored in CI;
+* no unsigned or unverifiable artefacts enter the release path.
 
-Unsigned, unverified, or inconsistent artefacts cannot progress.
+Artefacts failing these checks cannot progress.
 
-##### **7. Release-Ready State Assertion**
+#### 13.7.7 Release-Ready State Assertion
 
-A merge is only allowed when:
+A merge is permitted only when:
 
 * cumulative regression is green;
-* traceability table updates cleanly;
-* SBOM + provenance checks pass;
-* documentation passes spec-linting;
-* no gating exceptions are active without explicit approval.
+* traceability regeneration succeeds;
+* provenance and SBOM checks pass;
+* specification linting is clean;
+* no gating exception is active without explicit approval.
 
-This ensures that every commit merged into `main` is “release-ready” by construction, without requiring a late release heroics phase.
+Every commit merged to `main` is inherently “release-ready,” eliminating late stabilisation phases and ensuring the platform remains predictable, auditable, and safe.
 
 ---
 
@@ -16841,6 +17214,20 @@ Changes between versions tracked by diff, signed and timestamped.
 Ensures auditors can trace the lineage of every requirement from conception to verification.
 
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 14. Appendices and Change Log
 
