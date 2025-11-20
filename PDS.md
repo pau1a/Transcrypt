@@ -936,5 +936,3 @@ Everything must look engineered, predictable, and serious — because Transcrypt
 ## **12.2 Reference Artefacts**
 
 ---
-
-If you want the Level-3 skeleton added next, I can do that cleanly and systematically without breaking this structure.
