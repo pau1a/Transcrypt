@@ -834,15 +834,11 @@ These rely on colour, border, and spacing — not elevation.
 
 This is where the system draws hard boundaries:
 
-1. **No decorative shadows.**
-2. **No elevation changes based on role** (owner/advisor/verifier).
-3. **No component “floating” for visual effect.**
-4. **No neumorphism, glassmorphism, parallax, or modernist “soft UI”.**
-5. **No deep shadows exceeding elevation 3 rules.**
-6. **No inference-driven UI that appears on a separate “plane” or implies AI magic.**
-7. Essentials retains strict elevation rules; Marketing uses expressive depth for visual storytelling but must not mimic application-state behaviours or functional overlays.
-8. **No stacked modals for any reason.**
-9. **No shadow changes on viewport resize.**
+1. **No elevation changes based on role** (owner/advisor/verifier).
+2. **No neumorphism, glassmorphism, parallax, or modernist “soft UI”.**
+3. **No deep shadows exceeding elevation 3 rules.**
+4. **No stacked modals for any reason.**
+5. **No shadow changes on viewport resize.**
 
 Elevation is architectural, not expressive.
 Depth is hierarchical, not aesthetic.
