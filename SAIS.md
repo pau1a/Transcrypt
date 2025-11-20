@@ -17305,8 +17305,321 @@ Table of all environment variables consumed by the system, with classification a
 
 ### 15.3 Glossary of Terms and Abbreviations
 
-Define all recurring terms, abbreviations, and acronyms used throughout the SAIS — e.g., *MVP, CEv3.2, IAM, SLO, DSR, DLQ, IaC.*
-Keep definitions concise and cross-linked to the first appearance in the document.
+This glossary defines every recurring technical term, acronym, and abbreviation used anywhere in this SAIS. Definitions are concise, unambiguous, and scoped strictly to Transcrypt’s architecture, delivery pipeline, and operational doctrine.
 
+#### **A**
 
+**ACME** – Automated Certificate Management Environment used for issuing TLS certificates.
+**Admission Control** – Gate in the delivery pipeline that prevents unverified artefacts from being promoted.
+**API** – Application Programming Interface; contract for interactions between components.
+**API Gateway** – Entry point enforcing authentication, routing, and policy.
+**Artefact** – Any signed build output: HTML, JS bundles, PDFs, rulepacks, state documents.
+**Attestation** – Cryptographic evidence proving origin, authorship, and build integrity.
+**Audience (`aud`)** – JWT claim identifying the intended recipient.
 
+#### **B**
+
+**Bearer Token** – OIDC-issued token used to authenticate API requests.
+**Billing Portal** – Stripe-hosted UI for customer subscription management.
+**Blue/Green Deploy** – Release strategy using two isolated environments for safe promotion.
+
+#### **C**
+
+**CD** – Continuous Deployment; automated promotion to runtime.
+**CDN** – Content Delivery Network for distributing static artefacts.
+**Checkout Session** – Stripe session initialising a purchase.
+**CI** – Continuous Integration; automated checks run on every change.
+**Cumulative Regression Suite** – Full historical test corpus that must pass at every release.
+**Cosign** – Tool for signing artefacts and producing verifiable provenance.
+**Control Binding** – Link between a rule, its control requirement, and its evidence.
+**Cyber Essentials** – UK government-backed cybersecurity baseline.
+
+#### **D**
+
+**Data Subject Request (DSR)** – GDPR request for access or deletion of personal data.
+**Determinism** – Guarantee that repeated evaluations yield identical results.
+**Deterministic Evaluation** – Rule evaluation path with no runtime AI involvement.
+**DigitalOcean (DO)** – Hosting platform used for droplets, Spaces, networking.
+**DNS** – Domain Name System; resolves names to IP addresses.
+**Droplet** – DigitalOcean virtual machine instance.
+
+#### **E**
+
+**E2E (End-to-End Test)** – Full-stack test covering a complete user path.
+**Edge Cache** – CDN layer storing rendered pages and assets.
+**Ephemeral Environment** – Disposable environment created per pipeline run.
+**Evaluation Service** – Component performing rule evaluations deterministically.
+**Evidence Artefact** – Uploaded or system-generated evidence stored per tenant.
+
+#### **F**
+
+**Firewall Profile** – Minimal and immutable network ruleset applied to droplets.
+
+#### **G**
+
+**GDPR** – UK General Data Protection Regulation.
+**Hash** – SHA-256 digest used for proving integrity.
+**Hash Chain** – Sequence of hashes linking versions in an append-only lineage.
+
+#### **H**
+
+**HTML Blob** – Pre-rendered HTML document stored as an artefact.
+**HTTPS** – TLS-encrypted transport protocol.
+
+#### **I**
+
+**IAM** – Identity and Access Management (implicit via OIDC).
+**IaC (Infrastructure as Code)** – Declarative infrastructure definition.
+**Idempotency-Key** – HTTP header preventing duplicate processing.
+**ID Token** – OIDC authentication token.
+**Inference** – Controlled execution of an LLM with deterministic configuration.
+**Inference Contract** – Allowed parameters and model configuration for controlled inference.
+**Interface Contract** – Defined boundary for component communication.
+**Internal-Eval / Internal-Evidence / Internal-Report** – Internal ports for intra-system calls.
+**Issuer (`iss`)** – JWT claim indicating token authority.
+
+#### **J**
+
+**JSON** – Primary data interchange format.
+**JWKS** – JSON Web Key Set; exposes public keys for token verification.
+**JWT** – JSON Web Token; signed authentication/authorisation token.
+
+#### **L**
+
+**LLM** – Large Language Model; used at build-time only.
+**Lint** – Static analysis tool enforcing correctness across docs, diagrams, schemas, logs, IaC, and code.
+
+#### **M**
+
+**MFA** – Multi-Factor Authentication.
+**Migration Bundle** – Versioned set of database schema migrations.
+**Model Identifier** – Explicit versioned reference to an LLM model.
+**mTLS** – Mutual TLS for internal service calls.
+**MXroute** – SMTP service for outbound email.
+
+#### **O**
+
+**Observability Contract** – Required spans, logs, metrics, propagation semantics.
+**OIDC (OpenID Connect)** – Identity protocol used for authentication.
+**OTel (OpenTelemetry)** – Standard for logs, metrics, and traces.
+
+#### **P**
+
+**PDF Blob** – Pre-rendered PDF report stored per tenant.
+**Pipeline** – Full CI/CD process, including checks, signing, and promotion.
+**PKCE** – Proof Key for Code Exchange for secure OIDC flows.
+**Ports** – Named internal interfaces between services.
+**PostgreSQL** – Relational database backing the platform.
+**Prefix Isolation** – Per-tenant path separation inside the object store.
+**Problem+JSON** – Standardised error response payload.
+**Promotion Engine** – Mechanism enforcing rules for artefact promotion.
+**Provenance** – Metadata describing artefact origin and chain of custody.
+
+#### **R**
+
+**Redaction** – Removal of sensitive fields from logs/traces.
+**Release Evidence Bundle** – Signed pack containing proofs for a release.
+**Report Service** – Component assembling HTML/PDF reports.
+**REQ-ID** – Unique requirement identifier.
+**RulePack** – Versioned bundle of questions, mappings, automated checks.
+
+#### **S**
+
+**SAIS** – System Architecture & Interface Specification.
+**SBOM** – Software Bill of Materials listing dependencies.
+**S3-Compatible Object Store** – Storage layer for tenant artefacts.
+**Session Token** – Browser-side authentication session.
+**SHA-256** – Hash function used for integrity.
+**Signing** – Cryptographic sealing of artefacts.
+**SMTP** – Email transport protocol.
+**Snapshot** – Immutable copy of droplet or state.
+**Source of Truth** – Authoritative location for a given data type.
+**Spaces** – DigitalOcean’s S3-compatible object storage.
+**Span** – Unit of tracing in OTel.
+**SSR** – Server-Side Rendering in Next.js.
+**Static Export** – Pre-generated version of the marketing site.
+**Stripe** – Billing provider.
+
+#### **T**
+
+**Tenant-ID** – Identifier scoping a user’s environment and all data.
+**Tenancy Boundary** – Cryptographic/logical perimeter separating tenants.
+**Trace / Trace-ID** – End-to-end request correlation identifier.
+**Transcrypt** – Platform described by the PRD and SAIS.
+
+#### **U**
+
+**User-Agent Propagation** – Required logging of client metadata.
+
+#### **V**
+
+**Version Header** – Required header indicating client build + API revision.
+**Version History** – Append-only chain enabling lineage reconstruction.
+
+#### **W**
+
+**Webhook** – Callback endpoint for Stripe/MXroute events.
+**Worker** – Background processor handling async tasks.
+
+---
+
+### **15.4 Cross-Reference Framework**
+
+This section defines how requirements, components, services, interfaces, and evidence structures interlink across the SAIS. It guarantees that every architectural claim is traceable to its origin and that every implementation, pipeline rule, and operational control maps cleanly to its authoritative definition.
+All references are **forward-stable**: no relative linking, no ambiguous naming, no cross-talk between normative and descriptive sections.
+
+#### **15.4.1 Document-Level Cross-Reference Rules**
+
+The SAIS uses a controlled cross-reference model:
+
+* References **never** point to line numbers or ephemeral positions.
+* All references target **section numbers** or **REQ-IDs**.
+* References are always **unidirectional**: higher-order sections may reference lower-order ones, but never the reverse.
+* Definitions in **§15.3** are the only permitted lexical source for domain terminology.
+
+Cross-references are treated as **integrity-relevant** metadata: the meaning of a term, interface, or component is never duplicated; it is always dereferenced.
+
+#### **15.4.2 Component → Interface Mapping**
+
+Every component defined in:
+
+* **§3.2 Central Components and Interfaces**, and
+* any subordinate interface table
+
+must map to:
+
+1. its **external interfaces**,
+2. its **internal ports**, and
+3. its **observability contract**.
+
+The mapping rules:
+
+* Every call-site in the SAIS references **exactly one** component definition in §3.2.
+* Port names (e.g., `Internal-Eval`, `Internal-Report`) always link back to their canonical declaration in §3.2.
+* The API Gateway routes reference **§3.2.2** exclusively.
+* Evidence, Report, Rule Evaluation, and Worker pipelines reference **§3.2.3–3.2.6**.
+
+This ensures all system behaviour resolves to a single authoritative source.
+
+#### **15.4.3 Requirements (REQ-IDs) Mapping**
+
+All normative requirements use stable IDs of the form:
+
+```
+REQ-<domain>-<number>
+```
+
+Domains include:
+
+* **ARCH** – Architecture
+* **SEC** – Security
+* **DATA** – Evidence, storage, provenance
+* **OBS** – Observability
+* **PIPE** – CI/CD, signing, integrity
+* **UX** – Onboarding, routing, accessibility
+* **RPT** – Reporting
+
+Rules:
+
+* Every REQ-ID appears exactly once in the SAIS.
+* Implementations and diagrams reference REQ-IDs, never prose descriptions.
+* The CI pipeline binds evidence bundles to REQ-IDs in **§13 Verification Hooks**.
+
+#### **15.4.4 Pipeline → Architecture Cross-Links**
+
+Pipeline descriptions in §10 and §13 cross-reference architecture sections via:
+
+* **Component IDs** (from §3.2)
+* **Artefact classes** (from §3.1.4)
+* **Provenance and signing rules** (from §3.3 and §7.5)
+* **Observability invariants** (from §9.x)
+
+Cross-links are monotonic:
+
+* The pipeline never introduces new semantics; it only enforces the semantics defined in §3.
+* Every failure mode in the pipeline (lint, schema violation, attestation mismatch) points back to a requirement in §7 or §9.
+
+This creates a sealed loop between design-time and build-time.
+
+#### **15.4.5 Data Model → Storage → Evidence Flow**
+
+The data contracts in **§3.1.3** cross-reference:
+
+* Storage models in **§3.1.4**
+* Evidence lifecycle in **§5.3**
+* Reporting formats in **§3.2.6**
+
+All flows referencing evidence must map to:
+
+* **Prefix Isolation** (defined in §3.1.4)
+* **Hash-anchoring rules** (defined in §5.4)
+* **Integrity regeneration** (defined in §13.7)
+
+No flow may introduce a new artefact type without a corresponding storage definition.
+
+#### **15.4.6 Security Model Cross-Links**
+
+Security definitions in **§7** must map back to:
+
+* Identity primitives from **§3.3**
+* OIDC flows from **§3.2.2**
+* Tenancy boundaries from **Tenancy Model**
+* Network hygiene rules from **§7.2**
+* Data redaction from **§9.9**
+* Disaster readiness (backup/restore) from **§7.16** and drills in §12
+
+Any statement regarding authentication, authorisation, network boundary, or encryption must resolve to its canonical location in §7.
+
+#### **15.4.7 UX → API → Component Chain**
+
+User experience flows defined in **§4** reference:
+
+* API shapes in **§3.2.2**
+* Tenant model rules in **Tenancy Model**
+* Evidence submission mechanics in **§3.2.5**
+* Report routes in **§3.2.6**
+
+UX never introduces new domain objects; it only expresses the user interactions that call the API endpoints defined elsewhere.
+
+#### **15.4.8 Observability → Execution Path Alignment**
+
+All observability cross-links reference:
+
+* **Header propagation** from §6.9
+* **Trace, span, metric schema** from §3.2.9
+* **Testability and CI hooks** from §12.10
+* **Operational doctrine** in §11.1
+
+This ensures every execution path—UI → Gateway → Service → Worker—carries:
+
+* `X-Request-ID`
+* `X-Tenant-ID`
+* Idempotency keys
+* Canonical log schema fields
+* Span parentage rules
+
+#### **15.4.9 Diagram Cross-Referencing Rules**
+
+All diagrams across the SAIS follow strict constraints:
+
+* Every diagram must reference a concrete section or REQ-ID.
+* Titles must be plain text: **no parentheses allowed**.
+* Diagrams must appear **adjacent to the section they depict**—never appended at the end.
+* A diagram depicting a component must reference §3.2.x.
+* A diagram depicting a flow must reference the relevant pipeline section (§10 or §13).
+* Mermaid blocks use fenced triple-backtick syntax with the `mermaid` info-string.
+
+This ensures diagrams carry referential authority rather than decorative value.
+
+#### **15.4.10 Change History → Traceability → Lineage**
+
+Cross-references related to change and lineage:
+
+* **§13.8 Change & Version History** links to artefact definitions in §3.1.4.
+* Every version of every artefact references its predecessor via hash-chain semantics (defined in §5.4).
+* Audit logs (see §3.2.9 and §8) reference REQ-IDs to reconstruct compliance lineage.
+* Tenant-specific evidence references RulePack versioning (see §3.2.5 and §5.3).
+
+This creates a deterministic, forward-auditable chain between architecture, pipeline operations, and runtime state.
+
+---
