@@ -15583,23 +15583,483 @@ These guarantees close the loop between the **raw capacity guardrails** of §7.1
 
 ### 12.4 Reliability and Availability
 
-Availability ≥ 99.9 % monthly for all customer-facing endpoints.
-Planned maintenance ≤ 1 h / month.
-Mean Time To Recovery (MTTR) ≤ 30 min for P1 incidents (§12).
-List dependency SLAs (auth 99.9 %, storage 99.95 %) and composite uptime math.
+Reliability defines Transcrypt’s ability to remain **predictable, correct, and tenant-safe** under normal and disrupted conditions.
+Availability defines how consistently critical paths remain operational for each tenant.
+Targets in this section are **release-blocking**, continuously verified through §10 telemetry, and enforced through §11 pipeline gates.
+
+All reliability guarantees must preserve the platform doctrines of:
+**deterministic execution**, **sealed tenancy**, **no silent drift**, and **boring, stable, predictable behaviour**.
+
+---
+
+#### **12.4.1 Availability Guarantees**
+
+Availability applies at the **tenant level** and at the **critical-path level**, not merely at a global uptime figure.
+
+* **Overall availability:** ≥ 99.9% monthly for all customer-facing paths
+* **Critical path availability:**
+
+  * Rule evaluation ≥ 99.95%
+  * Evidence upload ≥ 99.9%
+  * Report generation queue ≥ 99.9%
+* **Planned maintenance:** ≤ 1 hour per month, with defined windows and pre-announced changes
+* **Burst protection:** marketing-site spikes may not degrade Essentials availability (§12.3.4)
+
+##### Diagram — Availability Boundaries
+
+```mermaid
+flowchart LR
+    Users[Tenants] --> Gateway[App Gateway]
+    Gateway --> Eval[Rule Eval\n99.95%]
+    Gateway --> Upload[Evidence Upload\n99.9%]
+    Gateway --> Reports[Report Queue\n99.9%]
+    Eval --> Telemetry[Telemetry\n§10]
+    Upload --> Telemetry
+    Reports --> Telemetry
+```
+
+---
+
+#### **12.4.2 Recovery and MTTR**
+
+Recovery behaviour must be **predictable, repeatable, and evidence-safe**.
+
+* **MTTR (P1 incidents):** ≤ 30 minutes
+* **Restart sequence:** deterministic worker and queue restore order; no improvised recovery paths
+* **Data safety:**
+
+  * no evidence loss
+  * no orphaned reports
+  * no duplicate evaluations
+* **Cache recovery:** caches must warm without causing traffic spikes or queue surges
+* **Cold start envelope:** full service availability within predictable startup time
+
+##### Diagram — Recovery Sequence
+
+```mermaid
+flowchart LR
+    Restart[Service restart] --> DBCheck[DB check]
+    DBCheck --> QueueRestore[Queue restore]
+    QueueRestore --> Workers[Workers come online]
+    Workers --> Health[Health checks]
+    Health --> OpenTraffic[Open to traffic]
+```
+
+---
+
+#### **12.4.3 Dependency SLAs and Composite Availability**
+
+External dependencies affect overall availability and must be explicitly modelled.
+
+* **OIDC / Identity:** ≥ 99.9%
+* **Object storage:** ≥ 99.95%
+* **Email delivery:** ≥ 99.9%
+* **Inference:** not required for runtime → does not affect core availability
+* **Composite minimum:** product of dependencies, calculated per critical path
+* **Degraded dependency behaviour:**
+
+  * identity outage → read-only mode with cached session
+  * storage delays → isolated back-pressure
+  * email outage → queued outbound messages, no blocking of core flows
+
+Dependencies must be monitored with telemetry that differentiates **internal** vs **external** outages.
+
+---
+
+#### **12.4.4 Failure Mode Behaviour**
+
+Failures must be **contained**, **isolated**, and **non-chaotic**.
+No failure mode may break deterministic execution or sealed tenancy.
+
+Behaviour must be defined for:
+
+* **Database slowdown:** evaluation latency tolerances preserved; heavy queries throttled
+* **Object storage latency:** evidence ingestion degrades tenant-locally only
+* **Identity provider errors:** cached sessions used; login attempts fail cleanly
+* **Queue backlog:** tenant slices preserved; global starvation forbidden
+* **Worker failure:** rerouted tasks without duplication
+
+Failure modes must never produce:
+
+* inconsistent results
+* corrupted artefacts
+* partial or repeated evaluations
+* silent retry loops
+
+##### Diagram — Failure Isolation
+
+```mermaid
+flowchart LR
+    TenantA[Tenant A] --> QueueA[Queue slice A]
+    TenantB[Tenant B] --> QueueB[Queue slice B]
+    QueueA --> WorkersA[Workers A]
+    QueueB --> WorkersB[Workers B]
+    WorkersA --> FailA[Failure in A\nIsolated]
+    WorkersB --> ContinueB[Workers B unaffected]
+```
+
+---
+
+#### **12.4.5 Health Checks and Synthetic Tasks**
+
+Health checks must reflect **real operational behaviour**, not simple “ping OK”.
+
+Required checks:
+
+* rule evaluation test
+* evidence ingestion test
+* report queue enqueue + dequeue
+* DB read/write probe
+* object store read/write probe
+* queue depth threshold check
+* worker heartbeat check
+
+Synthetic tasks run continuously and feed SLO dashboards.
+
+If any synthetic task fails twice consecutively:
+
+* endpoint is marked degraded
+* audit event is raised
+* error budget begins burn-down
+* pipeline gates tighten for subsequent releases
+
+---
+
+#### **12.4.6 Reliability Verification and Enforcement**
+
+All reliability guarantees must be:
+
+* **measured continuously** via structured telemetry
+* **enforced by CI** via synthetic load tests
+* **validated in staging** with seeded tenants
+* **backed by audit events** for any deviation
+
+A release **must not proceed** if:
+
+* availability metrics fall below thresholds
+* MTTR rehearsals exceed limits
+* dependency-failure fallbacks misbehave
+* synthetic tasks fail
+* any reliability NFR is flagged as red
+
+Exceptions follow §9.11 with strict time-boxing, owner assignment, and rollback plans.
+
+---
 
 ### 12.5 Resilience and Fault Tolerance
 
-Describe retry, back-off, and circuit-breaker defaults.
-Each service must degrade gracefully (queue → process later, UI → show “processing”).
-Document chaos-test cadence and pass criteria (no data loss, ≤ 2× latency spike).
+Resilience defines Transcrypt’s ability to continue operating predictably during partial failure, overload, or component degradation.
+Fault tolerance defines how the system isolates faults, prevents cascading failures, and preserves all evidence and artefacts.
+
+All behaviour in this section must preserve:
+
+* deterministic execution
+* sealed tenancy
+* evidence integrity
+* non-chaotic degradation
+* no silent drift
+* predictable recovery
+
+Verification is performed continuously through §10 telemetry and enforced by §11 pipeline gates.
+
+---
+
+#### **12.5.1 Retry and Backoff Strategy**
+
+Retry behaviour must be deterministic, bounded, and tenant-isolated.
+
+* **Retry count:** fixed per operation and documented in service configs
+* **Backoff:** fixed interval; no exponential jitter unless explicitly required and deterministic
+* **Idempotency:** all retried operations must be idempotent to avoid duplicate evaluations or artefacts
+* **Tenant isolation:** retry storms are contained per tenant; global queues cannot be overwhelmed
+* **Surface-level behaviour:** UI indicates “processing” rather than encouraging repeated user submission
+
+##### Diagram — Retry Containment
+
+```mermaid
+flowchart LR
+    TenantA[Tenant A Request] --> RetryA[Retries A\nBounded]
+    TenantB[Tenant B Request] --> RetryB[Retries B\nBounded]
+    RetryA --> QueueA[Queue Slice A]
+    RetryB --> QueueB[Queue Slice B]
+    QueueA --> WorkersA[Workers A]
+    QueueB --> WorkersB[Workers B]
+```
+
+---
+
+#### **12.5.2 Circuit-breakers and Isolation**
+
+Circuit-breakers prevent cascading failures and must operate predictably.
+
+* **Trigger conditions:**
+
+  * sustained error rate
+  * latency threshold crossing
+  * queue depth saturation
+* **Scope:** breakers isolate **only** the failing tenant or path
+* **Cooldown:** deterministic time window before reclosure
+* **Fallback:** safe degradation instead of request storms
+* **Isolation:** a breaker for Tenant A must not impact Tenant B
+
+##### Diagram — Circuit-breaker Isolation
+
+```mermaid
+flowchart LR
+    PathA[Path A] --> BreakerA[Circuit Breaker A]
+    PathB[Path B] --> BreakerB[Circuit Breaker B]
+    BreakerA -->|Open| DegradeA[Degraded Mode A]
+    BreakerB -->|Closed| NormalB[Normal Operation B]
+```
+
+---
+
+#### **12.5.3 Graceful Degradation Behaviour**
+
+When components degrade, behaviour must remain predictable and evidence-safe.
+
+* **Server side:**
+
+  * ingestion → queue rather than drop
+  * eval → queued rather than error
+  * report → delayed with deterministic ordering
+* **UI:**
+
+  * surface “processing” states
+  * block duplicate actions
+  * prevent refresh-driven duplication
+* **Never allowed:**
+
+  * evidence loss
+  * duplicate evaluations
+  * partially written artefacts
+  * inconsistent rule results
+
+##### Diagram — Degradation Flow
+
+```mermaid
+flowchart LR
+    Request[Incoming Request] --> Check[System Health Gate]
+    Check -->|Healthy| Process[Process Now]
+    Check -->|Degraded| QueueTask[Queue for Later]
+    QueueTask --> Telemetry[Emit Telemetry]
+```
+
+---
+
+#### **12.5.4 Chaos Testing Cadence and Criteria**
+
+Chaos drills validate that resilience mechanisms function under real-world stress.
+
+* **Cadence:** scheduled tests in staging; selected scenarios in production read-only mode
+* **Scenarios:**
+
+  * DB slowdown
+  * object storage latency
+  * identity provider outage
+  * queue backlog
+  * worker crash
+  * droplet restart
+  * network partial failure
+* **Pass criteria:**
+
+  * **0 evidence loss**
+  * **0 artefact corruption**
+  * **≤ 2× latency spike** on critical paths
+  * **no cross-tenant bleed**
+  * **complete automatic recovery** without human improvisation
+
+##### Diagram — Chaos Drill Loop
+
+```mermaid
+flowchart LR
+    Chaos[Inject Fault] --> Observe[Observe Telemetry]
+    Observe --> Criteria[Compare Against Criteria]
+    Criteria -->|Pass| Continue[Continue Operations]
+    Criteria -->|Fail| Block[Block Release\nRaise Audit Event]
+```
+
+---
+
+#### **12.5.5 Deterministic Recovery Rules**
+
+Recovery must be consistent across all failure types.
+
+* **Startup sequence:** fixed order for DB, queues, workers
+* **State restoration:** no job duplication or loss
+* **Tenant consistency:** isolation rules enforced during recovery
+* **Cache warm-up:** predictable; may not cause surges
+* **Evidence safety:** ingestion resumes from last confirmed chunk
+
+---
+
+#### **12.5.6 Verification and Enforcement**
+
+All resilience guarantees must be:
+
+* validated via telemetry (§10)
+* enforced in CI via fault-injection tests (§11)
+* audited via structured event logs
+* reviewed during post-incident analysis
+* blocked on release if any resilience NFR is red
+
+No deployment may proceed unless:
+
+* retry/backoff behaviours are deterministic
+* circuit-breakers operate correctly
+* degradation modes match specifications
+* chaos tests meet all criteria
+* recovery behaviour is validated
+* no silent drift is detected
+
+---
 
 ### 12.6 Security and Privacy Benchmarks
 
-All network traffic TLS 1.3+; encryption-at-rest AES-256.
-Secrets rotation verified ≤ 90 days (§12.4).
-Zero critical CVEs allowed at deploy (§11.5).
-Data leak probability = 0 tolerated events; monitor redaction success rate ≥ 99.99 %.
+Security and privacy benchmarks define the **non-negotiable safety invariants** of the platform.
+These constraints preserve tenant isolation, protect evidence integrity, and prevent silent drift across deployments.
+All benchmarks in this section are **release-blocking**, continuously verified through §10 telemetry, and enforced through §11 pipeline checks.
+
+Security here is not advisory; it is a strict contract.
+Privacy is treated as **zero-tolerance for leakage**, and any violation is a catastrophic P0 event.
+
+---
+
+#### **12.6.1 Transport and Encryption Guarantees**
+
+All data in motion and at rest must be secured using modern, stable, and deterministic cryptographic baselines.
+
+* **Transport:** TLS 1.3+ only
+* **Cipher suites:** pinned, no provider-driven negotiation drift
+* **Forward secrecy:** required for all external-facing endpoints
+* **Encryption at rest:** AES-256 for DB, object store, and logs
+* **Certificate rotation:** deterministic cadence with full audit trail
+* **Crypto drift detection:** pipeline verifies configs match approved baseline
+
+##### Diagram — Cryptographic Boundaries
+
+```mermaid
+flowchart LR
+    User[Client] --> TLS[HTTPS TLS13+]
+    TLS --> Gateway[Gateway]
+    Gateway --> DB[Encrypted DB AES256]
+    Gateway --> Storage[Encrypted Object Store AES256]
+```
+
+---
+
+#### **12.6.2 Secrets and Key Management Benchmarks**
+
+Secrets must be tightly controlled, regularly rotated, and impossible to access outside approved workflows.
+
+* **Rotation cadence:** ≤ 90 days
+* **Verification:** automated check in CI; rotation age must pass before deploy
+* **Storage:** encrypted secrets manager; never on disk, never in logs
+* **Auditability:** every rotation event produces a structured audit entry
+* **Access rules:** least-privilege; no cross-service key visibility
+* **Failure behaviour:** secret-fetch errors must degrade gracefully but safely
+
+##### Diagram — Secrets Lifecycle
+
+```mermaid
+flowchart LR
+    Create[Create Secret] --> Store[Secure Store]
+    Store --> Use[Service Use]
+    Use --> Rotate[Rotation Event]
+    Rotate --> Store
+    Rotate --> Audit[Audit Log Entry]
+```
+
+---
+
+#### **12.6.3 Dependency and CVE Tolerance Policies**
+
+Dependency integrity is enforced through strict vulnerability tolerance limits.
+
+* **Critical CVEs:** 0 allowed at deploy
+* **High severity:** must be explicitly risk-accepted under §9.11
+* **Scanning:** automated software composition analysis in pipeline
+* **Dependency locks:** reviewed and updated on fixed schedule
+* **Integrity:** no mutable fetches, pinned versions only
+* **Reproducibility:** rebuilds must be bit-identical across environments
+
+Dependencies that cannot meet these thresholds must be removed or replaced.
+
+---
+
+#### **12.6.4 Privacy, Leakage, and Redaction Guarantees**
+
+Tenant privacy is a **zero-leakage doctrine**, not a best-effort target.
+
+* **Leak probability:** 0 tolerated events
+* **Redaction success:** ≥ 99.99% continuously measured
+* **Scope enforcement:** strict tenant boundary on all storage, API calls, search paths
+* **Logging discipline:**
+
+  * no PII
+  * no raw evidence
+  * no unredacted strings
+* **Telemetry:** redaction counters and failure alerts emitted in real time
+* **Fallback:** redaction regressions force rollback and invalidate deploy
+
+##### Diagram — Redaction Guarantee Flow
+
+```mermaid
+flowchart LR
+    Input[Incoming Content] --> Redactor[Redaction Engine]
+    Redactor --> Clean[Clean Output]
+    Redactor --> Metrics[Redaction Metrics]
+    Metrics --> Alerts[Alert on Failure]
+```
+
+---
+
+#### **12.6.5 Security Chaos Testing**
+
+Security resilience is validated through scheduled chaos tests that simulate adversarial and accidental failure conditions.
+
+* **Scenarios:**
+
+  * expired certificates
+  * rejected KMS ops
+  * compromised secret rotation paths
+  * broken ACLs in object storage
+  * failed DB roles
+  * redaction model regression
+  * log-schema violation
+
+* **Pass criteria:**
+
+  * **0 elevation events**
+  * **0 leakage events**
+  * **all access controls behave deterministically**
+  * **system recovers to a known-good security state**
+
+Chaos tests run in staging and selected non-destructive variants in production.
+
+---
+
+#### **12.6.6 Verification and Enforcement**
+
+All security and privacy benchmarks must be:
+
+* **validated continuously** through §10 telemetry
+* **checked in CI** through cryptographic configuration tests
+* **audited** via structured logs and immutable evidence
+* **blocked** if any critical metric is red
+
+A release **must not** proceed if:
+
+* encryption config drifts
+* secrets are past rotation age
+* any critical CVE exists
+* redaction success falls below 99.99%
+* any security chaos test fails
+* any leakage suspicion is raised
+
+Security is binary: it is either correct or it is not.
+
+---
 
 ### 12.7 Maintainability and Operability
 
