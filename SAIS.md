@@ -17209,25 +17209,75 @@ Every commit merged to `main` is inherently “release-ready,” eliminating lat
 
 ### 13.8 Change and Version History
 
-Each release tag appends a new table snapshot to `/docs/traceability/vX.Y.Z.md`.
-Changes between versions tracked by diff, signed and timestamped.
-Ensures auditors can trace the lineage of every requirement from conception to verification.
+This subsection defines how Transcrypt preserves a complete, immutable, and independently verifiable history of requirement mappings across releases. Each release produces a deterministic snapshot of the traceability table, stored alongside signed diffs to ensure full lineage reconstruction from the PRD through to verified behaviour. No historical state may be edited, overwritten, or collapsed.
+
+#### 13.8.1 Snapshot Location and Structure
+
+Every release tag generates a traceability snapshot stored under:
+
+```
+/docs/traceability/vX.Y.Z.md
+```
+
+Each snapshot contains:
+
+* the full traceability table for that release;
+* signatures and provenance attestations;
+* timestamps matching the release commit;
+* references to the acceptance artefacts stored under `/evidence/traceability/`.
+
+Snapshots are immutable. CI blocks any attempt to modify or delete historical entries.
+
+#### 13.8.2 Diff Generation and Signing
+
+For each release, CI computes a diff between the newly generated traceability table and the previous release’s snapshot. The diff captures:
+
+* added or removed `REQ-ID`s;
+* transitions in acceptance state;
+* updates to implementing components or interfaces;
+* changes to test or evidence artefacts;
+* any PRD/SAIS-driven structural modifications.
+
+The diff is signed and timestamped, forming part of the release artefact bundle. Auditors can recompute this diff using only the prior snapshot, the current snapshot, and the signing keys.
+
+#### 13.8.3 Historical Lineage Reconstruction
+
+The combination of snapshots and signed diffs enables auditors to reconstruct the complete requirement lineage for any release:
+
+* PRD origin of each `REQ-ID`;
+* SAIS component and interface bindings;
+* implementation commits;
+* deterministic test artefacts;
+* acceptance events;
+* evidence records;
+* provenance chain.
+
+Nothing requires proprietary tooling. All verification is possible with standard cryptographic primitives and repository history.
+
+#### 13.8.4 Determinism and Inference Constraints
+
+Snapshots and diffs must contain:
+
+* deterministic, reproducible tables;
+* stable identifiers;
+* environment-invariant metadata;
+* no stochastic or runtime inference artefacts.
+
+If any requirement cannot produce deterministic evidence, it cannot be marked Verified and cannot propagate into snapshots.
+
+#### 13.8.5 Role in Compliance and Audit Architecture
+
+Version history integrates with the audit architecture defined in §9.5:
+
+* append-only semantics;
+* cryptographic hash chains;
+* sealed-tenancy boundaries;
+* stable redaction policies;
+* verifiable provenance.
+
+Together, these ensure that requirement evolution is transparent, immutable, and reconstructable across the entire lifetime of the platform.
 
 ---
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ## 14. Appendices and Change Log
 
@@ -17241,19 +17291,8 @@ Here’s the complete, final structure for **Section 15 – Appendices and Chang
 
 Explain that this section stores supporting material required to reproduce or audit the system design: diagrams, schema references, term definitions, and the version history of this document.
 
-### 15.2 Reference Schemas and Data Models
 
-Embed or link to canonical schemas from §4 (e.g., JSON Schema, SQL DDL, Pydantic models).
-Note source paths in the repo (`/schemas/`), the toolchain used for generation, and validation status in CI.
-Where possible, include hash of each exported schema for integrity checking.
-
-### 15.3 Diagram Source Files
-
-Provide locations and formats for all diagrams: Mermaid, PlantUML, Figma, or Draw.io.
-List their file paths, last update timestamp, and SHA digest.
-Clarify that only diagrams stored in Git (not screenshots) are authoritative for architecture reviews.
-
-### 15.4 Environment Variables and Configuration Keys
+### 15.2 Environment Variables and Configuration Keys
 
 Table of all environment variables consumed by the system, with classification and source of truth.
 
@@ -17264,43 +17303,10 @@ Table of all environment variables consumed by the system, with classification a
 | `LOG_LEVEL`         | Logging verbosity            | All          | `INFO`                       | ConfigMap       |
 | `OTEL_EXPORTER_URL` | OpenTelemetry endpoint       | All          | `https://otel.transcrypt.io` | ConfigMap       |
 
-### 15.5 Glossary of Terms and Abbreviations
+### 15.3 Glossary of Terms and Abbreviations
 
 Define all recurring terms, abbreviations, and acronyms used throughout the SAIS — e.g., *MVP, CEv3.2, IAM, SLO, DSR, DLQ, IaC.*
 Keep definitions concise and cross-linked to the first appearance in the document.
 
-### 15.6 External References
 
-List all external specifications, standards, and libraries referenced in this document:
-
-* IEC 62443-3-3 (Industrial Communication Networks — Security Levels)
-* Cyber Essentials v3.2
-* NIS2 Directive (EU 2022/2555)
-* OpenTelemetry Specification v1.28
-* Sigstore / Cosign documentation
-* WCAG 2.2 AA Accessibility Guidelines
-
-### 15.7 Document Change Log
-
-Maintain a chronological record of all edits to this document, in reverse order (newest first).
-
-| Date       | Version     | Author         | Summary of Changes                              | Commit / Tag |
-| :--------- | :---------- | :------------- | :---------------------------------------------- | :----------- |
-| 2025-11-13 | v1.0.0-sais | P. Livingstone | Initial full draft aligned with PRD v0.3.0      | `abc1234`    |
-| 2025-12-01 | v1.1.0-sais | G. McSneggle   | Added observability metrics and SBOM references | `def5678`    |
-| 2026-01-10 | v1.1.1-sais | P. Livingstone | Corrected schema links and traceability matrix  | `ghi9012`    |
-
-All entries are commit-linked and signed.
-For long-term audit, every minor revision must retain backward traceability to the PRD milestone it supports.
-
-### 15.8 Document Integrity and Verification
-
-State the hash of the full Markdown file (`sha256sum`) and any exported PDF to ensure authenticity.
-Include command example for re-verification:
-
-```bash
-sha256sum system-architecture-and-interface-spec.md
-```
-
----
 
