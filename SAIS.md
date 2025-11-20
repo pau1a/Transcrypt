@@ -15068,13 +15068,172 @@ These records form part of the operational evidence set referenced in §10.14 an
 
 ### 11.10 Compliance Clock and Regulatory Operations
 
-Transcrypt operates within legal time constraints—deadlines for evidence retention, breach notification, and audit reporting.
-This section defines the “compliance clock”: the timers, reminders, and runbooks governing how the platform aligns with Cyber Essentials, NIS2, UK GDPR, and ICO expectations.
-Operational decisions must respect these timers; changes or incidents affecting a tenant during an audit period must follow stricter controls.
+Transcrypt operates under strict legal time constraints.
+Regulatory clocks govern **when** evidence must be retained or deleted, **when** tenants must be notified, **when** breaches must be escalated, and **when** audits must be supplied with complete artefacts.
+This section defines the Compliance Clock: the timers, automation, and operational tooling that ensure Transcrypt meets Cyber Essentials, NIS2, UK GDPR, and ICO expectations without relying on human memory or improvised workflows.
 
-List operational tooling (runbook executor, pager platform, metrics dashboard, chat-ops commands).
-Define minimal manual steps; everything else automated.
-State fallback manual paths if automation fails.
+#### Compliance Clock Flow
+
+```mermaid
+flowchart LR
+    A[Regulatory Timers] --> B[Compliance Clock Engine]
+    B --> C[Operational Tooling]
+    C --> D[Audit and Evidence Layer]
+    C --> E[Authority Notification Path]
+```
+
+#### Regulatory Timers
+
+Regulatory and contractual obligations are represented as hard timers:
+
+* GDPR deletion windows (for example 30 or 90 days, tenant-configurable within legal bounds)
+* Cyber Essentials evidence-availability windows
+* NIS2 24-hour initial incident notification
+* NIS2 72-hour full report window
+* ICO 72-hour breach-notification deadline
+* Audit log retention windows
+* Evidence retention and expiry cycles
+* Inference log minimisation timelines
+* Backup expiry and verification cycles
+
+These timers are defined declaratively and executed autonomously.
+
+#### Compliance Clock Engine
+
+The Compliance Clock Engine enforces all time-based operations.
+It orchestrates:
+
+* scheduled regulatory workflows
+* tenant-scoped and system-scoped freezes
+* deletion and retention operations
+* export and audit-bundle generation
+* incident-driven notification timelines
+* compliance-state transitions for tenants
+* binding timers to runbooks and chat-ops commands
+
+The engine is deterministic and auditable: every timer tick produces traceable logs.
+
+#### Regulatory Freeze Periods
+
+Some periods require strict immobility:
+
+* audit windows where evidence must not mutate
+* external certification assessments
+* tenant-requested evidence reviews
+* post-incident forensic freeze periods
+* global security freeze after critical vulnerability disclosures
+
+Freeze periods block:
+
+* deploys
+* migrations
+* inference manifest updates
+* marketing runtime rebuilds
+* rulepack updates
+* evidence transformations
+
+Freeze may be tenant-scoped or global.
+
+#### Breach-Notification Timing
+
+When a breach impacts personal data, timing becomes mandatory:
+
+* breach clock begins at detection or earliest suspicion
+* notifications to internal teams must fire immediately
+* automated collection of lineage, logs, and evidence snapshots begins
+* regulatory timelines are enforced (24h NIS2 initial notice, 72h ICO/NIS2 detailed report)
+* freeze enforced for affected tenants
+* audit packages prepared with timestamps and digest manifests
+
+Operators must rely on automated prompts, not judgement calls about timing.
+
+#### Evidence Retention and Expiry Automation
+
+Retention and expiry behaviours are fully automated:
+
+* countdown to expiry tracked by Compliance Clock
+* lineage-graph validation performed before deletion
+* deletion lineage node created (§11.8)
+* irreversible deletion executed according to GDPR rules
+* tenant notified ahead of expiry
+* evidence under active audit is temporarily exempt from deletion
+
+Human intervention is neither required nor permitted for routine retention tasks.
+
+#### Required Operational Tooling
+
+Operators interact with regulatory processes via a minimal set of controlled tools:
+
+* **Runbook executor**: runs timed regulatory workflows and freeze/unfreeze commands
+* **Pager platform**: drives breach-clock notifications and urgent compliance timers
+* **Metrics dashboard**: displays compliance-timer health, overdue tasks, and audit readiness
+* **Chat-ops commands**:
+
+  * view active timers
+  * generate audit bundles
+  * freeze or unfreeze tenant or system operations
+  * trigger manual regulatory workflows when automation is degraded
+  * inspect retention queues
+
+These tools are the only permitted operational interface for compliance tasks.
+
+#### Automation First, Manual Last
+
+Automation handles:
+
+* retention
+* deletion
+* notification
+* freeze enforcement
+* audit generation
+* export production
+* regulatory clock transitions
+
+Manual execution is restricted to:
+
+* authority-requested interventions
+* operator confirmation when automation cannot determine state
+* fallback during partial system degradation
+
+Manual actions must still produce:
+
+* operator identity
+* timestamp
+* action code
+* digest of affected artefacts
+* lineage extension events
+
+This ensures full evidential continuity.
+
+#### Compliance Review Cycle
+
+The platform produces periodic compliance-health reports containing:
+
+* overdue timers
+* missed deletion deadlines
+* improper retention events
+* audit-log integrity failures
+* breach-notification SLA performance
+* evidence expiry backlog
+* inference log minimisation compliance
+* marketing runtime privacy compliance
+* freeze-period violations
+* drift in compliance automation
+
+These reviews update internal governance and tune the Compliance Clock Engine.
+
+#### Evidence and Audit Integration
+
+All compliance-clock actions produce artefacts integrated into the audit system (§10.14):
+
+* retention logs
+* deletion lineage nodes
+* notification timestamps
+* freeze- and unfreeze-events
+* regulatory workflow results
+* export-bundle manifests
+
+This ensures external auditors can independently verify Transcrypt’s regulatory behaviour.
 
 ---
 
