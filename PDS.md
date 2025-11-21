@@ -3711,25 +3711,540 @@ They must be displayed exactly as the system produces them, not as the UI wishes
 
 # **9. Accessibility Specification**
 
+Accessibility is a core behavioural requirement of Transcrypt. It is not cosmetic, optional, or dependent on surface. Marketing and Essentials must behave as one accessible system with a single contract. Every interactive element must remain operable, perceivable, and understandable regardless of device, impairment, environment, or user state. Accessibility rules apply equally to controls, navigation, evidence workflows, evaluation surfaces, reporting, billing, identity, degraded modes, and all CTA-bearing screens.
+
+Accessible behaviour is deterministic behaviour. No user should ever encounter ambiguity, hidden state, or conditional interactions based on ability. Accessibility is implemented at the level of components, patterns, flows, and runtime state — not after the fact.
+
 ## **9.1 Compliance Targets**
+
+### **9.1.1 Standards and Levels**
+
+Transcrypt aims for:
+
+* **WCAG 2.2 AA** compliance as minimum
+* **AAA alignment** where no functional compromise exists
+* **EN 301 549** compatibility for public-sector procurement
+
+These targets apply to **all MVP surfaces** — Marketing and Essentials equally.
+
+### **9.1.2 Deterministic Behaviour Under Assistive Tech**
+
+The interface must remain:
+
+* fully navigable with keyboard
+* stable under screenreader linearisation
+* readable under high contrast
+* functional under font scaling (up to 200%)
+* operable without pointer input
+* operable without vision, colour discrimination, or fine motor precision
+
+No surface may regress when assistive technologies are active.
+No state may be hidden behind hover-only affordances.
+
+### **9.1.3 Performance and Latency Under AT Load**
+
+Assistive tech often increases DOM traversal time.
+Transcrypt must:
+
+* avoid ARIA over-annotation
+* avoid deep nesting
+* avoid dynamic DOM churn
+* avoid reactive flicker, loading shimmer, or aggressive animation
+
+These rules preserve clarity for all users under stress.
 
 ## **9.2 Visual and Interaction Rules**
 
+### **9.2.1 Contrast and Colour Discipline**
+
+Transcrypt already uses a neutral-first palette; accessibility rules extend this:
+
+* minimum **4.5:1** for text
+* minimum **3:1** for large text and essential icons
+* semantic colours may never be the only channel of meaning
+* accent cerulean may never be used as a semantic indicator
+* error, success, warning, and info colours must be accompanied by text labels
+
+### **9.2.2 Motion, Timing, and State Transitions**
+
+Motion must be:
+
+* optional
+* subtle
+* non-essential
+
+Forbidden:
+
+* implicit transitions
+* timed auto-advance
+* automatic dismissal of alerts
+* hidden “success” animations implying uncertain backend state
+
+Users must remain fully in control of pacing.
+
+### **9.2.3 Focus, Hover, and Active States**
+
+Focus must:
+
+* be visible at all times
+* never be removed or suppressed
+* follow predictable flow
+* never be trapped inside components
+
+Hover states must not convey meaning that focus states do not.
+Click areas must be large, stable, and appropriately padded.
+
+### **9.2.4 Text, Scaling, and Reading Experience**
+
+At 200% scaling:
+
+* layouts must not collapse unpredictably
+* fixed containers must not overflow
+* tables must introduce horizontal scroll, never text truncation
+* buttons must remain readable and unambiguous
+
+Essentials must remain calm, readable, austere even at extreme zoom.
+
+### **9.2.5 Error Visibility and Clarity**
+
+Errors must:
+
+* be visible without colour
+* be announced programmatically
+* remain persistent until resolved
+* identify the exact field or component causing the issue
+
+No error may rely on subtle colour, position, or gesture.
+
 ## **9.3 Screenreader and Keyboard Operation**
+
+### **9.3.1 ARIA and Semantic Structure**
+
+Rules:
+
+* ARIA used sparingly — only where semantic HTML cannot express intent
+* every interactive element must be a real interactive element (button, link, input)
+* no custom div-buttons unless fully scaffolded
+* headings must follow strict descending order
+* regions must be landmarked consistently across surfaces
+
+Screenreader users must access the same structural logic as sighted users.
+
+### **9.3.2 Keyboard Flow**
+
+Full keyboard operation must be possible on:
+
+* identity flows
+* signup, login, reset flows
+* evidence upload
+* evaluation start
+* navigation
+* findings and report viewing
+* billing and payment confirmation
+
+Tab order must be:
+
+* predictable
+* visible
+* never broken by marketing layouts
+
+Escape routes must exist for every modal, drawer, and sheet.
+
+### **9.3.3 Live Regions, Alerts, and Timely Feedback**
+
+Screenreaders must receive:
+
+* immediate confirmation of state changes
+* explicit messaging for progress, errors, and blockers
+* ARIA live regions with polite or assertive priority depending on impact
+
+Forbidden:
+
+* silent state transitions
+* unannounced spinner changes
+* silent validation failures
+* silent button disable/enable
+
+### **9.3.4 Evidence, Evaluation, and Reports Under AT**
+
+These are the most failure-sensitive flows; they must:
+
+* label all upload inputs and state changes
+* announce when evidence transitions between lifecycle states
+* announce evaluation job state changes (Queued → Running → Completed)
+* announce availability of findings and reports
+* ensure that no finding or report is exposed before the backend confirms availability
+
+Accessibility is bound to determinism — never optimism.
+
+---
 
 # **10. Offline and Multi-Device Behaviour**
 
+Offline and multi-device behaviour define how Transcrypt operates when connectivity is absent, intermittent or degraded, and when users switch across phones, tablets, laptops and desktops. Offline behaviour must always fail safe, never speculate, never present stale authenticated state, and never perform queued backend actions without explicit user confirmation. Multi-device behaviour must be consistent, predictable and anchored to canonical backend truth — not local assumptions, caches or inferred session continuity.
+
+Offline and device-variant behaviour are *architectural safety rails*, not enhancements. They protect data integrity, user trust, and compliance correctness under stress.
+
 ## **10.1 Offline Modes**
+
+Offline behaviour is not an “extra mode” — it is a deterministic fallback pattern that guarantees safe degradation under connectivity loss. Offline states apply the moment Essentials cannot confirm identity, tenant context, capability, or system state.
+
+### **10.1.1 Identity Failure and Safe-Closed Authentication**
+
+If Essentials cannot reach the identity gateway:
+
+* the system must fail closed
+* authenticated UI must collapse to anonymous immediately
+* no cached role, tenant or nickname may be shown
+* no surface may imply access to evaluation, evidence or profile data
+
+Rules:
+
+* never assume a session is valid when the gateway is unreachable
+* never retain authenticated nav rails
+* never expose any authenticated metadata
+
+Offline always returns the user to a **safe anonymous state**.
+
+### **10.1.2 Read-Only Access to Locally Held Artefacts**
+
+Certain artefacts may be present locally (previously downloaded reports, cached read-only findings summaries, etc.). When offline:
+
+* these may be displayed **only** as read-only “local copies”
+* they must be clearly labelled as potentially outdated
+* they must never appear interactive
+* they must never allow regeneration, re-evaluation, or modification
+
+The user must never confuse a locally cached artefact with current backend truth.
+
+### **10.1.3 Disabled Operations During Offline**
+
+The following become **immediately disabled**:
+
+* evidence upload
+* evaluation initiation
+* profile edits
+* billing actions
+* report generation
+* control completion actions
+* anything requiring backend confirmation
+
+Disabled states must be explicit, not subtle.
+Offline is never a reason to misrepresent capability.
+
+### **10.1.4 Recovery and Reconnect Behaviour**
+
+On reconnection:
+
+* the user must explicitly reattempt any previously blocked operation
+* the system must never auto-submit stored intents
+* on reconnection, Essentials must re-validate identity and tenant context before restoring authenticated UI
+* backend state must be fetched **fresh** before rendering any completion, gating or evaluation status
+
+No queued actions.
+No silent transitions.
+No auto-syncing.
+No speculative reconciliation.
+
+### **10.1.5 Forbidden Offline Behaviours**
+
+Explicitly forbidden:
+
+* retaining authenticated nav while offline
+* showing cached evidence lists as if current
+* implying evaluation readiness while disconnected
+* running local-only “draft evaluations”
+* auto-uploading files upon reconnection
+* silently retrying billing actions
+* silently retrying evidence uploads
+* merging offline work with backend state without explicit confirmation
+
+Offline mode must *preserve integrity*, not convenience.
 
 ## **10.2 Device Classes and Breakpoints**
 
+Transcrypt must behave consistently across mobile, tablet, laptop and large desktop screens — not cosmetically, but architecturally. Device adaptation must never create divergent feature sets, divergent semantics or divergent interaction patterns. A user switching devices must receive exactly the same capabilities, states and limits.
+
+### **10.2.1 Supported Device Classes**
+
+Transcrypt formally supports:
+
+* mobile phones (narrow viewport)
+* tablets (intermediate viewport)
+* laptops
+* desktop monitors
+
+All devices:
+
+* maintain identical capability
+* honour the same interaction laws
+* surface identical evaluation, profile and evidence states
+
+No device receives “reduced mode” features or simplified versions of Essentials.
+
+### **10.2.2 Responsive Layout Rules**
+
+Breakpoints must:
+
+* preserve hierarchy
+* preserve clarity
+* never collapse important information behind hover-only elements
+* never remove labels that convey meaning
+* maintain touch targets of sufficient size on mobile
+
+Responsive design is structural, not stylistic.
+
+Rules:
+
+* tables must degrade into scrollable containers, never truncated lists
+* evaluation states must remain fully visible
+* findings lists must preserve filtering and grouping
+* evidence lists must preserve lifecycle indicators
+* billing screens must remain legible and fully operable
+* CTAs must never shrink to ambiguous icons
+
+### **10.2.3 Interaction Consistency Across Devices**
+
+Device size must never alter:
+
+* gating logic
+* evaluation initiation rules
+* evidence lifecycle semantics
+* error surfaces
+* identity resolution
+* multi-step flows such as profile completion, billing changes or invitations
+* routes into or out of Quick Start
+
+Touch vs pointer input may change gesture affordances, but never change **behaviour**.
+
+### **10.2.4 Mobile-First Stability Guarantees**
+
+Due to network variability and smaller viewports, mobile carries stricter requirements:
+
+* identity redirects must not flicker
+* long-running evaluations must present stable progress
+* evidence upload must use chunk-resilient UI state
+* popovers must become modals
+* “hover reveals meaning” is forbidden
+* keyboard-safe surfaces must not obstruct critical fields
+
+Mobile cannot behave like a “cut down” platform.
+It must behave like the full system, optimised for constraints.
+
+### **10.2.5 Multi-Device Session Integrity**
+
+Users frequently switch devices. Rules:
+
+* session state must never be inferred from local caches
+* device handoff must reflect the backend session truth
+* no device may override evaluation state, profile state or evidence state
+* simultaneous device usage must show identical evaluation job states
+* billing events must update globally and immediately upon backend confirmation
+
+No optimistic session continuity.
+No silent drift.
+
+### **10.2.6 Forbidden Device Behaviours**
+
+Explicitly forbidden:
+
+* device-dependent feature sets
+* showing different evaluation readiness on mobile vs desktop
+* hidden controls behind hover-only interactions
+* mobile-only “light mode” of Essentials
+* caching profile/evidence/evaluation states device-locally
+* interpreting viewport width as user intent
+* assuming mobile means “less serious operations”
+
+Every device must present the same truth.
+
+---
+
 # **11. Design QA and Acceptance Criteria**
+
+Design QA and Acceptance Criteria define the measurable conditions under which Transcrypt’s design implementation is considered correct, complete, and safe to ship. These rules apply uniformly to Marketing and Essentials surfaces; no surface may bypass or dilute them. Acceptance criteria must be deterministic, testable, and tied directly to the behavioural laws established in this PDS, the PRD, and the SAIS.
+
+Design QA evaluates *fidelity to system truth*.
+Acceptance evaluates *fidelity to user-facing behaviour*.
+Neither may rely on interpretation, heuristics, or design intent.
+Only observable, auditable behaviour qualifies.
 
 ## **11.1 Component Acceptance**
 
+Component acceptance validates each discrete design element—controls, cards, inputs, text blocks, feedback banners, evidence widgets, evaluation indicators—against the invariant behaviour defined in Section 5.
+
+### **11.1.1 Structural Acceptance**
+
+A component is accepted only if:
+
+* its hierarchy matches the PDS exactly
+* all states are implemented (default, hover, focus, active, disabled, error)
+* no undocumented states exist
+* spacing, padding, margins, and grid behaviour match the layout contract
+* it behaves identically across device classes
+
+Any deviation from structural rules fails acceptance.
+
+### **11.1.2 Interactive Acceptance**
+
+A component passes interaction QA if:
+
+* keyboard navigation is correct and complete
+* pointer interactions are stable and deterministic
+* focus visibility is guaranteed
+* error and success states match canonical text and colour rules
+* the component triggers *exactly* the expected API calls—no more, no fewer
+* no optimistic local state appears
+
+Interactive drift (double-firing, speculative UI, missing feedback) is an automatic rejection.
+
+### **11.1.3 Accessibility Acceptance**
+
+A component is only accepted if:
+
+* WCAG 2.2 AA contrast holds
+* touch-target sizing is compliant
+* text is readable at 200%
+* semantics are correct
+* ARIA is used minimally and properly
+* screenreader linearisation produces coherent structure
+
+Any accessibility failure is a design failure.
+
+### **11.1.4 Determinism and State Accuracy**
+
+A component passes determinism QA only if:
+
+* every visible state corresponds to confirmed backend truth
+* no ephemeral client-only states appear
+* loading, pending, and retry states are distinct and correctly triggered
+* component state cannot contradict evaluation, evidence, subscription, or identity truth
+
+Ambiguous or misaligned states invalidate the component.
+
 ## **11.2 Page-Level Acceptance**
 
+Page-level acceptance evaluates complete screens, ensuring that components, layout, flow, and behavioural rules work as a coherent surface.
+
+### **11.2.1 Layout and Information Density**
+
+A page is accepted only if:
+
+* the layout aligns with Section 4 rules
+* spacing, readability, and ordering follow the established hierarchy
+* no horizontal overflow occurs at standard breakpoints
+* mobile and desktop variants preserve meaning and capability
+* no essential information collapses behind hover-only patterns
+
+Pages failing readability or hierarchy consistency are rejected.
+
+### **11.2.2 Error, Feedback, and State Surfaces**
+
+A page must:
+
+* display errors immediately and persistently
+* surface backend failures with explicit context
+* present no contradictory or overlapping banners
+* use only documented feedback components
+* clearly show state transitions
+
+Any page that hides or softens critical blocking feedback fails acceptance.
+
+### **11.2.3 Identity, Tenant, and Entitlement Alignment**
+
+Pages must:
+
+* reflect identity state correctly
+* show the correct authenticated/anonymous structure
+* reflect subscription and entitlement gating deterministically
+* never expose authenticated UI to anonymous users
+* never show capabilities gated by incomplete profile or evidence
+
+Misaligned identity/tenant logic is an automatic fail.
+
+### **11.2.4 Navigation and Flow Correctness**
+
+A page passes acceptance if:
+
+* all routes and child flows work deterministically
+* back, forward, and reload preserve state truth
+* no page allows a user to enter an inconsistent journey path
+* forbidden paths are blocked with correct messaging
+
+Navigation must behave identically on all device types.
+
 ## **11.3 Journey-Level Acceptance**
+
+Journey-level acceptance validates complete, multi-surface flows across time, ensuring temporal correctness, backend alignment, and behavioural determinism. These criteria apply to:
+
+* Signup and Login
+* Marketing→Essentials routing
+* Subscription & Billing
+* Profile completion
+* Evidence submission
+* Evaluation
+* Findings & Reports
+
+### **11.3.1 Temporal Determinism**
+
+A journey is accepted only if:
+
+* its sequence matches the temporal contract defined in Section 8
+* no step resolves before backend confirmation
+* no optimistic, predictive, or inferred behaviour appears
+* state never becomes ambiguous between steps
+* all blocked states are explicit
+
+Timing must follow backend-confirmed truth, not UI assumptions.
+
+### **11.3.2 Cross-Surface Consistency**
+
+A journey passes if:
+
+* Dashboard, Evaluation, Evidence, and Profile views show consistent state
+* returning to a journey at any time shows canonical state
+* no surface shows stale or contradictory information
+* identical states appear across devices
+
+Cross-surface contradictions are a hard failure.
+
+### **11.3.3 Error Path Completeness**
+
+A journey must include:
+
+* correct error surfaces at every failure point
+* no silent fallbacks
+* deterministic recovery options
+* correct redirection behaviour
+
+Any missing error state invalidates the journey.
+
+### **11.3.4 Immutability and Audit Integrity**
+
+A journey is accepted only if:
+
+* every evaluation, evidence update, or report creation obeys immutability rules
+* lineage is preserved
+* no retroactive changes appear
+* no surface regenerates or reflows historical artefacts
+
+Breaking immutability breaks acceptance.
+
+### **11.3.5 Forbidden Journey Behaviours**
+
+The following behaviours fail acceptance instantly:
+
+* half-authenticated journeys
+* optimistic state transitions
+* local reconstruction of backend truth
+* any use of inference to guess state
+* partial results shown before evaluation completion
+* profile/evidence completeness calculated client-side
+* device-dependent divergent journeys
+
+Journeys must behave as coherent, deterministic, backend-driven sequences.
+
+---
 
 # **12. Appendices**
 
