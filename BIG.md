@@ -1,6 +1,58 @@
 # Brand Identity Guide
 
+The Brand Identity Guide defines the visual and verbal system that represents Transcrypt everywhere it appears. It establishes the rules that make the brand coherent across product, marketing, documentation, demos, presentations, and future customer-facing surfaces.
+
+Where the PRD defines purpose, the SAIS defines architecture, and the PDS defines behaviour, this guide defines expression — the consistent external face of a platform built on determinism, trust, and clarity.
+
+This is not a creative exploration or a loose set of suggestions. It is an operational standard. Every logo file, colour token, typographic choice, spacing rule, illustration, and written sentence must follow the constraints in this guide. Any deviation introduces risk: inconsistency, dilution, misinterpretation, or loss of trust.
+
+Transcrypt’s identity is built the same way its product is built — simple, disciplined, structured, and intolerant of ambiguity. The aim is not flashiness or novelty. The aim is precision, legibility, and a quiet confidence that reflects a platform designed to be safe, predictable, and uncompromising in how it handles customer data and compliance.
+
+The rules here bind designers, writers, engineers, partners, and anyone creating assets on behalf of the company. The result is a single brand that looks, sounds, and behaves like one product, one philosophy, and one promise — wherever it appears.
+
 # 1. Purpose and Positioning
+
+Transcrypt exists to make cybersecurity compliance effortless, reliable, and unambiguous for small and mid-sized organisations. Its purpose is not to entertain, embellish, or posture — but to remove uncertainty, reduce cognitive load, and replace scattered processes with a single, trusted system. This guide defines how that purpose is expressed visually and verbally everywhere the brand appears.
+
+The brand is not decorative. It is an operational tool. The same discipline that governs Transcrypt’s architecture, behaviour, and product decisions governs its identity. Every colour, word, typeface, spacing rule, and asset must serve clarity, trust, and precision. Nothing should distract from the product’s promise: predictable outcomes, verifiable progress, and a calm, structured experience in a domain normally defined by complexity and anxiety.
+
+This section establishes the brand’s strategic position and the narrative foundation that all communication must follow. It prevents drift. It ensures that internal teams, partners, and external contributors reinforce a single, coherent story rather than inventing their own. What follows defines the purpose statement, positioning statement, core story, and messaging pillars — the story engine that drives every line of copy, every page layout, and every marketing asset.
+
+### Purpose Statement
+
+Transcrypt exists to give organisations a simple, trusted path to cybersecurity compliance — replacing confusion and manual effort with clarity, structure, and measurable progress.
+
+### Positioning Statement
+
+For UK SMEs who need to achieve and maintain cybersecurity certifications without specialist staff or bloated enterprise tooling, Transcrypt is the compliance platform that offers a guided, auditable, and stress-free experience. Unlike generic SaaS tools or consultancy-heavy approaches, Transcrypt is built on deterministic architecture, sealed tenancy, and transparent evidence handling, delivering confidence without complexity.
+
+### Core Story
+
+Most small organisations know they need to meet cybersecurity standards, but the process feels like a maze. Requirements are scattered. Evidence is inconsistent. People don’t know what “good” looks like, and the stakes of getting it wrong are high. Transcrypt brings order to this chaos. It guides users step-by-step, explains what matters and why, structures everything that needs to be collected, and turns messy progress into clear, demonstrable readiness. It removes guesswork. It removes fear. It shows organisations that compliance doesn’t have to be complicated — it just has to be structured. With Transcrypt, the path is always knowable, repeatable, and auditable.
+
+### Key Messaging Pillars
+
+These principles anchor every outward-facing message. They do not change.
+They form the spine of the brand.
+
+1. **Clarity over complexity**
+   The product explains what needs to be done, why it matters, and how to do it — with no jargon, ambiguity, or hidden steps.
+
+2. **Trust through structure**
+   Deterministic workflows, sealed tenancy, verifiable evidence, and a predictable user experience make the platform dependable.
+
+3. **Guided, not overwhelming**
+   Transcrypt turns the compliance journey into a sequence of understandable tasks, each grounded in clear definitions and practical guidance.
+
+4. **Confidence, not guesswork**
+   Every action, artefact, and result is traceable. Users know where they stand, what’s left, and whether they’re ready.
+
+5. **Built for real organisations**
+   Designed for the workloads, constraints, and realities of SMEs — not as a stripped-down enterprise tool, but as a system with their world in mind.
+
+Together, these elements define how the brand speaks, behaves, and appears. They set the tone for the rest of this guide and ensure Transcrypt’s identity is as precise, consistent, and dependable as the product itself.
+
+---
 
 ## 1.1 Role of the Brand Identity Guide
 ### 1.1.1 Scope of the Guide
