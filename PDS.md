@@ -4250,6 +4250,572 @@ Journeys must behave as coherent, deterministic, backend-driven sequences.
 
 ## **12.1 Glossary**
 
-## **12.2 Reference Artefacts**
+### **Access Gate**
+
+A backend-confirmed rule that determines whether the user can perform an action (evaluation, billing, evidence upload).
+
+### **Active (Subscription State)**
+
+The subscription is current, paid, and fully entitled.
+
+### **Anonymous Navigation Rail**
+
+The unauthenticated menu structure rendered when identity is not established.
+
+### **App Service**
+
+The backend service that orchestrates evaluation jobs, evidence binding, and tenant logic.
+
+### **Archived (Evidence/Report State)**
+
+A preserved but inactive state for superseded or retired artefacts.
+
+### **ARIALandmark / Semantic Region**
+
+Structural markers used by assistive tech to orient within a document.
+
+### **ARIA Live Region**
+
+A region that announces updates to screenreaders (assertive/polite).
+
+### **Atomic Commit**
+
+A commit that succeeds or fails as one indivisible unit; no partial writes permitted.
+
+### **Audit Visibility Criterion**
+
+Requirement that actions, outputs, and artefacts remain fully traceable.
+
+---
+
+### **Backend Confirmation**
+
+Definitive signal from the backend that an action or state transition has completed.
+
+### **Backend Truth**
+
+The canonical authoritative state against which all UI behaviour must align.
+
+### **Billing Error Surface**
+
+A UI element that displays billing-related failures deterministically.
+
+### **Billing Service**
+
+The system that handles subscription management, entitlements, and payment integrations.
+
+### **Blocked State (Tenant)**
+
+A tenant that is suspended; Essentials becomes inaccessible.
+
+### **Breakpoints**
+
+Viewport width thresholds controlling responsive layout.
+
+### **Build Geometry**
+
+The structural arrangement of backend services, identity gateway, and workers.
+
+### **Bound Evidence**
+
+Evidence that has passed hash validation and been committed to metadata + object store.
+
+---
+
+### **Capability Banner**
+
+A banner explaining that a feature is unavailable due to gating conditions.
+
+### **Capability Gating**
+
+Feature enforcement based on entitlement, profile completeness, or evidence requirements.
+
+### **Cancelled (Evaluation State)**
+
+The job was intentionally aborted; results are not produced.
+
+### **Canonical Backend Truth**
+
+The single source of state used to determine UI behaviour.
+
+### **Canonical Landing Surface**
+
+The correct post-authentication page determined by tenant + role.
+
+### **Canonical Redirect**
+
+Redirect path guaranteed by the identity gateway.
+
+### **Canonical UI State**
+
+UI state fully aligned to backend truth without drift.
+
+### **Chunk-Resilient Upload**
+
+Evidence upload pattern supporting unreliable networks without duplication.
+
+### **Complete (Profile State)**
+
+All profile requirements are satisfied and committed.
+
+### **Component Acceptance**
+
+QA criteria for correctness of individual UI elements.
+
+### **Control Completeness**
+
+Backend-computed state showing that a control has sufficient valid evidence.
+
+### **Control Mapping**
+
+Relationship between evidence, rules, and evaluation logic.
+
+### **Cross-Surface Drift Check**
+
+Validation that all surfaces show identical state without contradictions.
+
+### **Cross-Surface State Reconciliation**
+
+Ensuring state remains consistent across device and view boundaries.
+
+### **Current (Report State)**
+
+The most recent, active report artefact.
+
+---
+
+### **Degraded Mode**
+
+A safe fallback user experience when capabilities are limited.
+
+### **Determinism Acceptance Rule**
+
+QA rule requiring UI to reflect only backend-confirmed states.
+
+### **Deterministic Behaviour**
+
+Behaviour where the same inputs produce the same observable outputs.
+
+### **Device Class**
+
+A category of devices: phone, tablet, laptop, desktop.
+
+### **Device Drift Prevention**
+
+Ensuring all devices display identical backend state.
+
+### **Draft State (Forbidden)**
+
+Any implied or temporary state not based on backend truth.
+
+### **Drift Checkpoint**
+
+State comparison to prevent UI misalignment.
+
+---
+
+### **EN 301 549**
+
+Accessibility standard for ICT products.
+
+### **End-to-End Journey**
+
+A multi-surface user flow governed by temporal contracts.
+
+### **Entitlement**
+
+Capabilities derived from subscription state.
+
+### **Entitlement Gate**
+
+A rule blocking a capability due to insufficient entitlements.
+
+### **Entitlement Refusal Surface**
+
+UI surface explaining why entitlement blocks an action.
+
+### **Error Terminal**
+
+Terminal state in a workflow representing failure.
+
+### **Evaluation Job**
+
+A backend job executing rulepack checks on tenant evidence.
+
+### **Evaluation Queue**
+
+Backend queue where evaluation jobs wait for workers.
+
+### **Evaluation Readiness**
+
+State where profile, evidence, and subscription conditions allow evaluation.
+
+### **Evaluation Snapshot**
+
+A preserved state of inputs used in a specific run.
+
+### **Evaluation Surface Lock**
+
+Disabling UI related to evaluations due to gating or job status.
+
+---
+
+### **Fail Closed**
+
+Security posture where uncertain states result in no access.
+
+### **Failed (Evaluation State)**
+
+Job executed but did not succeed due to unrecoverable error.
+
+### **Finding Severity**
+
+Assigned severity level (e.g., high, medium, low).
+
+### **Finding Status**
+
+Pass/fail/conditional status of individual rule evaluations.
+
+### **Findings**
+
+Immutable rule-level outputs of an evaluation.
+
+### **Flow Node**
+
+Node in a diagram representing a sequential step.
+
+### **Forbidden Transition**
+
+A state change that is explicitly not allowed.
+
+---
+
+### **Gating Banner**
+
+Banner explaining why a capability is not available.
+
+### **Ghost State**
+
+UI state with no corresponding backend state.
+
+---
+
+### **Hard Failure**
+
+A failure that halts progress and cannot be retried implicitly.
+
+### **Hash Mismatch**
+
+Difference between expected and computed hash; evidence invalid.
+
+### **Historical Findings View**
+
+A view showing findings from prior evaluation jobs.
+
+---
+
+### **Identity Challenge**
+
+The process of redirecting a user to authenticate.
+
+### **Identity Gateway**
+
+Layer responsible for identity validation and redirects.
+
+### **Identity Resolution**
+
+Final confirmation of user identity and role.
+
+### **Idempotency Key**
+
+Key guaranteeing that repeated identical API calls produce the same result.
+
+### **Immutability Acceptance Rule**
+
+Rule ensuring artefacts cannot be modified after creation.
+
+### **Immutable Report**
+
+A report that cannot be altered post-generation.
+
+### **Impermissible UI State**
+
+Any state violating PDS or backend truth.
+
+### **Incomplete (Profile State)**
+
+Mandatory profile data missing.
+
+### **Inline Blocking Surface**
+
+Fixed, in-flow error preventing progress.
+
+### **Intent-Driven Navigation**
+
+Routing triggered by explicit user action and identity resolution.
+
+### **Invite Landing**
+
+The page reached after accepting an invite token.
+
+### **Invite Token**
+
+Signed token mapping a user to a tenant and role.
+
+---
+
+### **Job Lineage**
+
+The relationship between evaluation jobs, findings, and reports.
+
+### **Job State**
+
+The canonical state of a running evaluation.
+
+---
+
+### **Landing Surface**
+
+The page a user arrives at after login or routing.
+
+### **Large Text Rule (WCAG)**
+
+Minimum contrast ratio for large text.
+
+### **Linearisation**
+
+Screenreader interpretation of page structure.
+
+### **Local Artefact Copy**
+
+Downloaded offline copy of findings or reports.
+
+---
+
+### **Metadata Commit**
+
+Database write for evidence metadata.
+
+### **Motion Reduction Mode**
+
+User setting requiring reduced animation.
+
+### **Multi-Device Session Integrity**
+
+Ensuring state continuity across different devices.
+
+### **Multi-Surface Flow**
+
+Journey spanning multiple screens or runtimes.
+
+---
+
+### **Object Commit**
+
+Upload of the evidence file to object storage.
+
+### **Offline Collapse**
+
+Forced transition to safe anonymous mode when connectivity fails.
+
+### **Optimistic State**
+
+UI representing a future state before backend confirmation.
+
+### **Origin State**
+
+Initial state in a state diagram.
+
+### **Operational Invariant**
+
+A behaviour the system must uphold under all conditions.
+
+---
+
+### **PastDue (Subscription State)**
+
+Payment failure state blocking evaluation.
+
+### **Payment Provider Confirmation**
+
+Signal from provider confirming billing success.
+
+### **PendingValidation (Profile State)**
+
+Profile submitted but not yet validated.
+
+### **Phantom Evidence**
+
+UI display of evidence that does not exist in backend truth.
+
+### **Profile Freshness Boundary**
+
+Point at which profile edits invalidate evaluation readiness.
+
+### **Profile Gate**
+
+Blocking rule based on incomplete profile.
+
+### **Profile Revalidation**
+
+Reconfirmation of profile after edits.
+
+### **Provisional UI State**
+
+Temporary local-only UI states (forbidden).
+
+---
+
+### **Queued (Evaluation State)**
+
+Job created but not yet running.
+
+---
+
+### **Redirect Intent**
+
+The reason encoded in Marketing→Identity redirect (signup, login, invite).
+
+### **Redaction Pipeline**
+
+System handling removal or masking of sensitive data.
+
+### **Report Artefact**
+
+Immutable file generated after evaluation.
+
+### **Report Lineage**
+
+Relationship between report and evaluation job.
+
+### **Report Signing**
+
+Cryptographic or deterministic stamping of report.
+
+### **Report Stamping**
+
+Recording metadata (time, version, job ID).
+
+### **Retired Evidence**
+
+Evidence made inactive but preserved.
+
+### **Reuse (Evidence)**
+
+Using the same bound artefact in multiple controls.
+
+### **Running (Evaluation State)**
+
+Evaluation job actively executing.
+
+---
+
+### **Safe Anonymous State**
+
+Guaranteed fallback when authentication cannot be confirmed.
+
+### **Safe-Closed Behaviour**
+
+Behaviour defaulting to safety during uncertainty.
+
+### **ScheduledChange (Subscription State)**
+
+Pending upgrade/downgrade to be applied at boundary time.
+
+### **Sequence Node**
+
+Node representing a step in a sequence diagram.
+
+### **Session Continuity**
+
+Preservation of identity across navigation.
+
+### **Soft Failure**
+
+Failure from which the user can recover without losing state.
+
+### **Stale (Profile State)**
+
+Profile changed after evaluation readiness; evaluation blocked.
+
+### **Stale State**
+
+Any UI representation based on outdated backend data.
+
+### **State Drift**
+
+UI reflecting old or incorrect backend state.
+
+### **State Node**
+
+State in a state diagram.
+
+### **Success Terminal**
+
+Endpoint representing successful completion of a flow.
+
+### **Superseded Evidence**
+
+Previously valid evidence replaced with a new artefact.
+
+### **Surface Determinism**
+
+Requirement that surfaces present only backend-confirmed states.
+
+---
+
+### **Tenant Blocked State**
+
+Tenant suspension preventing all Essentials activity.
+
+### **Tenant Merge**
+
+Invite user merges into existing tenant context.
+
+### **Tenant Resolution**
+
+Backend decision of tenant membership and role.
+
+### **Token Expiry Surface**
+
+UI surface displayed when invite/auth tokens expire.
+
+### **Transitional UI State**
+
+Intermediate but backend-aligned UI state.
+
+### **Trial (Subscription State)**
+
+Time-bound access given before activation.
+
+### **Trial Expiry Window**
+
+Time at which trial expires and entitlements cease.
+
+---
+
+### **Upload Failure**
+
+Failure during evidence upload; nothing is bound.
+
+### **Uploading (Evidence State)**
+
+Stage where file is being transferred, not yet validated.
+
+---
+
+### **Verifying (Evidence State)**
+
+Hash verification and validation in progress.
+
+---
+
+### **WCAG 2.2 AA**
+
+Accessibility standard Transcrypt must comply with.
+
+### **Worker Claiming Job**
+
+Worker taking ownership of a queued evaluation job.
 
 ---
