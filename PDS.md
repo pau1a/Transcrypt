@@ -3565,21 +3565,149 @@ Evaluation must always reflect a single, precise truth defined by backend state.
 
 ## **8.7 View Findings & Reports**
 
+Viewing Findings and Reports is the point where evaluation results become visible, navigable and exportable. Findings express the rule-level outputs of an evaluation job; reports represent canonical, immutable artefacts that consolidate those results for audit, assurance and certification contexts. No UI surface may infer, reinterpret, or modify findings. No report may be altered, regenerated over the same artefact, or displayed before backend confirmation.
 
+Findings and reports must always reflect backend truth. Their lineage—rulepack version, evaluation job ID, evidence snapshot, profile snapshot—must be explicit, stable, and non-negotiable.
 
+### **8.7.1 Findings as Immutable Evaluation Output**
 
+Each finding corresponds to a single rule evaluation or a clearly defined rule group. Findings must display:
 
+* severity
+* status
+* clear description bound to the rulepack
+* links to controls and relevant evidence
+* timestamp
+* evaluation job ID
+* rulepack version
 
+Rules:
 
+* findings are immutable outputs of an evaluation job
+* UI may attach remediation metadata but never alter the underlying finding
+* findings produced in one job must never merge with or overwrite findings from another job
+* no inference, clustering or AI-based “interpretations” may be applied
 
+Findings represent the **precise output** of the worker that ran the evaluation.
 
+### **8.7.2 Findings Presentation and Navigation**
 
+The Findings view must allow deterministic navigation and never alter the underlying data. It must support:
 
+* filtering by severity
+* filtering by control domain
+* filtering by evaluation job
+* stable grouping (control, domain, severity, status)
 
+Rules:
 
+* grouping is purely presentational, not structural
+* no grouping may collapse distinct findings into ambiguous lines
+* each finding must remain linkable to its rule, control and evidence
+* changes in grouping must not reorder findings inconsistently across sessions
 
+Findings must remain **composable, navigable, traceable**—never interpreted.
 
+### **8.7.3 Findings→Report Pipeline**
 
+Report generation is a separate pipeline triggered after a successful evaluation. The UI must show availability only after the report artefact is fully generated and stored.
+
+```mermaid
+flowchart TD
+title Report Generation Sequence
+A[Evaluation job Succeeded] --> B[Collect findings + metadata]
+B --> C[Assemble report content]
+C --> D[Sign + stamp artefact]
+D --> E[Store immutable report file]
+E --> F[Expose report for download]
+```
+
+Rules:
+
+* findings must never be pre-assembled into a “preview report”
+* the report must not be available until step **E** completes
+* any failure between C and E must prevent report visibility entirely
+* report content must reflect the exact findings and metadata associated with that job
+
+The pipeline must be auditable and one-directional.
+
+### **8.7.4 Report Artefacts and Historical Lineage**
+
+Reports must remain permanently tied to the evaluation job that produced them. A report’s lineage includes:
+
+* evaluation job ID
+* timestamp
+* rulepack version
+* profile snapshot
+* evidence snapshot
+* subscription state at time of generation (where relevant)
+
+Report lineage follows a strict state diagram:
+
+```mermaid
+stateDiagram-v2
+title Report and Evaluation Lineage States
+[*] --> EvaluationRun
+EvaluationRun --> FindingsReady
+FindingsReady --> ReportGenerated
+ReportGenerated --> Archived
+ReportGenerated --> Current
+Archived --> [*]
+```
+
+Rules:
+
+* `ReportGenerated` artefacts are immutable
+* moving into `Archived` must not alter the report
+* historical reports are never replaced or regenerated over the same ID
+* generating a new report for the same evaluation job must produce a **new** artefact with a distinct identifier
+* evaluation reruns produce entirely new findings + new reports
+
+Historical lineage must remain untouched.
+
+### **8.7.5 Report Download and Exposure Rules**
+
+Report downloads must:
+
+* return the exact immutable artefact stored in the object store
+* never be rendered client-side
+* never be reconstructed from findings
+* always be version-locked
+
+Users must see:
+
+* clear list of available reports
+* timestamps
+* job IDs
+* titles or types (if multiple formats are supported)
+
+Forbidden behaviours:
+
+* “preview mode” that represents anything other than canonical content
+* dynamic reflowing of existing artefacts
+* locale-based mutation of report text
+
+Reports must remain stable, literal representations of system truth.
+
+### **8.7.6 Forbidden Output Behaviours**
+
+The following are explicitly forbidden:
+
+* summarising findings using inference or ML
+* modifying finding text to “improve clarity”
+* regenerating reports without producing new artefacts
+* showing report links before the artefact exists
+* previewing incomplete or partial results
+* stitching together findings from multiple jobs
+* filtering out high-severity findings for UX “polish”
+* presenting reflowed or reformatted report content
+* hiding lineage (rulepack version, job ID)
+* any client-side attempt to compute compliance posture
+
+Findings and Reports are **the canonical outputs** of evaluation.
+They must be displayed exactly as the system produces them, not as the UI wishes to present them.
+
+---
 
 # **9. Accessibility Specification**
 
