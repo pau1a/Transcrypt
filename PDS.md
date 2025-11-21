@@ -849,17 +849,745 @@ Everything must look engineered, predictable, and serious — because Transcrypt
 
 # **5. Interaction Model**
 
-## **5.1 Component Interaction Rules**
+The interaction model defines how Transcrypt behaves when a user does anything that changes state, requests information, or moves through the system. Where earlier sections established philosophy, structure, and functional scope, this section defines the rules of motion: how components respond, how transitions occur, how forms behave, how evidence moves through the interface, and how identity and session continuity are expressed.
 
-## **5.2 Navigation Behaviour**
+Everything in this chapter reflects truths already defined upstream.
+The PRD declares that Transcrypt must feel *calm, deterministic, auditable, and unambiguous*.
+The SAIS establishes stateless compute surfaces, strict isolation, predictable routing, and reproducible evaluation paths.
+The PDS now binds these architectural and product constraints into the visible, tactile experience of interacting with the system.
 
-## **5.3 Form Behaviour and Validation**
+The interaction model does not describe aesthetics or visual style.
+It governs behaviour: what the user can do, what the system does in response, which states are allowed, how errors surface, how recovery works, and which transitions are forbidden. It ensures that Marketing and Essentials behave as two surfaces of the same product, following the same laws of movement, validation, feedback, and continuity.
 
-## **5.4 File Upload Behaviour**
+A user should always know three things at any moment inside Transcrypt:
 
-## **5.5 Feedback, Errors, and Status Indicators**
+1. **What state the system is in.**
+2. **What they can do next.**
+3. **Why the system responded the way it did.**
 
-## **5.6 Session and Identity Interaction Rules**
+This section defines the rules that guarantee those outcomes.
+
+---
+
+## **5.1 Component Behaviour and State Rules**
+
+Components in Transcrypt follow a closed set of states and deterministic transitions. A component never behaves probabilistically, never hides its state, and never implies persistence beyond what the architecture guarantees. These rules apply uniformly across Marketing and Essentials runtimes, ensuring that every interaction feels predictable, explainable, and calm.
+
+Components may only reflect **canonical system state** or **explicitly permitted local UI state**. All transitions must be atomic, reversible where logically appropriate, and auditable through the SAIS-defined telemetry pipeline. No component may introduce behaviour not derivable from the PRD or permitted by architectural constraints.
+
+### **5.1.1 Allowed Component States**
+
+Components may exist only in the following universal states:
+
+* **Idle** — awaiting user input or stably displaying canonical data.
+* **Loading** — awaiting a deterministic response from a backend service; no partial interactivity allowed.
+* **Success** — operation completed and state is canonical again.
+* **Error** — a recoverable or terminal failure with clear explanation.
+* **Disabled** — temporarily unavailable due to validation, identity, or billing state.
+* **Read Only** — permitted to view but not modify due to role or subscription constraints.
+
+These states map directly to SAIS runtime expectations. No other micro-states or speculative indicators are allowed.
+
+##### **Component State Lifecycle**
+
+```mermaid
+stateDiagram-v2
+title Component State Lifecycle
+Idle --> Loading: user action
+Loading --> Success: deterministic response ok
+Loading --> Error: deterministic response fails
+Success --> Idle: user proceeds
+Error --> Idle: user retries or dismisses
+Disabled --> Idle: constraints resolved
+ReadOnly --> Idle: permitted action taken
+```
+
+This lifecycle diagram appears here because it defines the behavioural law for **all** components; it cannot logically be deferred.
+
+---
+
+### **5.1.2 Deterministic State Transitions**
+
+Transitions must follow these rules:
+
+* **Explicit triggers only** — a component changes state only in response to a user action or a completed backend request.
+* **No hidden recompute** — components must not re-evaluate themselves silently based on timers, background polling, or inference.
+* **No partial transitions** — a component may not be half-interactive during Loading or Error.
+* **State origin visibility** — the UI must convey whether a state is user-generated, service-generated, or identity-generated.
+* **SAIS alignment** — the transition must correspond exactly to UI → Gateway → Service → Response, never implying a behaviour the system cannot perform.
+
+These rules prevent nondeterministic UX behaviours and align with the PRD principle of explainable state.
+
+##### **Deterministic Interaction Flow**
+
+```mermaid
+sequenceDiagram
+title Component Deterministic Interaction Flow
+actor User
+User ->> UI: perform action
+UI ->> Gateway: structured request
+Gateway ->> Service: validated call
+Service -->> Gateway: canonical response
+Gateway -->> UI: shaped result
+UI ->> UI: state change applied
+```
+
+This diagram is inserted here because it **binds component behaviour to the SAIS execution path**. It cannot be detached without breaking comprehension.
+
+---
+
+### **5.1.3 Component–Service Interaction Contract**
+
+Every component–service interaction follows these rules:
+
+* **One request, one outcome** — no multi-path branching, no speculative UI changes.
+* **Canonical or nothing** — the UI never renders partial backend data.
+* **Audit attached** — each interaction must emit request_id, tenant_id, and version markers, as defined in SAIS §2.4 and §2.6.
+* **No local inference loops** — any inference is build-time only; runtime behaviour must remain deterministic.
+
+The UI is simply the visible projection of a stateless backend.
+It must never behave as if stateful.
+
+---
+
+### **5.1.4 Unified Behaviour Across Marketing and Essentials**
+
+The Marketing runtime is not a marketing “shell”: it is an SSR/ISR compute surface with obligations identical to Essentials. Therefore:
+
+* Components must behave identically across both surfaces.
+* Loading, success, and error states must follow the same visual and behavioural grammar.
+* Navigation-related components must respect the same motion laws.
+* State cannot differ based on surface; only **authority context** (authenticated vs unauthenticated) may differ.
+
+##### **Unified Surface Behaviour Overview**
+
+```mermaid
+flowchart TD
+title Unified Component Behaviour Across Surfaces
+A[Marketing Component] --> B[Shared Behaviour Rules]
+C[Essentials Component] --> B
+B --> D[Deterministic State Lifecycle]
+```
+
+This diagram appears inline because it is the conceptual bridge that ensures surface parity, a core PRD requirement.
+
+---
+
+### **5.1.5 Forbidden Behaviours**
+
+The following behaviours are strictly prohibited:
+
+* **Silent auto-refresh**
+* **Speculative UI predictions**
+* **Background polling not declared in PRD**
+* **Any probabilistic behaviour**
+* **Implicit state transitions**
+* **Local data storage beyond session scope**
+* **Cross-tenant visual bleedthrough**
+* **Optimistic updates** (PRD prohibits non-canonical representations)
+* **Intermediate “flashing” states** caused by SSR/ISR hydration
+* **Surfaces behaving differently unless dictated by identity or subscription level**
+
+Forbidden behaviours enforce PRD clarity and SAIS architectural invariants.
+
+---
+
+## **5.2 System Navigation and Movement Behaviour**
+
+Navigation in Transcrypt follows explicit, deterministic rules. Movement between screens, surfaces, and states must always reflect canonical system truth, never local assumptions. The Marketing runtime and the Essentials runtime obey the same motion laws, ensuring that no part of the product behaves unpredictably or expresses a separate UX grammar.
+
+Navigation is a *mechanical contract* between the user, the UI, and the architecture. Every transition must be explainable, atomic, auditable, and consistent across devices and contexts. Reloads, backtracking, identity transitions, and error recovery are governed by the same rules.
+
+### **5.2.1 Navigation State Model**
+
+Movement is permitted only between well-defined page states.
+No hidden intermediate states, no jitter, and no silent recomputations are allowed.
+
+#### **Allowed Page States**
+
+* **Stable** — screen fully resolved, canonical data loaded.
+* **Loading** — awaiting a deterministic backend response.
+* **Error** — stable error state with explicit cause and recovery.
+* **Redirecting** — controlled movement via gateway-dictated constraints.
+* **Session Transition** — identity or subscription state change underway.
+
+Transitions must be one-way, atomic, and traceable.
+
+##### **Navigation State Machine**
+
+```mermaid
+stateDiagram-v2
+title Navigation State Model
+Stable --> Loading: user action
+Loading --> Stable: canonical data returned
+Loading --> Error: failure state
+Error --> Stable: retry or safe fallback
+Stable --> Redirecting: gateway-driven route
+Redirecting --> Stable: new canonical view
+Stable --> SessionTransition: identity or billing change
+SessionTransition --> Stable: continuity restored
+```
+
+This diagram appears here because it expresses the **fundamental movement rules** that all navigation must obey.
+
+---
+
+### **5.2.2 Page-to-Page Movement Rules**
+
+Page transitions follow these constraints:
+
+* **No implicit navigation** — no movement without user intent or backend instruction.
+* **Deterministic continuity** — navigation must not create appearance of different system truth between screens.
+* **Canonical reload** — every page load reflects system state, not prior UI assumptions.
+* **No client-side routing surprises** — hydration must not produce layout flashes, missing content, or pseudo-states.
+* **Permission-aware routing** — forbidden paths must fail cleanly at the gateway.
+
+Movement is linear unless explicitly defined otherwise by product logic; branching flows are avoided unless necessary for rulepack or evidence workflows.
+
+---
+
+### **5.2.3 Marketing↔Essentials Movement Contract**
+
+Transcrypt consists of two compute surfaces:
+
+* **Marketing (SSR/ISR)**
+* **Essentials (SSR/authenticated)**
+
+Both follow the same behavioural grammar.
+Movement between them must be:
+
+* explicit
+* gateway-controlled
+* identity-aware
+* non-probabilistic
+* auditable
+
+##### **Marketing to Essentials Movement**
+
+```mermaid
+flowchart TD
+title Marketing to Essentials Handoff
+A[Marketing Page] --> B[Gateway Verification]
+B --> C[Identity Check]
+C --> D[Essentials Page]
+```
+
+This diagram is placed here because the Marketing→Essentials handoff is **the core navigation boundary** in the entire product.
+
+#### **Rules for Cross-Surface Movement**
+
+* Marketing must never directly route into authenticated content.
+* Essentials must not leak into Marketing except through logged-out states.
+* Identity context must be passed explicitly and deterministically.
+* No implicit login or “magic continuation” is allowed.
+
+This is a system-level guarantee, not a UX flourish.
+
+---
+
+### **5.2.4 Refresh, Reload, and Recovery Behaviour**
+
+Reloading and session boundary behaviours are particularly sensitive under SSR/ISR and stateless compute constraints. The rules are:
+
+* **Reload must never lose truth** — the page always returns to canonical state.
+* **Expired sessions must be explicit** — user is returned cleanly to entry point with visible explanation.
+* **No stale cache persistence** — ISR content refetch must never contradict Essentials state.
+* **No “half-login” state** — refresh must resolve deterministically to logged-in or logged-out.
+* **Backward navigation must not reintroduce stale state**.
+
+##### **Refresh and Recovery Flow**
+
+```mermaid
+flowchart LR
+title Refresh and Recovery Flow
+A[User Refreshes Page] --> B[Gateway Validates Session]
+B --> C{Session Valid?}
+C -->|Yes| D[Canonical Page]
+C -->|No| E[Session Expired View]
+E --> F[Re-authenticate]
+```
+
+This diagram appears here because it expresses **continuity**, which is central to movement behaviour.
+
+---
+
+### **5.2.5 Forbidden Navigation Behaviours**
+
+The following behaviours are strictly prohibited:
+
+* **Speculative routing** (AI-driven or predictive).
+* **Client-side path guessing** (routing without gateway confirmation).
+* **Silent failures** or ambiguous redirects.
+* **Hydration-induced flicker of protected or stale content.**
+* **Cross-tenant path leakage**.
+* **Optimistic navigation** (routing to a page before the backend confirms legitimacy).
+* **Dynamic restructuring of available routes based on incomplete profile or inference.**
+
+These behaviours violate PRD determinism, SAIS boundaries, and Transcrypt’s ethos of trust through clarity.
+
+---
+
+## **5.3 Data Entry, Validation, and Form Integrity**
+
+Data entry in Transcrypt is governed by strict determinism and correctness. Forms do not guess, infer, or behave probabilistically. Every field, validation rule, error message, and recovery path must reflect canonical system truth defined by the PRD and implemented by the SAIS. The UI may perform lightweight syntax checks, but all semantic validation and rule logic remains server-authoritative.
+
+Marketing and Essentials runtimes follow the same behavioural grammar. SSR/ISR boundaries must never introduce conflicting states or ambiguous validation. All errors must be explicit, explainable, and actionable, and the user must always understand what is required, why it is required, and how to correct an issue.
+
+### **5.3.1 Principles of Data Entry and Correctness**
+
+Forms represent the system’s most sensitive operation: capturing data that influences compliance outcomes, evidence binding, billing state, and identity transitions. As such:
+
+* Users must see exactly what data is required and why.
+* Required fields must be explicit—no hidden dependencies.
+* Syntax checks (email format, allowed characters) may occur locally, but semantic checks (control logic, rulepack requirements, evidence constraints) must occur server-side.
+* Forms must not mutate user input silently.
+* No auto-complete, auto-guessing, or speculative interpretation of partial input is allowed.
+* Changes must only reflect user action or server-authoritative updates.
+
+This ensures correctness and prevents inconsistent compliance evaluation.
+
+### **5.3.2 Deterministic Validation Rules**
+
+Validation follows a layered model:
+
+* **Client-side (syntax only)**: simple correctness rules (length, characters, well-formed formats).
+* **Server-side (canonical semantics)**: all business logic, rulepack logic, and control constraints.
+* **Gateway mediation**: shape, validate, and reject malformed input.
+* **Service validation**: authoritative acceptance or rejection.
+
+No optimistic UI updates are allowed. No field is ever marked “valid” unless confirmed by the canonical path.
+
+#### **Validation Flow**
+
+```mermaid
+sequenceDiagram
+title Validation Flow
+actor User
+User ->> UI: enter data
+UI ->> UI: syntax validation
+UI ->> Gateway: submit form
+Gateway ->> Service: semantic validation
+Service -->> Gateway: canonical result
+Gateway -->> UI: validated response
+UI ->> UI: update field state
+```
+
+This diagram appears here because it defines the **authoritative chain of validation**, which is the backbone of form behaviour.
+
+### **5.3.3 Error Lifecycle and Recovery**
+
+Errors must be:
+
+* deterministic
+* stable
+* actionable
+* specific to cause
+* unambiguous about provenance (client or server)
+* cleared only by explicit user correction or server confirmation
+
+No ephemeral “shake” animations, no ambiguous red borders, no “something went wrong”.
+
+Errors fall into three categories:
+
+* **Syntax errors** — caught immediately on field interaction.
+* **Semantic errors** — returned from server after canonical evaluation.
+* **State errors** — session expiry, forbidden path, or violation of PRD rule constraints.
+
+#### **Error State Lifecycle**
+
+```mermaid
+stateDiagram-v2
+title Error State Lifecycle
+Idle --> SyntaxError: invalid format
+Idle --> SemanticError: server rejects input
+SyntaxError --> Idle: user fixes field
+SemanticError --> Idle: successful retry
+SemanticError --> FatalError: unrecoverable issue
+FatalError --> Idle: user re-authenticates or resets
+```
+
+This diagram belongs here because correctness depends on **explicit, predictable recovery paths**.
+
+### **5.3.4 Canonical State, Rehydration, and Refresh Behaviour**
+
+SSR/ISR dynamics can destabilise poorly designed forms. To prevent ambiguity:
+
+* Refresh must always return the form to **canonical** state, not local/UI memory.
+* ISR updates may refresh the page shell but must never mutate field values invisibly.
+* On refresh, partially entered data may only persist if explicitly permitted and documented.
+* Server-derived validation errors must reappear exactly as before—no disappearance unless the cause is resolved.
+
+#### **Canonical Rehydration Flow**
+
+```mermaid
+flowchart TD
+title Canonical Rehydration Flow
+A[User Refresh] --> B[SSR or ISR Render]
+B --> C[Gateway Fetches Canonical State]
+C --> D{Partial Data Allowed?}
+D -->|Yes| E[Merge User Draft and Canonical]
+D -->|No| F[Render Canonical State Only]
+```
+
+This diagram is inline because rehydration is the **largest risk surface** for inconsistent form correctness.
+
+### **5.3.5 Forbidden Form Behaviours**
+
+The following behaviours violate PRD and SAIS constraints and are strictly prohibited:
+
+* **Optimistic validation** — marking fields correct before server confirmation.
+* **Predictive auto-fill** — any inference-driven suggestion at runtime.
+* **Implicit field mutation** — changing values without user action.
+* **Multi-source truth** — conflicting data between Marketing and Essentials views.
+* **Silent error clearing** — hiding error states without cause.
+* **Local persistence unless explicitly defined**.
+* **Client-side rule logic**, beyond syntax checks.
+* **Stale or cached error messages after canonical fetch**.
+* **Heuristic or probabilistic field correction.**
+
+These prohibitions ensure that user-entered data remains a direct, unambiguous expression of real system state.
+
+---
+
+## **5.4 Evidence Intake and File Handling Behaviour**
+
+Evidence intake is the most sensitive user-driven operation in Transcrypt. Every uploaded file becomes an immutable artefact tied to compliance, rulepack evaluation, and auditability. The UI must reflect the exact state of the evidence pipeline defined in the SAIS — no optimistic behaviour, no partial acceptance, no silent failure, and no misrepresentation of canonical truth.
+
+Evidence handling follows a strict chain:
+
+User → UI → Signed URL → Object Store → Hashing → Verification → Metadata Commit → Binding → Canonical Evidence Artefact
+
+Every behavioural rule in this section arises directly from that chain.
+
+---
+
+### **5.4.1 Allowed Evidence Types and Constraints**
+
+Before any behavioural rules apply, the UI must enforce clear, explicit constraints:
+
+* allowed MIME types
+* maximum file size
+* maximum number of files per control
+* forbidden formats
+* integrity requirements (no multi-part, no partial chunks)
+* naming constraints
+* zero tolerance for hidden extensions or format masquerading
+
+These constraints come from PRD requirements for explainability and SAIS requirements for safe storage and deterministic verification. The UI must present these limits *before* an upload begins, not after a failure.
+
+---
+
+### **5.4.2 Evidence Intake Pipeline and State Transitions**
+
+Uploading evidence is a multi-stage pipeline. Each stage must be visible and deterministic.
+
+Stages:
+
+1. **Idle** — waiting for user selection.
+2. **Selected** — file picked, awaiting signed URL.
+3. **Uploading** — browser → object store.
+4. **Uploaded** — file in object store, awaiting hash verification.
+5. **Hashing** — backend computes digest.
+6. **Verifying** — digest compared against size and object store metadata.
+7. **Binding** — metadata + hash + object location committed atomically.
+8. **Complete** — canonical evidence artefact created.
+9. **Failed** — any non-recoverable error.
+10. **Retryable** — safe to retry (network glitch, expired URL).
+
+#### **Evidence Intake Pipeline Overview**
+
+```mermaid
+flowchart TD
+title Evidence Intake Pipeline
+A[File Selected] --> B[Obtain Signed URL]
+B --> C[Upload to Object Store]
+C --> D[Hash File]
+D --> E[Verify Integrity]
+E --> F[Bind Metadata and Hash]
+F --> G[Evidence Complete]
+C --> H[Retryable Error]
+H --> B
+D --> I[Failure]
+I --> A
+```
+
+This diagram appears here because it defines the full UI-facing flow from selection to canonical artefact.
+
+---
+
+### **5.4.3 Hashing, Verification, and Immutability Rules**
+
+Hashing is not cosmetic — it is the central integrity guarantee of the entire product.
+
+UI behaviour must reflect:
+
+* files are not “uploaded” until hash verification passes
+* hashing is performed server-side only
+* the UI must show clear progression from uploaded → hashing → verified
+* files failing verification must return to a stable, explainable error state
+* the UI must never present a file as usable until binding succeeds
+
+Even transient states must be deterministic.
+
+#### **Hashing and Immutability Flow**
+
+```mermaid
+sequenceDiagram
+title Hashing and Verification Flow
+actor User
+User ->> UI: selects file
+UI ->> Gateway: request signed URL
+Gateway ->> UI: deliver signed URL
+UI ->> ObjectStore: upload file
+ObjectStore -->> Gateway: upload complete
+Gateway ->> Service: hash and verify
+Service -->> Gateway: verified hash
+Gateway -->> UI: verified and immutable
+```
+
+This diagram appears here because it expresses the **verify-or-fail** logic that determines whether evidence becomes canonical.
+
+---
+
+### **5.4.4 Signed URL Lifecycle and File Transport Behaviour**
+
+Signed URLs govern how the browser sends evidence to object storage.
+Their lifecycle directly shapes the UI:
+
+* URL request → URL received → URL used → URL expired
+* no reuse
+* no client-side caching
+* no multi-use semantics
+* no speculative upload
+* expiry errors must present deterministic retry paths
+* retries must obtain a new signed URL
+
+#### **Signed URL Lifecycle**
+
+```mermaid
+stateDiagram-v2
+title Signed URL Lifecycle
+Idle --> Requested: file selected
+Requested --> Active: URL issued
+Active --> Expired: TTL reached
+Active --> Used: upload done
+Used --> Invalid: further use blocked
+Expired --> Requested: obtain new URL
+```
+
+This diagram must be inline because signed URL behaviour directly constrains what the UI may and may not do.
+
+---
+
+### **5.4.5 Atomicity, Retry Semantics, and Failure Behaviour**
+
+Evidence intake must be atomic. That means:
+
+* no partial evidence artefacts
+* no orphaned metadata
+* no orphaned files in object storage
+* retries must never double-commit
+* users must see clear, stable error states
+* a retry must be functionally equivalent to a fresh upload
+* canonical artefacts must be created once only, after metadata+hash+object tie together
+
+Failure classes:
+
+* **URL expiry** (retryable)
+* **network interruption** (retryable)
+* **hash mismatch** (fatal)
+* **object store error** (retryable unless corruption suspected)
+* **gateway rejection** (fatal)
+* **service-level rejection** (fatal)
+
+#### **Atomicity and Retry State Machine**
+
+```mermaid
+stateDiagram-v2
+title Atomicity and Retry State Machine
+Idle --> Uploading
+Uploading --> Uploaded: network ok
+Uploading --> Retryable: network fail
+Retryable --> Uploading: retry
+Uploaded --> Hashing
+Hashing --> Verified
+Hashing --> FatalError: mismatch
+FatalError --> Idle
+Verified --> Bound
+Bound --> Complete
+```
+
+This diagram appears here because atomic recovery is central to safe evidence handling.
+
+---
+
+### **5.4.6 Evidence Binding and Canonicalisation**
+
+Binding is the moment where:
+
+* object store file
+* hash digest
+* metadata record in Postgres
+
+become a single, immutable evidence artefact.
+
+UI behaviour here must:
+
+* wait for binding before presenting "complete"
+* represent binding failures explicitly
+* ensure binding steps never appear instantaneous or skipped
+* never present unbound files as legitimate evidence
+* refresh canonical state after binding to avoid stale or duplicate representations
+
+#### **Binding Semantics Diagram**
+
+```mermaid
+flowchart LR
+title Evidence Binding Semantics
+A[File in Object Store] --> B[Hash Verified]
+B --> C[Metadata Record Created]
+C --> D[Bind Hash + Metadata + Object]
+D --> E[Canonical Evidence Artefact]
+```
+
+Inline because it defines the **only moment evidence becomes real**.
+
+---
+
+### **5.4.7 Forbidden Evidence Behaviours**
+
+The following behaviours are strictly prohibited:
+
+* optimistic upload (“appears done before binding”)
+* resumable uploads
+* chunked uploads
+* partial data persistence
+* reuse of signed URLs
+* client-side hashing
+* content-type guessing
+* AI-driven metadata extraction
+* speculative auto-evidence linking
+* silent dropping of failed uploads
+* allowing multiple parallel uploads for same evidence slot
+* representing incomplete artefacts as usable
+
+These prohibitions protect the integrity of the compliance pipeline and honour the PRD's determinism requirements.
+
+---
+
+## **5.5 Feedback, Error States, and User Visibility Rules**
+
+Feedback in Transcrypt is not decorative. It is the system’s commitment to telling the truth about its own state. Whether loading, blocked, successful, or failed, the UI must represent canonical backend conditions precisely — without speculation, optimism, personality, or approximation.
+
+Errors must be explicit and explainable. Success must only surface when the system has actually reached the canonical state. Visibility rules ensure the user never sees stale, contradictory, or partial representations of reality. The user must always understand what just happened, why it happened, and what they can safely do next.
+
+Marketing and Essentials runtimes use the exact same feedback grammar, ensuring that the public surface communicates with the same calm clarity as the authenticated experience. No inference-driven language or probabilistic messaging is permitted anywhere in the system.
+
+---
+
+### **5.5.1 Feedback Grammar and Visibility Rules**
+
+Feedback must reflect canonical backend truth, expressed in a stable, deterministic grammar:
+
+* **Loading** means a request has been made and a canonical response is pending.
+* **Success** means the canonical operation has fully completed.
+* **Error** means the operation failed deterministically with a known cause.
+* **Blocked** means the operation cannot proceed due to identity, billing, or permission constraints.
+* **Idle** means the component reflects a stable, ready-to-act state.
+
+Visibility rules:
+
+* The UI must not flicker between states.
+* Loading indicators must be tied to real requests only.
+* No parallel spinners.
+* No “silent success” or “silent failure.”
+* No hiding important failure conditions.
+* Success indicators must only appear after backend confirmation.
+* Timeout behaviour must be explicit and consistent.
+
+This grammar ensures all feedback matches the deterministic backbone of the SAIS.
+
+---
+
+### **5.5.2 Error States and Provenance**
+
+Errors have three possible origins:
+
+* **Client-side syntax errors** (invalid format).
+* **Gateway rejections** (malformed requests, auth issues, expired session).
+* **Service-level failures** (semantic rejection, rulepack mismatch, forbidden action).
+
+Each must be visibly distinct and explained to the user with:
+
+* the cause,
+* the remedy,
+* the next permissible action.
+
+Errors must never imply hidden system behaviour or encourage blind retrying. An error must be actionable or terminal — never ambiguous.
+
+#### **Unified Feedback State Diagram**
+
+```mermaid
+stateDiagram-v2
+title Feedback and Error States
+Idle --> Loading: user action
+Loading --> Success: canonical response ok
+Loading --> Error: failure returned
+Error --> Idle: user corrects or retries
+Idle --> Blocked: identity or permission constraint
+Blocked --> Idle: constraint resolved
+```
+
+This diagram is presented here because it defines the full feedback state surface used across all components and surfaces.
+
+---
+
+### **5.5.3 Recovery and User Guidance**
+
+Recovery must be deterministic and predictable:
+
+* Errors must persist until the underlying cause is corrected.
+* Success must persist until overridden by a new action.
+* Loading indicators must end exactly when the canonical response arrives — no wobble, no delay.
+* Retry buttons must only appear on retryable states.
+* Fatal states must offer a clear path back (e.g., re-authentication).
+* Refresh must restore canonical state, not local placeholder values.
+
+User guidance must be:
+
+* directive, not interpretive
+* clear, not verbose
+* accurate, not speculative
+* consistent across Marketing and Essentials
+
+No inference assistance is allowed.
+
+---
+
+### **5.5.4 Forbidden Feedback Behaviours**
+
+The following behaviours violate PRD and SAIS determinism and are strictly forbidden:
+
+* **“Something went wrong” messages** with no provenance.
+* **Anthropomorphic or personality-driven language.**
+* **Speculative suggestions or AI-generated “best guesses.”**
+* **Optimistic success messaging** before backend confirmation.
+* **Hiding critical error conditions behind subtle icons.**
+* **Loading placeholders that contradict canonical data.**
+* **Auto-clearing errors without cause.**
+* **Delayed or asynchronous visual state changes** after canonical truth is known.
+* **Contradictory state surfaces** (e.g., success + error simultaneously).
+
+These prohibitions prevent the system from misrepresenting its own state — a critical requirement for auditability and user trust.
+
+---
+
+## **5.6 Identity, Session Continuity, and Access Stability**
+
+*(laws of identity and continuity)*
+
+---
+
 
 # **6. Marketing Runtime Design**
 
