@@ -1584,34 +1584,988 @@ These prohibitions prevent the system from misrepresenting its own state — a c
 
 ## **5.6 Identity, Session Continuity, and Access Stability**
 
-*(laws of identity and continuity)*
+Identity is the anchor that stabilises every other behaviour in Transcrypt. A user’s identity determines their tenant, their permissions, their visibility rules, and what actions the system will accept. Session continuity ensures that identity remains reliable across refresh, navigation, and cross-surface transitions. Access stability ensures the system never misrepresents authority — no “half logged-in” states, no stale permissions, no ambiguous authority contexts.
+
+Identity is always explicit, never inferred.
+Continuity is always deterministic, never approximate.
+Access is always authoritative, never optimistic.
+
+Marketing and Essentials surfaces obey the exact same identity rules.
 
 ---
 
+### **5.6.1 Identity Context and User State Visibility**
+
+The system must always make the user’s identity context visible and unambiguous:
+
+* **Logged-out**: Public, unrestricted, no tenant context.
+* **Logging-in**: Redirecting through IdP, state pending.
+* **Logged-in**: Explicit authenticated state, tenant context resolved.
+* **Session-valid**: User’s identity and permissions are current.
+* **Session-expired**: Session has lapsed; user is returned to a safe entry point.
+* **Logged-out (forced)**: User was removed from context due to expiry, revocation, or permission change.
+
+Identity must never appear as:
+
+* partial
+* stale
+* ambiguous
+* visually contradictory
+
+No page may display UI that contradicts the current identity state.
+
+---
+
+### **5.6.2 Session Lifecycle and Continuity Rules**
+
+Sessions represent authenticated continuity. They must follow a deterministic lifecycle governed by the Gateway and SAIS. The UI must reflect these transitions precisely.
+
+#### **Session State Cycle**
+
+```mermaid
+stateDiagram-v2
+title Session State Cycle
+LoggedOut --> LoggingIn: user initiates sign-in
+LoggingIn --> LoggedIn: IdP confirms identity
+LoggedIn --> SessionValid: gateway verifies token
+SessionValid --> SessionExpired: expiry reached
+SessionExpired --> LoggedOut: user redirected cleanly
+LoggedIn --> LoggingOut: user initiates logout
+LoggingOut --> LoggedOut: session cleared
+```
+
+This diagram is inline because identity stability depends entirely on these state transitions.
+
+Session continuity rules:
+
+* A refresh must return the user to a canonical identity state (valid or expired).
+* A stale session must be surfaced immediately.
+* Permission or billing changes must be expressed the next time identity is validated.
+* No partial page rendering should occur during identity shifts.
+* No client-side caching of permissions.
+
+Identity is always server-authoritative.
+
+---
+
+### **5.6.3 Cross-Surface Identity Flow and Routing Authority**
+
+Transcrypt has two compute surfaces:
+
+* **Marketing (SSR/ISR)** — may present logged-in/logged-out variants.
+* **Essentials (SSR/authenticated)** — requires valid identity.
+
+Movement between surfaces must follow strict rules:
+
+* Marketing → Essentials always flows through **Gateway identity validation**.
+* Essentials → Marketing is allowed only via **explicit user intent** (logout or navigation).
+* No “hidden” or automatic transitions.
+* No client-side identity shortcuts.
+* No bypass around Gateway.
+* No ISR caching of identity-sensitive content.
+
+#### **Cross-Surface Identity Flow**
+
+```mermaid
+flowchart TD
+title Cross Surface Identity Flow
+A[Marketing Surface] --> B[Gateway Identity Check]
+B --> C[Essentials Surface]
+C --> D[Return to Marketing]
+```
+
+This diagram appears here because cross-surface transitions are the only identity topology boundary in the product — they must be explicit and verifiable.
+
+---
+
+### **5.6.4 Access Stability and Permission Integrity**
+
+Access stability ensures that the user’s authority is always correct and always in sync with canonical truth.
+
+Rules:
+
+* Permissions must be validated on every page load.
+* UI must never show controls the user cannot legally use.
+* Revoked permissions must take effect on next identity validation.
+* Billing lapses must result in clean, predictable transitions to restricted modes.
+* No optimistic rendering of privileged controls.
+* No role-based UI decisions made client-side beyond basic hiding animations.
+
+If the backend says “no”, the UI must immediately reflect that reality.
+
+Permission integrity demands:
+
+* no contradiction between UI state and backend authority
+* no speculative rendering
+* no ambiguous disabled controls without explanation
+* explicit messaging when an action is blocked due to identity or permission constraints
+
+---
+
+### **5.6.5 Forbidden Identity Behaviours**
+
+The following are strictly prohibited:
+
+* **Predictive or inferred identity** (AI guesses, behavioural heuristics).
+* **Silent session expiry** (session must never “just stop working”).
+* **Optimistic permission assumptions**.
+* **Cross-surface drift** (Marketing implying access that Essentials rejects).
+* **ISR rendering of identity-sensitive content**.
+* **Partial login or stale role representations**.
+* **Identity-dependent UI changes without authoritative confirmation**.
+* **Implicit re-authentication** (no background login magic).
+* **Permission changes applied without revalidation**.
+
+These prohibitions ensure that identity remains stable, consistent, and auditably correct.
+
+---
 
 # **6. Marketing Runtime Design**
 
+Marketing is the public-facing compute runtime of Transcrypt. It operates as a full SSR/ISR surface under the same architectural constraints that govern Essentials, not as a decorative website or separate product. Its purpose, structure, layout, and content differ from Essentials, but its behaviour must follow the same interaction laws, identity constraints, and determinism rules defined in Sections 4 and 5. Users must experience Marketing and Essentials as two perspectives of a single, coherent system.
+
+Marketing communicates value, establishes credibility, and guides visitors toward the correct next step. It is where most journeys begin, and it must behave with the same stability and clarity as the authenticated application. Identity transitions often originate here, meaning every Marketing page must render correctly under SSR/ISR constraints, hydrate without contradiction, and respect the canonical identity state returned by the gateway.
+
+Marketing must present predictable layouts, stable component behaviour, and deterministic feedback under all conditions, including mobile and low-bandwidth environments. Nothing in this runtime may misrepresent capability, imply hidden functionality, or introduce behavioural drift relative to Essentials.
+
+The subsections that follow define the structural templates, article layouts, identity handoff rules, and performance variants that shape the Marketing runtime and ensure it remains fast, clear, canonical, and fully aligned with the behavioural system model already established.
+
 ## **6.1 Page Templates**
+
+The Marketing runtime uses a fixed set of deterministic templates that define the structural skeletons of all public pages. Templates differ in purpose, layout, and content density, but they must all follow the same interaction laws, identity constraints, and determinism rules that govern Essentials. These templates ensure predictable funnel paths, stable SSR/ISR rendering, safe hydration, and a coherent experience across the entire system.
+
+Templates may be visually expressive, but they must not introduce behaviours, components, or interaction patterns that contradict the system grammar defined in Sections 4 and 5. Every template expresses a constrained composition of fixed zones (hero, CTA, trust blocks, footer) and variable content regions, ensuring clarity, consistency, and performance under all device and network conditions.
+
+### **6.1.1 Template Archetypes**
+
+The Marketing runtime supports a controlled set of template archetypes:
+
+* **Landing Template** — hero, value statement, primary CTA, trust surface, narrative blocks.
+* **Feature Template** — structured explanation zones, screenshots/illustrations, contextual CTA.
+* **Pricing Template** — comparison grid, summary blocks, stable CTA positioning, no behavioural drift.
+* **Why/Trust Template** — credibility blocks, external validation, security highlights.
+* **Legal Template** — static, anchor-based navigation, no dynamic content.
+* **Content Hub Template** — list-based layouts for blog/category surfaces.
+
+Each archetype maintains a predictable left-to-right and top-to-bottom narrative structure. None may introduce functionality belonging exclusively to Essentials, such as evidence widgets, evaluation triggers, or tenant-specific controls.
+
+### **6.1.2 Composition Zones and Invariants**
+
+All templates share the same structural invariants:
+
+* **Header Zone** — navigation, login entry point, stable across all templates.
+* **Hero Zone** — clear value statement, deterministic size and spacing rules.
+* **Primary CTA Zone** — one CTA per page, positioned deterministically.
+* **Narrative Blocks** — long-form content regions with fixed spacing and typography rules.
+* **Trust/Validation Blocks** — selective, non-interactive, no behavioural unpredictability.
+* **Footer Zone** — global navigation, legal links, stable architecture across templates.
+
+These zones may vary in composition but not in behavioural rules. Hydration must never reflow the structure or reveal contradictory identity states. ISR regeneration must not alter the layout in identity-sensitive ways.
+
+#### **Template Anatomy Diagram**
+
+```mermaid
+flowchart TD
+title Template Anatomy
+A[Header] --> B[Hero]
+B --> C[Primary CTA Zone]
+C --> D[Narrative Blocks]
+D --> E[Trust Blocks]
+E --> F[Footer]
+```
+
+This diagram appears here because it defines the canonical structural scaffold that all templates must follow.
+
+### **6.1.3 Dynamic and Regenerative Regions**
+
+Marketing templates may contain dynamic content, but only within the following constraints:
+
+* **ISR-generated blocks** must be identity-agnostic.
+* **Hydration** must never reveal stale or partially authenticated states.
+* **Dynamic content** must not reorder itself based on inference or implicit rules.
+* **Inline components** may fetch public data but must not imply user-specific behaviour.
+
+Templates may include:
+
+* updated statistics
+* feature highlights
+* blog summaries
+* announcement banners
+
+…but all dynamic data must be canonical, cached safely, and rendered without violating determinism.
+
+Identity-sensitive areas (e.g., login button, personalised CTA) are rendered only server-side with explicit gateway checks. No template may conditionally alter its structure based on inferred user behaviour.
+
+### **6.1.4 Forbidden Template Behaviours**
+
+The following behaviours are prohibited:
+
+* **Any AI-driven or inferred content rearrangement.**
+* **Identity-conditional template switching without gateway validation.**
+* **Optimistic rendering of CTA states.**
+* **Hydration-induced layout flicker or structure shifts.**
+* **Embedding Essentials-only components (evidence forms, evaluation UI).**
+* **Implicit navigation or auto-advancing flows.**
+* **Templates that obscure or duplicate CTAs.**
+
+Templates must remain stable, safe, predictable, and aligned to the canonical Marketing funnel logic defined in the PRD.
+
+---
 
 ## **6.2 Blog and Article Layouts**
 
+The Blog is a structured, deterministic reading environment within the Marketing runtime. It exists to communicate expertise, provide credibility signals, and support search-driven discovery. Although article surfaces differ in density and purpose from landing or product pages, they must still follow the same interaction laws, identity rules, and determinism guarantees defined in Sections 4 and 5. Articles are content-first but never behaviourally permissive: the layout, render path, and component set are constrained to ensure clarity, stability, and architectural correctness.
+
+Blog pages are rendered using SSR or ISR and must never expose stale identity, contradictory state, or dynamic content that implies personalisation. Articles may guide readers to CTAs, but only through stable, non-intrusive zones that do not interrupt reading flow. No inline component may behave differently from its Essentials counterpart in terms of loading, error grammar, or interaction rules.
+
+### **6.2.1 Article Template Structure**
+
+Articles follow a fixed, predictable structure to maintain clarity and avoid behavioural drift:
+
+* **Article Header** — title, subtitle, publish date, optional author line.
+* **Metadata Row** — tags and categories, identity-agnostic and deterministic.
+* **Hero Media (optional)** — static image or banner; no video autoplay, no dynamic recomposition.
+* **Body Content** — long-form content rendered with stable typographic rules, fixed spacing, and deterministic heading hierarchy.
+* **Inline Assets** — images, diagrams, code blocks, quotes; all rendered canonically, with no dynamic fetch, inference, or reflow.
+* **Closing CTA Zone** — a single, predictable CTA placed after the article, structurally identical across all posts.
+* **Article Footer** — navigation to category index or Blog root, not personalised.
+
+This structure may not be conditionally rearranged based on session state, behavioural inference, or traffic source.
+
+### **6.2.2 Readability, Typography, and Asset Rules**
+
+Article readability is a functional requirement, not a cosmetic preference. The following rules apply:
+
+* **Line Length** — fixed maximum width for reading comfort across devices.
+* **Heading Hierarchy** — deterministic H1–H4 progression; no collapsed, re-styled, or dynamically injected headings.
+* **Spacing and Rhythm** — predictable vertical rhythm across all blocks; no dynamic expansion.
+* **Image Rules** — static dimensions, lazy-loaded safely, no inference-based cropping or resizing.
+* **Code Blocks** — monospace styling, fixed grammar, deterministic syntax highlighting.
+* **Quotes and Callouts** — visually distinct but behaviourally inert; never collapsible or interactive.
+
+Accessibility rules mirror those of Essentials: predictable focus behaviour, no hidden affordances, and no content that reflows unexpectedly at hydration.
+
+### **6.2.3 SSR/ISR Rendering and Canonicality**
+
+Blog pages must be generated under the same SSR/ISR constraints as the rest of the Marketing runtime:
+
+* **Identity-Agnostic Regeneration** — ISR pages must never contain personalised or identity-conditioned content.
+* **Canonical URL Rules** — each article has one canonical URL; no dynamic variants.
+* **Hydration Safety** — hydration must not re-reveal old session data or create contradictory states in the header.
+* **Stable HTML Skeleton** — the layout may not change shape when scripts load; all dynamic behaviours must be opt-in and deterministic.
+* **No Mixed Content** — article content must be delivered atomically; no partial or progressive rendering.
+
+If the user is signed in, the only allowed dynamic variant is the header changing state after authoritative gateway validation — never through inference, memory, or cached state.
+
+### **6.2.4 Forbidden Article Behaviours**
+
+The following behaviours are explicitly disallowed:
+
+* **Personalised recommendations**, related posts, or “users also read”.
+* **AI-driven or inference-driven content reordering**.
+* **Identity-dependent article variants**.
+* **Dynamic TOCs that change based on behaviour**.
+* **Optimistic components** (e.g., “likes”, counters, ephemeral interactions).
+* **Embedded Essentials-only controls**, such as evidence upload widgets.
+* **Auto-advancing, scroll-snapping, or behavioural nudging**.
+* **Hydration that alters layout structure**.
+* **Inline fetches that are not deterministic or canonical**.
+
+Articles must remain clear, predictable, and safe, acting as a credibility surface bound to the same behavioural grammar as the rest of Transcrypt.
+
+---
+
 ## **6.3 Marketing→Essentials Handshake States**
+
+The Marketing→Essentials transition is the system’s identity boundary. Marketing is anonymous, cacheable, and identity-agnostic; Essentials is authenticated, tenant-bound, and deterministic. The handshake between them must follow strict rules to prevent stale identity, contradictory state, hydration drift, or incorrect redirect behaviour. Every CTA that leads into Essentials must invoke the same canonical sequence: express intent → gateway challenge → identity validation → target view resolution → deterministic landing.
+
+Marketing may differ in structure and purpose, but it must obey the same interaction laws, identity constraints, and determinism rules that govern the authenticated runtime. No transitional state may imply authentication without gateway validation, and no Marketing page may present an identity state that has not been authoritatively confirmed.
+
+### **6.3.1 Identity Entry Points**
+
+Marketing provides four legal inbound identity paths:
+
+1. **Signup CTA** — initiates the onboarding identity flow for a new tenant owner.
+2. **Login CTA** — re-establishes identity for returning users.
+3. **Invite Acceptance** — follows a deterministic link containing a structured token; resolves into contributor or helper roles after gateway validation.
+4. **Return-to Pathing** — user enters Essentials via a remembered intent (e.g., from a blog article CTA) but only after the gateway confirms identity.
+
+Each path must be stable, non-inferred, and unambiguous. Marketing cannot adjust or reinterpret a user’s intended destination.
+
+### **6.3.2 SSR/ISR Identity State Rules**
+
+Marketing pages may be statically generated or regenerated, but identity-sensitive regions must follow strict rules:
+
+* SSR/ISR output **must always render as anonymous** unless gateway validation occurred during the request.
+* Hydration **must not flip identity state** unless the gateway supplies canonical identity.
+* Cached pages must not contain personalised fragments.
+* The header may switch from anonymous to authenticated only after deterministic confirmation.
+* No optimistic UI may predict identity or tenant context.
+
+Templates must remain structurally stable during hydration; no layout shift is permitted when identity resolves.
+
+### **6.3.3 Gateway-Controlled Handoff Sequence**
+
+All transitions from Marketing to Essentials must follow the same sequence:
+
+1. User activates a CTA.
+2. Marketing issues an identity intent (login, signup, invite).
+3. Gateway performs the authentication challenge.
+4. Identity is validated, no partial or inferred states allowed.
+5. Essentials resolves the correct target view.
+6. User lands on the deterministic post-auth surface.
+
+Marketing may not short-circuit this flow or infer any step. The gateway is the sole authority for identity correctness.
+
+### **6.3.4 Canonical Redirect and Target View Resolution**
+
+Essentials applies a strict target-resolution model:
+
+* **Signup** → Quick Start for new tenants.
+* **Login** → previous working surface if known; otherwise Essentials dashboard.
+* **Invite Acceptance** → contributor or helper landing page defined by the invite token.
+* **Return-to** → a validated URL that must match an allowed list; unrecognised values resolve to dashboard.
+
+Marketing must not override or modify this logic. Redirects must be canonical and must not expose internal URLs or tenant identifiers.
+
+### **6.3.5 Forbidden Transitional States**
+
+The following states are illegal and must never appear:
+
+* **Semi-authenticated UI** (header authenticated, body anonymous).
+* **Out-of-date identity** derived from cache, memory, or heuristics.
+* **Hydration-induced identity flicker**.
+* **Optimistic login indicators** (e.g., “Welcome back” before validation).
+* **Implicit tenant association** before Essentials resolves the tenant.
+* **Post-auth fragments leaking into pre-auth surfaces**.
+* **Split-state rendering** where identity and redirect target disagree.
+* **Loopback redirects** caused by stale session cookies.
+
+Every illegal state must instead fall back to deterministic anonymous rendering or a gateway-initiated redirect.
+
+### **6.3.6 Identity Handoff Diagram**
+
+```mermaid
+stateDiagram-v2
+title Identity Handoff
+[*] --> Anonymous
+Anonymous --> AuthIntent: CTA Activated
+AuthIntent --> GatewayChallenge
+GatewayChallenge --> Authenticated: Credentials Validated
+Authenticated --> TenantBound: Tenant Context Established
+TenantBound --> TargetView: Essentials Resolves Landing
+TargetView --> [*]
+```
+
+### **6.3.7 Canonical Redirect Flow**
+
+```mermaid
+flowchart TD
+title Canonical Redirect Flow
+A[CTA on Marketing] --> B[Identity Intent]
+B --> C[Gateway Challenge]
+C --> D[Identity Validated]
+D --> E[Resolve Target View]
+E --> F[Essentials Landing Page]
+```
+
+---
 
 ## **6.4 Mobile and Low-Bandwidth Variants**
 
+The Marketing runtime must remain clear, stable, and deterministic under constrained devices and degraded network conditions. Pages must load predictably even when hydration is delayed or unavailable, and no structural or behavioural drift may occur. All templates defined in §6.1 and all article layouts defined in §6.2 must produce a recognisable, coherent experience on mobile screens and in low-bandwidth environments. The product’s value, narrative structure, and CTA clarity must survive intact regardless of device or connection quality.
+
+Marketing pages may express content differently on small screens, but they must obey the same interaction laws, identity constraints, and determinism rules that govern the authenticated runtime. Identity may not be inferred, cached, or guessed. Hydration must not shift layout or reveal contradictory states, and all dynamic or regenerative regions must degrade safely into stable, non-interactive variants.
+
+### **6.4.1 Structural Stability Under Constraints**
+
+All page templates must retain their core structure on mobile:
+
+* **Hero → CTA → body → trust blocks → footer** must remain in the same sequence.
+* Layout must use deterministic stacking rules, not device heuristics.
+* No element may collapse, reorder, or hide itself based on inferred device behaviour.
+* Typography must remain readable at all viewport widths without unexpected wrapping or reflow.
+* Navigation must remain predictable: header condenses, but never mutates its states or behaviour.
+
+Hydration delay must not cause the header, hero, or CTA zones to shift position, resize unpredictably, or produce flash-of-unauthenticated/authenticated states.
+
+### **6.4.2 Asset Prioritisation and Degraded Loading**
+
+On slow or unstable connections, Marketing pages must prioritise:
+
+1. **Structural HTML**
+2. **Primary CTA**
+3. **Hero content**
+4. **Body text**
+5. **Critical imagery**
+6. **Non-essential imagery**
+7. **Deferred assets**
+
+The following behaviours are required:
+
+* Inline content must remain readable even if secondary assets fail.
+* Hero imagery may degrade to a static, low-resolution placeholder.
+* Trust blocks must remain text-first to preserve credibility.
+* Article images must be deterministically scaled without progressive reflow.
+* No template may collapse its structure due to missing assets.
+
+JS-deferred components must fail safely without causing layout instability.
+
+### **6.4.3 Safe Hydration and Identity Correctness**
+
+Identity handling must remain canonical on mobile and under poor network conditions:
+
+* SSR/ISR output always renders anonymous unless the gateway validated identity at request time.
+* Hydration may update header identity state **only** after authoritative gateway confirmation.
+* Hydration failure must produce a stable, anonymous header — never a partial or contradictory state.
+* CTA behaviour must remain deterministic whether the user is authenticated or not.
+
+Under no circumstances may the system:
+
+* infer identity based on cookies alone,
+* use local storage to guess authenticated state,
+* use cached fragments to render identity prematurely,
+* present a “split header” where mobile identity differs from desktop behaviour.
+
+### **6.4.4 Behaviour Under Network Volatility**
+
+Marketing pages must degrade gracefully under unreliable connections:
+
+* Pages must remain fully navigable **without** hydration or JS.
+* Body content must remain visible and readable without style drift.
+* CTAs must remain functional with server-side fallback handling.
+* Article pages must remain stable even if ISR regeneration is delayed.
+* Long-form text must never be truncated or degraded due to network conditions.
+* Dynamic content blocks must silently fail into static placeholders.
+
+Network volatility must not cause behavioural drift, flash-of-incorrect-state, or CTA relocation.
+
+### **6.4.5 Forbidden Mobile and Low-Bandwidth Behaviours**
+
+The following behaviours are prohibited:
+
+* **Adaptive or personalised content** based on device type or behaviour.
+* **Dynamic template switching** that alters structure under mobile conditions.
+* **ML/inference-based image compression or reordering.**
+* **Optimistic identity updates** while waiting for gateway validation.
+* **Auto-hiding CTAs** or CTA repositioning.
+* **Progressive content rearrangement** caused by hydration or asset loading.
+* **Interactive components that depend on Essentials behaviour**, such as collapsible evidence views.
+* **Any attempt to infer user intent** from scroll behaviour, device metrics, or bandwidth.
+
+Mobile and low-bandwidth variants must remain structurally identical to their full-fidelity counterparts, differing only in expression — never in behaviour, logic, or determinism.
+
+---
+
 # **7. Essentials App Design**
+
+Essentials is Transcrypt’s authenticated application runtime: identity-verified, tenant-bound, and completely deterministic. Every behaviour in this runtime must follow the interaction laws, identity constraints, and state guarantees defined in Sections 4 and 5, and must operate within the tenancy, evidence, and evaluation boundaries defined in the SAIS. Where the Marketing runtime attracts and orients users, Essentials performs the actual work: gathering evidence, evaluating controls, resolving findings, producing reports, and managing identity and account operations.
+
+Essentials is not a collection of pages but a system of states, flows, and structural invariants. Its surfaces must remain stable under load, predictable under error, and measurable at every interaction. No view may drift, infer, speculate, or contradict canonical backend truth. Every state transition must be authoritative: identity from the gateway, evidence integrity from the object store + metadata binding, evaluation from rulepack execution, and reporting from immutable artefact generation. Optimistic UI is forbidden. Split-state behaviour is forbidden. Any partial or contradictory representation of control state, evidence completeness, evaluation progress, or tenant context is forbidden.
+
+The subsections that follow define the structural framework, state-resolution surfaces, and deterministic flows that constitute the Essentials runtime. They cover the application layout framework, dashboard and home states, organisation profile, evidence and evaluation flows, findings and reports, billing and account management, and the error/offline/degraded behaviours that ensure stable operation in all conditions.
+
+Everything inside Essentials must be auditable, measurable, reversible, and safe.
+Everything must behave as defined — no improvisation, no ambiguity, no drift.
 
 ## **7.1 Application Layout Framework**
 
+The Essentials layout framework provides the structural skeleton for all authenticated surfaces. It constrains navigation, preserves tenant context, and ensures that identity-confirmed views render predictably regardless of state, device, or network conditions. The layout must never produce ambiguous or optimistic renderings; it represents canonical backend truth at all times. Every surface hangs from this frame.
+
+### **7.1.1 Persistent Structural Regions**
+
+Essentials contains three immutable layout regions:
+
+* **App Header** — identity-confirmed state, tenant selector, global navigation anchors. Never optimistic; updates only after gateway-verified identity.
+* **Left Navigation Rail** — stable route set: Dashboard, Evidence, Evaluation, Findings, Reports, Org Profile, Billing (role-gated). No collapsing beyond deterministic mobile rules.
+* **Content Pane** — the active working surface. No surface may bypass the layout or introduce non-deterministic navigation.
+
+These regions must remain structurally identical throughout Essentials. No page may alter their fundamental behaviour.
+
+### **7.1.2 Navigation Law and Route Stability**
+
+Essentials routing follows strict laws:
+
+* All routes must be deterministic and identity-bound.
+* No route may appear unless the backend confirms the user’s role and tenant context.
+* Deep links must resolve only to valid, identity-verified surfaces.
+* No optimistic route reveal is permitted (e.g., showing “Reports” before backend confirmation).
+* Navigation transitions must not reflow the layout or produce hybrid states.
+
+Routing correctness is a product invariant.
+
+### **7.1.3 Page Loading and Data Freshness Guarantees**
+
+Each surface must obey data freshness and identity requirements:
+
+* The header and navigation rail render only after identity and tenant verification.
+* The content pane must load with deterministic placeholders where data is pending.
+* No surface may show stale evaluation, evidence, or profile data; canonical backend truth overrides cached values.
+* Hydration must not contradict SSR-rendered identity or tenant context.
+
+All data must be authoritative, never predictive.
+
+### **7.1.4 Forbidden Layout Behaviours**
+
+Prohibited:
+
+* Layout flicker caused by client-side identity resolution.
+* Conditional hiding or shifting of structural elements.
+* Navigation options appearing before role verification.
+* UI reconstruction based on local storage, heuristics, or inference.
+* Any behaviour that gives the impression of multiple tenants simultaneously.
+
+Essentials layout integrity is absolute.
+
+---
+
 ## **7.2 Dashboard & Home States**
+
+The Dashboard is the user’s deterministic entry surface after authentication. It is a **state resolver**, not a decorative home page. Its purpose is to orient the user within their tenant, present canonical task state, and provide pathways into the evidence and evaluation flows without contradiction or optimism.
+
+### **7.2.1 First-Time Tenant Owner State**
+
+For brand-new tenants, the Dashboard must:
+
+* Present the **Quick Start** sequence.
+* Display evidence and evaluation status as **Not Started** until canonical backend records exist.
+* Show zero findings, zero reports, and no partial completions.
+* Provide deterministic guidance: “Add Evidence”, “Complete Org Profile”, “Run First Evaluation”.
+
+The Quick Start flow must never guess or infer readiness.
+
+### **7.2.2 Returning User State**
+
+Returning users see canonical state derived from backend truth:
+
+* Evidence completeness indicators
+* Last evaluation status
+* Outstanding findings requiring attention
+* Recently generated reports
+* Any workflow blockers (missing profile fields, role restrictions)
+
+Dashboard must never reconstruct state from browser memory or optimistic client caches.
+
+### **7.2.3 Role-Variant Home States**
+
+Each user role yields a different Dashboard expression:
+
+* **Tenant Owner** — full control visibility: Org Profile, Billing, Evidence, Evaluation.
+* **Contributor / Helper** — limited scope: evidence tasks only.
+* **Read-Only Reviewer** — reports and findings only; no interactive surfaces.
+* **Auditor / Insurer** — immutable evidence view and report access.
+
+No role may see actions they cannot legally perform. No hidden role-switching.
+
+### **7.2.4 Dynamic Blocks and Stable Behaviour**
+
+Dashboard may contain dynamic status blocks, but all must obey determinism:
+
+* Evaluation progress updates only from backend polling or push events.
+* Evidence completeness updates only after metadata commit.
+* No optimistic counts or inferred summaries.
+* No “predictive” blocks based on user history or ML.
+
+Dashboard dynamics must be reactive, not speculative.
+
+---
 
 ## **7.3 Org Profile Flow**
 
+The Organisation Profile represents the tenant’s identity. It is part configuration, part compliance record, and must be treated as a canonical data object. No behaviour in this flow may misrepresent tenant metadata, role boundaries, or audit visibility.
+
+### **7.3.1 Profile Structure and Canonical Fields**
+
+The Profile contains:
+
+* Legal entity name
+* Trading name
+* Address and region
+* Industry category
+* Entity size
+* Contact roles
+* Required certification metadata (PRD-linked)
+
+Every field has deterministic validation. No field may be optional if required for evaluation or reporting.
+
+### **7.3.2 Editing and Validation Behaviour**
+
+Editing follows strict rules:
+
+* All edits occur in a safe transactional pattern.
+* No partial saves; commit is atomic.
+* Validation must be deterministic and rulepack-consistent.
+* Errors must follow the identity-invariant feedback grammar defined in §5.5.
+* No field may imply inferred defaults or pre-populated guesses.
+
+Profile correctness is a product invariant.
+
+### **7.3.3 Role-Based Visibility and Permissions**
+
+Access rules:
+
+* **Tenant Owner** — full edit capability.
+* **Contributor** — read-only visibility unless explicitly elevated.
+* **Read-Only Reviewer** — restricted, no edit, no download of sensitive org metadata.
+* **Auditor** — restricted read-only, no mutation.
+
+No user may see hidden fields or phantom capabilities.
+
+### **7.3.4 Audit and Compliance Boundaries**
+
+Profile changes must:
+
+* be logged immutably
+* include before-and-after snapshots
+* trigger compliance hooks if required by PRD
+* never break evidence or evaluation state
+* propagate to reports only after confirmation
+
+The system must prevent:
+
+* profile rollback that invalidates a report
+* inconsistent metadata between evaluation and report
+* optimistic profile updates shown before commit
+
+### **7.3.5 Forbidden Profile Behaviours**
+
+Prohibited behaviours:
+
+* Inferred fields (“We filled this in for you”).
+* Silent auto-saving.
+* Delayed validation.
+* Cross-field autopopulation via inference or heuristics.
+* Profile edits that cause evaluation results to silently drift.
+* Rendering profile state based on cached or stale identity.
+
+The Organisation Profile must always represent canonical tenant truth.
+
+---
+
 ## **7.4 Evidence Flow**
+
+Evidence Flow defines how users attach, review, and maintain artefacts that prove compliance against controls, while the system guarantees integrity, immutability, and auditability. The UI expresses the exact SAIS pipeline: evidence is never “kind of” accepted, never half-bound, and never represented optimistically. Every state shown to the user must correspond directly to a canonical backend state.
+
+Evidence Flow is **control-centric**: users work from the controls they must satisfy, not from an unstructured file bucket. All navigation, feedback, and labelling in this flow must reinforce that evidence is a formal artefact, not an attachment convenience.
+
+### **7.4.1 Evidence Flow Overview**
+
+At a high level, the Evidence Flow consists of:
+
+1. **Control selection** — user navigates to a specific control that requires evidence.
+2. **Evidence intake** — user uploads files or references links using a constrained intake UI.
+3. **Pipeline execution** — the system streams the file, computes the hash, and binds metadata.
+4. **State update** — the control’s completeness and evidence list update only after a successful bind.
+5. **Maintenance** — users may retire, supersede, or cross-link evidence, subject to role and audit rules.
+
+No step is implied. Each is explicit, and the UI must never fuse or hide steps in a way that undermines determinism.
+
+### **7.4.2 Control-Centric Evidence Workspace**
+
+The Evidence workspace is anchored on the **control view**:
+
+* The control card shows: control name, description, rulepack linkage, and current completeness state.
+* A clear, deterministic list shows all evidence items currently bound to that control.
+* Evidence items show: file name, type, size, hash fingerprint, bound timestamp, and binding user/role.
+* Actions available depend on role (add, supersede, retire) and system state.
+
+The user may:
+
+* add evidence
+* inspect an evidence item
+* see its binding and usage across controls
+* follow links to rulepack details
+
+The user may **not**:
+
+* adjust binding semantics
+* bypass the normal intake pipeline
+* manually alter evidence state.
+
+### **7.4.3 Evidence Intake Pipeline Behaviour**
+
+The intake UI must represent the pipeline exactly as SAIS executes it:
+
+```mermaid
+flowchart TD
+title Evidence Intake Pipeline
+A[User selects control] --> B[Choose file or link]
+B --> C[Upload via signed URL]
+C --> D[Hash and validate]
+D --> E[Bind metadata and object]
+E --> F[Update control state]
+F --> G[User sees confirmed evidence entry]
+```
+
+Behaviour rules:
+
+* The UI may show progress indicators during upload and validation, but it must not mark an item as “attached” until step `E` completes.
+* If any step fails, the user sees a clear, non-ambiguous error with the option to retry from a safe step; partial uploads must not appear as artefacts.
+* The pipeline is **atomic from the user’s point of view**: they either see a new evidence item with a bound state, or they see a failure — never an in-between ghost.
+
+### **7.4.4 Evidence State Machine and User Messaging**
+
+Evidence items follow a constrained state machine:
+
+```mermaid
+stateDiagram-v2
+title Evidence Item States
+[*] --> PendingUpload
+PendingUpload --> Uploading: user confirms selection
+Uploading --> Verifying: upload complete
+Verifying --> Bound: hash and metadata confirmed
+Verifying --> Failed: validation error
+Bound --> Superseded: new evidence replaces this
+Bound --> Retired: evidence no longer active
+Superseded --> Archived
+Retired --> Archived
+Failed --> [*]
+```
+
+The UI must:
+
+* label each state clearly (e.g. “Uploading…”, “Verifying…”, “Bound”, “Superseded”, “Retired”)
+* never conflate `Uploading` or `Verifying` with `Bound`
+* never show `Superseded` or `Retired` evidence as contributing to control completeness, though they remain visible for audit
+* attach all status text to this state machine, not to local heuristics.
+
+### **7.4.5 Evidence Completeness and Control Summary**
+
+Control-level completeness is derived only from **Bound** evidence:
+
+* **Not Started** — zero bound evidence items.
+* **In Progress** — at least one bound item, but rulepack requirements not yet met.
+* **Complete** — rulepack requirements fully satisfied by bound items.
+* **Invalidated** — previously valid evidence no longer satisfies current rulepack or profile state.
+
+The control summary must display:
+
+* the current completeness state
+* a short explanation of what is missing (where relevant)
+* a deterministic count of bound evidence items
+* validation status for any associated profile dependencies.
+
+No control may appear as “better than it is”. Past completeness does not imply present completeness when rulepacks or org profile change.
+
+### **7.4.6 Evidence Maintenance and Cross-Control Reuse**
+
+Maintenance rules:
+
+* **Supersede** — user with sufficient role may attach replacement evidence; the original becomes `Superseded` and remains visible but non-contributing.
+* **Retire** — evidence is marked `Retired` when it is no longer relevant; it remains visible for history but cannot satisfy controls.
+* **Cross-Control Reuse** — a single evidence item may be linked to multiple controls, but its underlying object and hash are canonical; state updates must propagate consistently.
+
+The UI must:
+
+* avoid duplicating objects when reusing evidence
+* show clear indicators where an evidence item is reused across controls
+* prevent deletion of evidence that is still actively linked to any control.
+
+### **7.4.7 Forbidden Evidence Behaviours**
+
+The following are explicitly forbidden:
+
+* optimistic “Attached” labels before binding completes
+* evidence items appearing in lists without a bound state
+* client-side reconstruction of evidence lists from local storage
+* deletion of bound evidence without role-appropriate confirmation and audit logging
+* inference-based categorisation of evidence (“this probably satisfies X”)
+* automatic hiding of `Superseded` or `Retired` items that are needed for audit
+* any behaviour in which the UI and backend disagree on whether evidence exists or is valid.
+
+Evidence Flow must always reflect canonical backend truth.
+
+---
 
 ## **7.5 Evaluation Flow**
 
+Evaluation Flow defines how the system executes rulepacks against a tenant’s current evidence, org profile, and configuration to produce deterministic results. Evaluations are jobs with explicit lifecycles, never background magic. The UI must show evaluation state precisely, without inference, and must never claim that results exist until the job has completed successfully.
+
+### **7.5.1 Evaluation Entry Points**
+
+Users may initiate evaluation in a small, fixed set of ways:
+
+* **Run evaluation from Dashboard** — a general “run now” path that uses the currently active rulepack set.
+* **Run evaluation from Evaluation view** — a more detailed entry where rulepack selection and evaluation scope are confirmed.
+* **Re-run evaluation after significant change** — triggered from findings/reports or control surfaces when new evidence or profile changes justify a fresh run.
+
+All entry points must converge on the same evaluation job model; there are no special-case pathways with different semantics.
+
+### **7.5.2 Evaluation Job Lifecycle**
+
+Evaluations are represented by jobs with a strict state machine:
+
+```mermaid
+stateDiagram-v2
+title Evaluation Job States
+[*] --> Queued
+Queued --> Running: worker claims job
+Running --> Succeeded: all rules evaluated
+Running --> Failed: unrecoverable error
+Running --> Cancelled: user or system abort
+Succeeded --> [*]
+Failed --> [*]
+Cancelled --> [*]
+```
+
+Rules:
+
+* A job is `Queued` once the user confirms an evaluation and the system has validated preconditions (evidence and profile requirements).
+* A job becomes `Running` only after a worker has actually claimed it; the UI must not assume this automatically.
+* A job is `Succeeded` only when every rule in the rulepack has been evaluated successfully and results persisted.
+* `Failed` and `Cancelled` are terminal; they must not be silently retried without user-visible indication.
+
+The UI must show this lifecycle transparently, not rephrase it into ambiguous statuses.
+
+### **7.5.3 Pre-Evaluation Preconditions and Gating**
+
+Before a job can enter `Queued`:
+
+* the system must verify that required evidence completeness thresholds are met, as defined in the PRD and rulepack
+* the organisation profile must meet minimum completeness requirements
+* the tenant’s billing and entitlement must permit the evaluation
+* no incompatible long-running operation is blocking a fresh evaluation (e.g., a prior evaluation still `Running`)
+
+If preconditions fail, the UI shows a clear, stateful message (e.g. “Required evidence missing for controls X, Y, Z”) and refuses to create a job. No grey “maybe running later” behaviour is permitted.
+
+### **7.5.4 Synchronous vs Asynchronous Evaluation Behaviour**
+
+The evaluation flow may have both synchronous and asynchronous dimensions:
+
+* **Synchronous** — short, low-volume runs may complete fast enough for the user to see results in the same session without leaving the Evaluation view.
+* **Asynchronous** — long or heavy runs may move to background processing; the UI shows progress and eventual completion.
+
+Behaviour rules:
+
+* The UI must present one unified model — “this evaluation job is in state X” — regardless of duration.
+* No separate “quick evaluation” semantics are allowed; everything passes through the same job states.
+* Progress updates must be driven by backend state (polling or push), not by timers or approximations.
+* The user may navigate away; the job continues, and results are available once `Succeeded`.
+
+### **7.5.5 Re-run, Idempotency, and Versioning**
+
+Evaluations are not ephemeral; they form a historical chain:
+
+* Each job is stamped with: rulepack version, evidence snapshot identifiers, profile version, timestamp, and initiating user/role.
+* Re-running an evaluation creates a new job entry with its own immutable record.
+* The system must guarantee that re-running with the same inputs produces the same result (determinism).
+* When rulepacks change, new evaluations must clearly reference the updated version; prior results remain valid for their version and period.
+
+The UI must make these version ties explicit in job details and in links from findings and reports.
+
+### **7.5.6 Forbidden Evaluation Behaviours**
+
+The following are explicitly forbidden:
+
+* showing any notion of “results” before a job reaches `Succeeded`
+* client-side recomputation or simulation of evaluation outcomes
+* silently reusing old evaluations when the user requested a fresh one
+* altering evaluation results when rulepacks change without running a new job
+* failing evaluations being silently re-queued without visible failure state
+* optimistic “all good” banners that do not map directly to job states and rule outputs.
+
+Evaluation results must always be the product of a traceable job that ran to completion.
+
+---
+
 ## **7.6 Findings & Reports**
+
+Findings & Reports define how evaluation results are surfaced, grouped, and exported as immutable artefacts. Findings are the structured expression of what the evaluation discovered; reports are canonical documents anchored to specific jobs and versions. The UI must ensure that users can understand their posture without confusion and can export evidence of that posture without ambiguity.
+
+### **7.6.1 Findings Model and Grouping**
+
+Findings are the **atomic interpretation** of evaluation outcomes:
+
+* each finding corresponds to one rule or a small, clearly defined rule group
+* each has a severity, status, and clear description
+* each links to relevant controls, evidence, and rulepack documentation
+* each is associated with an evaluation job ID and timestamp
+
+Grouping behaviours:
+
+* findings may be grouped by: control, domain, severity, or status (open/closed)
+* grouping is a pure presentation concern; underlying data remains unchanged
+* groups must not suppress or merge distinct findings into a single ambiguous line.
+
+### **7.6.2 Findings Triage and Remediation View**
+
+The Findings view must allow:
+
+* filtering by severity, control, and evaluation job
+* inspection of individual findings with clear links to underlying evidence and rule definitions
+* marking findings as acknowledged or linked to remediation actions (where supported in the PRD)
+* clear separation between “this was found” and “this has been addressed”.
+
+Rules:
+
+* findings themselves are immutable outputs of evaluation; the system may track additional remediation metadata, but the original finding must not change
+* triage actions must never rewrite evaluation history
+* status labels (e.g. “Open”, “In Progress”, “Resolved”) are UI-level remediation indicators, not changes to the evaluation output.
+
+### **7.6.3 Report Generation Pipeline**
+
+Reports are canonical documents generated from evaluation jobs and associated findings. The pipeline must be deterministic and fully traceable:
+
+```mermaid
+flowchart TD
+title Report Generation Pipeline
+A[Evaluation Succeeded] --> B[Collect findings and metadata]
+B --> C[Assemble report document]
+C --> D[Sign and stamp artefact]
+D --> E[Store immutable report]
+E --> F[Expose for download and sharing]
+```
+
+Rules:
+
+* Report generation may be triggered automatically on evaluation success or explicitly by user action, but in both cases it must follow this pipeline.
+* The report captures: tenant identity, profile snapshot, rulepack version, evidence reference set, evaluation job ID, and findings summary.
+* Once stored, the report is immutable; any later regeneration must produce a new artefact, tied back to a specific job and context.
+
+### **7.6.4 Report Delivery and Export Rules**
+
+The Reports UI must:
+
+* list all generated reports with clear titles, timestamps, and evaluation job references
+* present a clear distinction between “latest report” and historical reports
+* support download in at least one fixed, non-editable format (e.g. PDF) as specified in the PRD
+* provide a stable link or export mechanism appropriate to the product (e.g. download, secure share).
+
+Constraints:
+
+* exports must not be altered after generation
+* partial or in-progress reports must never be downloadable
+* no “preview” may misrepresent final content; if a preview is offered, it must be rendered from the same canonical data and formatting rules as the final document.
+
+### **7.6.5 Immutable History and Regeneration**
+
+History rules:
+
+* each report remains tied to its source evaluation job; deleting or rerunning evaluations does not erase historical reports
+* if a user generates a new report for the same job (e.g. a different template, if supported), it must be treated as a new artefact with clear identification
+* the system may support regeneration under the same inputs only if it guarantees byte-identical output; otherwise, regenerations are treated as new artefacts.
+
+The UI must allow users to:
+
+* see the lineage from report → evaluation job → rulepack version → evidence snapshot
+* understand clearly that older reports reflect the system state at the time they were generated.
+
+### **7.6.6 Forbidden Reporting Behaviours**
+
+The following behaviours are explicitly forbidden:
+
+* modifying a report’s contents after generation
+* silently replacing or overwriting previously generated reports under the same name
+* inferring findings or summaries that are not present in the evaluation output
+* presenting non-canonical “lite” summaries as if they were official reports
+* generating reports from partial or failed evaluations
+* reconstructing reports on the client from cached data
+* serving different versions of a “same” report without a clear version distinction.
+
+Reports must always represent a single, unambiguous snapshot:
+a specific evaluation, of a specific tenant, at a specific time, with specific inputs.
+
+---
 
 ## **7.7 Billing & Account Management**
 
