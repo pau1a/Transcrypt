@@ -2569,23 +2569,1017 @@ a specific evaluation, of a specific tenant, at a specific time, with specific i
 
 ## **7.7 Billing & Account Management**
 
+Billing & Account Management governs how subscriptions, entitlements, and account-level configuration are exposed and controlled within Essentials. It is identity-bound, tenant-bound, and high-risk: every interaction here must be deterministic, auditable, and free from optimism or ambiguity. The UI must never suggest that a billing state has changed until the backend has committed that change and returned canonical confirmation.
+
+Billing surfaces must clearly separate **what is currently true** (active plan, renewal date, entitlements) from **what has been requested but not yet applied** (pending upgrades, downgrades, cancellations). No behaviour may depend on client-side assumptions, cached values, or inferred states.
+
+### **7.7.1 Billing Surface and Scope**
+
+The Billing area covers:
+
+* **Plan Overview** — current subscription tier, renewal date, billing period.
+* **Entitlements View** — which capabilities and limits are active for the tenant (evaluation caps, evidence storage tiers, feature access).
+* **Payment Details** — payment method summary and status (never raw card data).
+* **Change Plan Flows** — upgrade, downgrade, cancellation, and trial-to-paid transitions.
+* **Billing History** — invoices, receipts, and historical changes.
+
+This surface applies **per tenant**, not per user. Identity and role determine who can see or change what.
+
+### **7.7.2 Subscription Lifecycle and States**
+
+Subscriptions follow a strict lifecycle:
+
+```mermaid
+stateDiagram-v2
+title Subscription States
+[*] --> Trial
+Trial --> Active: payment method confirmed
+Trial --> Expired: trial ended without conversion
+Active --> PastDue: payment failure
+PastDue --> Active: payment resolved
+PastDue --> Cancelled: non-payment timeout
+Active --> ScheduledChange: upgrade or downgrade requested
+ScheduledChange --> Active: change applied at boundary
+Active --> Cancelled: user-initiated cancellation
+Cancelled --> [*]
+Expired --> [*]
+```
+
+The UI must:
+
+* show exactly one subscription state per tenant
+* distinguish clearly between **current state** and **scheduled change**
+* never show a future state (e.g. new plan) as active until the boundary is reached and the backend confirms it
+* expose PastDue and Expired as first-class states, not vague “issues with account” banners.
+
+Under no circumstances may the UI treat a plan as Active when the backend marks it `PastDue`, `Expired`, or `Cancelled`.
+
+### **7.7.3 Entitlements and Evaluation Gating**
+
+Entitlements are the operational expression of billing:
+
+* maximum evaluations per period
+* access to specific rulepacks or features
+* limits on evidence storage or tenants (if applicable)
+* constraints on report exports or retention
+
+Rules:
+
+* entitlements must be computed server-side and returned as canonical flags; the UI may only read and display them
+* attempts to run evaluation or access gated features when entitlements are insufficient must fail deterministically with clear messaging
+* no client-side “trial grace” logic is allowed; grace periods must be encoded in backend rules and reflected as canonical entitlements.
+
+Billing and entitlements must not drift apart. Evaluation gating can only be based on canonical entitlement state.
+
+### **7.7.4 Role-Based Access and Security**
+
+Billing & Account Management is role-gated:
+
+* **Tenant Owner** — full read/write access to plan changes, payment details, and history.
+* **Billing Admin (if defined)** — delegated billing control as allowed by PRD.
+* **Contributors / Helpers** — no billing access; at most a read-only notice of plan constraints when relevant to their tasks.
+* **Auditors / Insurers** — no billing access unless explicitly allowed for a specific use case; by default, none.
+
+The UI must:
+
+* never surface billing actions to roles that cannot exercise them
+* never leak billing details (amounts, invoices, payment status) to unauthorised users
+* tie every change to a specific identity for audit logging.
+
+### **7.7.5 Invoicing, Receipts, and History**
+
+Historical records must be treated as immutable artefacts:
+
+* each invoice/receipt entry shows date, amount, plan, status, and a stable reference ID
+* downloads must always retrieve the original invoice artefact, not a reconstructed or reflowed representation
+* history must reflect actual backend events (plan changes, renewals, failed payments), not inferred user journeys.
+
+From the UI perspective:
+
+* users can view a chronological list of billing events
+* each event describes what changed and when (e.g. “Upgraded from X to Y effective <date>”)
+* failed payment events must be visible and clearly labelled, not hidden.
+
+### **7.7.6 Forbidden Billing Behaviours**
+
+The following are explicitly forbidden:
+
+* optimistic plan labels (“You’re now on Plan X”) before backend confirmation
+* hiding PastDue or Expired states behind generic error messages
+* reconstructing billing state from local storage or stale API responses
+* silently downgrading entitlements without displaying the associated plan change
+* modifying or regenerating invoices in a way that changes their financial content
+* exposing partial payment details that imply full control but cannot be acted on
+* allowing billing flows to proceed when identity or tenant context is not fully resolved.
+
+Billing & Account Management must always reflect canonical backend state and must never lie, understate, or improvise.
+
+---
+
 ## **7.8 Error, Offline, and Degraded Modes**
+
+Error, offline, and degraded modes define how Essentials behaves when things go wrong: network failures, backend issues, partial outages, or client-side constraints. The system must fail **safely and deterministically**, preserving identity, tenant integrity, and data correctness above convenience. No failure mode may introduce ambiguous state, contradictory views, or silent corruption.
+
+This section applies across all Essentials flows: Dashboard, Evidence, Evaluation, Findings, Reports, Profile, and Billing. It defines a consistent grammar of error states and a predictable set of recovery paths.
+
+### **7.8.1 Error Taxonomy and Scope**
+
+Errors are classified into a small, explicit taxonomy:
+
+* **User Errors** — invalid input, missing required fields, unauthorised actions.
+* **Network Errors** — connectivity loss, timeouts, transient failures between client and API.
+* **Backend Errors** — internal errors in services, timeouts in downstream systems, misconfiguration.
+* **Permission Errors** — lack of rights for a given operation, role or entitlement mismatch.
+* **State Conflicts** — attempts to act on stale or incompatible state (e.g. editing evidence during evaluation lock).
+
+Each category must map to:
+
+* a consistent user-facing message pattern
+* a recovery option where possible (retry, correct input, change role)
+* logging and telemetry hooks for operations.
+
+### **7.8.2 Error Presentation and Recovery Behaviour**
+
+Error presentation must:
+
+* clearly state **what failed**
+* differentiate between temporary and permanent failure
+* propose a deterministic recovery option where appropriate
+* avoid generic “Something went wrong” patterns unless accompanied by a specific context.
+
+Recovery rules:
+
+* **User Errors** → user can correct input and resubmit; state remains local to the form.
+* **Network Errors** → user can retry once connectivity is restored; no duplicate side effects may occur.
+* **Backend Errors** → user may retry, but the UI must not spam retries; some operations require user to return later.
+* **Permission Errors** → no retry; user must change role or contact an owner.
+* **State Conflicts** → UI must refresh state from the backend and present the current canonical view.
+
+Under no circumstances may the UI fake success when the backend has not confirmed it.
+
+### **7.8.3 Offline and Read-Only Behaviour**
+
+Essentials is not an offline-first application, but it must behave safely when connectivity is poor or absent:
+
+* identity checks must fail closed: no assumption of continued authentication when gateways are unreachable
+* critical operations (evidence upload, evaluation, billing changes) must be disabled when the system cannot reach the backend
+* read-only views (e.g. cached reports already downloaded to the browser) may remain visible, but must clearly indicate that they may be out of date
+* any local drafts (e.g. forms partially completed) remain local until the user explicitly retries and receives confirmation.
+
+The system must never:
+
+* commit local changes on reconnection without explicit user action
+* pretend that offline actions were applied to the backend
+* reconstruct “likely” backend state after an outage.
+
+### **7.8.4 Degraded Modes Under Partial Failure**
+
+Partial failures occur when some services are healthy and others are not (e.g. evidence service up, evaluation service down). The UI must adopt a **degraded but safe** mode:
+
+```mermaid
+stateDiagram-v2
+title Degraded Mode States
+[*] --> Healthy
+Healthy --> PartiallyDegraded: one or more services unavailable
+PartiallyDegraded --> ReadOnly: writes disabled where unsafe
+PartiallyDegraded --> Healthy: all services restored
+ReadOnly --> Healthy: full functionality restored
+```
+
+Rules:
+
+* in **PartiallyDegraded**, features relying on failed services must be clearly marked as unavailable; buttons disabled with explanatory messaging
+* where safe, read-only access to existing data is allowed (e.g. viewing past reports while evaluation is down)
+* transitions back to `Healthy` must be explicit; the UI may poll or receive push signals but must not silently flip between states without updating the user.
+
+No behaviour may imply that degraded operations are fully functioning.
+
+### **7.8.5 Telemetry, Logging, and User Feedback**
+
+Every error, degradation, and offline event in Essentials must:
+
+* emit structured telemetry with request ID, tenant ID, operation type, and error category
+* be traceable back to a point in time and a specific operation
+* avoid leaking sensitive data in error payloads, while still providing enough context for debugging.
+
+From the user’s perspective:
+
+* serious or recurring errors may trigger inline guidance (“If this persists, contact support with reference ID X”)
+* the system must avoid spamming alerts; repeated failures of the same type should be summarised, not duplicated.
+
+Error-handling UX exists primarily to preserve trust and clarity, not to provide marketing copy.
+
+### **7.8.6 Forbidden Error and Degraded Behaviours**
+
+The following are explicitly forbidden:
+
+* silently swallowing errors and presenting apparent success
+* optimistic UI that assumes an operation will succeed and then quietly ignores failure
+* conflicting banners (e.g. “All good” while the app is in a degraded state)
+* exposing stack traces or raw backend error messages to end users
+* retry storms triggered automatically by the client
+* maintaining authenticated UI when the gateway has declared the session invalid or unreachable
+* caching stale data and presenting it as current after errors.
+
+Error, offline, and degraded modes must always fail **safe and explicit**, never quiet and ambiguous.
+
+---
 
 # **8. End-to-End User Journeys**
 
+The journeys in this section describe how users move through the system across time, not across individual screens. They show how the components, behaviours, constraints, and invariants defined in previous sections combine into complete, deterministic sequences that begin with intent and end with verified system outcomes.
+
+Each journey crosses multiple layers of the product: Marketing, identity verification, tenancy resolution, Essentials runtime, evidence and evaluation pipelines, and immutable reporting. These journeys must behave consistently regardless of entry point, device, or user role. No journey may contradict canonical backend state, misstate readiness, infer missing information, or expose the user to partial or optimistic transitions.
+
+Where Section 7 defined the structure and behaviour of Essentials surfaces, Section 8 describes how real users experience the system from start to finish. Each subsection documents the allowed transitions, required confirmations, landing states, fallback paths, and failure modes that together form the product’s temporal contract. Every step must be explicit, auditable, and reversible, and no journey may introduce ambiguity between what the user sees and what the system knows to be true.
+
+This section ensures that Transcrypt operates not only as a collection of deterministic components, but as a predictable, end-to-end experience that users can trust.
+
+---
+
 ## **8.1 Signup and Login**
+
+Signup and Login define the point at which an anonymous user becomes an authenticated actor, acquires a role, is associated with a tenant, and enters the Essentials runtime. These flows must be deterministic, auditable, and free from optimism. No surface may imply identity, role, or tenant assignment until the backend confirms each step. Marketing may funnel users into identity intent, but it may not infer identity, pre-render authenticated surfaces, or show navigation that belongs to Essentials.
+
+Signup and Login unify around one principle: **identity is a backend fact, not a UI suggestion**. The UI expresses only the states returned by the gateway and may never reconstruct authentication state locally.
+
+### **8.1.1 Entry Conditions and Allowed Starting Points**
+
+Users may begin from any of the following:
+
+* Marketing CTA (e.g. “Start Free Trial”, “Sign In”)
+* Direct Essentials route that forces redirect to identity
+* Invite acceptance via time-bound, single-use token
+* Returning user entering the login entry
+* Expired session attempting to re-enter Essentials
+
+These are the only permissible starting points. Forbidden entry points include:
+
+* direct entry into Essentials without identity
+* cached “remembered sessions” that disagree with the gateway
+* URL parameters attempting to bypass identity, role assignment, or tenant resolution
+
+### **8.1.2 Identity Challenge and Resolution**
+
+All identity transitions occur through the OIDC gateway. The UI must:
+
+* redirect to identity challenge exactly once per intent
+* wait for gateway confirmation
+* hydrate authenticated state only after receiving canonical identity
+* disable navigation and authenticated UI during challenge
+* surface identity errors unambiguously
+
+Inline identity is forbidden. Client-side “fake auth” states are forbidden.
+
+```mermaid
+sequenceDiagram
+title Identity Resolution Sequence
+User->>Marketing: Clicks CTA
+Marketing->>Gateway: Redirect with intent
+Gateway->>OIDCProvider: Authenticate user
+OIDCProvider->>Gateway: Token returned
+Gateway->>Essentials: Authenticated session with role + tenant context
+Essentials->>User: Landing surface (Quick Start or Dashboard)
+```
+
+### **8.1.3 Tenant Creation or Tenant Resolution**
+
+Once identity is confirmed, the system must determine the user’s tenant relationship:
+
+* **New user, no tenant** → system creates a new tenant, assigns user as Owner, and routes to Quick Start.
+* **Returning user** → user’s existing tenant is resolved; system routes to Dashboard.
+* **Invite acceptance** → token identifies tenant and role; user becomes Contributor, Helper, or Reviewer; system routes to Invite Landing.
+
+Tenant resolution must never:
+
+* guess or infer tenant
+* use cached tenant ID
+* show Essentials UI before tenant context is canonical
+* allow ambiguous or multiple-tenant states in the header
+
+```mermaid
+stateDiagram-v2
+title Tenant Assignment States
+[*] --> IdentityConfirmed
+IdentityConfirmed --> NewTenant: no existing tenant
+IdentityConfirmed --> ExistingTenant: existing tenant found
+IdentityConfirmed --> InviteBound: valid invite token
+NewTenant --> QuickStart
+ExistingTenant --> Dashboard
+InviteBound --> InviteLanding
+InviteBound --> Dashboard: if invite role merges with existing tenant
+```
+
+### **8.1.4 Canonical Landing Surfaces**
+
+After identity and tenant resolution:
+
+* **New tenant owners** land in Quick Start.
+* **Returning users** land in Dashboard.
+* **Invited users** land in Invite Landing or Dashboard (if they merge into existing tenant).
+* **Users with incomplete profile** may see gating banners but must still land on the correct surface.
+
+The system must not:
+
+* land new users on Dashboard
+* land returning users on Quick Start
+* give invited users Owner capabilities or visibility
+* silently redirect without identity and tenant confirmation
+
+### **8.1.5 Failure States and Recovery Paths**
+
+Failures must be explicit and deterministic.
+
+* **Expired or invalid invite token** → user sees a clear invalid-token state with no attempt to assign roles.
+* **Invalid credentials** → remain in login flow; no navigation changes.
+* **Suspended or blocked tenant** → identity confirmed but Essentials blocked; user sees a tenant-blocked screen.
+* **Network failures during authentication** → user returns to Marketing with error context; no partial identity.
+* **Repeated failures** → user receives stable guidance, not shifting error banners.
+
+Recovery routes may include retry, password reset, or contacting the Owner, depending on role context.
+
+### **8.1.6 Forbidden Transitions**
+
+The following transitions must never occur:
+
+* authenticated UI shown before backend identity confirmation
+* evidence, evaluation, or profile views visible while anonymous
+* tenant context inferred from localStorage or cookies
+* navigation flicker between anonymous and authenticated headers
+* optimistic “You’re logged in” banners before token validation
+* defaulting to Dashboard for users who do not yet have a tenant
+* accepting invalid invite tokens and assigning fallback roles
+* merging identity and tenant state based on browser history
+
+Signup and Login must uphold backend truth at all times.
+
+Identity, tenant assignment, and role resolution must be rendered exactly as the system defines them — never as the client assumes they should be.
+
+---
 
 ## **8.2 Marketing→Essentials Routing**
 
+Marketing surfaces operate anonymously and serve only one function in relation to Essentials: they funnel users into intent-driven identity flows that resolve through the gateway and land deterministically in the correct authenticated state. Marketing may encourage action, but it may not authenticate, imply role, or represent tenant state. Routing from Marketing into Essentials must always reflect canonical backend truth.
+
+The handoff is strictly sequenced: **Marketing → Gateway → Identity Provider → Gateway → Essentials**. Any deviation, short-circuit, or locally inferred identity is forbidden. Essentials must not render any authenticated UI until identity and tenant context have been confirmed by the gateway.
+
+### **8.2.1 Allowed Entry Points from Marketing**
+
+The only valid ways to cross from Marketing into Essentials are:
+
+* **Primary CTAs** such as “Start Free Trial”, “Sign In”, or “Login to Dashboard”.
+* **Deep links** that require authentication (e.g. `/app/essentials`), which trigger identity challenge immediately.
+* **Invite links** delivered externally, which begin in a Marketing-context wrapper but resolve through identity after token validation.
+* **Session expiry transitions**, where the user attempts to re-enter Essentials and is redirected back through the identity flow.
+
+Forbidden entry points include:
+
+* UI elements that imply account ownership or authenticated capabilities
+* static marketing content attempting to preload authenticated layout
+* client-side logic attempting to bypass identity challenge
+* cached “last tenant” assumed without gateway confirmation
+
+### **8.2.2 Identity Challenge Trigger Rules**
+
+Every Marketing→Essentials transition must initiate a deterministic identity challenge unless the gateway confirms a valid, current session. No Marketing surface may skip this step or attempt inline authentication.
+
+Routing behaviour:
+
+* CTAs redirect the user to the gateway with an explicit intent (signup, login, or invite-accept).
+* The gateway delegates authentication to the OIDC provider.
+* Identity is established only when the gateway returns role and tenant information to Essentials.
+* Essentials must delay any authenticated rendering until this entire sequence completes.
+
+```mermaid
+sequenceDiagram
+title Marketing to Essentials Identity Flow
+User->>Marketing: Clicks CTA
+Marketing->>Gateway: Redirect with intent
+Gateway->>OIDCProvider: Authenticate user
+OIDCProvider->>Gateway: Token + claims
+Gateway->>Essentials: Identity + role + tenant context
+Essentials->>User: Canonical landing surface
+```
+
+No identity optimism is allowed. Essentials must wait for gateway confirmation before acting.
+
+### **8.2.3 Post-Identity Routing Resolution**
+
+After identity is confirmed, Essentials must resolve the correct landing surface based solely on canonical tenant and role data. The routing map is small, rigid, and must never drift:
+
+* **New tenant owner** → Quick Start
+* **Returning user** → Dashboard
+* **Invited user** → Invite Landing (or Dashboard if invite merges into existing tenant)
+* **Suspended or blocked tenant** → Tenant-blocked holding state
+* **Expired invite** → Explicit invalid-token surface (not Dashboard)
+
+```mermaid
+stateDiagram-v2
+title Marketing to Essentials Routing States
+[*] --> IdentityConfirmed
+IdentityConfirmed --> NewTenant
+IdentityConfirmed --> ExistingTenant
+IdentityConfirmed --> InviteBound
+IdentityConfirmed --> TenantBlocked
+NewTenant --> QuickStart
+ExistingTenant --> Dashboard
+InviteBound --> InviteLanding
+InviteBound --> Dashboard
+TenantBlocked --> BlockedState
+```
+
+Rules:
+
+* Essentials must never show Dashboard to a new tenant.
+* Essentials must never show Quick Start to a returning user.
+* Essentials must never assign fallback roles if invite resolution fails.
+* Essentials must never infer tenant from cached identifiers.
+
+### **8.2.4 Error Paths and Safe Fallbacks**
+
+Failures must be explicit and must not leak authenticated UI elements.
+
+Allowed failure responses:
+
+* **Invalid invite token** → A clear invalid-token surface with no attempt to assign tenant or role.
+* **Tenant blocked** → Identity is confirmed, but Essentials is unavailable; user lands in the blocked tenant screen.
+* **Expired session during redirect** → User returns to Marketing with an explicit session-expired message.
+* **OIDC errors** → Return to pre-auth state with clear context and retry option.
+
+There is no concept of “silent fallback to Marketing”, and Essentials must not render partial UI when routing fails.
+
+### **8.2.5 Forbidden Routing Patterns**
+
+The following behaviour must never appear:
+
+* authenticated navigation rail or header on Marketing surfaces
+* Essentials surfaces appearing prior to identity confirmation
+* identity inferred from cookies or local storage
+* flicker between anonymous and authenticated headers
+* sending users to Dashboard without tenant verification
+* bypassing the gateway’s redirect protocol
+* optimistic “You are logged in” banners without gateway confirmation
+* reusing expired or invalid invites to construct fallback identities
+* routing differentiation based on device or heuristic assumptions
+
+Routing between Marketing and Essentials must reflect **canonical backend identity**, not client assumption.
+
+Only once identity is resolved and tenant context is fixed may Essentials render authenticated UI.
+
+---
+
 ## **8.3 Subscription & Billing Journey**
+
+The Subscription & Billing journey defines how plan state, entitlement state, and billing events shape the user’s ability to operate Essentials. Subscription status is a canonical backend fact. The UI must never speculate, infer, or display a plan state until backend confirmation is received. Billing drives entitlement, entitlement drives capability, and capability gates evaluation, reporting, and other Essentials workflows.
+
+This journey sits across identity, tenant context, the billing service, and the application service. All transitions must be deterministic, auditable, and consistent with the subscription lifecycle defined in the SAIS. No user action may cause an ambiguous or half-applied plan state.
+
+### **8.3.1 Subscription Entry Points and Visibility Rules**
+
+Subscription information becomes visible only after identity and tenant resolution. The UI must:
+
+* show the current subscription tier and renewal state only after canonical backend confirmation
+* expose plan, billing history, and entitlement details only to Tenant Owners (or designated Billing Admins if implemented)
+* reflect blocked or past-due states consistently across Dashboard, Evidence, and Evaluation surfaces
+* show entitlement-based gating without revealing payment information to non-authorised roles
+
+Forbidden:
+
+* any marketing surface showing authenticated billing data
+* any Essentials surface guessing subscription tier based on cached values
+* reconstructing subscription state client-side after navigation events
+
+### **8.3.2 Subscription State Machine and Transitions**
+
+The subscription lifecycle is finite, deterministic, and closed. All plan changes, renewals, failures, and cancellations follow this state machine:
+
+```mermaid
+stateDiagram-v2
+title Subscription Lifecycle States
+[*] --> Trial
+Trial --> Active: payment method confirmed
+Trial --> Expired: trial ended with no activation
+Active --> ScheduledChange: upgrade or downgrade requested
+ScheduledChange --> Active: change applied at boundary
+Active --> PastDue: payment failure
+PastDue --> Active: payment resolved
+PastDue --> Cancelled: non-payment timeout
+Active --> Cancelled: user-initiated cancellation
+Expired --> [*]
+Cancelled --> [*]
+```
+
+Rules:
+
+* only the backend may move a subscription between states
+* UI must reflect exactly the current state, never a future one
+* ScheduledChange is visible to the user but must not alter entitlements until the boundary time
+* PastDue must clearly restrict the evaluation flow, but must not prevent users from viewing existing evidence or reports
+
+### **8.3.3 Billing Actions and Confirmation Flow**
+
+All billing actions (upgrade, downgrade, cancellation, payment update) follow a strict confirmation pipeline:
+
+```mermaid
+sequenceDiagram
+title Billing Action Pipeline
+User->>Essentials: Requests billing change
+Essentials->>BillingService: Create change intent
+BillingService->>PaymentProvider: Execute action
+PaymentProvider->>BillingService: Confirmation or failure
+BillingService->>Essentials: Updated subscription state
+Essentials->>User: Updated plan + entitlements
+```
+
+Behavioural guarantees:
+
+* the UI must not display the new plan until the billing service confirms it
+* webhook delays must never justify optimistic plan displays
+* partial failures must surface clearly (“Upgrade pending provider confirmation”)
+* evaluation gating must only update after new entitlements are received
+
+No speculative UI transitions are allowed.
+
+### **8.3.4 Entitlement Gating and Evaluation Blocks**
+
+Entitlements define whether a tenant can:
+
+* run evaluations
+* generate reports
+* access certain rulepacks
+* store evidence to defined limits (if tiered storage is implemented)
+
+The application service computes entitlements from subscription state. The UI must:
+
+* read entitlements only from backend responses
+* disable evaluation entry points deterministically when entitlements are insufficient
+* clearly state why a function is unavailable (e.g. “Evaluation blocked due to PastDue subscription”)
+* update gating immediately after backend plan-state changes
+
+Forbidden:
+
+* hiding evaluation buttons entirely without explanation
+* enabling evaluation during PastDue or Expired states
+* offering “retry evaluation” after entitlements block it
+
+### **8.3.5 Webhook Delays, Synchronisation, and Safe UI Behaviour**
+
+Billing providers may introduce delays between a user action and confirmed plan updates. During these windows:
+
+* UI must show a stable “pending change” state
+* entitlements must remain based on *current* canonical plan, never the requested plan
+* Essentials must not re-enable gated features until confirmed
+* failed webhook calls must surface unambiguously to the user (e.g. “Payment update failed—please retry”)
+
+The system must resist UI-visible drift.
+The backend remains the only authority on plan state.
+
+### **8.3.6 Error and Suspension States**
+
+Subscription problems must result in clear, deterministic user experiences:
+
+* **PastDue** → evaluation disabled, access to evidence and findings preserved
+* **Expired Trial** → evaluation disabled, clear messaging
+* **Cancelled** → read-only Essentials, access to historical reports preserved
+* **Tenant Blocked** → Essentials locked; user sees a tenant-blocked holding screen
+* **Provider errors** → surfaced as “billing update failed” with next steps
+
+No ambiguous messaging (“Some features may be unavailable”) is allowed.
+
+### **8.3.7 Forbidden Billing Behaviours**
+
+The following behaviours must never occur:
+
+* optimistic upgrades or downgrades
+* showing entitlements before backend confirmation
+* silently removing features on downgrade without immediate feedback
+* regenerating or altering invoice artefacts
+* cached subscription state overriding backend truth
+* showing “Active” while billing service reports PastDue
+* speculative trial extensions based on user behaviour
+* heuristics or ML inference altering gating logic
+
+Subscription & Billing must be deterministic, authoritative, and strictly aligned with backend state at every step.
+
+---
 
 ## **8.4 Org Profile Completion**
 
+The organisation profile defines the tenant’s identity, scope, and compliance parameters. Evaluation and reporting depend on this data being complete, validated, and current. Profile completeness is never inferred, approximated, or guessed; it is a definitive backend fact based on required field sets and validation rules. Users must always see canonical profile state, and Essentials must never surface evaluation, report generation, or completeness indicators that contradict it.
+
+Profile edits follow a strict pipeline: user edits → validation → atomic commit → propagation to dependent services → updated gating. No UI may suggest that a profile is complete until the backend confirms that all required fields are valid and committed.
+
+### **8.4.1 Profile as a System Prerequisite**
+
+The profile is a mandatory prerequisite for:
+
+* evaluation readiness
+* rulepack applicability
+* evidence interpretation (some controls depend on profile metadata)
+* report generation
+* subscription alignment (e.g. entity size, industry category)
+
+Essentials must surface profile incompleteness wherever it affects operational flows. Dashboard, Evidence, and Evaluation views must reflect profile-gating consistently.
+
+Forbidden behaviours:
+
+* suppressing profile warnings
+* hiding gating messages behind optimistic UX
+* representing profile as “nearly complete” or “good enough”
+* inferring missing organisation details
+
+### **8.4.2 Required Fields and Validation Rules**
+
+Required fields must be explicitly defined in the backend rule set. They include (but are not limited to):
+
+* legal entity name
+* trading name (if applicable)
+* registered address
+* operating region
+* entity size category
+* industry classification
+* compliance-relevant attributes specified in the PRD
+
+The UI must enforce:
+
+* deterministic validation
+* immediate display of field-level errors
+* no optimistic validation
+* no auto-filling of inferred values
+* no quiet acceptance of partial data
+
+If validation fails, the profile remains unchanged until a commit is possible.
+
+### **8.4.3 Profile Completion Flow**
+
+The completion flow is a controlled pipeline, not a free-form form submission. The UI must represent the exact backend flow, including transitional states and failure conditions.
+
+```mermaid
+flowchart TD
+title Profile Completion Pipeline
+A[User edits profile fields] --> B[Submit for validation]
+B --> C[Backend validates required fields]
+C --> D[Atomic profile commit]
+D --> E[Propagation to dependent services]
+E --> F[Updated profile completeness state shown to user]
+```
+
+Rules:
+
+* profile completeness flips only at step **D**
+* step **E** may update evaluation gating and evidence requirements
+* UI may not assume completion until step **F**
+* failed validation must not alter existing profile state
+
+Optimistic “Saved” indicators are forbidden.
+
+### **8.4.4 Profile Freshness and Evaluation Readiness**
+
+Profile freshness determines whether the system considers evaluations safe and valid. Any edit that affects rulepack applicability or required fields may invalidate readiness.
+
+Profile follows a strict freshness state machine:
+
+```mermaid
+stateDiagram-v2
+title Profile Freshness States
+[*] --> Incomplete
+Incomplete --> PendingValidation: user submits edits
+PendingValidation --> Complete: validation + commit succeed
+PendingValidation --> Incomplete: validation fails
+Complete --> Stale: profile edited after evaluation readiness
+Stale --> PendingValidation: user resubmits edits
+Stale --> Incomplete: required fields removed or invalidated
+Complete --> [*]
+```
+
+Behaviour rules:
+
+* **Incomplete** → evaluation blocked
+* **PendingValidation** → evaluation blocked; UI must inform user
+* **Complete** → evaluation permitted
+* **Stale** → evaluation blocked until profile is revalidated
+* no surface may show readiness while profile is Incomplete, PendingValidation, or Stale
+
+### **8.4.5 Profile Editing After Evaluation**
+
+Profile edits may change:
+
+* control applicability
+* evidence requirements
+* evaluation preconditions
+* report content dependencies
+
+Rules:
+
+* if profile changes in a way that affects evaluation inputs, the evaluation state becomes invalidated
+* users must be shown a deterministic blocking message (“Profile changed — evaluation requires revalidation”)
+* evidence completeness may change dynamically if profile adjustments alter the required field set
+* historical reports remain immutable; profile edits cannot alter past artefacts
+
+UI must never back-fill new profile data into existing reports or historical evaluation summaries.
+
+### **8.4.6 Forbidden Behaviours**
+
+The following are strictly forbidden:
+
+* auto-filling profile values based on previous tenants or behavioural inference
+* ML-based suggestions for missing fields
+* inline optimistic “Saved” states before backend commit
+* treating profile as complete when required fields are missing
+* allowing evaluation to run while profile is Incomplete or Stale
+* locally reconstructing profile completeness after navigation
+* hiding profile gating banners on operational surfaces
+* caching old profile state as if it were current
+
+The profile must always reflect canonical backend truth, and all dependent flows must honour it without exception.
+
+---
+
 ## **8.5 Evidence Submission**
+
+Evidence Submission describes how users attach artefacts to controls and how the system validates, binds, and surfaces those artefacts safely and deterministically. Evidence is treated as a controlled compliance object, not a loose file. No surface may imply acceptance before the full SAIS pipeline has completed. Evidence must always reflect canonical backend state and must never be optimistic, inferred, or partially represented.
+
+### **8.5.1 Evidence as a Controlled Artefact**
+
+Evidence belongs to controls, not to users or folders. Every artefact must be:
+
+* validated for type, size, and integrity
+* hashed before acceptance
+* atomically bound to metadata and object storage
+* immutable once bound (except through supersede/retire flows)
+* fully traceable with tenant_id, request_id, and binding timestamp
+
+Forbidden:
+
+* client-side categorisation
+* AI-based metadata extraction
+* implied completeness
+* displaying evidence based on cached local lists
+
+The UI must show evidence only after the backend confirms that the bind step is complete.
+
+### **8.5.2 Evidence Intake Flow**
+
+The user-facing flow must mirror the exact pipeline defined in the SAIS. No UI shortcuts, batching illusions, or pre-binding previews are permitted.
+
+```mermaid
+flowchart TD
+title Evidence Intake Sequence
+A[Select control] --> B[Choose file or link]
+B --> C[Upload via signed URL]
+C --> D[Hash and validate server-side]
+D --> E[Bind metadata and object atomically]
+E --> F[Control completeness recalculated]
+F --> G[User sees confirmed evidence entry]
+```
+
+Behavioural rules:
+
+* The UI may show progress bars during upload and validation but must not list the evidence item until step **E** completes.
+* Failed uploads must never create phantom evidence entries.
+* Retry flows must restart from the last safe step and never duplicate objects in storage.
+* Evidence must appear instantly after binding; delays or partial states are forbidden.
+
+### **8.5.3 Evidence Item Lifecycle**
+
+Each evidence item follows a strict state machine. The UI must label each state clearly and must never blend adjacent states.
+
+```mermaid
+stateDiagram-v2
+title Evidence Lifecycle States
+[*] --> PendingUpload
+PendingUpload --> Uploading
+Uploading --> Verifying
+Verifying --> Bound: validation + commit succeed
+Verifying --> Failed: validation error
+Bound --> Superseded
+Bound --> Retired
+Superseded --> Archived
+Retired --> Archived
+Failed --> [*]
+```
+
+Rules:
+
+* **PendingUpload** and **Uploading** must never contribute to control completeness.
+* **Verifying** must not be displayed as “attached”.
+* **Bound** is the only state that updates evaluation readiness.
+* **Superseded** and **Retired** remain visible for audit but cannot fulfil requirements.
+* **Failed** must not leave artefacts in lists.
+
+### **8.5.4 Control Completeness and Evidence Impact**
+
+Control completeness is computed solely from **Bound** evidence items and rulepack requirements. The UI must display:
+
+* clear completeness indicators
+* which requirements remain unmet
+* how many bound artefacts satisfy the rule
+* whether evidence changes trigger evaluation invalidation
+
+Forbidden:
+
+* implied completion (“Looks good!”)
+* client-side completeness calculation
+* hiding missing requirements
+* treating superseded/retired items as valid
+
+Evidence can change the evaluation readiness state immediately and deterministically.
+
+### **8.5.5 Supersede, Retire, and Reuse**
+
+Evidence maintenance is strictly controlled:
+
+* **Supersede:** replacement evidence binds, original transitions to Superseded.
+* **Retire:** evidence is made non-applicable but stays visible for audit.
+* **Reuse:** a single evidence object may fulfil multiple controls, but its lifecycle state is shared.
+
+Rules:
+
+* Reuse must not duplicate objects in storage.
+* Supersede must not silently retire linked evidence without user confirmation.
+* Retire must not break historical reports or invalidate past evaluations.
+* Attempting to delete active (in-use) evidence must fail deterministically.
+
+### **8.5.6 Error Handling and Atomicity Guarantees**
+
+The system must guarantee:
+
+* no partial files
+* no partial metadata
+* no half-bound artefacts
+* no ghost entries after failures
+* no evidence drift between UI and backend
+
+If hashing or validation fails:
+
+* the evidence item must not appear in the UI
+* the user must receive clear guidance
+* retries must not create duplicate objects
+
+If object storage or metadata commits disagree, the pipeline must fail closed and roll back safely.
+
+### **8.5.7 Forbidden Evidence Behaviours**
+
+The following behaviours are explicitly forbidden:
+
+* optimistic “attached” labels before binding
+* AI-based or heuristic evidence interpretation
+* uploading in client-side queues without backend visibility
+* showing temporary or local-only evidence items
+* auto-categorising files into controls
+* silent deletion of evidence when superseded or retired
+* caching evidence lists and presenting them as current
+* any control-completeness calculation client-side
+* pre-acceptance previews that imply future success
+
+Evidence Submission must always reflect canonical backend truth and must never mislead the user into thinking that evidence exists, is valid, or is complete when it is not.
+
+---
 
 ## **8.6 Run Evaluation**
 
+Running an evaluation is the act of executing the rulepack set against the tenant’s current evidence, profile, and subscription state. Evaluations are deterministic, auditable jobs controlled exclusively by backend state. The UI must never infer readiness, predict outcomes, or surface partial or speculative results. Evaluation is allowed only when all preconditions—subscription, profile completeness, and evidence completeness—are satisfied.
+
+Evaluations produce immutable findings and serve as the foundation for reporting. No UI behaviour may misrepresent evaluation state, readiness, or completeness at any point.
+
+### **8.6.1 Preconditions and Readiness Checks**
+
+Before a user may initiate an evaluation, Essentials must confirm:
+
+* **Subscription entitlements** allow evaluation (not PastDue, not Expired).
+* **Profile completeness** is `Complete`.
+* **Evidence completeness** is satisfied across all required controls.
+* **No evaluation job is currently Running** for the same tenant.
+
+If any precondition fails:
+
+* the UI must block initiation
+* the reason must be explicit (e.g. “Evaluation blocked: Missing evidence for controls X and Y”)
+* the system must not queue or partially create a job
+* no optimistic “running soon” banners may appear
+
+Evaluations must be initiated from a clean, deterministic state.
+
+### **8.6.2 Evaluation Invocation Flow**
+
+When the user triggers an evaluation, the UI must reflect the exact SAIS pipeline. There must be no visual implication of instant results or speculative processing.
+
+```mermaid
+sequenceDiagram
+title Evaluation Invocation Flow
+User->>Essentials: Request evaluation
+Essentials->>AppService: Validate readiness + create job
+AppService->>Worker: Job queued for execution
+Worker->>AppService: Rulepack executed + results persisted
+AppService->>Essentials: Job state updated
+Essentials->>User: Updated progress or final outcome
+```
+
+Rules:
+
+* The UI may show “Queued” only after the backend creates the job.
+* The UI may show “Running” only after the worker claims the job.
+* No “evaluating…” state is permitted unless confirmed by backend state.
+* Reloading Essentials must show the same job state as any other surface—no drift.
+
+### **8.6.3 Evaluation Job Lifecycle**
+
+Evaluation follows a closed state machine. No additional states, sub-states, or interpretations are permitted.
+
+```mermaid
+stateDiagram-v2
+title Evaluation Job States
+[*] --> Queued
+Queued --> Running: worker claims job
+Running --> Succeeded: all rules evaluated
+Running --> Failed: unrecoverable error
+Running --> Cancelled: user or system abort
+Succeeded --> [*]
+Failed --> [*]
+Cancelled --> [*]
+```
+
+Rules:
+
+* Only backend transitions change job state.
+* UI must never invent “Almost finished”, “Partially successful”, or “Analyzing” states.
+* Findings and Reports remain locked until the job reaches `Succeeded`.
+* Failed jobs must display clear messaging including the category of failure (not details of internal exceptions).
+* Cancelled jobs must not silently requeue.
+
+### **8.6.4 User Interaction During Evaluation**
+
+While evaluation is in progress:
+
+* Users may navigate away; the job continues.
+* Returning to Dashboard or Evaluation view must show the same canonical state.
+* No part of the UI may show partial findings, preview summaries, or speculative statuses.
+* Progress indicators must be derived exclusively from backend job state, not timers.
+
+If the user triggers a second evaluation request during an active job:
+
+* the system must refuse
+* messaging must explain that evaluation is in progress
+* no new job may be queued
+
+Evaluation is always a **single deterministic job**, never parallel or overlapping.
+
+### **8.6.5 Completion, Failure, and Recovery**
+
+When evaluation completes:
+
+* the UI must surface the `Succeeded` state immediately
+* Findings become available
+* Report generation pipelines become accessible
+* Dashboard must update evaluation recency and compliance posture deterministically
+
+On failure:
+
+* the UI must show a clear, non-technical failed state
+* previous findings remain visible (from prior successful jobs)
+* no partial findings from the failed job may appear
+* the user may retry only after verifying readiness again
+
+On cancellation:
+
+* the job ends in a terminal `Cancelled` state
+* the system must not retain partial artefacts
+
+### **8.6.6 Forbidden Evaluation Behaviours**
+
+The following behaviours are explicitly forbidden:
+
+* predicting evaluation outcomes
+* showing partial or inferred findings
+* optimistic UI states (“Likely compliant”, “Early results look good”)
+* recomputing evaluation client-side
+* presenting stale job states as current
+* merging results from different job versions
+* running evaluation when profile or evidence is incomplete
+* silently retrying failed or cancelled jobs
+* displaying findings before the job reaches `Succeeded`
+
+Evaluation must always reflect a single, precise truth defined by backend state.
+
+---
+
 ## **8.7 View Findings & Reports**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # **9. Accessibility Specification**
 
