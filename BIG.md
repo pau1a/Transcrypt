@@ -55,46 +55,818 @@ Together, these elements define how the brand speaks, behaves, and appears. They
 ---
 
 ## 1.1 Role of the Brand Identity Guide
+
+This guide defines how Transcrypt presents itself visually and verbally across every surface. It establishes the rules that maintain coherence between product, marketing, documentation, and any future public-facing channels. Its role is to ensure the brand expresses the same philosophy everywhere: clarity, restraint, structure, and predictable behaviour.
+
 ### 1.1.1 Scope of the Guide
+
+This guide defines:
+
+* The visual identity: colour palette, typography, iconography, spacing, grid systems, layout structure.
+* The verbal identity: tone of voice, writing rules, naming conventions, language constraints.
+* The expression layer across all surfaces: website, product UI, docs, slide decks, assets, and external communication.
+* The boundaries that prevent visual or tonal drift.
+* The rules that designers, writers, engineers, and partners must follow when creating anything that represents Transcrypt.
+
+It acts as the expression layer of the broader system defined by the PRD, SAIS, and PDS. Where those documents define purpose, architecture, and behaviour, this guide defines identity and presentation.
+
 ### 1.1.2 What the Guide Does Not Cover
 
+This guide does not define:
+
+* Product behaviour, user flows, or interaction logic (covered by the PDS).
+* System architecture, tenancy model, data flow, or operational invariants (covered by the SAIS).
+* Product strategy, feature scope, or the reasoning behind decisions (covered by the PRD).
+* Commercial strategy, pricing, or go-to-market plans.
+* Regulatory interpretation or compliance obligations.
+* Engineering implementation details or code-level patterns.
+
+The Brand Identity Guide controls *how* Transcrypt is expressed.
+It does not decide *what* is built or *how* it works under the hood. It sits alongside PRD, SAIS, and PDS as a fourth pillar: expression, not architecture.
+
+---
+
 ## 1.2 Relationship to PRD, SAIS, and PDS
+
+The Brand Identity Guide is not an independent creative document. It is the final expression layer in a chain of upstream constraints. It inherits purpose from the PRD, system truth from the SAIS, and behavioural rules from the PDS. Nothing in this guide may contradict or reinterpret those documents. Its role is to translate them into a consistent visual and verbal identity across every surface where Transcrypt appears.
+
 ### 1.2.1 Upstream Document Dependency
+
+The Brand Identity Guide depends directly on the three core Transcrypt documents:
+
+#### PRD: Purpose, promise, and positioning
+
+The PRD defines why Transcrypt exists, who it is for, and what outcomes it must guarantee.
+The brand inherits these constraints. It may not introduce themes, claims, metaphors, or tones that extend beyond the PRD’s intent.
+If the PRD does not promise a capability, the brand may not imply it.
+
+#### SAIS: Architecture, invariants, and system truth
+
+The SAIS defines sealed tenancy, deterministic behaviour, data isolation, evidence integrity, and the operational laws of the platform.
+The brand must never conflict with these architectural truths.
+If the SAIS defines low motion, strict isolation, or minimalism, the brand must reflect it.
+Brand expression cannot violate the platform’s physics.
+
+#### PDS: Behaviour, layout, and interaction rules
+
+The PDS defines how the product behaves in a user’s hands: states, spacing, hierarchy, error models, motion limits, and interaction patterns.
+The brand may define style and tone but must never override or contradict behavioural rules already codified in the PDS.
+If the PDS prohibits theatrics, celebration, or emotional language, the brand inherits those prohibitions.
+
+Together, these upstream documents form the non-negotiable substrate of the Brand Identity Guide.
+This guide expresses the system; it does not invent its own.
+
 ### 1.2.2 Downstream Influence on Marketing and Product
 
+Once defined, the Brand Identity Guide governs the expression layer across all downstream surfaces.
+Every asset, interface, and communication must follow the rules set here.
+
+This includes:
+
+#### Marketing surfaces
+
+Website, landing pages, blog, social media templates, advertising, presentations, print media, and any public-facing asset.
+All must use the approved tone, typography, colour system, spacing rules, and structural patterns.
+
+#### Product and application surfaces
+
+UI, dashboards, forms, states, tables, navigation, diagrams, and in-product communication.
+Styling, tone, iconography, layout choices, and visual metaphors must follow the guide exactly.
+Behaviour continues to be governed by the PDS; visual and verbal expression is governed by this guide.
+
+#### Documentation and communication
+
+User guides, internal docs, onboarding materials, email notifications, PDF exports, and compliance-facing outputs.
+These must adopt the same tone, typography, and visual identity to preserve consistency and trust.
+
+The Brand Identity Guide is therefore the binding contract for expression across Transcrypt.
+Upstream documents define intent, architecture, and behaviour.
+This guide defines how they look, sound, and present themselves in every real-world context.
+
+---
+
 ## 1.3 Intended Audience
+
+The Brand Identity Guide exists to maintain a single, consistent expression of Transcrypt across every surface. Although Transcrypt is developed by one person, the guide must serve all present and future roles involved in creating, publishing, or automating branded assets. Its audience therefore includes internal roles, automated systems, and any future external contributors.
+
 ### 1.3.1 Internal Teams
+
+“Internal teams” refers to every function involved in producing Transcrypt assets, even when those functions are carried out by a single individual. This includes:
+
+#### 1. Core roles
+
+Marketing, design, product, engineering, documentation, and operational communication.
+Even when performed by one person, these roles require consistent rules to prevent context-switch drift or stylistic inconsistency.
+
+#### 2. Functional personas
+
+Operational personas such as Brian (public-facing marketing voice), Ged (technical collaborator), and Flash (diagram generation) must follow this guide exactly.
+They do not have creative freedom; they inherit the brand constraints defined here.
+
+#### 3. Automated systems
+
+Static site generators, PDF export pipelines, template engines, CSS token systems, and any automated layout or content tools must pull their styling and tone from this guide.
+Automation must not generate alternative styles or “interpretations”.
+
+#### 4. Future roles
+
+If additional help is added later—contractors, illustrators, editors, or virtual assistants—this guide provides the binding rules for their output.
+No internal role, present or future, may deviate from the identity defined in this document.
+
 ### 1.3.2 External Partners
+
+External partners include any party outside Transcrypt who produces, modifies, or distributes branded materials. Even if no such partners exist now, this guide defines the rules they must follow if they are engaged in the future.
+
+#### 1. Scope of external work
+
+This includes design contractors, marketing freelancers, print vendors, video editors, illustrators, and event organisers.
+Any asset they create must conform to the rules defined here—typography, colour, layout, tone, spacing, and structural patterns.
+
+#### 2. No creative reinterpretation
+
+External partners are not permitted to “reinterpret” the brand, propose alternative directions, or introduce personal stylistic preferences.
+The identity is a fixed system, not a collaborative exploration.
+
+#### 3. Escalation requirements
+
+If a rule is unclear or appears to be missing, external partners must seek clarification rather than guess.
+Assumptions, approximations, or stylistic improvisations are not permitted.
+
+#### 4. Compliance across mediums
+
+The rules in this guide apply equally to digital, print, environmental, and social surfaces.
+No external contributor may relax constraints for convenience, format, or familiarity.
+
+---
 
 ## 1.4 Brand Philosophy and Identity Principles
 
+The brand exists to reduce anxiety, not to add noise. Every design, copy, and interaction decision must respect the following principles:
+
+1. **Clarity first**
+   If a choice exists between clever wording and clear wording, clear wins. If a visual treatment risks confusion, it is not allowed. Users must always know where they are, what they are looking at, and what happens next.
+
+2. **Calm by default**
+   The product operates in stressful contexts: audits, incidents, deadlines. The brand must counter that stress, not amplify it. No loud colour clashes, no aggressive motion, no dramatic language. Calm, measured, and predictable at all times.
+
+3. **Structure as reassurance**
+   Grids, spacing, and hierarchy are not aesthetic flourishes; they are signals that the system is ordered, thought through, and safe to trust. Layouts must feel deliberate: consistent margins, predictable typography, and repeatable patterns across screens.
+
+4. **Evidence over claims**
+   Wherever possible, show rather than tell. Progress indicators, timelines, and clear status states are preferred over marketing promises. The brand earns trust by exposing structure and evidence, not by insisting on its own credibility.
+
+5. **Neutral, human, and unbranded in tone**
+   The voice is human but restrained: no slang, no memes, no “on-trend” phrasing that will date quickly. Transcrypt speaks like a calm specialist who has seen these problems before and can explain them without ego.
+
+6. **Deterministic, not magical**
+   Transcrypt is powered by solid architecture and clear workflows, not “black box” magic. Avoid metaphors that suggest guessing, intuition, or AI wizardry. Emphasise repeatability, auditability, and explicit rules.
+
+7. **Single system, many surfaces**
+   Marketing site, app UI, docs, emails, and decks are all expressions of one system. Designers and writers may not “reinvent” the brand for each surface. Local variation is allowed only where this guide explicitly permits it.
+
+Any proposed deviation from these principles must be justified in writing and, if accepted, recorded as an explicit update under §10.4 Versioning and Release Management.
+
+---
+
 # 2. Core Brand Identity
 
+Transcrypt’s identity is not an aesthetic choice; it is a structural expression of the system described in the PRD, SAIS, and PDS. Where those documents define purpose, architecture, and behaviour, this section defines the internal character of the brand — the values, tone, and personality constraints that shape every visual and verbal decision. These principles ensure Transcrypt expresses itself with the same clarity, discipline, and determinism that govern the product itself. Nothing here is optional or inspirational. These are the rules that anchor all expression across product, marketing, documentation, and future surfaces.
+
 ## 2.1 Brand Values and Personality
+
+Transcrypt’s values and personality are grounded in the realities of security, compliance, and evidential systems. They reflect the calm, structured, and predictable nature of the platform, and they exist to minimise cognitive load, avoid theatrics, and maintain trust. These values flow directly from the architectural and behavioural constraints defined upstream; they are not creative inventions but system-derived requirements.
+
 ### 2.1.1 Primary Values
+
+#### 1. Clarity
+
+Every surface must prioritise readability, comprehension, and explicit meaning. The brand avoids ambiguity, jargon drift, decorative noise, and any element that obscures intent. Clarity is not a stylistic preference; it is a fulfilment of the PRD’s mandate to remove uncertainty and reduce cognitive load.
+
+#### 2. Structure
+
+Layouts, spacing, tone, and hierarchy must reflect the ordered, deterministic nature of the platform. Consistency is a security posture. The brand expresses this through predictable grids, stable tone, and unchanging rules.
+
+#### 3. Trust
+
+Trust is earned through visible restraint, reliability, and precision. The brand does not shout, oversell, or dramatise. It communicates as a steady, dependable system — the same way the architecture behaves.
+
+#### 4. Neutrality
+
+Transcrypt’s identity avoids emotional colour, humour, personality spikes, and conversational affect. Neutral language and calm visuals reduce stress and increase comprehension, which directly supports compliance workflows.
+
+#### 5. Calm
+
+Compliance and audits often create pressure. The brand counterbalances this with quiet surfaces, minimal motion, clear language, and stable layouts. Calmness is a functional requirement, not an aesthetic choice.
+
+#### 6. Evidence over assertion
+
+Statements are factual, grounded, and unexaggerated. The brand mirrors the evidence model in the product: claims are supported by structure, not flourish. Hyperbole, vague claims, and hype adjectives are prohibited.
+
+#### 7. Discipline
+
+Brand expression follows strict rules with no improvisation. Discipline ensures predictability and prevents drift as Transcrypt’s footprint expands. Every decision must reflect intentionality and constraint.
+
 ### 2.1.2 Emotional Tone
 
+Transcrypt’s tone is the verbal reflection of its architecture: calm, neutral, and deterministic. It avoids the emotional volatility common in consumer brands and the theatrical reassurance often found in security marketing.
+
+#### 1. Calm
+
+Language remains steady and unfussy. Sentences are short, factual, and free from rhetorical performance. No urgency unless legally required.
+
+#### 2. Neutral
+
+No humour, cuteness, cheerfulness, hype, or conversational flair. The tone is informational, not personality-driven.
+
+#### 3. Quietly confident
+
+The brand is authoritative without being forceful. It states facts plainly and avoids both bravado and apology. Confidence comes from clarity, not volume.
+
+#### 4. Factual
+
+Uses concrete nouns and direct verbs. Avoids hyperbolic descriptors. No unnecessary adjectives. No metaphors implying magic, journeys, transformation, or heroics.
+
+#### 5. Helpful, not friendly
+
+The brand assists the user without trying to entertain them. It prioritises user focus and cognitive stability over rapport or warmth.
+
+#### 6. Predictable
+
+All communications sound like they come from the same place. There are no mood shifts, tonal deviations, or stylistic surprises.
+
+#### 7. Non-manipulative
+
+No fear-based framing. No emotional appeals. Compliance is serious; the brand must be stabilising, not pressurising.
+
+---
+
 ## 2.2 Tone of Voice
+
+Transcrypt’s tone of voice is the verbal expression of its architecture. It must be as calm, predictable, and structured as the platform itself. Tone is not used to create personality or emotional colour; its purpose is to reduce cognitive load, avoid ambiguity, and reinforce trust. The voice used across all written communication — product UI, website, documentation, marketing assets, support responses, and exported reports — must follow the same rules with no exceptions. Tone is therefore a system boundary, not a stylistic option.
+
 ### 2.2.1 Writing Style
+
+Transcrypt’s writing style is grounded in clarity, restraint, and factual precision. It supports compliance work by eliminating unnecessary mental effort and by presenting information in a neutral, direct manner.
+
+#### 1. Clear
+
+Sentences are short, direct, and free of decorative language. Concrete nouns and direct verbs are preferred. Meaning must be explicit at first reading.
+
+#### 2. Calm
+
+The tone does not express excitement, urgency, apology, or emotional colour. No exclamation marks are used. No stylistic devices imply speed, drama, or pressure.
+
+#### 3. Factual
+
+Copy states what is required, what is happening, or what the user must do next. It avoids speculation, persuasion, and unfounded claims.
+
+#### 4. Neutral
+
+There is no humour, playfulness, or conversational friendliness. The writing does not mimic personality. It simply communicates information.
+
+#### 5. Sparse
+
+Adjectives are used only when necessary for meaning. There are no rhetorical flourishes, circular explanations, or narrative introductions. Brevity is a functional requirement.
+
+#### 6. Instructional
+
+Actions use clear imperatives: “Add device”, “Upload evidence”, “Review answers”. Conversational patterns such as “Let’s do this” or “Ready to continue?” are prohibited.
+
+#### 7. Consistent
+
+The same tone is used across all mediums. Marketing pages, blog posts, UI strings, and documentation must read as if written by a single steady system.
+
+#### 8. Non-emotive
+
+Copy must not express sympathy, encouragement, disappointment, enthusiasm, or reassurance. Compliance work requires cognitive stability, not emotional signalling.
+
+#### 9. Deterministic
+
+Language patterns remain stable over time. There are no mood shifts, stylistic experiments, or contextual tone changes. Writing must reflect the deterministic nature of the system.
+
 ### 2.2.2 Language Restrictions
 
+Language restrictions prevent drift, inconsistency, and accidental introduction of emotion or hype. Any content that violates these rules is considered off-brand.
+
+#### 1. No emotional or expressive language
+
+Avoid words suggesting excitement, delight, frustration, or friendliness.
+Examples of prohibited language: “excited”, “delighted”, “happy to help”, “don’t worry”.
+
+#### 2. No hype or marketing superlatives
+
+Prohibited: “cutting-edge”, “transformative”, “revolutionary”, “industry-leading”, “state-of-the-art”.
+If a claim cannot be demonstrated through evidence, it is not permitted.
+
+#### 3. No metaphors or figurative imagery
+
+Avoid metaphors about journeys, magic, unlocking, levelling up, heroics, or guidance companions.
+The brand communicates literally, not symbolically.
+
+#### 4. No conversational devices
+
+Prohibited: rhetorical questions, casual phrasing, emojis, slang, idioms, chatty statements, regionalisms, and informal contractions that add friendliness.
+
+#### 5. No artificial intensity
+
+Words suggesting urgency, speed, or alarm are banned unless mandated by regulation.
+Avoid: “immediately”, “urgent”, “critical”, “as soon as possible”.
+
+#### 6. No first-person subjectivity
+
+Avoid: “we believe”, “we think”, “in our view”.
+The brand is a structured system, not a personal perspective.
+
+#### 7. No apologies unless legally required
+
+Avoid: “Sorry about that”.
+Use neutral factual patterns: “This action failed. Try again.”
+
+#### 8. No over-reassurance
+
+Avoid: “You’re on track”, “Almost there”, “You’re all set”.
+Compliance surfaces must remain objective and unemotional.
+
+#### 9. No humour
+
+Humour, puns, and playful phrasing are prohibited across all surfaces.
+
+#### 10. No stylistic emphasis
+
+Avoid ALL CAPS for emphasis, elongated punctuation, decorative formatting, or typographic novelty.
+
+#### 11. Precise use of modal language
+
+Avoid weak modality: “might”, “could”, “should”, unless describing regulatory ambiguity.
+Prefer direct statements that reduce interpretation.
+
+---
+
 ## 2.3 Naming and Linguistic Rules
+
+Transcrypt’s naming system is part of its structural integrity. Every concept, feature, and action must use a single, literal, unambiguous name across the product, documentation, marketing, and all external surfaces. Naming is not a creative layer; it is an extension of the architecture. One concept must map to one term, and that term must remain stable. No synonyms, metaphors, or stylistic variants are permitted. Any name change is treated as a versioned event under §10.4.
+
 ### 2.3.1 Product Naming Rules
+
+#### 1. Company name
+
+The company name is always **Transcrypt**.
+No camel-case, spacing, punctuation, invented capitalisation, or stylised variants.
+The name is not abbreviated and not translated.
+
+#### 2. Product and module names
+
+Product and module names must be literal, descriptive, and concise.
+They must not imply capabilities not defined in the PRD or contradict architectural truths in the SAIS.
+
+Permitted pattern examples:
+
+* Transcrypt Essentials
+* Transcrypt Essentials Plus (tier descriptor only)
+
+Not permitted: invented words, thematic naming, metaphorical pack names, or emotive language.
+
+#### 3. Feature names
+
+Features must use the clearest possible noun for the concept they represent.
+Examples of canonical terms:
+
+* Evidence
+* Controls
+* Tasks
+* Reports
+* Scope
+* Devices
+* Users
+* Audit log
+
+These terms must appear identically in UI, documentation, PDFs, and the marketing site.
+
+Forbidden: synonyms such as “attachments”, “proof”, “files”, “entries”, “objects”, or “supporting documents” when referring to evidence.
+
+#### 4. Action names
+
+Actions use imperative form without conversational cushioning.
+Examples:
+
+* Add device
+* Upload evidence
+* Review answers
+* Export report
+* Delete entry
+
+Not permitted:
+“Let’s add your device”, “Go ahead and…”, “You’re ready to upload”.
+
+#### 5. Internal system names
+
+Terms such as tenant, environment names, pipelines, and internal identifiers may appear only in technical documentation (SAIS, developer notes).
+They must never appear in user-facing or marketing content.
+
 ### 2.3.2 Terminology Consistency
 
+#### 1. One term per concept
+
+Each concept has exactly one name.
+It is used everywhere without synonyms or contextual alternatives.
+
+#### 2. Framework naming
+
+External frameworks are written in their canonical forms:
+
+* Cyber Essentials
+* Cyber Essentials Plus
+* NIS2
+* UK GDPR
+* IEC 62443
+
+Never abbreviate Cyber Essentials as CE in user-facing content.
+Never invent stylised forms (“NIS-2”, “GDPR UK”).
+
+#### 3. Organisation vs tenant
+
+“Organisation” is the public-facing term.
+“Tenant” is technical and used only in architectural and engineering contexts.
+
+#### 4. Status language
+
+Statuses must be mutually exclusive, literal, and easily understood:
+
+* Not started
+* In progress
+* Pending review
+* Completed
+
+Avoid vague or expressive terms such as “Active”, “Ongoing”, “Almost there”, or “Working on it”.
+
+#### 5. Time language
+
+Use precise time expressions (e.g., “within 2 minutes”, “7 days”).
+Avoid vague expressions such as “soon”, “shortly”, or “in a while”.
+
+#### 6. Regulatory wording
+
+Terms that may imply legal guidance must be used with care and remain consistent.
+Where ambiguity exists, use the regulator’s original phrasing.
+
+#### 7. Environment names
+
+Local, Dev, Staging, and Production are internal references only.
+They may not appear in customer-facing copy or reports.
+
+#### 8. Terminology changes are versioned
+
+Any change to naming must be deliberate, justified, updated across all surfaces, and logged under §10.4 Versioning and Release Management.
+
+#### 9. Deterministic vocabulary
+
+Vocabulary must remain stable.
+No contextual renaming, no tone-based variants, no creative rephrasing.
+This ensures consistent comprehension and aligns with deterministic system behaviour.
+
+---
+
 ## 2.4 Tagline and Messaging Framework
+
+Transcrypt’s tagline and messaging framework defines the core verbal statements through which the brand expresses its purpose. These messages are not marketing slogans or emotional appeals; they are structured, literal, and system-aligned summaries of the PRD’s intent, the SAIS’s architectural guarantees, and the PDS’s behavioural constraints.
+Every public surface — homepage, app chrome, PDFs, documentation, slides, social — must draw from this framework to ensure consistent, predictable, and untheatrical communication. Messaging may not embellish, dramatise, or reinterpret the product’s purpose. It must remain grounded, clear, and calm at all times.
+
 ### 2.4.1 Tagline System
+
+#### 1. Primary tagline
+
+A single, high-level line used in hero surfaces, introduction blocks, and top-level presentations. It must be literal, calm, and aligned with Transcrypt’s structural promise.
+
+Examples of permitted forms:
+
+* **Compliance, without the confusion.**
+* **Clear. Measurable. Repeatable.**
+* **A simple, structured path to compliance.**
+* **Compliance you can prove.**
+
+The primary tagline must avoid hype, metaphor, emotional tone, or exaggerated claims. It may not imply AI magic, dramatic transformation, superior speed, or any capability not defined in the PRD or SAIS.
+
+#### 2. Secondary taglines
+
+Short supporting lines used in feature sections, subpages, documentation headers, or deck subtitles. These reinforce the core promise but remain restrained and factual.
+
+Examples:
+
+* **Structured workflows for real organisations.**
+* **Evidence handled safely and consistently.**
+* **Clear tasks. Predictable progress.**
+* **Designed for SMEs.**
+
+Secondary taglines must not drift stylistically from the primary tone. They expand context but do not reinterpret the product.
+
+#### 3. Tagline constraints
+
+All taglines must:
+
+* use plain language
+* make no unverified claims
+* avoid emotional colour
+* avoid metaphor
+* avoid theatrics or inspirational phrasing
+* match the Messaging Pillars in §1
+* remain stable across surfaces
+* be version-controlled if changed
+
+No tagline may suggest outcomes the product cannot guarantee.
+
 ### 2.4.2 Messaging Architecture
+
+The messaging architecture defines the structured hierarchy that governs how Transcrypt communicates across all channels. It prevents drift, ensures clarity, and ties all public statements back to the same small set of permitted ideas.
+
+#### 1. Core promise
+
+The top-level message all communication must reinforce.
+Permitted examples:
+
+* **Transcrypt removes uncertainty from cybersecurity compliance.**
+* **A clear, structured way to achieve compliance.**
+
+This message must remain literal, neutral, and grounded in the PRD.
+
+#### 2. Message pillars
+
+Every substantive message must align directly with one of the following:
+
+* Clarity over complexity
+* Trust through structure
+* Guided, not overwhelming
+* Confidence, not guesswork
+* Built for real organisations
+
+These pillars act as the foundation of all long-form and short-form messaging.
+
+#### 3. Explanatory messaging
+
+Used in product pages, documentation intros, onboarding, and presentations.
+Characteristics:
+
+* short
+* factual
+* non-emotive
+* describes behaviour, not aspiration
+
+Examples:
+
+* **Transcrypt shows what needs to be done and why it matters.**
+* **Evidence is stored and handled consistently.**
+* **Progress is always visible.**
+
+#### 4. Micro-messaging
+
+Used in UI, email notifications, PDF exports, and support templates.
+Examples:
+
+* **Report generated.**
+* **Pending review.**
+* **Task completed.**
+
+Micro-messaging must remain strictly literal and free from personality or warmth.
+
+#### 5. Forbidden messaging patterns
+
+The following are prohibited on all surfaces:
+
+* emotional appeals (“Don’t worry”, “You’ve got this”)
+* hype language (“transformative”, “revolutionary”)
+* fear-based messaging (“Your business is at risk!”)
+* metaphors (“compliance journey”, “unlock your potential”)
+* conversational tone (“Let’s get started”)
+* vague claims (“industry-leading platform”)
+* expressive or theatrical phrasing
+
+All messaging must remain neutral and factual.
+
+#### 6. Deterministic messaging rules
+
+Messaging must be stable across contexts and time.
+Permitted statements cannot be stylised, remixed, or rewritten based on channel or audience.
+Copy must reflect the same steady voice everywhere, matching the deterministic posture of the product.
+
+#### 7. Versioning
+
+Changes to taglines, message pillars, or architectural messaging require:
+
+* justification
+* review against PRD, SAIS, and PDS
+* system-wide updates
+* inclusion in §10.4 Versioning and Release Management
+
+---
 
 # 3. Logo System
 
+The logo system defines the *fixed, non-negotiable* visual core of Transcrypt.
+Where typography, colour, and layout establish tone, the logo system establishes identity: the symbolic anchor that carries the ideas of **sealed tenancy**, **containment**, and **deterministic structure** wherever the platform appears.
+
+This is not a creative playground and not a family of “fun alternates.”
+It is a governed asset: one primary mark, a tightly constrained set of secondary forms, and explicit rules for when each may be used. Every logo file in this section exists to prevent improvisation and to ensure that the brand expresses the same structural logic as the product and the architecture behind it.
+
+The Transcrypt monogram is built on symmetry, figure–ground clarity, and controlled negative space. Its geometry reflects the platform’s engineering principles:
+
+* **Symmetry** mirrors determinism, repeatability, and predictable outcomes.
+* **Vertical forms** reflect the audit spine: the unbroken path from requirement to verification.
+* **The enclosing arc** represents blast-radius containment and secure tenancy boundaries.
+* **Negative space** carries as much meaning as the filled forms, echoing the platform’s emphasis on visibility, absence of drift, and unambiguous separation.
+
+The rules that follow specify:
+
+* the **primary logo** and its approved orientations,
+* the **secondary and compact marks**,
+* the precise **clearspace and minimum sizes**,
+* the **restricted conditions** under which colour or orientation may change,
+* and the explicit catalogue of **incorrect usages**.
+
+Nothing outside these rules is permitted.
+Nothing inside these rules may be altered, redrawn, recoloured, recombined, or “interpreted.”
+This ensures that every appearance of Transcrypt — in UI, documentation, marketing, partner materials, or third-party environments — reflects the same engineered consistency as the platform itself.
+
+---
+
 ## 3.1 Primary Logo
+
+The primary logo is the authoritative expression of the Transcrypt identity. It consists of the monogram symbol — a precise geometric form built on symmetry, negative space, and controlled counter-shapes — paired with the Transcrypt wordmark in a fixed relationship. All other marks derive from this master asset and may not alter its proportions, geometry, or internal spacing.
+
+The monogram embodies the engineering principles that underpin the platform: determinism, separation, and sealed tenancy. Its mirrored vertical structures reflect repeatability and internal order; the outer curvature conveys containment and controlled blast-radius boundaries; the negative space resolves into implicit letterforms only when the geometry is intact. Any distortion, recolouring, rotation, or reinterpretation breaks the mark’s logic and is not permitted.
+
+The primary logo is used for all high-visibility brand surfaces, including the marketing site, product entry points, documentation covers, partnership decks, and any environment where Transcrypt must be unmistakably identified. It is also the reference asset from which secondary and compact variants inherit scale, spacing, stroke behaviour, and contrast conditions.
+
+Only the approved files provided in the brand asset library may be used. Manual redrawing, recombination, or typesetting around the symbol is prohibited. The following subsections define its approved colour variants and the only valid orientations and lockups.
+
+---
+
 ### 3.1.1 Colour Variants
+
+Colour variations exist to maintain clarity, contrast, and structural integrity of the monogram under different lighting conditions and background surfaces. They are not stylistic options. Each variant is a functional state of the same symbol, governed by strict rules to preserve the geometry, figure–ground balance, and recognisability of the mark.
+
+#### **Primary Black**
+
+The default form of the logo is solid black. This variant preserves the maximum fidelity of the monogram’s counter-shapes and delivers the strongest figure–ground separation. It is the standard for all marketing, product, and documentation surfaces where a light or neutral background is used.
+
+#### **Primary White (Inverse)**
+
+The inverse white variant is used on dark or saturated brand backgrounds. It does not introduce alternate strokes or outlines; the geometry remains identical to the black version, simply expressed in reverse polarity. This variant exists solely to maintain accessibility and contrast compliance.
+
+#### **Single-Colour Accent Variant**
+
+A single-colour accent version may be used in controlled environments where colour harmonisation is required inside the product UI. This variant uses exactly one approved brand colour and must pass the same contrast criteria as the primary black and white forms. It cannot be used for marketing, external collateral, or any context where the logo functions as a primary identifier.
+
+#### **Restrictions**
+
+These constraints apply to every colour state without exception:
+
+* No gradients, textures, transparencies, shadows, glows, or stroke effects.
+* No multicolour combinations or experimental palettes.
+* No low-contrast applications on photography, patterned surfaces, or tinted overlays unless the logo is placed inside an approved solid container.
+* No recolouring by third parties; only the defined variants may be used.
+
+The logo is a structural glyph, not a decorative graphic. Its colour states exist to defend clarity and recognisability, not to express mood or style.
+
+---
+
 ### 3.1.2 Orientation and Lockups
 
+The primary logo has a single correct orientation and a strictly limited set of approved lockups. These constraints protect the structural logic of the monogram — its symmetry, counter-form balance, and implied letterforms — and ensure that the logo behaves predictably across every surface.
+
+#### **Upright Orientation**
+
+The monogram exists in one orientation only: upright, with verticals aligned to the Cartesian grid. Rotating, skewing, or mirroring the form disrupts the negative-space relationships and breaks the implicit T/C reading.
+The logo must never be angled, tilted, or placed on a sloped baseline.
+
+#### **Horizontal Lockup**
+
+The horizontal lockup pairs the monogram on the left with the Transcrypt wordmark on the right. It is the default arrangement for marketing surfaces, web headers, product entry points, documentation covers, and any environment where clear linear reading is required.
+Spacing between the monogram and the wordmark is fixed and defined by the clearspace system in § 3.3; it may not be altered or visually “nudged.”
+
+#### **Vertical Lockup**
+
+The vertical lockup centres the monogram above the wordmark. This arrangement is used in tall or square formats: onboarding screens, splash pages, posters, social media tiles, and compressed layout blocks where the horizontal lockup loses presence.
+The vertical lockup maintains the same proportional relationship between symbol and wordmark as the horizontal version and must be used exactly as supplied.
+
+#### **Restrictions**
+
+These rules apply to all lockups:
+
+* No custom arrangements, re-stacking, or intermediary configurations.
+* No placing the wordmark above the monogram, or beside it on the right.
+* No surrounding text, taglines, or descriptors unless using an approved lockup containing them.
+* No changes to the spacing, scale ratio, or alignment relationship between symbol and wordmark.
+* No third-party “optimised” or redrawn lockups; the distributed assets are the only valid versions.
+
+The lockup system is deliberately minimal and deterministic. It ensures that the logo maintains the same structural logic wherever it appears — whether in tight UI environments or full-width marketing layouts.
+
+---
+
 ## 3.2 Secondary and Compact Logos
-### 3.2.1 Use Cases
-### 3.2.2 Restrictions
+
+Secondary and compact logos are functional reductions of the Transcrypt monogram. They exist to maintain brand continuity in environments where the full primary lockup either does not fit or would compromise clarity. These forms are not alternatives, stylistic variations, or interpretive marks. They are context-specific expressions of the same geometry that defines the primary symbol.
+
+The secondary mark uses the monogram alone. Compact marks apply this same geometry at extreme scales or inside constrained shapes, with only the minimum stroke or pixel compensation required for legibility. No other simplification or reinterpretation is permitted. Every variant inherits directly from `tc.svg` and must preserve the monogram’s symmetry, counterform logic, and negative-space balance.
+
+---
+
+### **3.2.1 Use Cases**
+
+Secondary and compact marks serve environments where clarity, scale, or system integration demands a symbol-only representation of Transcrypt. Each use case is strictly defined.
+
+#### **Application Shell and Navigation**
+
+Inside the Essentials app and future modules, the monogram functions as the anchor for the product’s interface:
+
+* Top-left app shell logo at 24–32px.
+* Collapsed sidebar mode, where only icons are visible.
+* Navigation drawers, mobile headers, and compact UI states.
+
+The symbol provides a stable point of orientation without overwhelming functional UI.
+
+#### **Small-Scale and Micro-Scale Icons**
+
+At very small sizes — favicons, pinned shortcuts, toolbar icons — a compact version of the monogram is used. This variant retains the exact silhouette of the monogram with stroke or pixel-fitting adjustments only where required for raster clarity.
+
+Examples include:
+
+* Browser tabs (16px / 32px).
+* OS-level pinned or shortcut icons.
+* Compact in-product status markers or badges.
+
+The geometry remains the same; only technical compensations differ.
+
+#### **Technical Documentation and Diagrams**
+
+The symbol is used as a structural anchor in diagrams and schematics in the SAIS, PDS, and operational documentation:
+
+* Identification of Transcrypt’s trust boundary.
+* Label for orchestrators, policy engines, or tenant isolation components.
+* Visual reinforcement of “Transcrypt realm” within architectural compositions.
+
+Its purpose is to signal system ownership, not to act as decoration.
+
+#### **Identity Touchpoints and Avatars**
+
+In contexts where brand representation must be compact — social profiles, internal communications platforms, partner dashboards — the monogram may be placed within an approved square or circular container.
+
+Use cases include:
+
+* LinkedIn or GitHub organisation avatars.
+* Slack, Teams, or Discord workspace icons.
+* Identity thumbnails in partner systems.
+
+These avatars are not marketing assets; they are only for identity presence.
+
+---
+
+### **3.2.2 Restrictions**
+
+Secondary and compact marks are tightly controlled to prevent fragmentation, reinterpretation, or brand drift.
+
+#### **No Alternate Symbols**
+
+There are no micro-logos, shortforms, cropped arcs, isolated stems, or simplified shapes.
+The monogram is the monogram.
+Every secondary or compact form must derive directly from its geometry.
+
+#### **No Replacement of the Primary Logo**
+
+Secondary or compact marks cannot be used:
+
+* On marketing site heroes or headers.
+* On external proposals or executive decks.
+* On product launch surfaces or public-facing documentation covers.
+* In any environment where Transcrypt must be introduced, not merely recognised.
+
+The primary lockup is used for brand introduction.
+The monogram-only mark is used for brand continuity.
+
+#### **No Unapproved Containers or Shapes**
+
+The monogram may not be placed inside arbitrary shapes such as capsules, rounded rectangles, hexagons, or decorative frames.
+Only the approved square or circular containers for avatars and app icons are permitted.
+
+#### **No Colour Deviation**
+
+Secondary and compact marks follow the same colour rules as § 3.1.1:
+
+* Black, white, or the single approved accent.
+* No gradients, shadows, glows, or overlays.
+* No recolouring by partners, vendors, or customer systems.
+
+#### **No Alteration of Ratios or Stroke Geometry**
+
+Except for the minimal stroke adjustments defined for micro-scale clarity:
+
+* No thickening or thinning of strokes.
+* No widening or compressing of the symbol.
+* No rounding, softening, or redrawing of corners.
+* No substituting geometric primitives.
+
+The symbol’s proportions are invariant.
+Pixel-fitting is a technical adjustment, not a design reinterpretation.
+
+---
 
 ## 3.3 Clearspace and Minimum Size
 ### 3.3.1 Clearspace Rules
