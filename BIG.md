@@ -66,6 +66,8 @@ Together, these elements define how the brand speaks, behaves, and appears. They
 ### 1.3.1 Internal Teams
 ### 1.3.2 External Partners
 
+## 1.4 Brand Philosophy and Identity Principles
+
 # 2. Core Brand Identity
 
 ## 2.1 Brand Values and Personality
@@ -80,7 +82,7 @@ Together, these elements define how the brand speaks, behaves, and appears. They
 ### 2.3.1 Product Naming Rules
 ### 2.3.2 Terminology Consistency
 
-## 2.3 Tagline and Messaging Framework   ← **THIS IS WHERE IT GOES**
+## 2.3 Tagline and Messaging Framework
 ### 2.3.1 Tagline System
 ### 2.3.2 Messaging Architecture
 
@@ -196,6 +198,18 @@ Together, these elements define how the brand speaks, behaves, and appears. They
 ### 8.4.1 Pattern Library
 ### 8.4.2 Restrictions on Pattern Placement
 
+## 8.5 Motion & Interaction Identity
+### 8.5.1 Motion Principles
+### 8.5.2 Easing, Duration, and Behaviour Rules
+### 8.5.3 Interaction Feedback Standards
+### 8.5.4 Prohibited Motion
+
+## 8.6 Audio & Sonic Identity
+### 8.6.1 When Audio Is Allowed
+### 8.6.2 Default Prohibition Rules
+### 8.6.3 Tone and Behaviour Requirements
+### 8.6.4 Third-Party / Partner Restrictions
+
 # 9. Marketing Application
 
 ## 9.1 Website Brand Usage
@@ -214,6 +228,11 @@ Together, these elements define how the brand speaks, behaves, and appears. They
 ### 9.4.1 Business Cards
 ### 9.4.2 Posters, Banners, and Signage
 
+## 9.5 Application Examples
+### 9.5.1 Correct Usage Examples
+### 9.5.2 Incorrect Usage Examples
+### 9.5.3 Extended Scenario Examples
+
 # 10. Governance and Accessibility
 
 ## 10.1 Usage Rules and Change Control
@@ -227,6 +246,8 @@ Together, these elements define how the brand speaks, behaves, and appears. They
 ## 10.3 Brand Consistency Audits
 ### 10.3.1 Audit Checklist
 ### 10.3.2 Issue Escalation
+
+## 10.4 Versioning and Release Management 
 
 # 11. Asset Delivery
 
@@ -245,3 +266,11 @@ Together, these elements define how the brand speaks, behaves, and appears. They
 ## 11.4 Icon and Illustration Library
 ### 11.4.1 Delivery Format
 ### 11.4.2 File Organisation
+
+# 12. Legal, Localisation, and Brand Protection
+## 12.1 Trademark and Copyright Usage
+## 12.2 Third-Party and Co-Branding Rules
+## 12.3 Localisation Guidelines
+## 12.4 Photography and Image Rights
+## 12.5 Legal Notices in Marketing and Product
+## 12.6 Prohibited Uses and Violations
