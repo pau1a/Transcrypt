@@ -146,7 +146,21 @@ Together, these elements define how the brand speaks, behaves, and appears. They
 
 # 6. Iconography and Illustration Style
 
+Transcrypt’s icon system is built on a curated, forked subset of Feather Icons (MIT-licensed). The Feather set provides the geometric base: a 24×24 grid, minimal outlines, and neutral metaphors. All icons used in Transcrypt must conform to the rules in this section, regardless of their origin. Raw Feather assets are never used directly without being brought into the Transcrypt icon library and governed by §6.5.
+
 ## 6.1 Icon Style Principles
+
+Icons in Transcrypt are simple, neutral line icons based on a 24×24 grid. The visual model is derived from Feather Icons: clean outlines, no fills by default, and no expressive or playful metaphors. Icons exist to support comprehension, not to add character or decoration.
+
+All icons must:
+- Use a 24×24 canvas
+- Follow a single, consistent stroke weight
+- Avoid texture, gradients, shadows, and depth
+- Use widely recognised metaphors only
+- Remain visually quiet and subordinate to typography and layout
+
+---
+
 ### 6.1.1 Line Weight and Geometry
 ### 6.1.2 Contrast and Legibility
 
@@ -161,6 +175,75 @@ Together, these elements define how the brand speaks, behaves, and appears. They
 ## 6.4 Do and Don’t Patterns
 ### 6.4.1 Acceptable Use
 ### 6.4.2 Forbidden Use
+
+## 6.5 Icon Creation Governance
+
+Icons are one of the most easily corrupted parts of a brand system. Without strict governance, teams introduce inconsistent stroke weights, proportions, and visual metaphors. This section defines when new icons may be added, how they must be constructed, and how the Feather-based library is curated over time.
+
+### 6.5.1 Feather as the Base Set
+
+Transcrypt uses a curated subset of Feather Icons as its geometric and stylistic base. Only icons that align with Transcrypt’s tone and metaphors are admitted into the library. Raw Feather assets must be:
+
+- Reviewed for metaphor clarity
+- Adjusted where necessary to match Transcrypt stroke, corner, and alignment rules
+- Renamed to follow the icon naming scheme in §6.5.3
+
+No other third-party icon libraries are permitted.
+
+### 6.5.2 When New Icons May Be Created
+
+New icons (whether adapted from Feather or drawn from scratch) may only be introduced when:
+
+- A concept cannot be expressed using an existing Transcrypt icon
+- The concept is essential to product clarity
+- The metaphor is widely understood and not culturally ambiguous
+- The icon can be expressed within the existing 24×24 geometric model
+
+New icons must not be created for:
+- Decorative or campaign-specific purposes
+- Emotional expression or brand “personality”
+- Concepts that can be expressed with labels alone
+
+### 6.5.3 Naming and Versioning Rules
+
+All icons are stored in the Transcrypt icon library and named using:
+
+`icon-[concept]-[variant]-vX.Y.svg`
+
+Examples:
+- `icon-shield-outline-v1.0.svg`
+- `icon-upload-default-v1.1.svg`
+
+Rules:
+- Concept names are short, functional nouns
+- Variants are `outline`, `solid`, or `default` (solid only if explicitly allowed later)
+- Versioning follows the semantic scheme in §10.4
+
+Feather’s original filenames are not used in product; they are internal to upstream source only.
+
+### 6.5.4 Approval Workflow
+
+Every icon added or modified must pass:
+
+1. **Purpose review** – do we actually need an icon here?
+2. **Geometry review** – 24×24 grid, stroke weight, corner radius, optical balance
+3. **Accessibility review** – legible at small sizes, clear on light and dark backgrounds
+4. **System review** – consistent with existing icon set and layout rules
+5. **Versioning and archiving** – old versions retained; changes logged per §10.4
+
+### 6.5.5 Prohibited Icon Constructs
+
+The following are not allowed in the Transcrypt icon system, Feather or otherwise:
+
+- Multi-colour icons
+- Gradients, shadows, depth
+- Playful or metaphor-heavy icons (e.g., mascots, faces, cartoons)
+- Icons that imply celebration or emotion (confetti, fireworks, expressive faces)
+- Icons with excessive internal detail that collapse at small sizes
+
+If a Feather icon violates these rules, it must not be imported into the Transcrypt library.
+
+---
 
 # 7. Imagery and Photography
 
@@ -466,7 +549,61 @@ No fallback may present a broken or partially styled identity.
 
 ## 11.4 Icon and Illustration Library
 ### 11.4.1 Delivery Format
+
+All icons are delivered as optimised SVG files through the Transcrypt icon library. Consumers must not pull directly from upstream Feather packages. Only the curated, Transcrypt-governed set may be used in product, marketing, or documentation.
+
+The library includes:
+- Core UI icons (navigation, actions, status)
+- Compliance and security metaphors (evidence, controls, reports, shields)
+- A small set of supporting symbols required by the Essentials App
+
 ### 11.4.2 File Organisation
+
+Icons are organised by functional group, not by their original Feather naming:
+
+- `core/` – generic UI actions (add, edit, delete, search, filter)
+- `navigation/` – menu, back, forward, external link
+- `status/` – info, warning, error, success
+- `compliance/` – shield, checklist, evidence, report
+- `system/` – settings, user, tenant, integration
+
+Feather remains an upstream source only. The Transcrypt icon library is the single source of truth for all shipped icon assets.
+
+### 11.4.3 Core Icon Set (Initial Release)
+
+The Core Icon Set defines the minimum viable group of icons required for the Transcrypt Essentials App, website, and documentation. These icons are based on curated and geometry-corrected Feather Icons and represent the canonical assets for v1 of the identity system.
+
+Each icon listed below exists in the `/assets/icons/` directory and follows the naming, geometry, and versioning rules defined in §6.5.
+
+#### Navigation & Interface
+- `icon-menu-default-v1.0.svg`
+- `icon-arrow-left-default-v1.0.svg`
+- `icon-arrow-right-default-v1.0.svg`
+- `icon-external-link-default-v1.0.svg`
+
+#### Actions
+- `icon-add-default-v1.0.svg`
+- `icon-edit-default-v1.0.svg`
+- `icon-delete-default-v1.0.svg`
+- `icon-upload-default-v1.0.svg`
+- `icon-download-default-v1.0.svg`
+
+#### Status & Feedback
+- `icon-info-default-v1.0.svg`
+- `icon-warning-default-v1.0.svg`
+- `icon-error-default-v1.0.svg`
+- `icon-success-default-v1.0.svg`
+
+#### Compliance & Security
+- `icon-shield-default-v1.0.svg`
+- `icon-checklist-default-v1.0.svg`
+- `icon-file-default-v1.0.svg`
+- `icon-evidence-default-v1.0.svg`
+- `icon-report-default-v1.0.svg`
+
+This set forms the baseline. New icons may only be added through the governance workflow defined in §6.5.
+
+---
 
 # 12. Legal, Localisation, and Brand Protection
 ## 12.1 Trademark and Copyright Usage
