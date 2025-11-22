@@ -82,9 +82,9 @@ Together, these elements define how the brand speaks, behaves, and appears. They
 ### 2.3.1 Product Naming Rules
 ### 2.3.2 Terminology Consistency
 
-## 2.3 Tagline and Messaging Framework
-### 2.3.1 Tagline System
-### 2.3.2 Messaging Architecture
+## 2.4 Tagline and Messaging Framework
+### 2.4.1 Tagline System
+### 2.4.2 Messaging Architecture
 
 # 3. Logo System
 
