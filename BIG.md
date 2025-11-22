@@ -210,6 +210,12 @@ Together, these elements define how the brand speaks, behaves, and appears. They
 ### 8.6.3 Tone and Behaviour Requirements
 ### 8.6.4 Third-Party / Partner Restrictions
 
+## 8.7 Wireframes and Structural Examples
+### 8.7.1 Purpose of Wireframes
+### 8.7.2 Core Layout Wireframes
+### 8.7.3 Form and Flow Wireframes
+### 8.7.4 Do and Don’t Wireframe Patterns
+
 # 9. Marketing Application
 
 ## 9.1 Website Brand Usage
