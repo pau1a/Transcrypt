@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Transcrypt – Colour Token Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      /* Primary palette – provisional values */
+
+      --brand-base-900: #020617;   /* deep engineered base */
+      --brand-base-800: #0f172a;   /* base variant */
+
+      --brand-surface-0: #ffffff;  /* pure light surface */
+      --brand-surface-50: #f9fafb; /* neutral light surface */
+      --brand-surface-100: #f3f4f6;/* structured light */
+
+      --accent-500: #3b82f6;       /* cerulean mid */
+      --accent-300: #93c5fd;       /* cerulean soft */
+      --accent-700: #1d4ed8;       /* cerulean deep */
+
+      --black: #000000;
+      --white: #ffffff;
+
+      /* Filigree (industrial violet) – provisional */
+
+      --filigree-violet-50:  #f5f3ff;
+      --filigree-violet-100: #e4ddff;
+      --filigree-violet-200: #c4b5fd;
+      --filigree-violet-300: #8b5cf6;
+
+      /* Secondary semantic – provisional Tailwind-ish */
+
+      --success-bg: #ecfdf5;
+      --success-border: #bbf7d0;
+      --success-text: #166534;
+
+      --warn-bg: #fffbeb;
+      --warn-border: #fed7aa;
+      --warn-text: #92400e;
+
+      --err-bg: #fef2f2;
+      --err-border: #fecaca;
+      --err-text: #b91c1c;
+
+      /* Neutral greyscale – slate-ish */
+
+      --neutral-900: #111827;
+      --neutral-800: #1f2937;
+      --neutral-700: #374151;
+      --neutral-600: #4b5563;
+      --neutral-500: #6b7280;
+      --neutral-400: #9ca3af;
+      --neutral-300: #d1d5db;
+      --neutral-200: #e5e7eb;
+      --neutral-100: #f3f4f6;
+      --neutral-50: #f9fafb;
+
+      /* Export / print-safe – provisional */
+
+      --export-accent-safe: #2563eb;   /* slightly deeper cerulean */
+      --export-neutral-safe: #111827;  /* deep neutral */
+      --export-text-primary: #111827;  /* print-safe text */
+      --export-text-secondary: #4b5563;
+
+      /* Layout/typography */
+
+      --radius-card: 12px;
+      --radius-pill: 999px;
+
+      --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.18);
+      --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.12);
+
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: var(--font-sans);
+      background: radial-gradient(circle at top, #1f2937 0, #020617 50%, #020617 100%);
+      color: var(--neutral-50);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    h1, h2, h3, h4 {
+      margin: 0;
+      font-weight: 600;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.35rem;
+    }
+
+    h2 {
+      font-size: 1.3rem;
+      margin-bottom: 0.15rem;
+    }
+
+    h3 {
+      font-size: 1.05rem;
+    }
+
+    p {
+      margin: 0.1rem 0 0.35rem;
+      font-size: 0.9rem;
+      color: var(--neutral-300);
+    }
+
+    .section {
+      margin-top: 28px;
+      padding: 18px 18px 20px;
+      border-radius: 16px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(75, 85, 99, 0.9);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .section + .section {
+      margin-top: 20px;
+    }
+
+    .section-header {
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(55, 65, 81, 0.7);
+      padding-bottom: 10px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    @media (min-width: 880px) {
+      .grid.cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .grid.cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .grid.cols-6 {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+    }
+
+    .swatch-card {
+      border-radius: var(--radius-card);
+      background: rgba(15, 23, 42, 0.98);
+      border: 1px solid rgba(55, 65, 81, 0.85);
+      overflow: hidden;
+      font-size: 0.8rem;
+      box-shadow: var(--shadow-subtle);
+      display: flex;
+      flex-direction: column;
+      min-height: 140px;
+    }
+
+    .swatch-chip {
+      height: 64px;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    .swatch-body {
+      padding: 8px 9px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .swatch-name {
+      font-weight: 500;
+      color: var(--neutral-50);
+      font-size: 0.8rem;
+    }
+
+    .swatch-token {
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.75rem;
+      color: var(--neutral-300);
+      word-break: break-all;
+    }
+
+    .swatch-note {
+      font-size: 0.75rem;
+      color: var(--neutral-400);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      padding: 3px 8px;
+      font-size: 0.7rem;
+      color: var(--neutral-200);
+      background: rgba(15, 23, 42, 0.92);
+    }
+
+    .tag-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-500);
+      flex-shrink: 0;
+    }
+
+    .demo-row {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(55, 65, 81, 0.8);
+      font-size: 0.82rem;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .btn {
+      border-radius: var(--radius-pill);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border: 1px solid transparent;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-500), var(--accent-700));
+      color: var(--white);
+      border-color: rgba(37, 99, 235, 0.8);
+      box-shadow: 0 10px 28px rgba(37, 99, 235, 0.6);
+    }
+
+    .btn-ghost {
+      border-color: rgba(148, 163, 184, 0.8);
+      color: var(--neutral-200);
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    .btn-outline {
+      border-color: var(--accent-500);
+      color: var(--accent-300);
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: var(--radius-pill);
+      padding: 3px 8px;
+      font-size: 0.7rem;
+      border-width: 1px;
+      border-style: solid;
+    }
+
+    .pill-success {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--success-text);
+    }
+
+    .pill-warn {
+      background: var(--warn-bg);
+      border-color: var(--warn-border);
+      color: var(--warn-text);
+    }
+
+    .pill-error {
+      background: var(--err-bg);
+      border-color: var(--err-border);
+      color: var(--err-text);
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .alert {
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.78rem;
+      margin-top: 6px;
+      border-width: 1px;
+      border-style: solid;
+    }
+
+    .alert-success {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--success-text);
+    }
+
+    .alert-warn {
+      background: var(--warn-bg);
+      border-color: var(--warn-border);
+      color: var(--warn-text);
+    }
+
+    .alert-error {
+      background: var(--err-bg);
+      border-color: var(--err-border);
+      color: var(--err-text);
+    }
+
+    .export-card {
+      border-radius: var(--radius-card);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: var(--brand-surface-0);
+      color: var(--export-text-primary);
+      padding: 10px 12px;
+      font-size: 0.8rem;
+      box-shadow: var(--shadow-subtle);
+      max-width: 420px;
+    }
+
+    .export-heading {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .export-sub {
+      font-size: 0.78rem;
+      color: var(--export-text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .export-bar {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--export-neutral-safe);
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .export-bar-inner {
+      height: 100%;
+      width: 72%;
+      background: var(--export-accent-safe);
+    }
+
+    .mono {
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.75rem;
+    }
+
+    .hero-head {
+      margin-bottom: 16px;
+    }
+
+    .hero-eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.7rem;
+      color: var(--neutral-400);
+      margin-bottom: 4px;
+    }
+
+    .accent-text {
+      background: linear-gradient(135deg, var(--accent-300), var(--accent-700));
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .filigree-line {
+      border-bottom: 1px solid var(--filigree-violet-200);
+    }
+
+    .filigree-footnote {
+      font-size: 0.72rem;
+      color: #fff;
+      background: linear-gradient(
+        135deg,
+        rgba(15, 23, 42, 0.97),
+        rgba(139, 92, 246, 0.25)
+      );
+      border-radius: 10px;
+      padding: 6px 9px;
+      border: 1px solid var(--filigree-violet-200);
+    }
+
+    .filigree-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: var(--radius-pill);
+      padding: 3px 8px;
+      font-size: 0.7rem;
+      border: 1px solid var(--filigree-violet-300);
+      background: var(--filigree-violet-50);
+      color: #312e81;
+    }
+
+    .filigree-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--filigree-violet-300);
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header / Hero -->
+  <header class="hero-head">
+    <div class="hero-eyebrow">Transcrypt · Colour Tokens</div>
+    <h1>Colour system demo</h1>
+    <p>
+      Provisional values for the Transcrypt palette, wired to tokens from <span class="mono">Appendix A</span>.
+      This page exists to check legibility, hierarchy, and behaviour – not to sell anything.
+    </p>
+    <div class="demo-row">
+      <span class="tag">
+        <span class="tag-dot"></span>
+        Primary base · surface · <span class="accent-text">cerulean accent</span>
+      </span>
+    </div>
+  </header>
+
+  <!-- Primary palette -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Primary palette</h2>
+      <p>Engineered base, light surfaces, cerulean accent, and black/white extremes – the colours that actually carry the brand.</p>
+    </div>
+
+    <div class="grid cols-3">
+      <!-- Engineered base 900 -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--brand-base-900);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Engineered base 900</div>
+          <div class="swatch-token">--brand-base-900</div>
+          <div class="swatch-note">Deep backdrop for high-authority surfaces.</div>
+        </div>
+      </div>
+
+      <!-- Engineered base 800 -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--brand-base-800);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Engineered base 800</div>
+          <div class="swatch-token">--brand-base-800</div>
+          <div class="swatch-note">Variant base for panels, nav, and chrome.</div>
+        </div>
+      </div>
+
+      <!-- Accent 500 -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--accent-500);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Cerulean accent 500</div>
+          <div class="swatch-token">--accent-500</div>
+          <div class="swatch-note">Primary point of focus; CTAs and key state.</div>
+        </div>
+      </div>
+
+      <!-- Accent 300 -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--accent-300);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Cerulean accent 300</div>
+          <div class="swatch-token">--accent-300</div>
+          <div class="swatch-note">Soft accent for hovers, subtle emphasis.</div>
+        </div>
+      </div>
+
+      <!-- Accent 700 -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--accent-700);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Cerulean accent 700</div>
+          <div class="swatch-token">--accent-700</div>
+          <div class="swatch-note">Deep accent; primary buttons, critical focus.</div>
+        </div>
+      </div>
+
+      <!-- Surfaces -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: linear-gradient(135deg, var(--brand-surface-0), var(--brand-surface-100));"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Light surfaces</div>
+          <div class="swatch-token">--brand-surface-0 / -50 / -100</div>
+          <div class="swatch-note">Cards, documents, export surfaces.</div>
+        </div>
+      </div>
+
+      <!-- Black / White extremes -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: linear-gradient(90deg, var(--black) 0%, var(--white) 100%);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Black / White extremes</div>
+          <div class="swatch-token">--black / --white</div>
+          <div class="swatch-note">Typography, schematics, hard-contrast elements.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-row">
+      <div>Primary buttons and focus demo:</div>
+      <div class="btn-row">
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-outline">Secondary action</button>
+        <button class="btn btn-ghost">Ghost / quiet action</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Secondary semantic -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Secondary semantic colours</h2>
+      <p>State, not personality. Success, warning, and error only.</p>
+    </div>
+
+    <div class="grid cols-3">
+      <!-- Success -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--success-bg); border-bottom-color: var(--success-border);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Success</div>
+          <div class="swatch-token">--success-bg / -border / -text</div>
+          <div class="swatch-note">Valid evidence, complete flows, healthy state.</div>
+        </div>
+      </div>
+
+      <!-- Warning -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--warn-bg); border-bottom-color: var(--warn-border);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Warning</div>
+          <div class="swatch-token">--warn-bg / -border / -text</div>
+          <div class="swatch-note">Expiring exceptions, attention required.</div>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--err-bg); border-bottom-color: var(--err-border);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Error</div>
+          <div class="swatch-token">--err-bg / -border / -text</div>
+          <div class="swatch-note">Invalid state, blocked actions, failed checks.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-row">
+      <div>Pills and alerts demo:</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;">
+        <span class="pill pill-success">
+          <span class="pill-dot"></span>
+          Evidence set is complete
+        </span>
+        <span class="pill pill-warn">
+          <span class="pill-dot"></span>
+          2 exceptions expiring soon
+        </span>
+        <span class="pill pill-error">
+          <span class="pill-dot"></span>
+          Evaluation blocked
+        </span>
+      </div>
+      <div style="display:grid; gap:6px; margin-top:8px;">
+        <div class="alert alert-success">All core controls have valid, locked evidence.</div>
+        <div class="alert alert-warn">Some prompts are incomplete. Review before running evaluation.</div>
+        <div class="alert alert-error">Latest export cannot be generated until errors are resolved.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Neutral greys -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Neutral foundations</h2>
+      <p>Greys that define hierarchy, not mood. No extra “personality”.</p>
+    </div>
+
+    <div class="grid cols-6">
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--neutral-900);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Neutral 900</div>
+          <div class="swatch-token">--neutral-900</div>
+          <div class="swatch-note">Primary text on light surfaces.</div>
+        </div>
+      </div>
+
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--neutral-800);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Neutral 800</div>
+          <div class="swatch-token">--neutral-800</div>
+          <div class="swatch-note">Strong headings, high-contrast UI.</div>
+        </div>
+      </div>
+
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--neutral-700);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Neutral 700</div>
+          <div class="swatch-token">--neutral-700</div>
+          <div class="swatch-note">Secondary headings, labels.</div>
+        </div>
+      </div>
+
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--neutral-600);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Neutral 600</div>
+          <div class="swatch-token">--neutral-600</div>
+          <div class="swatch-note">Body text on dark panels.</div>
+        </div>
+      </div>
+
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--neutral-500);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Neutral 500</div>
+          <div class="swatch-token">--neutral-500</div>
+          <div class="swatch-note">Muted text, meta info.</div>
+        </div>
+      </div>
+
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--neutral-400);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Neutral 400</div>
+          <div class="swatch-token">--neutral-400</div>
+          <div class="swatch-note">Labels, tertiary annotations.</div>
+        </div>
+      </div>
+
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--neutral-300);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Neutral 300</div>
+          <div class="swatch-token">--neutral-300</div>
+          <div class="swatch-note">Borders and separators.</div>
+        </div>
+      </div>
+
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--neutral-200);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Neutral 200</div>
+          <div class="swatch-token">--neutral-200</div>
+          <div class="swatch-note">Soft dividers, table lines.</div>
+        </div>
+      </div>
+
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--neutral-100);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Neutral 100</div>
+          <div class="swatch-token">--neutral-100</div>
+          <div class="swatch-note">Lifted background for light cards.</div>
+        </div>
+      </div>
+
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--neutral-50);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Neutral 50</div>
+          <div class="swatch-token">--neutral-50</div>
+          <div class="swatch-note">Lowest contrast light background.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-row">
+      <div>Neutral usage demo (on light):</div>
+      <div style="margin-top:6px; padding:10px 12px; border-radius:10px; background:var(--brand-surface-0); color:var(--neutral-800); box-shadow:var(--shadow-subtle); max-width:520px;">
+        <div style="font-size:0.88rem; font-weight:600; margin-bottom:2px;">Tenant “Acme Manufacturing”</div>
+        <div style="font-size:0.8rem; color:var(--neutral-500); margin-bottom:6px;">
+          Neutral-driven layout: heading, subtext, and meta all use different greys, not different colours.
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; font-size:0.76rem; color:var(--neutral-600);">
+          <span>Evidence items: <span style="color:var(--neutral-900); font-weight:500;">32 / 46</span></span>
+          <span>·</span>
+          <span>Controls mapped: <span style="color:var(--neutral-900); font-weight:500;">83%</span></span>
+          <span>·</span>
+          <span>Next evaluation window: <span style="color:var(--neutral-900); font-weight:500;">30 days</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filigree / micro-detail -->
+  <section class="section">
+    <div class="section-header filigree-line">
+      <h2>Filigree / micro-detail</h2>
+      <p>Industrial violet, reserved for metadata, rulers, and document ornament – never UI chrome or semantic state.</p>
+    </div>
+
+    <div class="grid cols-4">
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--filigree-violet-50);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Filigree 50</div>
+          <div class="swatch-token">--filigree-violet-50</div>
+          <div class="swatch-note">Page tints, subtle document backgrounds.</div>
+        </div>
+      </div>
+
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--filigree-violet-100);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Filigree 100</div>
+          <div class="swatch-token">--filigree-violet-100</div>
+          <div class="swatch-note">Gridlines, cover-page bands, folios.</div>
+        </div>
+      </div>
+
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--filigree-violet-200);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Filigree 200</div>
+          <div class="swatch-token">--filigree-violet-200</div>
+          <div class="swatch-note">Rules, dividers, diagram trims.</div>
+        </div>
+      </div>
+
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--filigree-violet-300);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Filigree 300</div>
+          <div class="swatch-token">--filigree-violet-300</div>
+          <div class="swatch-note">Sparing accents for headings, badges.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-row">
+      <div>Document-style filigree demo:</div>
+      <div style="margin-top:8px; display:flex; flex-direction:column; gap:8px; max-width:540px;">
+        <div style="padding:8px 10px; border-radius:10px; background:var(--brand-surface-0); border:1px solid var(--filigree-violet-200); position:relative;">
+          <div style="font-size:0.78rem; letter-spacing:0.16em; text-transform:uppercase; color:#4b5563; margin-bottom:3px;">
+            Transcrypt · SAIS
+          </div>
+          <div style="font-size:0.9rem; font-weight:600; color:#111827; margin-bottom:2px;">
+            § 8.10 Compliance Evidence and Verification
+          </div>
+          <div style="font-size:0.8rem; color:#4b5563;">
+            Every evaluation run is backed by a fixed set of evidence artefacts and signed rulepacks.
+          </div>
+          <div style="position:absolute; right:10px; top:8px;">
+            <span class="filigree-chip">
+              <span class="filigree-dot"></span>
+              v1.3 · draft
+            </span>
+          </div>
+        </div>
+
+        <div class="filigree-footnote">
+          <span class="mono">Note:</span> Filigree colours must never appear on buttons, status chips,
+          or interactive UI. They exist purely for document framing, diagrams, and print-oriented ornament.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Export / print safe -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Export / print-safe tokens</h2>
+      <p>Used for PDFs, printed reports, and anything that has to survive a cheap office laser printer.</p>
+    </div>
+
+    <div class="grid cols-4">
+      <!-- Export accent safe -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--export-accent-safe);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Export accent</div>
+          <div class="swatch-token">--export-accent-safe</div>
+          <div class="swatch-note">Headings, progress, and key markers in PDFs.</div>
+        </div>
+      </div>
+
+      <!-- Export neutral safe -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--export-neutral-safe);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Export neutral</div>
+          <div class="swatch-token">--export-neutral-safe</div>
+          <div class="swatch-note">Lines, dividers, non-accent structure.</div>
+        </div>
+      </div>
+
+      <!-- Export text primary -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--export-text-primary);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Export text primary</div>
+          <div class="swatch-token">--export-text-primary</div>
+          <div class="swatch-note">Main copy in exported documents.</div>
+        </div>
+      </div>
+
+      <!-- Export text secondary -->
+      <div class="swatch-card">
+        <div class="swatch-chip" style="background: var(--export-text-secondary);"></div>
+        <div class="swatch-body">
+          <div class="swatch-name">Export text secondary</div>
+          <div class="swatch-token">--export-text-secondary</div>
+          <div class="swatch-note">Captions, meta, and supporting labels.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-row">
+      <div>Export card demo:</div>
+      <div style="margin-top:8px;">
+        <div class="export-card">
+          <div class="export-heading" style="color:var(--export-text-primary);">
+            Cyber Essentials 2025 – Evaluation summary
+          </div>
+          <div class="export-sub">
+            Generated from tenant “Acme Manufacturing” using rulepack <span class="mono">CE-UK-2025.1</span>.
+          </div>
+          <div style="font-size:0.78rem; color:var(--export-text-secondary);">
+            Evidence coverage
+          </div>
+          <div class="export-bar">
+            <div class="export-bar-inner"></div>
+          </div>
+          <div style="margin-top:4px; font-size:0.76rem; color:var(--export-text-secondary);">
+            68% of required evidence items present and locked at time of export.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="margin-top:18px; padding-top:8px; border-top:1px solid rgba(55, 65, 81, 0.8); font-size:0.75rem; color:var(--neutral-400);">
+    <div>All colours on this page are provisional and mapped through tokens only. Adjust hex values centrally; behaviour remains unchanged.</div>
+  </footer>
+
+</div>
+</body>
+</html>

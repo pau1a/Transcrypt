@@ -1785,3 +1785,204 @@ To maintain long-term integrity, automated checks may be added to detect:
 This future capability extends the governance model in §10 and reinforces Transcrypt’s principle of deterministic brand expression.
 
 ---
+
+# Appendix A - Colour Tokens and Specifications
+
+Perfect — we go with **Option A: placeholder tokens only**, fully structured, no hex values yet, no accidental colour commitment.
+
+Here is **Appendix A — Colour Tokens and Specifications**, written exactly as a top-tier brand/engineering organisation would define it: deterministic, implementation-ready, and fully cross-referenced in Section 4.
+
+---
+
+# **Appendix A — Colour Tokens and Specifications**
+
+This appendix defines the authoritative colour tokens used across all Transcrypt surfaces.
+These tokens form the implementation layer of the colour system.
+They provide the single source of truth for developers, designers, and documentation authors.
+
+Values in this appendix are **placeholders** and intentionally free of numeric colour definitions.
+Final hex/RGB/HSL values will be set during visual refinement and swapped into the token definitions without requiring changes to the Brand Identity Guide text.
+
+All references in Section 4 point to this appendix.
+
+---
+
+## **A.1 Primary Palette Tokens**
+
+These tokens represent the core colours of the Transcrypt identity.
+Their exact numeric values are defined here and nowhere else.
+
+### **A.1.1 Engineered Base**
+
+* `--brand-base-900`: <deep-engineered-base>
+* `--brand-base-800`: <engineered-base-variant>
+
+Used for:
+
+* hero surfaces
+* product chrome
+* high-authority backgrounds
+* foundational brand surfaces
+
+### **A.1.2 Light Surfaces**
+
+* `--brand-surface-0`: <pure-light-surface>
+* `--brand-surface-50`: <neutral-light-surface>
+* `--brand-surface-100`: <structured-light-layer>
+
+Used for:
+
+* documentation surfaces
+* cards, panels, forms
+* PDF exports
+* long-form reading environments
+
+### **A.1.3 Cerulean Accent**
+
+* `--accent-500`: <cerulean-mid> (primary accent)
+* `--accent-300`: <cerulean-soft>
+* `--accent-700`: <cerulean-deep>
+
+Used exclusively for:
+
+* CTAs
+* focus states
+* selected elements
+* interactive guidance
+* key progress indicators
+
+### **A.1.4 Black/White Extremes**
+
+* `--black`: <pure-black>
+* `--white`: <pure-white>
+
+Used for:
+
+* typography
+* schematic diagrams
+* high-contrast elements
+
+---
+
+### **A.1.5 Filigree (Industrial Violet)**
+
+These tokens define the optional micro-detail colour used for structural embellishment and metadata.
+They must never function as accents or semantic colours.
+
+* `--filigree-violet-50`: <industrial-violet-50>
+* `--filigree-violet-100`: <industrial-violet-100>
+* `--filigree-violet-200`: <industrial-violet-200>
+* `--filigree-violet-300`: <industrial-violet-300>
+
+Used exclusively for:
+
+* footnotes
+* metadata labels
+* micro-rules and fine dividers
+* architecture diagrams
+* PDF gridlines and folio marks
+* cover-page detailing for SAIS, PRD, PDS
+* premium print filigree
+
+Filigree tokens must not appear in UI, CTAs, semantic states, or charting.
+
+---
+
+## **A.2 Secondary Semantic Tokens**
+
+Secondary colours represent system state.
+They must never compete with the accent and must remain consistent across product, documentation, and exports.
+
+### **A.2.1 Success Tokens**
+
+* `--success-bg`: <success-background>
+* `--success-border`: <success-border>
+* `--success-text`: <success-text>
+
+Used for:
+
+* “complete” states
+* valid evidence
+* positive confirmations
+
+### **A.2.2 Warning Tokens**
+
+* `--warn-bg`: <warning-background>
+* `--warn-border`: <warning-border>
+* `--warn-text`: <warning-text>
+
+Used for:
+
+* expiring deadlines
+* incomplete flows
+* attention-required states
+
+### **A.2.3 Error Tokens**
+
+* `--err-bg`: <error-background>
+* `--err-border`: <error-border>
+* `--err-text`: <error-text>
+
+Used for:
+
+* failed checks
+* invalid evidence
+* prohibited actions
+
+---
+
+## **A.3 Neutral Greyscale Tokens**
+
+Transcrypt’s greyscale provides structural hierarchy and spacing in both light and dark environments.
+
+* `--neutral-900`: <deep-neutral>
+* `--neutral-800`: <dark-neutral>
+* `--neutral-700`: <subtle-dark-neutral>
+* `--neutral-600`: <quiet-dark-neutral>
+* `--neutral-500`: <mid-neutral>
+* `--neutral-400`: <soft-neutral>
+* `--neutral-300`: <pale-neutral>
+* `--neutral-200`: <very-light-neutral>
+* `--neutral-100`: <structured-neutral>
+* `--neutral-50`: <lifted-neutral>
+
+Used for:
+
+* borders
+* card chrome
+* UI elevation
+* diagram scaffolding
+* spacing definition
+
+These greys must never be repurposed as accent colours.
+
+---
+
+## **A.4 Print and Export Safe Tokens**
+
+These tokens ensure that PDF exports and printed reports maintain consistent colour reproduction across devices.
+
+* `--export-accent-safe`: <cerulean-print-safe>
+* `--export-neutral-safe`: <neutral-print-safe>
+* `--export-text-primary`: <text-print-primary>
+* `--export-text-secondary`: <text-print-secondary>
+
+Used for:
+
+* signed PDFs
+* printed evidence bundles
+* offline audit documents
+* archival records
+
+---
+
+## **A.5 Token Usage Rules**
+
+1. **No colour may be used unless defined in this appendix.**
+2. **No new tokens may be introduced without revising Appendix A.**
+3. **All product code, CSS, design files, and illustration exports must reference tokens, not hex values.**
+4. **All future rulepacks and features inherit the palette from these tokens.**
+5. **Variance (soft/deep) is allowed only for the accent and only within the cerulean family.**
+6. **Semantic tones must never be repurposed as brand colours.**
+
+---
