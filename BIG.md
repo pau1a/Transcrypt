@@ -211,10 +211,205 @@ Together, these elements define how the brand speaks, behaves, and appears. They
 ### 8.6.4 Third-Party / Partner Restrictions
 
 ## 8.7 Wireframes and Structural Examples
-### 8.7.1 Purpose of Wireframes
-### 8.7.2 Core Layout Wireframes
-### 8.7.3 Form and Flow Wireframes
-### 8.7.4 Do and Don’t Wireframe Patterns
+
+Wireframes visualise Transcrypt’s structural logic without the distraction of colour, typography, or imagery. They are functional blueprints — tools for communicating layout rhythm, information hierarchy, spacing, and behavioural patterns before visual styling is applied.
+They exist to ensure that every surface designed under the Transcrypt brand inherits the same clarity, calmness, and predictable flow defined in the PDS and reinforced by this guide.
+
+Wireframes are **not** creative artefacts.
+They are structural evidence of adherence to the system.
+
+### **8.7.1 Purpose of Wireframes**
+
+Wireframes serve as the intermediate layer between layout rules (Section 8.1–8.4) and real-world marketing or application surfaces (Section 9). Their purpose is to:
+
+* Validate the spatial grid in real contexts
+* Test information hierarchy before visual styling
+* Expose layout issues early (density, imbalance, cognitive weight)
+* Demonstrate correct use of spacing, rhythm, and block composition
+* Provide partners and contractors with an unambiguous structural template
+
+Every significant layout — page templates, dashboards, forms, modals, onboarding flows — must be wireframed before typography, colour, or imagery is applied.
+
+### **8.7.2 Core Layout Wireframes**
+
+Core layout wireframes illustrate the structural backbone of the brand. Every layout must obey:
+
+* **Consistent grid usage:** 12-column default, with documented breakpoints
+* **Predictable spacing:** following the fixed or modular scale defined in Section 8.3
+* **Clean hierarchy:** one dominant H1 block, clear secondary blocks, and grouped tertiary elements
+* **No visual noise:** whitespace is an active structural component, not an optional one
+
+Core wireframes must be produced for:
+
+* **Homepage framework** (hero zone, clarity block, CTA structure)
+* **Content pages** (blog/article layouts)
+* **Feature or landing pages**
+* **Documentation-style layouts**
+* **Dashboard or app pages** where relevant
+
+Each wireframe shows *structure only* — boxes, labels, spacing, and flow.
+
+### **8.7.3 Form and Flow Wireframes**
+
+Forms and workflows have strict structural requirements due to Transcrypt’s purpose: reduce cognitive load and eliminate ambiguity.
+
+Wireframes must demonstrate:
+
+* **Single-column form layouts** for readability and clarity
+* **Clear field grouping** using spacing, not borders
+* **Minimal branching** in any given interaction
+* **Predictable CTA placement:** right-aligned primary, left or centre secondary
+* **Inline validation areas** that preserve rhythm and do not shift the layout erratically
+
+Flow wireframes must include:
+
+* **Step-by-step task flows**
+* **Verification or review steps**
+* **Progress indicators**
+* **Error and fallback states**
+
+These wireframes define behaviour and guidance long before visuals appear.
+
+### **8.7.4 Do and Don’t Wireframe Patterns**
+
+Wireframes must make acceptable and unacceptable patterns explicit.
+
+**Acceptable:**
+
+* Generous spacing
+* Calm rhythm with minimal visual density
+* One visual focus per screen
+* Predictable alignment of elements
+* Clear, unambiguous reading paths
+
+**Forbidden:**
+
+* Crowded layouts
+* Overuse of columns (no multi-column forms)
+* Excessive grouping lines or boxed sections
+* Surprise elements (pop-ins, floating blocks, disconnected CTAs)
+* Visually aggressive structures (tight density, inconsistent block widths)
+
+Wireframes act as the inspection mechanism: if a layout doesn't wireframe cleanly, it will not behave cleanly once styled.
+
+---
+
+## **8.8 State and Mode Patterns**
+
+State and mode patterns define how Transcrypt behaves in every non-ideal or transitional situation. These states carry significant brand weight: they influence user trust more than static surfaces. They must be calm, unambiguous, structured, and free of theatrics.
+Every loading sequence, error message, success confirmation, or empty pattern must follow the same predictable rules to preserve the brand’s promise of clarity and confidence.
+
+No state may introduce surprise, motion spikes, playful language, or unnecessary visual noise.
+
+### **8.8.1 Loading States**
+
+Loading patterns must:
+
+* Use **minimal, low-motion indicators**
+* Preserve layout structure; no content “jumping”
+* Avoid skeleton screens unless the structural layout requires them
+* Use neutral language: *“Loading…”*, *“Preparing view…”*
+* Never use humour, filler text, or animations with character or personality
+
+Loading indicators must not distract or imply instability.
+No pulsing colour, no playful metaphors, no progress bars unless time is genuinely meaningful.
+
+### **8.8.2 Empty States**
+
+Empty states exist to reduce uncertainty. They must:
+
+* Clearly state why the space is empty
+* Provide one primary next action (e.g., “Add evidence”)
+* Use short, directive copy
+* Include a small visual indicator *only if it reinforces clarity*
+
+Empty states must not use:
+
+* Metaphors
+* Illustrations implying emotion
+* Humorous or “light” tone
+* Decorative visuals
+
+The intention is calm instruction, not engagement or entertainment.
+
+### **8.8.3 Validation and Error States**
+
+Error states must be clinical, factual, and free from dramatics.
+
+Rules:
+
+* Use **precise, actionable language**: *“This field is required.”*, *“Invalid email format.”*
+* Avoid blame, personality, humour, or conversational flourishes
+* Highlight only the affected element — no full-screen error patterns unless the system is genuinely unavailable
+* Never animate errors; no shaking, bouncing, pulsing, or colour flashes
+
+Colour use must follow Section 4.5 (Prohibited Applications):
+Errors must meet WCAG; no high-saturation reds or flashing affordances.
+
+### **8.8.4 Success and Confirmation States**
+
+Success feedback must:
+
+* Be minimal and brief
+* Use clean, neutral confirmation: *“Saved.”*, *“Completed.”*
+* Avoid celebratory icons, emojis, confetti, ticks with flourish, or bright colour flashes
+* Maintain layout stability; do not shift the interface unnecessarily
+
+Transcrypt does not do “congratulations,” “you’re all set!”, or any copy implying personality or emotional performance.
+
+### **8.8.5 Pending, Review, and Intermediate States**
+
+These states occur when work is in progress but not yet complete—especially relevant to compliance workflows.
+
+Rules:
+
+* Use precise descriptors: *“Pending review”*, *“Awaiting confirmation”*, *“In progress”*
+* No metaphors about “journeys,” “paths,” or “processing magic”
+* Maintain stable structure; avoid intermediate animations
+
+If a user must wait for back-end operations, fallback messages must be clear and deterministic.
+
+### **8.8.6 System-Level Error Modes**
+
+For outages, integration failures, or major exceptions:
+
+* Use structured, audit-aligned messaging
+* Avoid blaming language or conversational tone
+* Provide one clear fallback path
+* Include an incident identifier for support
+
+No humour, no brand personality, no flourish.
+System errors represent reputational risk and must reinforce calm professionalism.
+
+### **8.8.7 Interaction Modes**
+
+Interaction modes define how users move through tasks:
+
+* Focus states must be visible, WCAG-compliant, and restrained
+* Hover states (desktop) must be minimal and avoid colour jumps
+* Disabled states must be clearly distinguishable
+* Active states must rely on structural cues, not strong colour
+
+Modes must never introduce:
+
+* Glow effects
+* Neon accents
+* Animated highlights
+* Playful feedback
+
+The product must remain calm at all times.
+
+### **8.8.8 Fallback and No-JS States**
+
+If JavaScript is disabled or fails:
+
+* Primary content must remain readable
+* Critical actions must degrade gracefully
+* Errors must follow the same tone and structural rules
+
+No fallback may present a broken or partially styled identity.
+
+---
 
 # 9. Marketing Application
 
@@ -280,3 +475,124 @@ Together, these elements define how the brand speaks, behaves, and appears. They
 ## 12.4 Photography and Image Rights
 ## 12.5 Legal Notices in Marketing and Product
 ## 12.6 Prohibited Uses and Violations
+
+Here is **Section 13: Future Work**, written cleanly, professionally, and fully aligned with the architecture, tone, and governance style of your Brand Identity Guide.
+This section includes *only* the items that legitimately belong here — the ones that are safe to defer and do not undermine the integrity of the core system.
+
+Everything that needed to be in the main document has already been separated out earlier.
+
+Drop this directly into your BIG, immediately after Section 12.
+
+---
+
+# **13. Future Work**
+
+This section outlines areas of the brand system that are intentionally deferred. They are not required for the stability, coherence, or correctness of the current identity. Each represents an extension that will become relevant as Transcrypt’s product surface grows, its marketing channels expand, or new operational needs emerge.
+These items should be prioritised as the platform matures, new modules or tiers are introduced, or external demands justify additional identity layers.
+
+Future work items must not be implemented ad-hoc. They require the same rigour, review, and versioning discipline defined in §10.4.
+
+---
+
+## **13.1 Data Visualisation Identity**
+
+Transcrypt will eventually present structured progress indicators, audit-readiness scores, task completion ratios, and other compliance-related metrics.
+A dedicated data visualisation identity will be required to define:
+
+* Approved chart types
+* Semantic colour mappings
+* Minimum contrast and accessibility rules
+* Motion restrictions
+* Prohibited chart forms
+* Structural templates for dashboards and reports
+
+This work is deferred until visualisation becomes part of the product surface.
+
+---
+
+## **13.2 Illustration Scaling and Integration**
+
+The current system defines illustration tone and metaphor. Future expansion will define:
+
+* Scaling rules for mobile, cards, and hero surfaces
+* Integration rules with photography
+* Responsive behaviour
+* Acceptable and prohibited styles for multi-illustration sets
+
+This will be activated when illustration becomes a recurring pattern across marketing and product.
+
+---
+
+## **13.3 Sub-Brand and Tier Architecture**
+
+As Transcrypt adds modules, feature tiers, or related products, a formal sub-brand strategy will be required. This includes:
+
+* Naming conventions
+* Colour or accent differentiation
+* Typography accents
+* Logo or lockup variations (if any)
+* Rules preventing brand fragmentation
+
+This will be developed when expansion beyond the Essentials App is planned.
+
+---
+
+## **13.4 Physical Space and Environmental Branding**
+
+When Transcrypt first appears in physical environments — conferences, booths, signage, or printed events — additional guidance will be required for:
+
+* Large-format typography
+* Distance legibility
+* Banner and backdrop layouts
+* Physical material constraints
+* Lighting and colour fidelity in real-world spaces
+
+This is deferred until Transcrypt participates in live events.
+
+---
+
+## **13.5 Social Behaviour and Channel Identity**
+
+While core templates exist in §9, a deeper behavioural identity for social channels will be needed as the brand’s public presence grows.
+Future work will define:
+
+* Posting tone
+* Platform-specific constraints (LinkedIn, X, YouTube, etc.)
+* Hashtag rules
+* Reactive content guidance
+* Image–text balance per channel
+* Prohibited topics and formats
+
+This becomes essential when daily or campaign-driven posting begins.
+
+---
+
+## **13.6 Design Tokenisation and Brand API**
+
+As engineering and product UI surface expand, Transcrypt will require a design-token system that expresses:
+
+* Semantic colour tokens
+* Typography tokens
+* Spacing and rhythm tokens
+* Motion tokens
+* JSON/CSS variable exports
+* Versioned token distribution for developers
+
+This is deferred until UI implementation begins at scale.
+
+---
+
+## **13.7 Brand Drift Detection and Automation**
+
+To maintain long-term integrity, automated checks may be added to detect:
+
+* Outdated logo files
+* Deprecated colour values
+* Incorrect typography usage
+* Token drift in UI code
+* Off-brand layouts in shared folders
+* Missing attribution in imagery
+
+This future capability extends the governance model in §10 and reinforces Transcrypt’s principle of deterministic brand expression.
+
+---
