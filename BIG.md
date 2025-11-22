@@ -869,22 +869,365 @@ Pixel-fitting is a technical adjustment, not a design reinterpretation.
 ---
 
 ## 3.3 Clearspace and Minimum Size
-### 3.3.1 Clearspace Rules
-### 3.3.2 Minimum Size Specifications
+
+Clearspace and minimum size rules exist to protect the structural logic of the Transcrypt monogram. Because the mark relies on symmetry, negative space, and tight internal ratios, it cannot survive crowding, compression, or overly small deployments without losing its implicit T/C reading and its sense of sealed containment. These rules define the minimum conditions under which the logo remains legible, recognisable, and consistent across all surfaces.
+
+Clearspace protects the integrity of the mark in layout systems. Minimum sizes protect it in scale systems. Together, they ensure the logo maintains its engineered clarity whether used in marketing surfaces, product interfaces, or micro-scale iconography.
+
+---
+
+### **3.3.1 Clearspace Rules**
+
+Clearspace acts as the “safety buffer” around the monogram and the primary lockup. It prevents surrounding elements from interfering with the counterforms that make the mark work. Because the monogram is defined by its internal void and its mirrored verticals, proximity to text, UI elements, or graphic noise can distort its reading and visually collapse the negative space.
+
+#### **Defining the Clearspace Unit**
+
+The clearspace unit is derived from the monogram’s own geometry to keep the rule proportional, not arbitrary.
+
+**X = the width of one vertical stem of the monogram.**
+This is a stable internal dimension that scales cleanly across all variants and ensures the protective zone feels balanced at any size.
+
+#### **Primary Lockup Clearspace**
+
+The primary logo (monogram + wordmark) requires clearspace of:
+
+* **1X** on all sides for standard use.
+* **2X** on hero surfaces, document covers, and marketing placements where breathing room reinforces authority and presence.
+
+No external text, logos, UI elements, illustrations, or controls may enter the clearspace zone.
+No optical adjustments are permitted; the clearspace is measured strictly from the bounding box.
+
+#### **Secondary Mark Clearspace**
+
+The symbol-only version uses the same clearspace unit:
+
+* **1X** minimum clearspace on all sides.
+
+When used in product UI (nav bars, drawers, sidebars), the clearspace may tighten slightly to **0.5X** if constrained by layout components, but only within the product interface — never in marketing or external collateral.
+
+#### **Containered Icons**
+
+Square or circular avatar icons inherit the same internal padding:
+
+* The symbol must sit inside its container with **0.75X** internal padding to prevent edge crowding.
+
+This prevents cramped avatars and preserves the silhouette even when cropped to small resolutions.
+
+---
+
+### **3.3.2 Minimum Size Specifications**
+
+Minimum size requirements ensure that the monogram and lockups remain readable and structurally intact as they scale down. The goal is not merely “visible shape” but preservation of the counterform logic that gives the mark its character.
+
+#### **Primary Lockup Minimum Sizes**
+
+To maintain readability of both the monogram and the wordmark:
+
+* **Digital minimum width:**
+  **120px** for desktop, **96px** for mobile.
+  Below this, the wordmark loses clarity and the monogram begins to crowd the spacing.
+
+* **Print minimum width:**
+  **35mm**.
+  Anything smaller should use the symbol-only secondary mark.
+
+#### **Secondary Monogram Minimum Sizes**
+
+The monogram alone is more tolerant of small-scale use but still has a lower bound:
+
+* **UI minimum:**
+  **24px** for interface chrome, navigation anchors, and badge-level indicators.
+  Below this, fine negative space collapses.
+
+* **Documentation minimum:**
+  **20px** when used as a diagram anchor or system label.
+
+#### **Compact and Micro-Scale Icons**
+
+For extremely small deployments, a technically compensated variant (`tc-favicon.svg`) is used to maintain silhouette recognition:
+
+* **Favicon minimum:**
+  **16px**, with pixel-fitting strokes.
+
+* **Pinned / shortcut icons:**
+  **32px** and above.
+
+No other geometry changes are permitted. The favicon variant is a functional render, not a separate symbol.
+
+---
 
 ## 3.4 Incorrect Usage Examples
-### 3.4.1 Distortion and Rotation
-### 3.4.2 Colour Misuse
+
+Incorrect usage compromises the structural logic of the Transcrypt monogram and weakens its ability to function as a precise, engineered identifier. The monogram relies on specific internal ratios, consistent counterforms, and exact geometry. Any distortion, recolouring, or unauthorised manipulation breaks these relationships and creates a diluted or counterfeit version of the mark. The examples in this section define prohibited treatments so the logo remains uncompromised across all environments.
+
+---
+
+### **3.4.1 Distortion and Rotation**
+
+Distortion of any kind destroys the monogram’s symmetry and the implicit T/C structure encoded in its negative space. Rotation breaks the vertical alignment that defines the mark and collapses its internal tension.
+
+The following are strictly prohibited:
+
+#### **Stretching or Squashing**
+
+Changing the horizontal or vertical proportions alters stroke thickness, disrupts counterforms, and breaks the intended geometry.
+The logo must never be compressed, expanded, squeezed, or stretched — even “slightly” for layout convenience.
+
+#### **Rotation**
+
+The monogram must remain upright at all times.
+No rotation, angling, tilting, or diagonal placement is allowed.
+Even small-degree rotations distort the vertical spine and disrupt the perception of structural containment.
+
+#### **Skewing or Perspective Transformations**
+
+Shearing, slanting, applying perspective, or simulating 3D depth destroys the axial symmetry and violates the deterministic engineering character of the mark.
+
+#### **Cropping or Partial Display**
+
+The monogram must never be cropped, cut off, or shown as a fragment (e.g., just the arc, just one stem).
+This breaks the figure–ground relationships that give the mark meaning.
+
+#### **Reconstruction or Redrawing**
+
+No redrawing, re-spacing, approximations, “cleanups,” or designer reinterpretations.
+The only valid geometry is the one provided in the official assets.
+
+---
+
+### **3.4.2 Colour Misuse**
+
+The monogram’s clarity depends not only on geometry but also on correct colour contrast. Because the mark operates through negative space and silhouette, colour misuse quickly collapses its readability or causes the shape to visually merge with its surroundings.
+
+The following treatments are prohibited:
+
+#### **Non-Brand Colours**
+
+The logo must not appear in arbitrary colours, gradients, tints, pastels, overlays, or promotional palettes.
+Only pure black, pure white, or the approved single-colour accent are permitted.
+
+#### **Low-Contrast Placement**
+
+Using the monogram on backgrounds that do not provide sufficient contrast — such as mid-tone greys, busy textures, coloured photographs, or patterned surfaces — is not allowed unless placed within an approved solid container.
+
+#### **Effects and Filters**
+
+No shadows, glows, blurs, outer strokes, embossing, neon effects, or transparency.
+These treatments introduce visual noise and undermine the symbol’s precision.
+
+#### **Layering or Masking Experiments**
+
+The logo must not be used as a mask for images, gradients, illustrations, or videos.
+It is not a decorative frame or pattern; it is a controlled glyph.
+
+#### **Unapproved Containers**
+
+The monogram may not be placed inside arbitrary shapes (rounded rectangles, capsules, hexagons, abstract containers).
+Only the sanctioned square or circular avatar containers are allowed.
+
+---
 
 # 4. Colour Palette
 
+Colour in Transcrypt’s identity is not an expressive layer. It is a functional system that supports clarity, hierarchy, and reliability across every surface — from the marketing site to the Essentials app to PDF exports and architectural documentation. The palette exists to reinforce Transcrypt’s role as *boring, safe infrastructure*: predictable, legible, and free from aesthetic noise.
+
+The product is built on determinism, sealed data boundaries, and unambiguous truth. The colour system mirrors that behaviour. It uses a restrained set of tones, chosen not for personality but for their ability to organise information and maintain consistency across light and dark environments.
+
+The palette has three structural layers:
+
+1. **Primary colours** — the deep engineered base, white/near-white surfaces, and a single cerulean accent that acts as the system’s point of focus.
+2. **Secondary colours** — functional tones for semantic states, diagrams, and supporting UI, never competing with the primary accent.
+3. **Neutral foundations** — a greyscale that provides depth, spacing, and hierarchy without drawing attention to itself.
+
+Colour is applied sparingly, with strict contrast rules, minimal decorative usage, and a bias toward monochrome forms wherever clarity would benefit. The logo’s silhouette and the system’s typography remain the anchors; colour supports them, never leads.
+
+This section defines the palette, its hierarchy, and the constraints governing its use, so Transcrypt’s identity remains stable, serious, and unmistakably technical — whatever surface it appears on.
+
+---
+
 ## 4.1 Primary Brand Palette
+
+The primary palette defines the core colours that carry Transcrypt’s identity across all surfaces. These colours set the tonal temperature of the brand: cold, precise, and deliberately restrained. They form the visual spine from which every other colour decision derives.
+
+Transcrypt uses a minimal primary set: a deep engineered base, clean light surfaces for clarity, and a single cerulean accent that acts as the system’s point of focus. Each colour has a clearly defined role. The base establishes authority and stability; the light surfaces handle legibility and layout structure; the accent provides directional emphasis without introducing emotion or stylistic noise.
+
+The primary palette is intentionally narrow. It ensures that the brand remains consistent whether rendered in UI chrome, PDF exports, diagrams, or physical materials. Everything outside these core colours is secondary, functional, or prohibited.
+
+---
+
 ### 4.1.1 Core Colours
+
+The core colours define the minimal set of tones that represent Transcrypt in every context where the brand must be unmistakable. Each colour has a defined, non-negotiable purpose. Nothing outside this set carries brand identity.
+
+#### **Engineered Base**
+
+A deep, near-black blue forms the base of the identity.
+It is the backdrop for hero surfaces, product chrome, and structural components where authority and clarity matter.
+This tone anchors the entire system and ensures that the brand reads as a stable piece of infrastructure rather than a decorative interface.
+
+The engineered base is never used as an accent, never softened, and never tinted. Its job is to hold the frame.
+
+#### **Light Surfaces**
+
+White and near-white surfaces provide the clarity layer of the brand.
+These values control content-heavy environments — documentation, data tables, PDF exports, dashboards, and any space where reading comfort outranks atmosphere.
+
+They exist purely for legibility and spatial structure.
+They do not function as accents and they do not attempt to carry emotion.
+
+#### **Cerulean Accent**
+
+The single point of colour in the primary palette is a controlled cerulean — a mid-spectrum blue chosen for its engineered neutrality.
+It carries no emotional overtones and does not behave like a marketing highlight.
+Its purpose is functional:
+
+* to draw attention to interactive elements,
+* to denote focus or state transitions,
+* to mark calls to action,
+* to guide the user in complex flows.
+
+The accent always works in a trio: base, light surface, cerulean.
+It is never paired with additional accents and never used as a background.
+Its variants (soft, deep) support accessibility and hierarchy but remain within the same hue family.
+
+#### **Black and White Extremes**
+
+Pure black and pure white are retained as functional extremes for typography, diagrams, and high-contrast environments.
+They are not brand colours but operational tools, ensuring that text, icons, and schematics remain razor-clear across all surfaces.
+
+---
+
 ### 4.1.2 Palette Meaning and Associations
 
+The colours in Transcrypt’s primary palette are chosen for their behavioural qualities, not their aesthetic personality. Each tone carries a specific operational meaning that aligns with the product’s purpose: clarity, stability, and predictable behaviour in environments where ambiguity creates risk.
+
+#### **Engineered Base — Stability and Containment**
+
+The deep engineered base represents structural integrity.
+It echoes the sealed nature of Transcrypt’s tenants and the immutability of stored evidence.
+It is the visual metaphor for “the boundary”: the line between what is inside the system and what is not.
+This colour signals seriousness, focus, and the absence of ornamentation.
+It does not attempt to evoke emotion — it suppresses it.
+
+#### **Light Surfaces — Clarity and Inspection**
+
+White and near-white surfaces represent inspection, legibility, and audit-friendly visibility.
+They reflect the product’s core mission: making truth easier to see.
+These colours support reading, comparison, annotation, and long-form documentation without fatigue.
+They are not expressive; they are deliberately neutral, creating an environment where content, not colour, carries meaning.
+
+#### **Cerulean Accent — Direction and Intent**
+
+Cerulean serves as a single point of controlled emphasis.
+It directs the eye without shouting, allowing the system to guide attention in a calm, engineered way.
+It is used where the user’s next step needs to be clear: calls to action, selected states, interactive surfaces, progress indicators.
+Cerulean is chosen for its neutrality — cooler than consumer blue, warmer than instrument cyan — a technical midpoint that conveys “this is the thing to pay attention to” without signalling urgency, emotion, or brand personality.
+
+This accent is not decorative.
+Its meaning is consistent wherever it appears: **focus here**.
+
+#### **Black and White Extremes — Precision and Truth**
+
+Pure black and pure white are functional extremes used for typography, diagrams, and schematic elements where precision matters more than mood.
+They represent binary clarity: on/off, true/false, present/absent.
+In documentation and technical materials, these colours reinforce the determinism at the heart of the product.
+
+---
+
 ## 4.2 Secondary Palette
-### 4.2.1 Supporting Colours
-### 4.2.2 Use Cases
+
+The secondary palette supports the product’s functional needs without ever competing with the primary colours. These tones are not part of Transcrypt’s identity; they are part of its interface logic. Their job is to communicate state, hierarchy, and system meaning in environments where monochrome alone is insufficient.
+
+Secondary colours exist only to improve comprehension. They never introduce personality, and they never dilute the authority of the primary palette.
+
+---
+
+### **4.2.1 Supporting Colours**
+
+The supporting colours are a tightly constrained set of functional tones used for semantics, data visualisation, and system feedback. They follow three principles:
+
+1. **Functional, not expressive** — every tone corresponds to a precise meaning.
+2. **Subordinate to the accent** — nothing in this set may resemble or compete with cerulean.
+3. **Neutral until required** — these colours appear only when they serve a clear informational purpose.
+
+The typical categories include:
+
+#### **Success / Confirmation**
+
+A muted green family used only to communicate “this state is valid, complete, or healthy.”
+Greens are subdued and never bright. They reinforce correctness without introducing exuberance or emotional positivity.
+
+#### **Warning / Caution**
+
+An amber family used to signal conditions that require attention but do not represent failure.
+These tones echo industrial caution systems — neither playful nor alarming, simply informative.
+
+#### **Error / Failure**
+
+A disciplined, desaturated red used exclusively for errors, failed checks, invalid evidence, or blocked actions.
+No gradient, no glow, no emotional theatrics — just clear, immediate signalling.
+
+#### **Diagrammatic Neutrals**
+
+A narrow set of greys or muted blues used in architecture diagrams, flowcharts, and PDS/SAIS illustrations.
+Their purpose is structural clarity, not identity.
+
+These tones sit behind the brand; they never define it.
+
+---
+
+### **4.2.2 Use Cases**
+
+Supporting colours appear only in contexts where the user needs clear, fast interpretation of system state, or where data representation requires additional visual channels.
+
+#### **Semantic States in the Essentials App**
+
+Each supporting colour maps to a single semantic domain:
+
+* Success → evidence complete, evaluation ready
+* Warning → expiring exceptions, incomplete prompts, upcoming deadlines
+* Error → blocked runs, invalid evidence, permission issues
+
+These mappings are fixed and universal.
+A colour may not be reinterpreted.
+
+#### **System Feedback and Notifications**
+
+Secondary colours are used sparingly in:
+
+* alerts
+* banners
+* inline validation messages
+* status chips
+* logs and change history markers
+
+The hierarchy is always:
+**base → light → accent → secondary (only for state).**
+
+#### **Data Visualisation and Diagrams**
+
+Charts, progress meters, and SAIS/PDS diagrams may use supporting colours only when needed for differentiation:
+
+* categories in bar charts
+* thresholds in compliance readiness
+* steps in evaluation pipelines
+* architectural boundaries
+
+No chart may use the primary accent unless it represents action or focus.
+The accent’s role remains protected.
+
+#### **Documentation and Exports**
+
+In PDFs, reports, and printed material, secondary colours remain muted to ensure:
+
+* legible contrast
+* high reproduction accuracy
+* compatibility with grayscale printing
+* no drift into marketing-style colour storytelling
+
+Supporting colours never appear as backgrounds or large surfaces.
+
+---
 
 ## 4.3 Neutral Foundations
 ### 4.3.1 Greyscale System
