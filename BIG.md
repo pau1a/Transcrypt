@@ -2965,24 +2965,765 @@ Prohibited:
 ---
 
 ## 8.3 Visual Rhythm and Spacing Rules
-### 8.3.1 Vertical Rhythm
-### 8.3.2 Spacing Hierarchy
+
+Transcrypt’s layout system is built on a strict, token-driven spacing scheme.
+Nothing in the interface — from page-level sections to inline UI elements — may introduce spacing that is not represented in **Appendix B — Spacing Tokens and Specifications**. This ensures:
+
+* predictable rhythm across product, marketing, and documentation
+* deterministic behaviour under responsive layouts
+* effortless maintainability
+* zero spacing drift over time
+
+The entire rhythm of the system is constructed from integer multiples of the **4px base unit**, expressed through the tokens in §B.1–§B.4.
+
+Spacing is not a creative decision. It is structural engineering.
+
+---
+
+## **8.3.1 Vertical Rhythm**
+
+Vertical rhythm defines how content stacks from top to bottom.
+Transcrypt uses a **three-tier rhythm model**, each tier mapped directly to token groups in Appendix B:
+
+1. **Section Rhythm** — large structural breaks
+2. **Block Rhythm** — grouping of related content
+3. **Element Rhythm** — fine-grained spacing inside components
+
+The rules governing this rhythm are absolute:
+
+### **Section Rhythm**
+
+Large breaks in a layout (major page sections, hero to body, long-form document transitions) must use one of the following tokens from §B.2:
+
+* `--space-section-xl` (120px)
+* `--space-section-l`  (96px)
+* `--space-section-m`  (72px)
+* `--space-section-s`  (56px)
+
+Choosing between them is contextual:
+
+* **XL** — hero → body transitions, top of page
+* **L** — major content boundaries, long-form documentation
+* **M** — dense product screens, supporting sections
+* **S** — minimal structural separation on small surfaces
+
+No other spacing values may be used for section-level breaks.
+
+### **Block Rhythm**
+
+Content blocks (cards, grouped controls, stacked paragraphs, dashboard modules) must use the block tokens defined in §B.3:
+
+* `--space-block-l` (40px)
+* `--space-block-m` (32px)
+* `--space-block-s` (24px)
+
+Blocks are always spaced **evenly** when stacked.
+Mixed or improvised block spacing is prohibited.
+
+### **Element Rhythm**
+
+Fine-grained spacing within a block or component (label→input, icon→text, chip stacks, meta groups) must use element tokens from §B.4:
+
+* `--space-element-l`   (20px)
+* `--space-element-m`   (16px)
+* `--space-element-s`   (12px)
+* `--space-element-xs`  (8px)
+* `--space-element-xxs` (4px)
+
+These are the **only** permitted intra-component spacing values.
+No uncontrolled values (2px, 6px, 10px, 18px, 28px, etc.) may be introduced.
+
+---
+
+## **8.3.2 Spacing Hierarchy**
+
+The spacing hierarchy defines which class of spacing governs what type of decision.
+This prevents teams and future contributors from accidentally using oversized spacing for micro-elements or tiny spacing between large blocks.
+
+The hierarchy is:
+
+### **1. Section spacing outranks all other spacing**
+
+Section tokens always override block or element spacing.
+If two large blocks appear adjacent and visually function as separate page sections, section spacing must be used—even if the underlying HTML structure suggests otherwise.
+
+Section spacing also governs:
+
+* top-of-page spacing
+* page template boundaries (marketing and product)
+* major documentation transitions
+* tenant dashboard phase breaks
+
+### **2. Block spacing governs structure inside a section**
+
+Block spacing is used when:
+
+* multiple cards or modules appear inside the same section
+* stacked form groups need separation
+* paragraphs or content clusters require breathing room
+* components are grouped into logical clusters
+
+Block spacing may never be substituted with element spacing, even if a block contains only a single piece of content.
+
+### **3. Element spacing governs micro-relationships**
+
+Element spacing is used when dealing with:
+
+* label + input
+* icon + text
+* chip stacks
+* list item internals
+* metadata groupings
+* button internals
+* row items inside a table cell
+
+Element spacing is the only class of spacing permitted *inside* components.
+
+### **Prohibited Practices**
+
+To prevent drift:
+
+* **No ad-hoc pixel values**
+  All spacing must map to a token in Appendix B.
+
+* **No “visual guesswork”**
+  Designers and developers must not eyeball spacing. Use tokens.
+
+* **No mixing tier classes**
+  Block spacing cannot replace section spacing; element spacing cannot replace block spacing.
+
+* **No negative margins**
+  Rhythm must be constructed, not hacked.
+
+---
+
+## **Token Cross-References**
+
+This section is normative **only when interpreted via tokens in Appendix B**:
+
+* Section rhythm → §B.2
+* Block rhythm → §B.3
+* Element rhythm → §B.4
+* Base unit (4px) → §B.1
+
+All responsive layouts, Tailwind configs, and CSS implementations must reference these tokens directly.
+
+---
 
 ## 8.4 Brand Pattern Usage
-### 8.4.1 Pattern Library
-### 8.4.2 Restrictions on Pattern Placement
+
+Brand patterns in Transcrypt are not decorative assets. They are structural devices used to reinforce hierarchy, distinguish content zones, and provide subtle visual texture without introducing noise or emotional tone.
+
+Patterns exist to **support layout**, not to express personality. They must never compete with typography, iconography, or the core colour palette. Their role is to provide controlled variation in large, sparse, or data-heavy layouts where pure flat colour becomes visually fatiguing.
+
+Patterns are deterministic: a finite set, a finite set of use cases, and no improvisation.
+
+All patterns are defined as reusable SVG assets stored under:
+
+```
+/assets/patterns/
+```
+
+Only patterns in this directory are permitted.
+No new patterns may be created outside a revision of this section.
+
+---
+
+## **8.4.1 Pattern Library**
+
+Transcrypt’s pattern library is deliberately narrow. Each pattern follows the same system:
+
+* engineered geometry
+* monochrome or neutral-only
+* low-contrast
+* repeatable without seams
+* based on grid multiples defined in §8.1
+* tokenised colours only (Appendix A)
+
+The provisional pattern catalogue consists of **three** system patterns:
+
+### **A. Micro-Grid (Default Structural Pattern)**
+
+A subtle 2px or 4px dot/cross matrix used to give large hero surfaces or section dividers a faint sense of structure.
+Characteristics:
+
+* 4px spacing (aligned with the global spacing unit)
+* opacity 4–7% against the base
+* never used behind text smaller than 18px
+* ideal for: hero surfaces, product chrome, non-interactive containers
+
+### **B. Directional Lines (Flow Pattern)**
+
+A sparse diagonal or orthogonal pattern used to hint at “process”, “flow”, or “progression” in operational contexts like dashboards or evaluation summaries.
+Characteristics:
+
+* stroke weight locked to iconography stroke
+* pattern angle fixed (45° or 0° only)
+* opacity 6–12%
+* ideal for: workflow summaries, stage transitions, empty-state screens
+
+### **C. Boundary Rings (Containment Pattern)**
+
+Concentric ultra-soft rings used sparingly to metaphorically reinforce sealed boundaries, tenant isolation, and controlled zones.
+Characteristics:
+
+* rings spaced by 16px (4 × spacing unit)
+* opacity not exceeding 5%
+* drawn from neutral or base palette only
+* ideal for: tenant switcher, zone headers, section intros
+
+---
+
+## **8.4.2 Restrictions on Pattern Placement**
+
+Patterns can easily become noise. These restrictions are absolute to maintain Transcrypt’s restraint and engineered tone.
+
+### **1. Never behind body text**
+
+No pattern may appear behind running body copy.
+Paragraphs, lists, tables, and documentation text must sit on pure surfaces (`--brand-surface-*` only).
+
+### **2. Never behind interactive elements**
+
+Patterns must not interfere with:
+
+* buttons
+* forms
+* links
+* focus indicators
+* state chips
+* validation messages
+
+Only pure surfaces maintain maximum clarity.
+
+### **3. Do not stack patterns**
+
+Only **one** pattern layer per visual region.
+Pattern-on-pattern is prohibited.
+
+### **4. No colourised patterns**
+
+Patterns must only use:
+
+* neutrals (`--neutral-*`)
+* base tones (`--brand-base-*`)
+* print-safe equivalents
+
+Cerulean accents may never be used for patterns.
+
+### **5. No edge-to-edge on mobile**
+
+On mobile, patterns must not run full-bleed.
+They must respect margins defined in §8.1.2 to avoid clutter and cognitive load.
+
+### **6. Fixed opacity ranges**
+
+Each pattern has a strict opacity envelope:
+
+* Micro-grid: **4–7%**
+* Directional lines: **6–12%**
+* Boundary rings: **3–5%**
+
+Opacity outside these ranges is prohibited.
+
+### **7. No decorative intent**
+
+Patterns are not artistic devices.
+If a pattern does not improve **structure, hierarchy, or comprehension**, it is not used.
+
+### **8. Marketing exception rules**
+
+Marketing surfaces may use patterns more expressively **only** when:
+
+* opacity remains within system bounds
+* colour remains tokenised
+* pattern is one of the three approved forms
+* emphasis does not overshadow the logo or primary CTA
+
+No new “marketing patterns” exist outside this library.
+
+---
 
 ## 8.5 Motion & Interaction Identity
+
+Motion in Transcrypt is a **behavioural constraint**, not a decorative layer.
+It exists to:
+
+* clarify cause and effect
+* make state changes legible
+* reduce surprise and cognitive noise
+
+It must never:
+
+* perform “delight”
+* add personality
+* compete with content
+
+All motion is implemented through a **small, fixed set of Tailwind motion tokens** and class combinations. Anything outside that set is considered off-brand.
+
+Transcrypt distinguishes explicitly between:
+
+* **Product surfaces** – Essentials app, in-product flows, dashboards, PDFs, operational UIs.
+* **Marketing surfaces** – website, landing pages, campaigns, long-form articles.
+
+Marketing may use a **slightly richer** motion palette, but it remains low-key, deterministic, and free from theatrics. Product motion is stricter and always functional.
+
+---
+
 ### 8.5.1 Motion Principles
+
+All motion decisions, whether in the app or marketing, must follow these principles.
+
+1. **Function, not decoration**
+
+   Motion must only exist where it:
+
+   * connects an action to a response (e.g. button press → panel opens)
+   * confirms a state change (e.g. filter applied, item saved)
+   * helps the eye track content (e.g. accordion expand/collapse)
+
+   If removing the animation does not harm understanding, it is probably not needed.
+
+2. **Calm and minimal**
+
+   Motion is subtle and short:
+
+   * no bouncing, wobbling, springing, or elastic movement
+   * no overshoot or “playful” easing
+   * no constant motion purely to keep a page “lively”
+
+   Motion should be barely noticeable when things work correctly.
+
+3. **Deterministic and consistent**
+
+   Motion must:
+
+   * start and end in predictable places
+   * use the same durations and easings for the same pattern everywhere
+   * never vary randomly or based on user profile
+
+   A button behaves the same way on every page, in every environment.
+
+4. **Accessible by default**
+
+   * Respect `prefers-reduced-motion`.
+   * When reduced motion is requested, all non-essential animation must drop to simple **opacity** or **colour** transitions or be disabled entirely.
+   * No keyframe-driven movement is allowed in reduced-motion mode.
+
+5. **Hierarchy of importance**
+
+   * Structural changes (modals, drawers, major panel shifts) may use slightly longer durations.
+   * Micro-interactions (hover, focus, pressed states) use shortest durations.
+   * Marketing hero transitions may use the upper end of the allowed range but must remain restrained.
+
+6. **Tailwind as the motion surface**
+
+   Motion is expressed in Tailwind as:
+
+   * a **small semantic set of “motion tokens”** (documented below), and
+   * combinations of `transition-*`, `duration-*`, `ease-*`, and `animate-*` utilities.
+
+   Any class outside that approved set is considered an exception and must be justified and reviewed.
+
+---
+
 ### 8.5.2 Easing, Duration, and Behaviour Rules
+
+Motion in Transcrypt is constrained to a **small, semantic set of timings and easings**, implemented via Tailwind.
+
+#### 8.5.2.1 Duration Tokens
+
+Use **three** duration levels, mapped to Tailwind utility classes:
+
+* **`motion-fast`** – micro transitions
+
+  * **Product & marketing:** `duration-150`
+  * Use for: hover, focus, pressed states, small colour/opacity shifts.
+
+* **`motion-standard`** – most UI transitions
+
+  * **Product:** `duration-200`
+  * **Marketing:** `duration-200` or `duration-300` (for slightly richer hero or section transitions)
+  * Use for: dropdowns, accordions, tabs, small layout shifts.
+
+* **`motion-slow`** – structural changes only
+
+  * **Product:** `duration-300`
+  * **Marketing:** `duration-300`–`duration-500` (only for hero sections or large view transitions)
+  * Use for: modals, page-section fades, overlay entry/exit.
+
+Hard limits:
+
+* No animation longer than **500ms** on any surface.
+* No chained, multi-step animations that keep the UI “busy”.
+* No infinite loops on product surfaces, ever.
+
+When in doubt, pick **`motion-standard`**.
+
+#### 8.5.2.2 Easing Tokens
+
+Use **two** easing profiles, implemented via Tailwind timing utilities:
+
+* **`motion-ease-standard`** – default interaction easing
+
+  * Tailwind: `ease-out`
+  * Use for: most transitions (buttons, panels, drawers, overlays).
+  * Behaviour: quick start, smooth deceleration, no overshoot.
+
+* **`motion-ease-subtle`** – softer motion for background elements
+
+  * Tailwind: `ease-in-out`
+  * Use for: marketing hero fades, section reveals, background content moves.
+  * Behaviour: gentle in/out, still short and controlled.
+
+All UI motion must use `ease-out` or `ease-in-out`.
+`ease-in` and `linear` are reserved for very specific internal uses (e.g. stealth progress indicators) and should be considered exceptions.
+
+Prohibited easings:
+
+* custom cubic-bezier curves that overshoot or bounce
+* spring/physics driven easings in production UIs
+* anything that looks like “elastic”, “back”, or “bounce”
+
+#### 8.5.2.3 Transition Properties
+
+Only the following properties may be animated in normal use, expressed via Tailwind:
+
+* **Colour and background:**
+
+  * `transition-colors` with `duration-150/200` and `ease-out`
+  * Use for: hover, focus, active states, state chips.
+
+* **Opacity:**
+
+  * `transition-opacity` with `duration-150/200/300` and `ease-out`
+  * Use for: fades, loading placeholders, simple reveals.
+
+* **Transform (very limited):**
+
+  * `transition-transform` with `duration-150/200` and `ease-out`
+  * Permitted transforms: small `translate-y` or `scale` for menus, drawers, modals.
+  * Max translation: `translate-y-2` (8px).
+  * Max scale range: 0.98 → 1.0 or 1.0 → 1.02, no more.
+
+* **Height for controlled panels:**
+
+  * Use only for accordion / expand-collapse patterns, with care to avoid jank.
+  * If it causes layout instability, switch to opacity instead.
+
+Any animation outside colours, opacity, and small transforms must be treated as an exception and justified in writing.
+
+---
+
 ### 8.5.3 Interaction Feedback Standards
+
+Interaction feedback is how the system confirms that an input was registered and a state transition is happening.
+
+#### 8.5.3.1 Product Surfaces
+
+In the Essentials app and any operational UI:
+
+* **Hover** (desktop):
+
+  * Use `transition-colors duration-150 ease-out`.
+  * Allowed changes: background, border, text colour, subtle shadow.
+  * No movement, no scale, no “lift” beyond a very small shadow change.
+
+* **Focus**:
+
+  * Must always be visually clear.
+  * Implement with a focus ring using colour tokens and `transition-shadow` if needed.
+  * Never rely solely on colour; shape/outline should also indicate focus.
+
+* **Pressed / Active**:
+
+  * Use a short `motion-fast` duration, slight darkening/brightening or tiny scale (e.g. `scale-95`) with `ease-out`.
+  * No long “button down” states, no bounce on release.
+
+* **Toggles, switches, and checkboxes**:
+
+  * Animate only the internal knob or fill state with `duration-150/200`, `ease-out`.
+  * Avoid large sliding distances or slow state changes.
+
+* **Modals, drawers, overlays**:
+
+  * Fade and/or small vertical translation using `motion-standard` or `motion-slow`.
+  * Background dimmer uses `transition-opacity`.
+  * No zoom-in/zoom-out theatrics.
+
+* **Loading indicators**:
+
+  * Use either:
+
+    * static indicators (spinners/progress bars) with `animate-[spin]` or
+    * very subtle pulse aligned to `motion-standard`.
+  * No bouncing dots, wave loaders, or character animations.
+
+#### 8.5.3.2 Marketing Surfaces
+
+On the marketing site and landing pages:
+
+* **Section reveals**:
+
+  * Allowed: soft opacity + small translate (e.g. `opacity-0 → opacity-100`, `translate-y-4 → translate-y-0`) with `duration-300`–`duration-500`, `ease-in-out`.
+  * Triggered on initial load or once on scroll into view. No repeating scroll parallax.
+
+* **Hero motion**:
+
+  * Allowed: slow background shifts, mild fades, or small icon motion.
+  * No parallax that fights with content or causes motion sickness.
+
+* **Illustrative loops**:
+
+  * Allowed: restrained Lottie or SVG loops that:
+
+    * do not flash
+    * do not jitter
+    * do not spin continuously in a distracting way
+  * Must pause or reduce when `prefers-reduced-motion` is set.
+
+Even on marketing surfaces, motion must never overshadow content.
+
+#### 8.5.3.3 Tailwind Motion Tokens in Practice
+
+In code, motion standards translate into Tailwind utility combinations such as:
+
+* Product micro-interaction:
+
+  * `transition-colors duration-150 ease-out`
+* Product modal:
+
+  * `transition-opacity transition-transform duration-200 ease-out`
+* Marketing hero:
+
+  * `transition-opacity duration-500 ease-in-out`
+
+Developers must reuse these patterns rather than inventing new combinations ad hoc.
+
+---
+
 ### 8.5.4 Prohibited Motion
 
+The following motion patterns are **explicitly banned** across all Transcrypt surfaces, regardless of context.
+
+1. **Tailwind’s expressive animation utilities**
+
+   Prohibited in production:
+
+   * `animate-bounce`
+   * `animate-ping`
+   * `animate-pulse` (except for a very controlled, reduced-motion aware indicator)
+   * `animate-spin` on anything decorative
+   * any custom animation with similar behaviour
+
+   Spin is allowed only for functional spinners, at modest speed.
+
+2. **High-energy or playful motion**
+
+   * Bouncing, wobbling, squashing, stretching
+   * Elastic or spring-back effects
+   * “Card lift” that jumps by more than 8px or scales by more than 2%
+   * “Hover jump” interactions that move content significantly
+
+3. **Infinite decorative loops**
+
+   * Background animations that never stop
+   * Continuous colour cycling
+   * Looping shape morphs with no functional meaning
+
+   Exceptions: a subtle, low-energy loop in a hero illustration, provided it is calm, slow, and respects reduced-motion preferences.
+
+4. **Motion as reward or celebration**
+
+   * Confetti, fireworks, bursts, “success” explosions
+   * Tick marks that bounce or “celebrate”
+   * Animated badges or trophies
+
+   Success is confirmed by concise copy and clear state, not theatrics.
+
+5. **Motion that obstructs reading**
+
+   * Animations that move behind or under text
+   * Parallax that causes text and backgrounds to move in opposing directions
+   * Repeated in-view reveals while the user scrolls back and forth
+
+6. **Large-scale layout reflow animations**
+
+   * Animating entire page layouts on every navigation
+   * Sliding whole pages left/right/up/down as if on a carousel
+   * Long morphs between radically different layouts
+
+7. **Non-compliant reduced-motion behaviour**
+
+   * Ignoring `prefers-reduced-motion`
+   * Using the same animation but slightly slower instead of simplifying it
+   * Keeping constant subtle motion even when reduced motion is requested
+
+   When reduced motion is set, only essential transitions (opacity/colour) should remain.
+
+8. **Unapproved custom keyframes**
+
+   Any `@keyframes` or custom Tailwind animation config that:
+
+   * rotates, bounces, or shakes elements
+   * flashes colours
+   * moves elements more than 8px repeatedly
+   * runs longer than 500ms in a loop
+
+   must be treated as non-compliant unless explicitly documented and approved.
+
+---
+
 ## 8.6 Audio & Sonic Identity
-### 8.6.1 When Audio Is Allowed
-### 8.6.2 Default Prohibition Rules
-### 8.6.3 Tone and Behaviour Requirements
-### 8.6.4 Third-Party / Partner Restrictions
+
+Transcrypt is fundamentally a **quiet system**.
+Silence is part of its identity — calm, deliberate, engineered.
+Audio is therefore treated as a **high-risk medium**: permitted only when it improves comprehension or accessibility, and forbidden everywhere it introduces personality, theatrics, or emotional colouration.
+
+On product surfaces, the default is **no audio at all**.
+On marketing surfaces, audio is allowed only when the user explicitly triggers it (e.g., a video).
+System-generated sound must never play automatically.
+
+This section defines **when audio is allowed, when it is prohibited, and what its tone must be when it is used**.
+
+---
+
+## **8.6.1 When Audio Is Allowed**
+
+Audio is permitted only in three narrow contexts:
+
+### **1. User-initiated video content (marketing only)**
+
+If a user actively presses “play”, audio may accompany:
+
+* product walkthrough videos
+* founder/engineering commentary
+* promotional explainers
+* demo recordings
+
+Even then, the soundtrack must be clean, minimal, and free of “tech-fantasy” tropes.
+
+### **2. Accessibility-driven cues (product only)**
+
+Audio may assist users who rely on:
+
+* screen readers
+* audible status confirmations
+* system alerts required for accessibility compliance
+
+These must follow platform standards — never custom-designed sounds.
+
+### **3. Explicit opt-in notifications (rare)**
+
+A user may configure an optional, explicit setting (off by default) for:
+
+* long-running evaluation completion
+* audit export readiness
+* tenant-level lifecycle events
+
+These audio cues must be:
+
+* extremely short (under 400ms)
+* neutral in tone
+* not melodic
+
+If the user has not opted in, audio must not play under any circumstances.
+
+---
+
+## **8.6.2 Default Prohibition Rules**
+
+Audio is **prohibited by default** on all Transcrypt surfaces unless it fits one of the three categories above.
+
+Specifically forbidden:
+
+* **Auto-playing sound** of any kind
+* **UI bleeps**, pings, click sounds, or confirmation tones
+* **Hover or focus sound effects**
+* **Success/celebration sounds**
+* **Error buzzers**, warning tones, or failure stingers
+* **Marketing auto-loops**
+* **Ambient soundbeds** on landing pages
+* **Musical branding**, jingles, or mnemonic signature tones
+* **Keyboard emulation sounds** in code or terminal demos
+* **Audio metaphors** (e.g., lock sounds, paper shuffling, modem tones)
+
+Transcrypt does not gamify security, and it does not dramatise operations.
+The absence of sound is intentional.
+
+---
+
+## **8.6.3 Tone and Behaviour Requirements**
+
+When audio is used (rarely), it must follow strict behavioural and tonal constraints.
+
+### **Tone Requirements**
+
+Audio must be:
+
+* neutral
+* precise
+* non-melodic
+* low-frequency dominant
+* free of cinematic effects
+* free of reverb, echo, distortion, or modulation
+
+Think *instrument panel*, not *marketing flourish*.
+
+No musical intervals, no chord progressions, no earworms, no personality.
+
+### **Behaviour Requirements**
+
+* Must respect **system volume settings**
+* Must respect **browser autoplay blocking**
+* Must respect **prefers-reduced-motion and accessibility preferences**
+* Must never **layer sounds** or play multiple cues simultaneously
+* Must **never loop indefinitely**
+
+Audio must always behave predictably and silently exit when disabled.
+
+---
+
+## **8.6.4 Third-Party / Partner Restrictions**
+
+Third-party or partner content embedded within Transcrypt surfaces (e.g., YouTube, Vimeo, webinar embeds) must follow these restrictions:
+
+### **1. No auto-play**
+
+All embedded players must load in a muted state until the user presses play.
+
+### **2. No unvetted audio tracks**
+
+If a partner’s audio includes:
+
+* aggressive music
+* speculative tech sounds
+* high-energy marketing tracks
+* emotional or manipulative scoring
+
+…the embed must be rejected, replaced, or disabled.
+
+### **3. No interactive audio elements**
+
+No external widgets may introduce:
+
+* sound-on-hover
+* sound-on-scroll
+* ambient loops
+* background animations with audio
+
+### **4. Compliance with browser and platform rules**
+
+Any embedded player must respect:
+
+* autoplay policies
+* mobile OS restrictions
+* corporate lockdown environments
+* reduced-motion or accessibility settings
+
+If compliance cannot be guaranteed, the audio must be stripped or the embed must be removed entirely.
+
+---
 
 ## 8.7 Wireframes and Structural Examples
 
@@ -3699,3 +4440,49 @@ Used for:
 * architectural diagrams
 
 ---
+
+# Appendix B — Spacing Tokens and Specifications
+
+This appendix defines the authoritative spacing tokens used across all Transcrypt surfaces.  
+All layout, rhythm, and component spacing must be expressed using these tokens.
+
+## B.1 Base Unit
+
+- `--space-unit`: 4px
+
+All other spacing tokens are integer multiples of this base unit.
+
+## B.2 Section Spacing
+
+- `--space-section-xl`: 120px  # 30 × base
+- `--space-section-l`:  96px   # 24 × base
+- `--space-section-m`:  72px   # 18 × base
+- `--space-section-s`:  56px   # 14 × base
+
+Used for: page-level breaks, major section dividers.
+
+## B.3 Block Spacing
+
+- `--space-block-l`: 40px  # 10 × base
+- `--space-block-m`: 32px  # 8 × base
+- `--space-block-s`: 24px  # 6 × base
+
+Used for: spacing between stacked content blocks (cards, groups, form sections).
+
+## B.4 Element Spacing
+
+- `--space-element-l`:   20px  # 5 × base
+- `--space-element-m`:   16px  # 4 × base
+- `--space-element-s`:   12px  # 3 × base
+- `--space-element-xs`:  8px   # 2 × base
+- `--space-element-xxs`: 4px   # 1 × base
+
+Used for: spacing between labels and inputs, list items, chip stacks, micro-elements.
+
+## B.5 Usage Rules
+
+1. All spacing in product, marketing, and documentation must map to these tokens.
+2. No ad-hoc pixel values may be introduced in layout CSS.
+3. Tailwind / CSS implementations must consume these tokens, not redefine new spacing scales.
+4. Any change to these values is a versioned change and must be recorded under §10.4.
+
