@@ -567,10 +567,6 @@ Marketing reflows with the same logic — the only difference is breathing room.
 
 ### **4.4.4 Constraints and Prohibitions**
 
-### **4.4.5 Content Width and Container Boundaries**
-
-
-
 To maintain system integrity:
 
 1. Essentials may not override grid rules. Marketing may use expanded or editorial container layouts as long as tokens and breakpoint logic remain intact.
@@ -582,6 +578,116 @@ To maintain system integrity:
 7. **No layout shifts** caused by content volume (lists may scroll; they may not reflow unpredictably).
 
 These constraints ensure Transcrypt feels consistent, serious, and engineered regardless of who is looking at it or what device they hold.
+
+### **4.4.5 Content Width and Container Boundaries**
+
+Content width is an architectural constraint that governs how far readable material may extend across the viewport. It preserves line-length discipline, prevents enterprise-dashboard sprawl, and ensures identical behaviour across tenants and runtimes. Width is not a design preference — it is a deterministic system rule.
+
+Transcrypt enforces **two** and only **two** container widths:
+
+* **Wide (≈1320px)** — Marketing, Site, Blog
+* **Medium (≈1120px)** — Essentials, Billing, Evidence, Evaluation, Reporting, Settings
+
+No page, component, or runtime may introduce a third width without a formal amendment to this subsection and to IA Appendix A — Page Templates.
+
+---
+
+#### **4.4.5.1 Core Container Rules**
+
+**1. Two width classes only**
+
+* `--layout-width-medium` (Essentials)
+* `--layout-width-wide` (Marketing/Site/Blog)
+
+These tokens define all content containers. No additional widths or “slightly wider/narrower” variants are permitted.
+
+**2. Deterministic binding**
+Each surface binds to **one** width class based on runtime:
+
+* Essentials → **Medium**
+* Marketing/Site/Blog → **Wide**
+
+There are no mixed-width surfaces.
+
+**3. Global max width discipline**
+Readable text must never exceed the safe global line-length envelope (approx. 68–72ch). Even in wide containers, text blocks sit within a controlled text column; images and editorial layouts may occupy extra space.
+
+**4. Controlled min-width behaviour**
+Below the smallest breakpoint, both container types collapse into a full-width mobile pattern with fixed padding tokens. No surface is allowed to “stretch” or introduce improvisational paddings.
+
+---
+
+#### **4.4.5.2 Full-Bleed and Near-Bleed Rules**
+
+Full-bleed is tightly controlled and **never permitted** in Essentials.
+
+**Permitted in Marketing only:**
+
+* Hero bands
+* Editorial image strips
+* Section dividers
+
+**Prohibited everywhere else:**
+
+* Evidence items
+* Forms
+* Evaluation summaries
+* Reporting screens
+* Billing
+* Settings
+* Any authenticated surface
+
+**Near-bleed rules (Marketing only):**
+
+* Charts, diagrams, and editorial blocks may expand horizontally but must remain inside grid gutters and spacing tokens.
+* Typography blocks must always remain inside the text-width envelope.
+
+No near-bleed is allowed in Essentials.
+
+---
+
+#### **4.4.5.3 Breakpoint Interaction**
+
+Container behaviour across breakpoints is rule-driven, not adaptive:
+
+1. Containers **lock** to their width token at and above the binding breakpoint.
+2. Below that breakpoint, container width collapses to the mobile pattern.
+3. Two-column layouts collapse to one column **at a fixed breakpoint only** — never earlier, never later.
+4. No runtime introduces additional breakpoint-specific container widths.
+5. No content type modifies container behaviour.
+
+---
+
+#### **4.4.5.4 Typography Line-Length Constraints**
+
+All text must remain within safe, readable limits:
+
+* Body: **60–72 characters per line**
+* Long-form (Marketing articles): maximum **72ch**, even in wide mode
+* Microtext: width bound to component, not container
+* Headings: may exceed 72ch only if they remain inside the container and do not overflow the text column definition
+
+Essentials has **zero flexibility**.
+Marketing may adjust composition but may not violate the line-length envelope for copy blocks.
+
+---
+
+#### **4.4.5.5 Restrictions and Prohibitions**
+
+These rules prevent layout drift and are non-negotiable:
+
+1. **No third width class** may be introduced at any time.
+2. **No component-level width overrides** (cards, tables, forms, modals).
+3. **No surface may mix widths** — each surface has exactly one.
+4. **No dynamic width expansion** based on viewport availability.
+5. **No edge-to-edge cards or forms** in Essentials.
+6. **No designer or developer discretion** — any exception requires a system revision.
+7. **No inference-generated surfaces may introduce new container geometries.**
+8. **No content type may create its own width logic** (e.g., “wide blog card”).
+9. **Exports ignore container width entirely** — they use fixed PDF geometry.
+10. **Hero full-bleed must never imply full-bleed anywhere else** in the system.
+
+Content width is part of Transcrypt’s operational identity: engineered, fixed, and predictable.
 
 ---
 
