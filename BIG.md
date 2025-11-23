@@ -1951,8 +1951,93 @@ The icon system must read cleanly at a glance: neutral, sparse, and unambiguous.
 ---
 
 ## 6.2 Line Weight, Corners, and Scale
-### 6.2.1 Stroke Rules
-### 6.2.2 Scaling Constraints
+
+This section defines the non-negotiable geometric rules that govern every icon used in Transcrypt. These rules ensure that all icons — whether sourced directly from Feather or lightly adjusted — behave as a single engineered system. Stroke weight, corner behaviour, and scaling constraints are fixed. No icon may deviate from these specifications.
+
+Icons are not expressive assets. They are functional glyphs with precise geometric boundaries. Any variation in stroke consistency, corner rounding, or scale introduces visual drift and undermines the clarity required across UI, diagrams, and exported documents.
+
+---
+
+## **6.2.1 Stroke Rules**
+
+Stroke behaviour in Transcrypt is uniform and strictly controlled. Every icon in the system must use the same engineered outline structure to maintain clarity, contrast, and predictable rendering.
+
+**1. Single stroke weight**
+All icons must use a **fixed 2px stroke weight** based on the Feather baseline.
+No thin, bold, variable, or multi-weight icons are permitted.
+
+**2. Round caps and round joins**
+Stroke caps and joins must always be **round**, matching Feather geometry.
+No mitered, beveled, square, or stylistic join behaviours.
+
+**3. No fill paths**
+Icons are outline-only. Fill shapes are prohibited except where a 16×16 reduction becomes unreadable and only a minimal filled form preserves legibility. Such exceptions must be rare and purely functional.
+
+**4. Pixel-grid alignment**
+All stroke endpoints, control points, and anchor nodes must align to whole-pixel coordinates within the 24×24 frame.
+Fractional coordinates (e.g. 12.4, 7.8) are prohibited.
+
+**5. Clean geometry only**
+Icons must contain no stray nodes, doubled paths, overlapping strokes, micro-segments, or boolean artifacts.
+
+**6. No stroke scaling**
+Strokes must not thicken, thin, distort, or scale disproportionately when icons are resized.
+If an icon needs to appear at a different size, it must scale uniformly within the constraints defined in §6.2.2.
+
+**7. No stylistic variations**
+No textured strokes, dashed lines, broken lines, pressure-sensitive curves, or variable-width strokes.
+Icons must remain mechanically consistent.
+
+The stroke system is intentionally rigid. Its purpose is clarity, not expression.
+
+---
+
+## **6.2.2 Scaling Constraints**
+
+Scaling rules ensure that icons remain legible and mechanically stable across all contexts — UI chrome, diagrams, PDFs, and micro-scale surfaces such as favicons. Icons must not distort or behave unpredictably when resized.
+
+**1. Native size: 24×24**
+All icons are authored in, and optimised for, a **24×24 coordinate system**.
+This is the canonical size for evaluation and alignment.
+
+**2. Approved display sizes**
+Icons may be displayed at:
+
+* **24×24** (default for UI and diagrams)
+* **20×20** (secondary UI contexts)
+* **16×16** (compact UI or metadata contexts)
+
+Sizes such as 18px, 22px, or any fractional scaling (e.g. 13.5px) are prohibited. They generate anti-aliased blur and destroy geometric consistency.
+
+**3. 16×16 simplification**
+If an icon becomes visually ambiguous at 16×16, a **manually simplified variant** must be produced.
+Simplification rules:
+
+* Remove non-essential internal paths
+* Reduce intersections
+* Preserve silhouette only
+* Maintain stroke weight and round joins
+
+This is not a redesign; it is a functional reduction.
+
+**4. No upscaling beyond intended use**
+Icons must not be enlarged beyond **32×32** except in rare documentation diagrams where the icon acts as a directional marker.
+Icons may never be used as decorative oversized illustrations.
+
+**5. No distortion during scaling**
+Scaling must be uniform.
+No horizontal/vertical stretching, shearing, perspective transforms, or manual “nudging.”
+
+**6. No container-dependent scaling hacks**
+Icons must not stretch to fill arbitrary shapes, buttons, or layout slots. Containers must be designed to respect the icon’s fixed ratio.
+
+**7. PDF and print fidelity**
+Icons must remain legible when exported to PDF or printed in monochrome.
+If an icon loses clarity in print at small sizes, the simplified 16×16 variant must be used instead of scaling the 24×24 master.
+
+The scaling system ensures that Transcrypt icons behave with the same deterministic logic as the product itself: consistent, predictable, and structurally unambiguous.
+
+---
 
 ## 6.3 Illustration Tone and Style
 ### 6.3.1 Principles of Illustration
@@ -2009,31 +2094,875 @@ Icons do not require a pre-defined inventory.
 
 # 7. Imagery and Photography
 
+Imagery in Transcrypt operates on a **two-surface model**:
+the **Product surface**, where clarity and neutrality dominate, and the **Marketing surface**, where high-craft visual expression is permitted.
+Both surfaces share the same conceptual spine — seriousness, technical competence, and truthfulness — but apply it with different levels of visual intensity.
+
+The **Product imagery** supports comprehension, documentation, and trust.
+It avoids dramatics, avoids personality, and avoids anything that competes with structure or typography. It is documentary in tone: clear lighting, honest subjects, no atmosphere added in post. Product imagery exists to *explain*.
+
+The **Marketing imagery** is allowed to be visually persuasive.
+It may use controlled cinematic lighting, depth cues, atmospheric gradients, soft glows, structured abstractions, and motion-led composition — as long as these treatments remain technical rather than whimsical. Marketing imagery exists to *signal capability, confidence, and modernity* without drifting into consumer gloss.
+
+Across both surfaces, the imagery system must adhere to three principles:
+
+1. **Truthful substance over aesthetic trickery.**
+   Nothing may distort the nature of the product or exaggerate its capabilities.
+
+2. **A technical visual tone.**
+   Imagery should feel engineered, intentional, and grounded in the realities of operational security, not inspired by lifestyle design or entertainment aesthetics.
+
+3. **Consistency of message, not uniformity of style.**
+   Product and Marketing serve different purposes and therefore use different treatments — but both must reinforce that Transcrypt is serious, disciplined, and built for people who handle risk professionally.
+
+This section defines subject matter, mood, composition rules, and treatment standards for both surfaces, ensuring that imagery consistently communicates Transcrypt’s competence and restraint, whether guiding an auditor through evidence or introducing the product on a landing page.
+
+---
+
 ## 7.1 Subject Matter and Mood
-### 7.1.1 Thematic Constraints
-### 7.1.2 Avoided Subjects
+
+Imagery used by Transcrypt must support clarity, context, and comprehension. It must not introduce emotion, narrative, or personality. The subject matter must remain functional, deliberate, and directly relevant to the domain of cybersecurity, structured systems, and operational environments. The mood must always be neutral and controlled — aligned with the brand’s engineered posture and its responsibility to reduce cognitive noise.
+
+Imagery is a **supporting component**, never a lead element. If an image does not directly improve understanding, it is removed.
+
+---
+
+### **7.1.1 Thematic Constraints**
+
+All imagery must fall within a narrow set of permissible themes. These themes reflect Transcrypt’s identity: structured, technical, calm, and grounded in real operational environments.
+
+Permitted thematic categories:
+
+#### **1. Real-world operational detail**
+
+Images that capture infrastructure, devices, networks, or physical environments relevant to security and compliance.
+
+Examples:
+
+* server racks (unbranded, calm lighting)
+* network hardware
+* workstations, devices, cabling
+* industrial or office environments without people
+
+Purpose: contextual grounding without implying excitement or drama.
+
+#### **2. Abstract structural forms**
+
+Geometric, minimal imagery that reinforces ideas of structure, containment, or ordered systems.
+
+Examples:
+
+* grid patterns
+* controlled linework
+* modular shapes
+* architectural abstractions (not artistic flourishes)
+
+Purpose: reinforce clarity and system behaviour visually.
+
+#### **3. Documentation-oriented imagery**
+
+Screens, forms, structured content, checklists, diagrams — shown only to reinforce product comprehension.
+
+Examples:
+
+* evidence structures
+* interface elements (desaturated, non-interactive)
+* flow diagrams
+* architecture snippets
+
+Purpose: support understanding, not sell features.
+
+#### **4. Environmentally neutral textures**
+
+Muted, minimal textures that provide subtle depth without resembling consumer branding or mood photography.
+
+Examples:
+
+* concrete
+* brushed metal
+* matte surfaces
+
+Purpose: support, not dominate.
+
+#### **5. Tools and artefacts**
+
+Objects that are part of real-world compliance work.
+
+Examples:
+
+* notebooks
+* pens
+* routers
+* reference documents
+
+Purpose: ground the system in reality, without metaphor.
+
+---
+
+### **7.1.2 Avoided Subjects**
+
+Certain subjects are prohibited because they introduce emotion, personality, narrative, or thematic drift. They destabilise the brand and conflict with its obligation to remain calm, precise, and non-expressive.
+
+The following categories are **forbidden**:
+
+#### **1. People**
+
+No faces, models, hands, teams, meetings, or “human connection” imagery.
+People introduce emotion, bias, personality, and narrative — all incompatible with Transcrypt’s neutral system identity.
+
+#### **2. Emotional or atmospheric photography**
+
+No moody lighting, sunsets, skylines, abstract flares, bokeh, or cinematic imagery.
+
+These add narrative tone, not clarity.
+
+#### **3. Metaphorical content**
+
+No keys, locks, shields, padlocks, mazes, lighthouses, bridges, animals, or any symbolic representation of “security.”
+
+Metaphor violates the deterministic, literal identity of Transcrypt.
+
+#### **4. Consumer-tech aesthetics**
+
+No glowing keyboards, RGB-lit racks, dramatic server close-ups, neon-lit rooms, or hacker-themed imagery.
+
+These signal theatricality, not trust.
+
+#### **5. Stock photography tropes**
+
+No people at laptops, handshakes, posed “professionals,” stick-figure iconography, or artificial composite images.
+
+These undermine credibility and introduce inconsistent tone.
+
+#### **6. Playful or stylised visuals**
+
+No illustrations or photographs with:
+
+* cartoonish style
+* exaggerated colour
+* expressive shape language
+* trendy gradients
+
+These are incompatible with the brand’s engineered seriousness.
+
+#### **7. Branded environments**
+
+No office shots, billboards, swag, or lifestyle photography implying a corporate culture.
+
+The brand is a system — not a lifestyle.
+
+---
 
 ## 7.2 Composition Rules
-### 7.2.1 Cropping and Framing
-### 7.2.2 Perspective and Depth
+
+Imagery used by Transcrypt must be composed in a way that reinforces clarity, neutrality, and structural order. Composition cannot introduce drama, narrative, or personality. All framing, cropping, and perspective choices must reduce cognitive noise and keep attention on information, not aesthetics.
+
+The composition system exists to prevent expressive visual behaviour and to ensure that images feel like part of the same engineered environment across the marketing site, documentation, and product surfaces.
+
+---
+
+### **7.2.1 Cropping and Framing**
+
+Cropping rules ensure that imagery remains functional, neutral, and free from emotional or narrative cues. Images must be cropped to remove visual noise, irrelevant content, and any elements that imply personality, human presence, or mood.
+
+#### **1. Subject-first, environment-second**
+
+The subject (hardware, documentation, structured objects) must occupy a clear, stable region of the frame. Extraneous background must be reduced or removed.
+
+Permitted:
+
+* clean object-centred crops
+* straight-on framing around structured forms
+* tightly controlled negative space
+
+Prohibited:
+
+* artistic off-centre compositions
+* aesthetic “empty space” used for emotional effect
+* visual storytelling through framing
+
+#### **2. Always square or rectilinear crops**
+
+Aspect ratios must remain mechanically neutral.
+
+Permitted ratios:
+
+* 1:1
+* 4:3
+* 16:9
+* 3:2
+
+Prohibited:
+
+* cinematic ultrawide ratios
+* asymmetrical or decorative crops
+* non-rectangular shapes
+
+Images must not be masked inside circles, hexagons, soft shapes, or decorative containers.
+
+#### **3. Zero dynamic cropping**
+
+Do not crop to create drama, suggest action, or draw emotional focus.
+
+Examples of prohibited cropping:
+
+* partial close-ups implying motion
+* angled crops of devices
+* abstract crops that obscure context
+
+Clarity outweighs visual interest.
+
+#### **4. Grid-aligned framing**
+
+Major verticals and horizontals in the image must align with the brand’s grid logic where practical.
+Cropping must avoid tilt, horizon skew, or off-axis framing unless the subject itself is fixed at an angle.
+
+#### **5. Remove humans if present**
+
+If an otherwise acceptable image contains people or body parts:
+
+* crop them out cleanly
+* or discard the image
+
+Hands, silhouettes, and partial limbs are treated as full human presence and are prohibited.
+
+---
+
+### **7.2.2 Perspective and Depth**
+
+Perspective rules ensure that images maintain a calm, technical character. Depth must be minimal, controlled, and free from cinematic behaviour. Imagery must remain literal and documentary, not expressive.
+
+#### **1. Neutral, front-facing perspective only**
+
+Permitted perspectives:
+
+* straight-on (orthographic-style)
+* mild three-quarter angles when structural clarity benefits
+
+Prohibited:
+
+* dynamic angles
+* low vantage points
+* high “hero” camera positions
+* wide-angle distortion
+
+Perspective must never suggest speed, action, elevation, or drama.
+
+#### **2. Minimal depth-of-field**
+
+Shallow depth-of-field introduces mood; therefore it is prohibited.
+
+Rules:
+
+* Images must be in focus across the majority of the frame
+* Background blur must be functional, not atmospheric
+
+No bokeh, no soft-focus, no cinematic blur.
+
+#### **3. No exaggerated foreground/background separation**
+
+Avoid images where the subject is sharply isolated against a soft or atmospheric background.
+Acceptable depth separation must be subtle and documentary in character.
+
+#### **4. Avoid vanishing points and strong convergence**
+
+Images must not use perspective lines that:
+
+* pull the viewer into the frame
+* add implied motion
+* create dramatic recession
+
+Hardware or architecture images must be taken with neutral lens settings to avoid distortion.
+
+#### **5. Shadow behaviour must be minimal**
+
+Shadows may exist but must not:
+
+* dramatise form
+* create contrast spikes
+* imply mood or time-of-day narrative
+
+Soft, neutral shadows only — or none at all.
+
+#### **6. Flat lay is permitted but must not be stylised**
+
+Flat-lay images are allowed if:
+
+* the subject matter is technical or operational (devices, documents, tools)
+* spacing is orderly
+* the scene is not decorative
+
+Flat-lays must *never* mimic lifestyle photography.
+
+#### **7. Architecture/diagram perspective**
+
+When images contain screens, documents, or structured artefacts:
+
+* perspective must be kept close to orthographic
+* edges must remain straight, not keystone-distorted
+* no simulated 3D, extruded shadows, or angled “mockups”
+
+The rule is: **clarity over realism, realism over style**.
+
+---
 
 ## 7.3 Colour Treatment and Filters
-### 7.3.1 Standard Treatments
-### 7.3.2 Prohibited Filters
+
+Colour treatment ensures that imagery never introduces emotion, warmth, or stylistic drift. All images must be processed in a way that reinforces the neutral, engineered character of the brand. Filters must support clarity and reduce noise — not create mood, drama, or visual personality.
+
+Transcrypt imagery must appear quiet, technical, and documentary.
+Colour is functional, not expressive.
+
+---
+
+### **7.3.1 Standard Treatments**
+
+Permitted treatments are narrowly defined and exist solely to maintain clarity, consistency, and print/export reliability. Any treatment not explicitly listed is considered out-of-system.
+
+#### **1. Neutral Desaturation (5–20%)**
+
+A small degree of desaturation is allowed to:
+
+* remove emotional warmth
+* reduce colour variance across images
+* unify mixed lighting sources
+
+Desaturation must be minimal.
+Images must *not* appear monochrome unless they originated that way.
+
+#### **2. Soft Contrast Equalisation**
+
+A controlled contrast curve ensures legibility without drama.
+
+Permitted adjustments:
+
+* small lift of shadows to remove harsh depth
+* controlled highlight compression to prevent glare
+* mild midtone balancing for clarity
+
+No punch, no cinematic contrast.
+
+#### **3. Temperature Correction**
+
+Only functional temperature changes are allowed:
+
+* remove warm indoor casts
+* neutralise mixed lighting
+* restore daylight neutrality
+
+Images must move towards **cool-neutral** (but never icy or stylised).
+
+#### **4. Grain Removal**
+
+If an image contains digital noise or grain, it should be minimised.
+However:
+
+* no stylised “softening”
+* no skin smoothing
+* no blur beyond minimal noise reduction
+
+#### **5. Linear Sharpening**
+
+A restrained sharpening pass is allowed to maintain clarity of:
+
+* device edges
+* screens
+* documents
+* technical objects
+
+Sharpening must be subtle, never crisp or stylised.
+
+#### **6. Exposure Normalisation**
+
+All images must sit within a controlled luminosity range:
+
+* no high-key brightness
+* no low-key darkness
+* no silhouettes
+
+The goal is readability, not atmosphere.
+
+#### **7. Unified Colour Profile**
+
+Images must be exported using:
+
+* **sRGB** for web
+* **embedded CMYK-safe sRGB** equivalent for print-safe exports
+
+This prevents unexpected saturation shifts.
+
+---
+
+### **7.3.2 Prohibited Filters**
+
+Transcrypt does not use stylised photography. Any treatment that introduces mood, personality, or cinematic tone is prohibited. Images must remain literal, documentary, and neutral — aligned with the product’s purpose of clarity and inspection.
+
+The following are not permitted on any marketing, product, documentation, or export surface:
+
+### **1. Cinematic or Expressive Colour Manipulation**
+
+No strong colour washes, tinted overlays, colour grading, or mood-setting palettes.
+Images may not be made warmer, cooler, softer, harsher, or more dramatic.
+
+### **2. High-Style Contrast Manipulation**
+
+No heavy shadows, lifted blacks, crushed highlights, or stylised tonal curves designed to evoke atmosphere.
+
+### **3. Noise, Grain, or Texture Effects**
+
+No film grain, noise overlays, matte textures, halation, bloom, or vintage film emulation.
+
+### **4. Softening or Glow Effects**
+
+No skin-smoothing, glow blooms, bloom highlights, or atmospheric haze.
+
+### **5. Artificial Vignettes or Edge Treatments**
+
+No darkened corners, spotlighting effects, lens vignettes, or radial emphasis.
+
+### **6. **No Stylising Effects (Unified Rule)**
+
+Images must not use:
+
+* colour-isolation or channel-picking
+* gradient colour overlays
+* brand-colour filters
+* blurs, Gaussian blur, background art blur, bokeh simulations
+* duotone, tritone, posterisation, or any illustrative processing
+
+These treatments introduce theatrics and contradict Transcrypt’s documentary tone.
+
+---
 
 ## 7.4 Prohibited Imagery
-### 7.4.1 Brand Integrity Risks
-### 7.4.2 Misleading or Off-Brand Content
+
+Prohibited imagery exists to prevent accidental drift into emotional framing, metaphor, theatrics, or anything that could misrepresent Transcrypt’s purpose.
+If an image risks introducing personality, narrative, or implication beyond literal documentation, it must not be used.
+
+This section defines the classes of imagery that are structurally incompatible with Transcrypt.
+
+---
+
+### **7.4.1 Brand Integrity Risks**
+
+These categories undermine the brand’s engineered, neutral posture and therefore cannot appear on any surface — marketing, product, documentation, PDF exports, or social.
+
+#### **1. Metaphorical or Symbolic Imagery**
+
+No symbols intended to represent concepts indirectly, including:
+
+* locks, shields, keys
+* padlocks in clouds
+* maze metaphors
+* heroic or aspirational symbols
+* abstract “cyber swirls” or neon networks
+
+Transcrypt does not use metaphor to communicate security.
+
+#### **2. Emotional or Performative Imagery**
+
+Any image designed to evoke excitement, fear, energy, humour, warmth, or drama is prohibited.
+
+Examples:
+
+* smiling office teams
+* stressed employees with laptops
+* triumph/failure depictions
+* emotional human expression of any kind
+
+The brand must remain calm, neutral, and untheatrical.
+
+#### **3. Stylised Cyber or Tech Aesthetic**
+
+No “cyberpunk,” neon, gridlines, holographic elements, digital distortion, glowing edges, or matrix-style motifs.
+
+These imply emotion, futurism, or magical systems — all incompatible with Transcrypt’s deterministic architecture.
+
+#### **4. Decorative or Mood-Setting Images**
+
+No imagery whose primary role is aesthetic rather than informational.
+
+Examples:
+
+* abstract patterns
+* stylised backgrounds
+* bokeh or depth-of-field theatrics
+
+Transcrypt does not use imagery to decorate or evoke mood.
+
+#### **5. Stock Photography with Brand Personality**
+
+Any stock photography that attempts to portray:
+
+* “innovation”
+* “collaboration”
+* “digital transformation”
+* “team culture”
+
+is forbidden. These introduce narrative and personality.
+
+---
+
+### **7.4.2 Misleading or Off-Brand Content**
+
+These categories risk distorting expectations or implying behaviours, capabilities, or workflows that Transcrypt does not provide.
+
+#### **1. Implied Security Guarantees**
+
+Images suggesting:
+
+* hacks being blocked
+* shields deflecting attacks
+* glowing data streams
+* people “protecting” devices
+
+These misrepresent what the platform does and violate PRD boundaries.
+
+#### **2. Imagery Suggesting Human “Advisory” or Consultancy**
+
+Transcrypt does not present itself as a consultancy or human-led service.
+
+Prohibited:
+
+* people looking over shoulders
+* meetings across laptops
+* advisors pointing at screens
+* handshakes or partnership symbolism
+
+The platform is system-led, not people-led.
+
+#### **3. Misleading setting or context**
+
+No imagery implying environments Transcrypt does not operate in:
+
+* server rooms
+* SOC dashboards
+* datacentres
+* threat-hunting teams
+* analysts in headsets
+
+Transcrypt is a compliance product, not a monitoring, SOC, or ops platform.
+
+#### **4. Illustrations or Photography Implying Emotion, Persona, or Narrative**
+
+Prohibited:
+
+* character illustrations
+* mascots
+* cartoons
+* emotive portraits
+* stylised sketches
+
+Transcrypt does not anthropomorphise, storytell, or entertain.
+
+#### **5. Misleading Depictions of Process**
+
+Images must not:
+
+* imply automation the system does not perform
+* show workflows that differ from those defined in the PDS
+* depict incorrect regulatory steps
+* suggest results or guarantees the system cannot provide
+
+#### **6. Any Image That Competes With the Identity System**
+
+If an image introduces:
+
+* strong tone
+* personality
+* narrative
+* colour dominance
+* visual noise
+
+…it is off-brand.
+
+---
 
 # 8. Layout and Composition
 
+Layout in Transcrypt is not a creative gesture — it is an operational constraint.
+Where the PRD defines purpose and the SAIS defines architecture, layout defines **how information is physically arranged** so the system reads with the same determinism it is built on.
+
+Transcrypt’s layout model is engineered, not expressive.
+It enforces:
+
+* predictable structure
+* stable margins
+* consistent rhythm
+* repeatable grid behaviour
+* strict separation between content and chrome
+* zero ambiguity in spacing or alignment
+
+Every surface — marketing, app, documentation, exports — must read as part of a single, coherent system. That system privileges **clarity, hierarchy, and precision** above all else. There is no decorative layout, no ornamental composition, and no “designer drift.” If a layout pattern cannot be described, reproduced, and validated, it is not part of Transcrypt.
+
+This section defines:
+
+1. **Grid systems and margins** for mobile, tablet, and desktop
+2. **Canonical page templates** for core touchpoints
+3. **Vertical rhythm and spacing hierarchy** (the spacing logic that everything inherits)
+4. **Brand patterns and their extremely limited use**
+5. **Motion and interaction identity** rules
+6. **Audio rules** for rare cases where sound is permitted
+
+These rules ensure that every page, component, and visual structure behaves like engineered infrastructure — stable, legible, and resistant to aesthetic drift — while still giving the marketing layer the flexibility it needs to operate at its expected level of polish.
+
+This is the determinism of the SAIS expressed as visuals:
+**no surprises, no improvisation, no ambiguity.**
+
+---
+
 ## 8.1 Brand Grids and Margins
-### 8.1.1 Grid Options
-### 8.1.2 Margin Rules
+
+Transcrypt’s layout system is built on a stable, predictable grid that behaves the same across the marketing site, the Essentials app, documentation surfaces, and exported materials. The grid does not express personality; it enforces structure. Every layout decision — spacing, rhythm, column width, breakpoints, and margins — must derive from the rules in this section.
+
+The system is characterised by three traits:
+
+1. **Determinism:** layouts collapse and expand according to fixed breakpoints, not designer preference.
+2. **Clarity:** columns and gutters are generous enough to support dense technical content.
+3. **Consistency:** the same spatial logic applies across product, docs, and exports.
+
+Transcrypt avoids improvisational, fluid, or “creative” grid decisions. The grid exists to stop drift, not enable it.
+
+---
+
+## **8.1.1 Grid Options**
+
+The grid system has three modes tied to device classes, each optimised for clarity and touch accuracy rather than ornamental flexibility.
+
+### **Mobile Grid (≤ 480px)**
+
+**2-column fixed grid**
+
+* Columns: **2**
+* Gutter: **16px**
+* Outer margins: **20–24px**
+* Text spans: **always 2 columns**
+* Cards: full width or half width only
+* No nested grids permitted
+
+Rationale: Four-column mobile grids look clever until the user tries to tap or read anything. Transcrypt demands clarity and predictable reading, not marketing density.
+
+### **Tablet Grid (481–880px)**
+
+**4–6 column grid depending on surface**
+
+* Product UI: **4 columns**
+* Marketing & content pages: **6 columns**
+* Gutter: **20px**
+* Outer margins: **32px**
+
+Rationale: Tablet is the bridge state where marketing gains slightly more freedom, but product UI remains controlled and text-first.
+
+### **Desktop Grid (≥ 880px)**
+
+**12-column grid — the system’s backbone**
+
+* Columns: **12**
+* Gutter: **24–32px**
+* Max content width: **1200–1320px**
+* Sidebars: multiples of 3 columns
+* Content regions: multiples of 4 columns
+
+Rationale: This is where the identity is most visible. The grid must be unambiguous and robust enough for complex documentation, dense tables, diagrams, and multi-panel product screens.
+
+### **Print and Export Grid (PDF & long-form docs)**
+
+**Single or dual-column scientific layout**
+
+* Single column: **preferred default**
+* Dual column: **only for dense technical material**
+* Margins: **larger, fixed, conservative**
+* No responsive behaviour
+
+Rationale: Technical documentation should read like evidence, not a website.
+
+---
+
+## **8.1.2 Margin Rules**
+
+Margins are structural boundaries, not “white space choices.” They enforce containment, focus, and visual calm. Inconsistent margins create drift; fixed margins enforce discipline.
+
+### **Core Margin Rules (All Surfaces)**
+
+* Outer margins are **always larger** than internal gutters.
+* Margins must **increase** with screen size.
+* No element may “kiss” the viewport edge except full-bleed hero imagery on marketing surfaces.
+* Margins define the rhythm; content never overrides them.
+
+### **Mobile Margin Rules**
+
+* Default margin: **20–24px**
+* Do not collapse below **16px**
+* Buttons, pills, and chips must retain **at least 12px** breathing room from edges.
+
+### **Tablet Margin Rules**
+
+* Default margin: **32px**
+* May expand to **40px** on text-heavy surfaces
+* No mixed-margin layouts allowed (e.g., uneven left/right).
+
+### **Desktop Margin Rules**
+
+* Standard margin: **48–64px**
+* Hero sections may use **compensated margins** for proportion (e.g., 72px top, 64px sides).
+* All documentation pages, system dashboards, and tables must sit inside the same margin boundary for consistency.
+
+### **PDF / Print Margin Rules**
+
+* Minimum margin: **20–25mm**
+* Wider top margin for metadata, headers, and audit details
+* No decorative bleed, no edge-to-edge colour
+
+---
 
 ## 8.2 Key Page Templates
-### 8.2.1 Landing Pages
-### 8.2.2 Campaign and Feature Pages
+
+Transcrypt’s outward-facing surfaces follow a small set of deterministic templates. These templates establish the structural identity of the brand – the shapes, rhythms, and sequencing that make a page recognisably Transcrypt before colour, typography, or graphics are considered.
+
+This section defines the canonical layouts for marketing surfaces. These patterns are not aesthetic suggestions; they are behavioural rules. They keep the brand coherent while giving the single author (you) room to refine, iterate, and A/B test inside stable constraints.
+
+Templates do not restrict creativity – they prevent entropy. They give every page a predictable skeleton so that experimentation affects performance, not identity.
+
+A/B testing is fully permitted on all marketing surfaces. As a single-author system, Transcrypt relies on consistent judgement rather than multi-team governance. Experiments may explore copy, density, illustration usage, or block sequencing, provided they do not violate the colour system, grid rules, motion envelope, or typographic standards defined elsewhere in this guide.
+
+---
+
+## **8.2.1 Landing Pages**
+
+Landing pages are the highest-authority marketing surfaces. They introduce Transcrypt to new visitors and must embody the brand’s core personality: engineered, sober, and technically competent. These pages must feel stable and trustworthy at first glance.
+
+### **Page Structure Requirements**
+
+Landing pages follow a fixed upstream structure. Minor variations are allowed, but the order must remain intact:
+
+1. **Hero Block**
+
+   * Always present, always above the fold.
+   * Single clear headline with grounded, non-flamboyant language.
+   * Optional eyebrow line for categorisation.
+   * No theatrical motion. Micro-animations only (opacity, subtle translation).
+   * Hero may contain:
+
+     * system diagram
+     * abstract geometric pattern from §8.4
+     * neutral photography (only if tied to the narrative)
+   * Button layout: primary → secondary. No more than two.
+
+2. **Narrative / Value Block**
+
+   * “What Transcrypt does and why it matters.”
+   * Uses the 12-column grid on desktop, 2-column on mobile.
+   * No marketing gloss (no gradient blobs, no neon colour, no fake depth).
+
+3. **Credibility Layer**
+
+   * Lightweight proof points: standards mapping, diagrams, logos, audit-oriented language.
+   * No testimonial animations, carousels, or auto-rotating elements.
+
+4. **Product Slice**
+
+   * A sober, deep-focused view into a key feature or process.
+   * Uses dark base backgrounds with light-surface cutouts.
+   * Icons permitted (Feather-based only).
+
+5. **Secondary CTA / Closing Block**
+
+   * One CTA only.
+   * May include a miniature diagram or a few short supporting bullets.
+
+### **A/B Testing Guidance**
+
+Allowed tests include:
+
+* headline variants
+* CTA wording/ordering
+* presence/absence of the narrative block
+* illustration vs diagram in the hero
+* density variations (tight vs spacious)
+* micro-motion tuning
+* alternative eyebrow patterns
+
+Prohibited tests:
+
+* adding new colours
+* introducing new visual metaphors
+* unconventional grid structures
+* dramatic motion (parallax, zooms, scroll hijacks)
+* hero images outside photography/diagram/pattern rules
+
+Landing pages must always look like engineered infrastructure, not a startup pitch.
+
+---
+
+## **8.2.2 Campaign and Feature Pages**
+
+Campaign and Feature Pages are lower-authority but more expressive surfaces. They support detailed explanations, initiatives, comparisons, announcements, and deep dives. These pages are allowed to “breathe” more than landing pages but remain bound to the identity system.
+
+### **Page Structure Requirements**
+
+These pages can use a more flexible sequence of blocks, but must still follow:
+
+* the 12-column desktop grid
+* the 2-column mobile grid
+* Transcrypt spacing rhythm
+* the cerulean-only accent discipline
+* sober photographic treatment
+* Feather-aligned iconography
+* motion envelope from §8.5
+
+Typical blocks include:
+
+* narrative explainer
+* diagram stack
+* feature comparison
+* deep content slice (long-form)
+* system demonstration graphic
+* optional video (only if documentary or screen-capture style)
+
+### **Expanded Flexibility**
+
+Campaign/feature pages may:
+
+* reorder content blocks
+* include more diagrams and illustrations
+* use more complex multi-column layouts
+* incorporate animation (inside the motion envelope)
+* run A/B tests on block ordering and density
+* include optional background patterns from §8.4
+
+They may **not** introduce:
+
+* new grid sizes
+* additional accent colours
+* stylised photography
+* high-emotion marketing visuals
+* motion exceeding the micro-range
+
+### **CTA Rules**
+
+* CTAs appear after meaningful narrative or proof.
+* No hero-style CTA stacking.
+* One CTA per major block, two max on the entire page.
+
+### **A/B Testing Guidance**
+
+Allowed:
+
+* testing narrative length
+* alternate diagram types
+* presence/absence of supporting imagery
+* changing pacing between blocks
+* denser vs lighter layouts
+* scroll-responsive micro-motion
+
+Prohibited:
+
+* testing new chroma
+* adding expressive marketing ornamentation
+* experimental motion behaviours outside §8.5
+* introducing new photography styles
+
+---
 
 ## 8.3 Visual Rhythm and Spacing Rules
 ### 8.3.1 Vertical Rhythm
