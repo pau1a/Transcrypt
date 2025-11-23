@@ -1238,35 +1238,656 @@ Supporting colours never appear as backgrounds or large surfaces.
 
 ## 4.3 Neutral Foundations
 
+Neutral tones form the structural backbone of Transcrypt’s colour system. They are not expressive, decorative, or thematic — they exist purely to create hierarchy, depth, and separation across light and dark environments. Neutrals ensure that information carries the visual weight, not colour. All neutral values used across the product map directly to the tokens defined in **§A.3 Neutral Greyscale Tokens**, and no additional greys, “almost-greys”, or improvised desaturated colours may be introduced.
 
-### 4.3.1 Greyscale System
-### 4.3.2 Background Layering Rules
+Neutrals are used to define spacing, boundaries, dividers, and text hierarchy. They allow the engineered base, light surfaces, and cerulean accent to remain stable and unambiguous, while providing the subtle gradations required for complex interface layouts. They are functional tools — not part of the brand’s identity.
+
+Transcrypt’s greyscale is intentionally narrow. The steps from --neutral-900 through --neutral-50 describe a controlled ladder that works consistently across UI chrome, documentation, diagrams, and exported PDFs. Designers and engineers must reference these values directly; any divergence breaks the determinism expected of the system.
+
+---
+
+## **4.3.1 Greyscale System**
+
+The greyscale system provides ten deliberate steps:
+**--neutral-900 → --neutral-50**, as defined precisely in **§A.3 Neutral Greyscale Tokens**.
+
+Each step has a single responsibility:
+
+* **--neutral-900 / -800**
+  High-authority text on light surfaces; diagram outlines; headings in documentation; structural anchors.
+  These are never used on dark panels.
+
+* **--neutral-700 / -600**
+  Secondary headings, labels, and body text on darker backgrounds; metadata in the product UI; hierarchy in complex layouts.
+
+* **--neutral-500 / -400**
+  Muted text, tertiary annotations, form helper text, non-critical meta. These tones must never be elevated to primary text roles.
+
+* **--neutral-300 / -200**
+  Borders, separators, table rules, visual scaffolding in both UI and diagrams.
+  These define structure, not emphasis.
+
+* **--neutral-100 / -50**
+  Lightest backgrounds for cards, panels, and lifted surfaces.
+  These values establish elevation and layering without introducing colour.
+
+No neutral tone may be repurposed as an accent, a semantic colour, or a marketing element. The neutrals are the quiet layer beneath the system’s functional and identity colours.
+
+---
+
+## **4.3.2 Background Layering Rules**
+
+Backgrounds follow a deterministic layering model that mirrors the architectural principles defined in the PRD and SAIS: clear boundaries, predictable behaviour, and no visual ambiguity. All layering must be constructed exclusively from **A.1 light surfaces**, **A.1 engineered base values**, and **A.3 neutral tokens**.
+
+The rules are:
+
+**1. Dark-first hierarchy**
+Dark panels use the engineered base tokens (--brand-base-900, --brand-base-800) as foundational layers. Lighter neutrals appear only as separators or text, never as backgrounds over the base.
+
+**2. Light-first hierarchy**
+In documentation, reports, and long-form reading environments, light surfaces (--brand-surface-0, -50, -100) establish the canvas. Neutrals provide the hierarchy above it.
+
+**3. Elevation by brightness, never by hue**
+Elevation is expressed by moving **one to two steps** up or down the neutral ladder, not by adding colours or tinted variants.
+
+**4. No chromatic layering**
+Accents (--accent-500/300/700) may never be used as backgrounds or layer fills. They are reserved for interactive emphasis only.
+
+**5. Print and export alignment**
+Where surfaces must appear in exported or printed documents, the system substitutes the specialised print-safe tokens from **§A.4**. Neutral and light surface values must map directly to their print equivalents. No on-screen-only values may leak into exported artefacts.
+
+**6. Diagram constraints**
+Architecture diagrams, flowcharts, and PDS/SAIS figures must use only **A.3 neutrals** (and the occasional cerulean accent) to ensure clarity and reproducibility across light and dark surfaces.
+
+**7. No substitution**
+If a designer or engineer requires a shade that does not exist in **A.3**, the correct response is to adjust the design, not to invent a new neutral.
+
+---
 
 ## 4.4 Use Across Light and Dark Surfaces
-### 4.4.1 Light Surface Rules
-### 4.4.2 Dark Surface Rules
+
+Transcrypt’s colour system must behave consistently across both light and dark environments. The identity is not allowed to vary in personality or tone depending on theme; the palette is engineered so that meaning, hierarchy, and affordances remain stable regardless of background.
+
+All surfaces — whether rendered in the marketing site, the Essentials app, documentation, or PDFs — must adhere strictly to the implementation tokens in **§A.1 Primary Palette Tokens**, **§A.2 Secondary Semantic Tokens**, and **§A.3 Neutral Greyscale Tokens**. No colour may appear in one environment that is not represented as a token in Appendix A.
+
+The behaviour is deterministic:
+**light surfaces establish clarity; the engineered base establishes authority; the accent provides focus; neutrals create hierarchy; semantics communicate state.**
+Nothing else is permitted.
+
+---
+
+## **4.4.1 Light Surface Rules**
+
+Light environments use the suite of surface tokens defined in **§A.1.2 Light Surfaces**. Their purpose is to create the clean, audit-friendly reading environment that underpins Transcrypt’s product behaviour.
+
+The rules are:
+
+**1. Light surfaces are the default canvas.**
+All content-heavy areas — documentation, tables, PDFs, export views, long-form explanations, system settings — must use the light surface tokens (`--brand-surface-0`, `--brand-surface-50`, `--brand-surface-100`) as their backgrounds.
+
+**2. Text hierarchy is neutral-driven.**
+Over light surfaces, primary text must use `--neutral-900`.
+Secondary text uses `--neutral-700` or `--neutral-600`.
+Meta and helper text use `--neutral-500` or `--neutral-400`.
+
+Accents are never used for text except in CTAs or selected states, where they map explicitly to `--accent-500` or `--accent-700`.
+
+**3. No decorative colour blocks.**
+Large panels or cards may not adopt accent or semantic colours as their backgrounds.
+All content surfaces must remain within the light-surface tokens.
+
+**4. Cerulean is for interaction only.**
+In light environments, accent tokens must appear only on:
+
+* primary and secondary actions (buttons),
+* selected tab states,
+* focus indications,
+* progress indicators,
+* navigational emphasis.
+
+Cerulean (`--accent-500`, with soft and deep variants) must never be used to “colour” a section or to provide mood.
+
+**5. Semantic colours stay small.**
+Success/warning/error tokens (`--success-*`, `--warn-*`, `--err-*`) may appear only in:
+
+* chips,
+* inline validation,
+* alerts,
+* status indicators.
+
+They may never control the overall background of a page or component.
+
+**6. Print/export behaviour must follow §A.4.**
+When a light-surface design is exported to PDF, the system must switch to print-safe equivalents such as `--export-text-primary` and `--export-accent-safe`.
+No on-screen-only colour is permitted in exported artefacts.
+
+---
+
+## **4.4.2 Dark Surface Rules**
+
+Dark environments use the engineered base tokens from **§A.1.1 Engineered Base**, supported by the neutral ladder from **§A.3**. Dark surfaces are not an alternative “theme”; they are the structural frame used in high-authority areas such as hero sections, chrome, and system-level panels.
+
+The rules are:
+
+**1. The engineered base is the only dark background.**
+Dark backgrounds must always be either:
+
+* `--brand-base-900` (deep),
+* `--brand-base-800` (variant).
+
+No invented dark tones, no off-brand blues, no grey-substitutes.
+
+**2. Neutrals carry all text and structure.**
+On dark backgrounds:
+
+* Primary text uses `--white` or `--neutral-50`, depending on contrast.
+* Secondary text uses `--neutral-300`.
+* Tertiary or meta uses `--neutral-400` or `--neutral-500`.
+
+Accents must be used sparingly on dark surfaces and only for the same functional roles as in light mode: CTA, state, focus, or direction.
+
+**3. No light-surface tokens inside dark panels.**
+Cards, containers, and insets rendered over a dark base must use neutrals (`--neutral-900` → `--neutral-100`) to define layering.
+`--brand-surface-0` / `--brand-surface-50` may not be used directly inside dark chrome.
+
+**4. Elevation depends on brightness, not colour.**
+A panel elevated above `--brand-base-900` may move up the neutral ladder (`--neutral-800`, `--neutral-700`) but must never use accent or semantic tones to indicate depth.
+
+**5. Cerulean must never become a background.**
+In dark environments, cerulean appears brighter and therefore must remain strictly confined to functional roles.
+`--accent-500` / `--accent-700` may not fill entire components, screens, panels, or cards.
+
+**6. Semantic colours follow the same constraints.**
+Success, warning, and error states remain small, controlled, and informational.
+Their tokens (`--success-*`, `--warn-*`, `--err-*`) may only appear in chips, inline feedback, or alert overlays — never as structural backgrounds.
+
+**7. Diagram usage is neutral-first.**
+All diagrams rendered over dark backgrounds must use neutral tokens for nodes, lines, and boundaries, with cerulean permitted only for emphasis or flow direction.
+No semantic colours may control large diagram shapes.
+
+---
 
 ## 4.5 Prohibited Colour Applications
-### 4.5.1 Accessibility Failures
-### 4.5.2 Situations to Avoid
+
+Transcrypt’s colour system is intentionally restrictive.
+Its purpose is to eliminate ambiguity, remove visual noise, and prevent any drift toward expressive or marketing-styled design.
+To maintain this stability, the following applications are explicitly prohibited.
+These rules apply across the marketing site, the Essentials app, documentation, diagrams, and all exported artefacts.
+
+Any colour usage outside the tokens defined in **Appendix A** is automatically considered out-of-system and non-compliant.
+
+---
+
+## **4.5.1 Accessibility Failures**
+
+These prohibitions ensure the system remains legible, predictable, and WCAG-aligned.
+
+**1. Insufficient contrast between text and background.**
+Text must never be rendered using a token that does not meet contrast requirements against its surface token.
+Examples of prohibited combinations:
+
+* `--neutral-500` text on `--brand-surface-100`
+* `--accent-300` text on `--brand-base-800`
+* `--neutral-400` text over `--accent-300`
+
+If contrast cannot be guaranteed, the element must revert to the permitted text tokens (`--neutral-900` on light; `--white` / `--neutral-50` on dark).
+
+**2. Accent-coloured text for non-interactive copy.**
+Cerulean tokens (`--accent-300`, `--accent-500`, `--accent-700`) may not be used as text colour except:
+
+* primary CTA buttons,
+* selected states,
+* focus indicators,
+* navigational emphasis.
+
+All other text must use neutrals or extremes.
+
+**3. Semantic colours used for body text.**
+`--success-*`, `--warn-*`, and `--err-*` may not be used for paragraphs, labels, headers, or navigational elements.
+They are reserved exclusively for status signalling.
+
+**4. Ghosted text over semantic backgrounds.**
+Any text placed on semantic colours must use approved semantic text tokens (e.g. `--success-text`) — never neutrals or generic white.
+
+**5. Gradients that reduce readability.**
+No gradient may be used as a text fill.
+Accented gradient text is prohibited outside specific marketing headers and must have explicit approval in design QA (§11 of the PDS).
+
+---
+
+## **4.5.2 Situations to Avoid**
+
+These prohibitions maintain identity coherence, prevent token misuse, and protect Transcrypt’s neutral engineering tone.
+
+**1. Accent colours as backgrounds.**
+Cerulean tokens must never fill panels, sections, cards, page backgrounds, modal surfaces, table rows, or diagram regions.
+Accent is for interaction, not decoration.
+
+**2. Semantic colours as section or card backgrounds.**
+Success/warning/error tokens may not be used to colour:
+
+* hero banners,
+* feature cards,
+* entire rows in tables,
+* documentation surfaces,
+* app screens.
+
+They may appear only in chips, inline validation elements, and alerts.
+
+**3. Arbitrary blues outside the accent family.**
+No shade of blue beyond the defined accent tokens (`--accent-300/500/700`) may appear anywhere in the system.
+This prevents drift into “brandish” cool tones or diluted cerulean copies.
+
+**4. Off-system greys.**
+Only tokens in **§A.3 Neutral Greyscale Tokens** may be used.
+Hex values such as `#e0e0e0`, `#2a2a2a`, or any designer-invented grey are prohibited.
+
+**5. Colour-coded user roles or multi-accent systems.**
+No feature or flow may introduce:
+
+* multiple accent colours,
+* per-user colour themes,
+* colour-driven persona indicators.
+
+This prevents brand fragmentation and keeps hierarchy stable.
+
+**6. Decorative colour for mood-setting.**
+Transcrypt does not use colour to evoke emotion, energy, or personality.
+Prohibited examples:
+
+* warm gradients for “friendly onboarding”,
+* purple or green highlight bars in marketing copy,
+* colourful badges or ribbons.
+
+If mood must be conveyed, it must be done through structure, typography, and clarity — never colour.
+
+**7. Token aliasing.**
+No component may redefine a token (e.g., `--accent-500: #2769f0;`).
+All overrides and reassignments are prohibited.
+Tokens defined in Appendix A are the single source of truth.
+
+**8. Colour used to encode meaning twice.**
+For example: a semantic colour plus an icon plus a border.
+The rule is: **one semantic channel at a time.**
+If a semantic colour is present, additional colour-based reinforcement is prohibited.
+
+**9. Dark-mode variants that change hue.**
+Dark environments may not substitute alternate hues “for visibility.”
+Only neutral brightness adjustments are permitted; the hue must remain identical to its token.
+
+**10. Print/export introducing new colours.**
+PDFs may not introduce non-token colours “for clarity” or “for print optimisation.”
+All printable colours must come from **§A.4 Print and Export Safe Tokens**.
+
+---
 
 # 5. Typography
 
+Typography in Transcrypt is not decoration. It is the structural backbone that carries information with precision, predictability, and zero ambiguity. The type system exists to make content readable under inspection, reliable under load, and consistent across every surface — from the marketing site to the Essentials app to PDF exports, architectural diagrams, and logged evidence trails.
+
+Where colour provides hierarchy, typography provides cadence: a controlled, measured rhythm that keeps the interface calm even when the content is dense. The system avoids stylistic flourish, avoids expressive forms, and avoids any hint of brand “voice.” Type is the final carrier of seriousness in a platform built around sealed boundaries, immutable artefacts, and deterministic behaviour.
+
+Transcrypt uses a single, unified typographic family across all platforms. This eliminates drift, prevents mismatched personalities, and reinforces the core brand principle: boring, safe infrastructure. The chosen family must perform equally well in UI chrome, technical writing, diagrams, and formal exports, with clear weight separation and disciplined spacing behaviour.
+
+All font usage in this section is normative and must be implemented exactly as specified. The underlying font tokens and fallback stacks defined here govern both product and marketing surfaces; no alternative typefaces may be introduced without revising this section.
+
 ## 5.1 Brand Typefaces
+
+Typography in Transcrypt uses a single, unified type family with a monospaced companion. This pair covers every context the platform must support: dense UI, long-form documentation, formal PDF exports, architectural diagrams, and code-adjacent content. The goal is total consistency — a single typographic DNA across all surfaces, with no room for substitutions or accidental drift.
+
+The typefaces chosen for Transcrypt must be stable, neutral, technically minded, and available across platforms without licensing friction. They must prioritise legibility under load, predictable metrics, and reliable rendering on macOS, Windows, Linux, and mobile environments.
+
+All primary and secondary type usage maps directly to the stacks defined in §5.3.1 Font Loading and Fallbacks. No other font families may be introduced.
+
+---
+
 ### 5.1.1 Primary Typeface
+
+**IBM Plex Sans** is the primary typeface of Transcrypt.
+
+It is used for:
+
+* all UI text (navigation, labels, buttons, chips)
+* all long-form content (marketing, documentation, help guides)
+* all product surfaces (forms, tables, evaluation flows)
+* all exports (PDFs, evidence bundles, reports)
+* all headings, sub-headings, and body text
+
+IBM Plex Sans is chosen because:
+
+* it is engineered, not expressive — a precise, modern grotesk
+* it has excellent weight separation without theatrical contrast
+* it holds clarity at small sizes, particularly in data-dense UI
+* it renders predictably on all major OSes
+* its neutral character aligns with Transcrypt’s identity:
+  **boring, safe, infrastructure-grade**
+
+IBM Plex Sans is the only font permitted for brand-carrying text.
+All headings, labels, buttons, and structural text must use it.
+
+Weight usage is defined later in §5.3.2 Weight and Style Usage.
+
+---
+
 ### 5.1.2 Secondary and Accent Typefaces
 
+**IBM Plex Mono** is the secondary and accent typeface of Transcrypt.
+
+It is used exclusively where precision, alignment, and technical clarity matter:
+
+* code snippets and inline technical notation
+* identifiers (tenant IDs, rulepack IDs, evaluation run IDs)
+* timestamps and fixed-width tokens
+* tables containing numerical or structured data
+* diagrams and schematics requiring fixed alignment
+* UI elements where even spacing is essential (e.g., audit logs)
+
+IBM Plex Mono brings:
+
+* predictable glyph width for alignment in tables, logs, and exports
+* visual distinction without introducing stylistic noise
+* engineering temperament, matching the platform’s deterministic behaviour
+
+IBM Plex Mono must **never** be used for general body text, headings, or marketing-facing content.
+It serves a functional role only: precision, not personality.
+
+The only two permitted families in the entire system are:
+
+* **IBM Plex Sans**
+* **IBM Plex Mono**
+
+Everything else is fallback, not part of the identity.
+
+---
+
 ## 5.2 Hierarchy and Roles
+
+Typography in Transcrypt is a hierarchy of function, not decoration. Every typographic layer expresses a distinct behavioural role within the product: headings establish structure, body text carries substance, and meta text provides supporting signals without competing for attention. The hierarchy is engineered to be predictable across the marketing site, Essentials app, PDF exports, and architectural documentation.
+
+All typographic roles must be implemented exclusively using IBM Plex Sans and IBM Plex Mono (see §5.1). Decisions about size, weight, and spacing are deterministic, not aesthetic. The purpose of this hierarchy is to eliminate ambiguity for the user, reduce cognitive effort, and ensure that every surface reflects the same internal logic.
+
+---
+
 ### 5.2.1 Headings
+
+Headings define structure. They communicate hierarchy, not emotion. Their job is to break information into navigable layers without introducing artistic voice.
+
+All headings use **IBM Plex Sans** with controlled weight ranges:
+
+* **H1**: strong structural anchor
+* **H2**: major sectional break
+* **H3**: intra-section heading
+* **H4/H5**: small-scale technical headings for UI or documentation
+
+The behavioural rules:
+
+1. **H1** is reserved for the top of a page or major documentation sections.
+   It must not be used inside cards, modals, or nested UI.
+
+2. **H2** defines primary subsections.
+   Marketing, documentation, and product surfaces must align on this usage.
+
+3. **H3** structures content within a section.
+   It is the default heading level inside the Essentials app.
+
+4. **H4/H5** provide granularity for long-form documentation, SAIS diagrams, or PDS detail.
+   They must not be used to mimic body text or meta info.
+
+Weights are restricted:
+
+* **H1–H3:** Medium (500) or Semibold (600)
+* **H4/H5:** Regular (400) or Medium (500)
+
+No heading may use:
+
+* italics
+* artificially condensed or expanded letterforms
+* arbitrary weight jumps
+* decorative colour (only primary palette rules apply)
+
+Headings must always represent structure, never emphasis.
+Emphasis is handled through content and layout, not typography.
+
+---
+
 ### 5.2.2 Body and Meta Text
 
+Body and meta text handle the actual informational load of the product: explanations, labels, long-form documentation, audits, evidence descriptions, and UI copy. Their purpose is clarity, low friction, and comfortable reading.
+
+#### **Body Text**
+
+Body text uses **IBM Plex Sans Regular (400)** by default.
+Its characteristics:
+
+* high legibility at small sizes
+* clean rhythm for long-form reading
+* no ornamental contrast
+* predictable rendering in PDFs and exports
+
+Body text variations:
+
+* **Bold (600)** is reserved exclusively for semantic emphasis.
+* **Medium (500)** may be used for short spans where clarity demands it (e.g., form field labels).
+* **Italic** is prohibited across the entire system.
+
+Body text must always appear on approved light or dark surfaces using the contrast rules defined in §4.4.
+
+#### **Meta Text**
+
+Meta text is informational scaffolding: timestamps, captions, hints, change logs, version tags, evaluation IDs, or secondary annotations. It communicates context, not content.
+
+Rules:
+
+* Uses **IBM Plex Sans Regular (400)** or **IBM Plex Sans Light (300)** depending on environment.
+* Colour must always come from the neutral ladder (typically --neutral-500 to --neutral-300).
+* Never competes with body or heading levels.
+* May be slightly reduced in size, but never below accessibility thresholds.
+* No bold, no accent colour, no decorative behaviour.
+
+Meta text must always remain quiet.
+Its job is to support the structure, not participate in it.
+
+---
+
 ## 5.3 Web and Application Font Rules
+
+The typography system only works if the implementation is stable. Transcrypt does not allow drift in font rendering, fallback behaviour, or weight usage. IBM Plex Sans and IBM Plex Mono must load predictably across all environments — the marketing site, the Essentials app, embedded components, and exported PDFs.
+
+All font usage must be deterministic. Network conditions, browser differences, or OS defaults must not change typographic appearance. Any deviation is considered a defect in presentation, not a stylistic variation.
+
+---
+
 ### 5.3.1 Font Loading and Fallbacks
+
+Transcrypt uses **IBM Plex Sans** as the primary UI and documentation typeface, and **IBM Plex Mono** for code, rulepacks, version identifiers, and technical instrumentation. These fonts must be served in a way that guarantees:
+
+1. **Zero layout shift**
+2. **Consistent rendering across platforms**
+3. **Clear fallback sequencing when the webfont is unavailable**
+
+#### **Webfont Delivery Requirements**
+
+* Fonts must be self-hosted inside the Transcrypt CDN, not pulled from third-party providers.
+  No Google Fonts, no externally hosted CSS.
+
+* Supported formats:
+  **WOFF2** (primary), **WOFF** (fallback for legacy).
+  No TTF, OTF, or EOT.
+
+* Preload directives must be used for critical weights:
+  `400`, `500`, `600` for IBM Plex Sans.
+  `400` for IBM Plex Mono.
+
+* Rendering strategy must use:
+  `font-display: optional;`
+  This avoids flash-of-invisible-text and prevents content shifts.
+
+* CSS must define absolute, explicit fallback chains:
+
+  ```
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI",
+                Roboto, Helvetica, Arial, sans-serif;
+  ```
+
+Fallback chains must always prioritise legibility and rhythm. The purpose is a graceful degradation path — never an expressive replacement.
+
+#### **PDF and Export Requirements**
+
+PDF exports embed the fonts directly.
+IBM Plex Sans and IBM Plex Mono must be included in the export pipeline so that regulatory documents render identically on every machine, online or offline.
+No user system font may be substituted at export time.
+
+#### **Non-Web Environments**
+
+Native app shells or embedded components must use the same explicit stacks.
+If IBM Plex is not available locally, system fallbacks must still preserve spacing and structure.
+
+---
+
 ### 5.3.2 Weight and Style Usage
 
+Transcrypt uses a deliberately narrow weight range. This guards against visual drift and maintains the engineered, serious tone of the system.
+
+The permitted weights:
+
+* **IBM Plex Sans 400** — body text (default)
+* **IBM Plex Sans 500** — labels, minor emphasis, supporting headings
+* **IBM Plex Sans 600** — H1–H3 structural headings only
+* **IBM Plex Mono 400** — code, IDs, technical notation
+
+All other weights (100, 200, 300, 700, 800) are prohibited.
+
+#### **Prohibited behaviours**
+
+* No italics across any surface, including marketing materials.
+  Italics introduce expressive slant and break the system’s engineered monotone.
+
+* No faux-bolding or synthetic weight creation.
+  Only the weights actually provided by IBM Plex may be used.
+
+* No letterform distortion (tracking hacks, negative letter-spacing, or condensed/expanded variants).
+
+* No text-shadow, glow, or other decorative styling — including hover or focus states.
+
+* No colour emphasis outside approved palette rules (see §4).
+  Accent colour may be used for interactive states only.
+
+#### **Size and Role Mapping**
+
+Sizes are not fixed here (they belong in CSS), but their relationships are:
+
+* Each heading downshifts by a predictable ratio.
+* Body text is always the baseline scale.
+* Meta text is always smaller than body text, never equal.
+* Mono text never exceeds the body text size.
+
+This consistency lets users parse structure subconsciously, the same way they parse indentation in code.
+
+---
+
 ## 5.4 Pairing and Spacing Conventions
+
+Typography in Transcrypt is engineered, not expressive. Pairing rules and spacing conventions exist to create predictable visual rhythm across screens, documents, diagrams, and exports. The aim is consistency, not personality. Every component inherits these rules so that headings, body text, mono text, and metadata align with the same internal logic.
+
+Typography is treated the same way as code formatting: strict, repeatable, immune to stylistic improvisation.
+
+---
+
 ### 5.4.1 Pairing Rules
+
+Pairing defines how IBM Plex Sans (UI text) and IBM Plex Mono (technical text) coexist. The relationship is functional, not decorative.
+
+#### **Sans → Mono roles must always remain distinct**
+
+* **IBM Plex Sans** handles narrative text: headings, body, labels, annotations.
+* **IBM Plex Mono** handles structured data: code, rulepack IDs, API payloads, hashes, runbook steps, version strings, tenant identifiers, and architectural parameters.
+
+Mono is never used for headings or long-form copy. Sans is never used for code or identifiers.
+
+#### **Mixed-content blocks follow a strict pattern**
+
+Whenever mono and sans appear together (e.g., in a rule explanation or technical note):
+
+* Sans introduces or frames the content.
+* Mono displays the exact value, name, or parameter.
+
+Example:
+
+> Evidence bucket: `tenant-4A73/export/2025-02-14.json`
+
+Sans contextualises; mono carries the truth.
+
+#### **Heading–body pairing is fixed**
+
+* H1–H3 always use **IBM Plex Sans 600**.
+* Body text always uses **IBM Plex Sans 400**.
+
+H4+ is treated as body-scale text with weight 500. No exception.
+
+This prevents overly deep or creative heading hierarchies. If more structure is needed, spacing — not font weight — creates it.
+
+#### **No expressive pairing behaviours**
+
+* No typeface substitutions.
+* No alternate fonts for marketing, campaigns, or “special” pages.
+* No seasonal variants, playful accents, or personality-driven pairings.
+
+Transcrypt’s brand stays cold and consistent, even in marketing surfaces.
+
+---
+
 ### 5.4.2 Tracking and Leading
+
+Spacing is not stylistic; it is a readability constraint. Tracking (letter-spacing) and leading (line height) ensure that the system is legible on every device and in every export format.
+
+#### **Tracking Rules**
+
+Tracking must never be manually adjusted except for specific cases:
+
+* **Uppercase labels** may use slight increased tracking to maintain clarity, but never beyond +2%.
+* **Headings** use the typeface defaults — no stretch, no compression.
+* **Mono text** uses *default* monospaced spacing. No added tracking.
+
+Absolute prohibitions:
+
+* No negative tracking.
+* No tightening headings for “aesthetic compactness.”
+* No platform-specific tracking overrides (e.g., iOS tight headings).
+
+Consistency beats aesthetics.
+
+#### **Leading Rules**
+
+Line height follows a strict scale to maintain vertical rhythm:
+
+* **Body text**: ~1.5 line height relative to font size.
+  (Large enough for audit documents, long tables, and dense content.)
+
+* **Headings (H1–H3)**: tighter leading, between 1.1 and 1.25 depending on size.
+  Headings must sit close to their block — never float.
+
+* **Mono text**: ~1.4 line height for legibility in code and terminal-style blocks.
+
+* **Meta text** (small annotations): consistent with body rhythm; never tighter than 1.35.
+
+#### **Vertical Rhythm Rules**
+
+Typography aligns with the 4/8/12 spacing grid used across product screens:
+
+* Text blocks always sit on multiples of **4px** spacing units.
+* No arbitrary manual nudging.
+* Headings always have more spacing *above* than below, to visually group them with their content block.
+
+This creates a predictable reading cadence: headings introduce, body follows, and components stack cleanly.
+
+#### **Export and Print Leading**
+
+Because PDFs compress text differently:
+
+* Line height in exported documents must be slightly increased (1.55–1.6 for body) to avoid cramped text in regulatory printouts.
+* This is enforced by the export stylesheet, not the web stylesheet.
+
+---
 
 # 6. Iconography and Illustration Style
 
@@ -1286,7 +1907,48 @@ All icons must:
 ---
 
 ### 6.1.1 Line Weight and Geometry
+
+Transcrypt icons use a **single 2px stroke weight** built on Feather’s 24×24 grid.
+Geometry must read as engineered, not stylised. Shapes are clean, angular where appropriate, and always snapped to the pixel grid.
+
+Rules that apply to every icon:
+
+* **Stroke weight is fixed.** No variation, no dual weights, no “thin” or “bold” icon sets.
+* **Stroke caps and joins are round**, matching Feather’s default.
+* **No fill paths** except in rare cases where a 16×16 reduction becomes illegible.
+* **All contours must align to the 24×24 coordinate system**. No off-grid coordinates such as 12.3, 7.8, 18.25.
+* **Curves must remain minimal and low-tension.** No decorative flourishes.
+* **Corners follow a consistent rounding profile**, identical across icons.
+* **Icons must not exceed or undershoot the 24×24 frame.** Overscan, negative offsets, or “mask bleed” are prohibited.
+* **Boolean operations (union, subtract, intersect) must be clean** — no micro-nodes, no overlapping segments, no fractional gaps.
+
+The aim is mechanical precision. The icons should feel like schematics, not drawings.
+
+Icons that appear visually softer, more playful, or more expressive than Feather’s geometry must be rejected or rewritten.
+
+---
+
 ### 6.1.2 Contrast and Legibility
+
+Icons in Transcrypt must maintain **WCAG-compliant contrast** and remain legible across both light and dark surfaces. Because the icon system is outline-based and unfilled, contrast management is essential.
+
+Rules:
+
+* On **light surfaces**, icons must use `--neutral-800` or `--neutral-900`.
+* On **dark surfaces**, icons must use `--brand-surface-0` (pure white).
+* On **accent backgrounds**, icons are prohibited. Accent surfaces are never used as icon backdrops.
+* Icons must always appear at 1:1 pixel alignment at the intended display size.
+  Anti-aliased blur introduced by fractional scaling is considered a rendering defect.
+* At **16×16**, if the icon loses clarity (e.g., too many intersecting paths), it must be manually simplified.
+  No upscaling hacks are permitted.
+* Icons must not use opacity variation to simulate contrast.
+  100% opacity strokes only.
+* Icons must remain visible when exported to PDF, printed in greyscale, or viewed on low-quality displays.
+  Any icon that relies on subtle stroke contrast or colour is invalid.
+
+The icon system must read cleanly at a glance: neutral, sparse, and unambiguous. Anything that demands “interpretation” has already violated the intent.
+
+---
 
 ## 6.2 Line Weight, Corners, and Scale
 ### 6.2.1 Stroke Rules
@@ -1993,5 +2655,118 @@ Used for:
 4. **All future rulepacks and features inherit the palette from these tokens.**
 5. **Variance (soft/deep) is allowed only for the accent and only within the cerulean family.**
 6. **Semantic tones must never be repurposed as brand colours.**
+
+---
+
+# **A.6 Geometry and Elevation Tokens (Fully Defined)**
+
+Geometry tokens define the system-wide rules for corner radii and elevation. These are the only permitted values. No component may invent its own.
+
+All values below are **final numeric definitions**, not placeholders.
+
+---
+
+## **A.6.1 Radius Tokens**
+
+These radii create the engineered, controlled geometry of the Transcrypt system.
+
+### **Radius Tokens — Canonical Values**
+
+* `--radius-none: 0px;`
+
+  * Used for: tables, strict technical blocks, diagrams, structural containers.
+
+* `--radius-tight: 4px;`
+
+  * Used for: inputs, dropdowns, small UI controls, secondary buttons.
+  * Keeps things crisp without looking hostile.
+
+* `--radius-card: 12px;`
+
+  * Used for: cards, panels, modals, grouped surfaces.
+  * This matches the curvature used in your colour-token demo.
+  * Strongly contributes to the “engineered, not friendly” aesthetic.
+
+* `--radius-pill: 999px;`
+
+  * Used for: pills, status chips, tags.
+  * Explicitly full-rounding; ensures a clean ellipse regardless of width.
+
+**System Rules**
+
+1. Components must choose from the above; no custom radii.
+2. Cards *must* use `--radius-card` unless explicitly square (`--radius-none`).
+3. No intermediate radii (6px, 8px, 10px) may be introduced—this prevents style drift.
+4. Icons and illustrations that include rounded shapes must align to these values (i.e., 0px, 4px, or pill-level).
+
+---
+
+## **A.6.2 Shadow Tokens**
+
+Shadows in Transcrypt are ultra-controlled: no theatrics, no long spreads, no coloured glows. Only just enough elevation to separate layers.
+
+### **Shadow Tokens — Canonical Values**
+
+* `--shadow-none: none;`
+
+  * For: strict data surfaces, tables, flat layout elements.
+
+* `--shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.12);`
+
+  * Matches your demo exactly.
+  * Used for: small cards, light UI elevation, inline groupings.
+
+* `--shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.18);`
+
+  * From your HTML demo: deeper but still disciplined.
+  * Used for: modals, primary panels, major grouped information blocks.
+
+**System Rules**
+
+1. No inline `box-shadow`; all shadows must reference tokens.
+2. Shadows may not stack or layer.
+3. Shadow colours must always use the neutral deep base (`rgba(15,23,42,*)`).
+4. Dark-mode elevation may use light contrast shifts, but the token names remain the same.
+5. Shadows are **never** semantic indicators—state is handled only by colour tokens.
+
+---
+
+# **A.7 Typography Tokens**
+
+Typography tokens define the canonical font stacks for Transcrypt. These tokens are the only permitted way to reference fonts in CSS, app code, or exported documents.
+
+### **A.7.1 Sans-Serif Primary Typeface**
+
+```
+--font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont,
+             "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+```
+
+Used for:
+
+* all body text
+* all headings
+* all UI chrome
+* all product surfaces
+* all marketing surfaces
+* PDF exports (where supported; otherwise mapped to the closest fallback)
+
+### **A.7.2 Mono Typeface (Code / Technical)**
+
+You implicitly used a mono stack in your demo, so we formalise that too:
+
+```
+--font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular,
+             Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+             monospace;
+```
+
+Used for:
+
+* code fragments
+* inline technical identifiers
+* tokens
+* system logs
+* architectural diagrams
 
 ---
