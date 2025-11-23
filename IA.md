@@ -4,7 +4,7 @@ This Information Architecture defines the structural model of Transcrypt across 
 
 # **2. Full Sitemap**
 
-The sitemap defines every surface the user can reach across both the Marketing runtime and the Essentials application. It acts as the authoritative inventory of pages and ensures all navigation, routing, and user journeys have a stable structural foundation.
+The sitemap defines every surface the user can reach across both the Marketing runtime and the Essentials application, establishing the structural outline of the platform. It serves as the descriptive map of how pages are grouped and related. The complete, authoritative list of all pages — including identifiers, purpose, and runtime classification — is maintained in Appendix B and should be used alongside this sitemap for implementation and verification.
 
 ## **2.1 System Surfaces Overview**
 
@@ -34,7 +34,7 @@ This section establishes how users move between surfaces: global navigation, sec
 
 # **4. Page Hierarchy**
 
-The hierarchy assigns relative importance to pages and sections, organising them into parent–child relationships. It prevents flat sprawl, supports clear user expectations, and aligns structural depth with narrative weight defined in the PRD.
+This hierarchy defines how all surfaces relate to one another, assigning structural weight and ordering pages into clear parent–child relationships. It prevents unnecessary flattening, avoids deep or confusing nesting, and ensures users always understand where they are in the system. Hierarchical groupings in this section correspond to the structural templates illustrated in Appendix A.
 
 ## **4.1 Structural Tiers**
 
@@ -48,7 +48,7 @@ The hierarchy assigns relative importance to pages and sections, organising them
 
 # **5. SEO Keyword Mapping**
 
-This defines the core information targets for organic search, mapping primary and secondary keywords to specific surfaces. It ensures each page serves a distinct search intent and avoids cannibalisation across the content ecosystem.
+This section defines the primary and secondary keyword targets for organic search and assigns them to specific surfaces within the platform. Its purpose is to ensure that each page carries a distinct search intent, preventing overlap and internal competition. Keyword assignments must align with the metadata fields and constraints defined in Appendix C, which governs how these targets are expressed through canonical tags, descriptive fields, and other SEO-relevant metadata.
 
 ## **5.1 Pillar Keyword Targets**
 
@@ -64,7 +64,7 @@ This defines the core information targets for organic search, mapping primary an
 
 # **6. Content Types**
 
-This identifies the distinct classes of content the system supports (e.g., articles, guides, evaluation surfaces, legal surfaces). It provides a consistent structural pattern for each type, ensuring predictability and maintainability.
+This section defines the distinct classes of content used across the platform, from marketing pages and long-form articles to intake forms, evaluation steps, reports, and legal surfaces. Each type carries its own structural requirements and behavioural expectations. The foundational templates for these content types are represented in Appendix A, ensuring consistency, predictability, and long-term maintainability.
 
 ## **6.1 Marketing Types**
 
@@ -92,7 +92,7 @@ The taxonomy defines the classification system used across content, including ta
 
 # **8. URL Structure**
 
-This section details canonical URL formats, parameter rules, slug patterns, and structural URL boundaries. It ensures stability, readability, and long-term compatibility as the site evolves.
+This section defines the canonical URL patterns that determine how pages are addressed, indexed, and resolved across the system. It specifies the rules for slug formation, parameter handling, pagination, and reserved paths to ensure clarity, predictability, and long-term stability. URL patterns for key templates follow the structural forms shown in Appendix A, while all canonical, redirect, and metadata-dependent behaviours must conform to the field definitions and constraints set out in Appendix C.
 
 ## **8.1 Canonical Paths**
 
@@ -146,7 +146,7 @@ This governs how deep the IA is allowed to go before it becomes unwieldy and how
 
 # **12. Transition Matrix for User Journeys**
 
-This defines every permitted journey between surfaces, including required preconditions and valid exit paths. It ensures all state transitions are deliberate, predictable, and traceable across Marketing, Essentials, Billing, and Reporting.
+This section defines all valid transitions between surfaces, specifying the preconditions for entry, the states that must be preserved or established, and the conditions under which each path may terminate. It ensures every journey remains deliberate, predictable, and traceable across Marketing, Essentials, Billing, and Reporting. All transitions in this matrix must reference the page identifiers defined in Appendix B to guarantee alignment with the authoritative page inventory.
 
 ## **12.1 Valid Transitions**
 
@@ -169,5 +169,63 @@ This defines every permitted journey between surfaces, including required precon
 ## **A.4 Component Sketches**
 
 ## **A.5 Interaction States**
+
+---
+
+## **Appendix B — Page Inventory Tables**
+
+A fully tabulated representation of:
+
+* page name
+* purpose
+* runtime (Marketing / Essentials)
+* template reference
+* allowed transitions (summary)
+* URL pattern
+* taxonomy assignment
+
+This is too large for the main IA but essential for implementation, QA, and cross-referencing.
+
+## **Appendix C — Metadata Schema**
+
+Because metadata touches SEO, discoverability, canonical structure, and CMS fields, the schema needs a clear, stable reference outside the IA body.
+
+Includes:
+
+* required fields
+* optional fields
+* field types
+* rules for canonical/OG/meta
+* default values
+* validation rules
+
+This appendix becomes the binding spec for the CMS and Next.js metadata layer.
+
+---
+
+# **Appendices That Are PROBABLY Needed (but optional until content expands)**
+
+## **Appendix D — Taxonomy Catalogue**
+
+Once the taxonomy grows, a catalogue of all categories, tags, synonyms, and deprecated tags is required.
+Initially optional, but it becomes essential as content volume increases.
+
+## **Appendix E — Linkage Map (Cross-Link Diagram Set)**
+
+Internal cross-links, especially SEO-driven or journey-critical ones, often need diagrammatic representation.
+
+This appendix is optional until the system has 20+ pages or linked clusters that must be visualised.
+
+## **Appendix F — Search Configuration (If Search Exists in MVP)**
+
+If you add site or blog search (even basic), you will need:
+
+* indexed content types
+* stopword lists
+* weighting rules
+* exclusions
+* ranking adjustments
+
+If search is postponed, this appendix is postponed.
 
 ---
