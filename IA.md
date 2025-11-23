@@ -4,11 +4,11 @@ This Information Architecture defines the structural model of Transcrypt across 
 
 # **2. Full Sitemap**
 
-The sitemap defines every surface the user can reach across both the Marketing runtime and the Essentials application, establishing the structural outline of the platform. It serves as the descriptive map of how pages are grouped and related. The complete, authoritative list of all pages — including identifiers, purpose, and runtime classification — is maintained in Appendix B and should be used alongside this sitemap for implementation and verification.
+The sitemap defines every surface the user can reach across both the Marketing runtime and the Essentials application, establishing the structural outline of the platform. It serves as the descriptive map of how pages are grouped and related. The complete, authoritative list of all pages — including identifiers, purpose, and runtime classification — is maintained in Appendix B and should be used alongside this sitemap for implementation and verification. **Lateral, cross-page connective elements (such as contextual or semantic cross-links) are implemented through governed partials defined in Appendix D.**
 
 ## **2.1 System Surfaces Overview**
 
-This subsection defines the structural nature and boundaries of all surface types so the sitemap, hierarchy, transitions, and templates have a governed framework to attach to, preventing page-level drift and ensuring the entire IA remains coherent and enforceable.
+This subsection defines the structural nature and boundaries of all surface types so the sitemap, hierarchy, transitions, and templates have a governed framework to attach to, preventing page-level drift and ensuring the entire IA remains coherent and enforceable. **Cross-surface relationships that do not form part of the structural hierarchy (e.g., contextual recommendations, industry pivots, related-content meshes) are governed separately through the partials catalogue in Appendix D.**
 
 ## **2.1.1 Runtime Domains**
 
@@ -20,7 +20,7 @@ Surfaces are grouped into functional classes to clarify their operational purpos
 
 ## **2.1.3 Surface Roles**
 
-Each surface carries a defined role within the overall system structure. Roles include entry points, hubs, workflow steps, leaf surfaces, and terminal outputs such as reports. These roles influence navigation availability, breadcrumb rules, and transition validity across the platform.
+Each surface carries a defined role within the overall system structure. Roles include entry points, hubs, workflow steps, leaf surfaces, and terminal outputs such as reports. These roles influence navigation availability, breadcrumb rules, and transition validity across the platform. **Non-hierarchical, lateral relationships between surfaces—such as related content or thematic pivots—are deliberately excluded from these roles and instead follow the governed partial mechanisms in Appendix D.**
 
 ## **2.1.4 Boundary Surfaces and Transitions**
 
@@ -38,34 +38,34 @@ Surfaces not included in the MVP are explicitly declared out of scope to prevent
 
 ## **2.2 Marketing Runtime Surfaces**
 
-The Marketing runtime contains all public-facing, unauthenticated surfaces responsible for introducing the platform, explaining its value, enabling discovery, and supporting long-form content. These surfaces prioritise clarity, credibility, and controlled expression, and operate independently of the deterministic behaviour that governs the Essentials runtime.
+The Marketing runtime contains all public-facing, unauthenticated surfaces responsible for introducing the platform, explaining its value, enabling discovery, and supporting long-form content. These surfaces prioritise clarity, credibility, and controlled expression, and operate independently of the deterministic behaviour that governs the Essentials runtime. **Marketing surfaces may embed cross-referential partials as defined in Appendix D to support controlled lateral discovery and guided progression.**
 
-## **2.2.1 Marketing Surface Classes**
+### **2.2.1 Marketing Surface Classes**
 
 Marketing surfaces fall into well-defined classes that each serve a distinct communicative purpose:
 
 * **Landing Surfaces** — High-level introduction points that articulate value and direct users into deeper sections.
 * **Informational Surfaces** — Structured content pages covering features, methodology, and problem framing.
-* **Long-Form Content Surfaces** — Blog articles, guides, and explanatory material organised through taxonomy rules defined in §7.
+* **Long-Form Content Surfaces** — Blog articles, guides, and explanatory material organised through taxonomy rules defined in §7. **These surfaces rely heavily on partials such as Related Stories, Starter Kit Promo, and Research Highlight as governed in Appendix D.**
 * **Legal and Compliance Surfaces** — Public policy documents that must remain independently accessible and crawlable.
 
-## **2.2.2 Navigational Behaviour**
+### **2.2.2 Navigational Behaviour**
 
-These surfaces use expressive, content-led navigation patterns distinct from Essentials. Global navigation remains persistent, search (if enabled) is optional, and contextual links reinforce topical or thematic discovery. Navigation within the Marketing runtime must not expose authenticated functions or imply interaction modes belonging to Essentials.
+These surfaces use expressive, content-led navigation patterns distinct from Essentials. Global navigation remains persistent, search (if enabled) is optional, and contextual links reinforce topical or thematic discovery. **All such contextual or thematic cross-links must comply with the partial definitions and placement rules defined in Appendix D.** Navigation within the Marketing runtime must not expose authenticated functions or imply interaction modes belonging to Essentials.
 
-## **2.2.3 Expression and Layout Constraints**
+### **2.2.3 Expression and Layout Constraints**
 
 Marketing surfaces follow the expressive palette and structural allowances defined in the Brand Identity Guide. They support broader content widths, more flexible hierarchy, and promotional narrative elements. Even so, their layout patterns must still align with the structural templates in Appendix A to ensure consistency across all surfaces.
 
-## **2.2.4 Interaction Boundaries**
+### **2.2.4 Interaction Boundaries**
 
 Marketing surfaces do not alter user state and do not expose deterministic workflows. Any transition toward authenticated or task-driven behaviour must occur cleanly through controlled entry points defined in §2.1.4. This prevents leakage of application-state assumptions into public content.
 
-## **2.2.5 Search and Discoverability Considerations**
+### **2.2.5 Search and Discoverability Considerations**
 
-If Marketing search is provided, it operates strictly over public content types and uses taxonomy and metadata rules defined in §7 and Appendix C. Discovery mechanisms must reinforce, not duplicate, the internal logic of cross-linking defined in §9.
+If Marketing search is provided, it operates strictly over public content types and uses taxonomy and metadata rules defined in §7 and Appendix C. Discovery mechanisms must reinforce, not duplicate, the internal logic of cross-linking defined in §9 and implemented via the partials catalogue in Appendix D.
 
-## **2.2.6 Surface Exclusions**
+### **2.2.6 Surface Exclusions**
 
 No authenticated, multi-step, or data-bearing surfaces appear in the Marketing runtime. Evaluation, Reporting, Evidence, Billing, and Settings structures are completely excluded to maintain runtime purity and prevent user confusion.
 
