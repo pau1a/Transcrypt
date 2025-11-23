@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Transcrypt – Essentials Mock (Medium Container)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      /* Primary palette – provisional values */
+
+      --brand-base-900: #020617;   /* deep engineered base */
+      --brand-base-800: #0f172a;   /* base variant */
+
+      --brand-surface-0: #ffffff;  /* pure light surface */
+      --brand-surface-50: #f9fafb; /* neutral light surface */
+      --brand-surface-100: #f3f4f6;/* structured light */
+
+      --accent-500: #3b82f6;       /* cerulean mid */
+      --accent-300: #93c5fd;       /* cerulean soft */
+      --accent-700: #1d4ed8;       /* cerulean deep */
+
+      --black: #000000;
+      --white: #ffffff;
+
+      /* Filigree (industrial violet) – provisional */
+
+      --filigree-violet-50:  #f5f3ff;
+      --filigree-violet-100: #e4ddff;
+      --filigree-violet-200: #c4b5fd;
+      --filigree-violet-300: #8b5cf6;
+
+      /* Secondary semantic – provisional Tailwind-ish */
+
+      --success-bg: #ecfdf5;
+      --success-border: #bbf7d0;
+      --success-text: #166534;
+
+      --warn-bg: #fffbeb;
+      --warn-border: #fed7aa;
+      --warn-text: #92400e;
+
+      --err-bg: #fef2f2;
+      --err-border: #fecaca;
+      --err-text: #b91c1c;
+
+      /* Neutral greyscale – slate-ish */
+
+      --neutral-900: #111827;
+      --neutral-800: #1f2937;
+      --neutral-700: #374151;
+      --neutral-600: #4b5563;
+      --neutral-500: #6b7280;
+      --neutral-400: #9ca3af;
+      --neutral-300: #d1d5db;
+      --neutral-200: #e5e7eb;
+      --neutral-100: #f3f4f6;
+      --neutral-50: #f9fafb;
+
+      /* Export / print-safe – provisional */
+
+      --export-accent-safe: #2563eb;   /* slightly deeper cerulean */
+      --export-neutral-safe: #111827;  /* deep neutral */
+      --export-text-primary: #111827;  /* print-safe text */
+      --export-text-secondary: #4b5563;
+
+      /* Layout/typography */
+
+      --radius-card: 12px;
+      --radius-pill: 999px;
+
+      --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.10);
+      --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.10);
+
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      background: var(--neutral-100);
+      color: var(--neutral-900);
+    }
+
+    /* App shell */
+
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+      background: var(--neutral-100);
+    }
+
+    .app-sidebar {
+      width: 240px;
+      background: var(--brand-surface-0);
+      border-right: 1px solid var(--neutral-200);
+      display: flex;
+      flex-direction: column;
+      padding: 16px 16px 16px;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .logo-mark {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: radial-gradient(circle at 20% 0%, var(--accent-300), var(--accent-700));
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08);
+    }
+
+    .logo-text {
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--neutral-800);
+    }
+
+    .sidebar-nav {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 0.85rem;
+    }
+
+    .nav-section-label {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.68rem;
+      color: var(--neutral-400);
+      margin: 10px 0 4px;
+    }
+
+    .nav-item {
+      border-radius: 999px;
+      padding: 7px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--neutral-600);
+      cursor: pointer;
+    }
+
+    .nav-item span {
+      flex: 1;
+    }
+
+    .nav-item-bullet {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--neutral-300);
+      flex-shrink: 0;
+    }
+
+    .nav-item.active {
+      background: var(--accent-500);
+      color: var(--white);
+      font-weight: 500;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.45);
+    }
+
+    .nav-item.active .nav-item-bullet {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid var(--neutral-200);
+      font-size: 0.75rem;
+      color: var(--neutral-500);
+    }
+
+    .sidebar-footer-code {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--neutral-200);
+      background: var(--neutral-50);
+      margin-top: 6px;
+      font-size: 0.7rem;
+      color: var(--neutral-700);
+    }
+
+    .sidebar-footer-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--success-text);
+    }
+
+    /* Main area */
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--neutral-100);
+    }
+
+    .main-topbar {
+      height: 56px;
+      border-bottom: 1px solid var(--neutral-200);
+      background: var(--brand-surface-0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+    }
+
+    .main-topbar-inner {
+      /* MEDIUM CONTAINER: key geometry */
+      width: 100%;
+      max-width: 1040px; /* proposal: medium content width */
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--neutral-500);
+    }
+
+    .breadcrumbs a {
+      text-decoration: none;
+      color: var(--neutral-600);
+    }
+
+    .breadcrumbs-current {
+      color: var(--neutral-400);
+    }
+
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--neutral-200);
+      background: var(--brand-surface-0);
+      font-size: 0.78rem;
+      color: var(--neutral-700);
+    }
+
+    .user-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--neutral-300), var(--neutral-500));
+    }
+
+    .user-tenant {
+      font-weight: 500;
+      color: var(--neutral-800);
+    }
+
+    /* Main content */
+
+    .main-content-wrap {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 16px 16px 24px;
+    }
+
+    .main-content {
+      width: 100%;
+      max-width: 1040px; /* same medium container width as topbar */
+      display: grid;
+      grid-template-columns: minmax(0, 2.2fr) minmax(260px, 1fr);
+      gap: 18px;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 960px) {
+      .app-sidebar {
+        display: none;
+      }
+      .main-topbar-inner,
+      .main-content {
+        max-width: 100%;
+      }
+      .main-content {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .main-topbar {
+        height: auto;
+        padding: 8px 12px;
+      }
+      .main-topbar-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .user-chip {
+        margin-top: 4px;
+      }
+      .main-content-wrap {
+        padding: 12px;
+      }
+    }
+
+    /* Left column: Evidence table etc. */
+
+    .card {
+      border-radius: var(--radius-card);
+      background: var(--brand-surface-0);
+      border: 1px solid var(--neutral-200);
+      box-shadow: var(--shadow-subtle);
+      padding: 14px 14px 12px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--neutral-200);
+      padding-bottom: 8px;
+    }
+
+    .card-title-block h1 {
+      font-size: 1.05rem;
+      margin: 0 0 2px;
+      color: var(--neutral-900);
+    }
+
+    .card-title-block p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--neutral-500);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      font-size: 0.72rem;
+      border: 1px solid var(--success-border);
+      background: var(--success-bg);
+      color: var(--success-text);
+    }
+
+    .status-pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--success-text);
+    }
+
+    .card-submeta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 0.76rem;
+      color: var(--neutral-600);
+    }
+
+    .meta-label {
+      color: var(--neutral-500);
+    }
+
+    .meta-value {
+      font-weight: 500;
+      color: var(--neutral-800);
+    }
+
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.78rem;
+      color: var(--neutral-600);
+    }
+
+    .filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .filter-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--neutral-200);
+      background: var(--neutral-50);
+      font-size: 0.72rem;
+      color: var(--neutral-700);
+      cursor: default;
+    }
+
+    .filter-pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-500);
+    }
+
+    .table-wrapper {
+      border-radius: 10px;
+      border: 1px solid var(--neutral-200);
+      overflow: hidden;
+      background: var(--brand-surface-0);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+
+    thead {
+      background: var(--neutral-50);
+    }
+
+    th, td {
+      padding: 7px 9px;
+      border-bottom: 1px solid var(--neutral-200);
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    th {
+      font-weight: 500;
+      color: var(--neutral-600);
+      font-size: 0.75rem;
+    }
+
+    tbody tr:nth-child(even) {
+      background: var(--brand-surface-50);
+    }
+
+    tbody tr:hover {
+      background: var(--neutral-100);
+    }
+
+    .col-control {
+      width: 34%;
+    }
+
+    .col-status {
+      width: 18%;
+    }
+
+    .col-evidence {
+      width: 26%;
+    }
+
+    .col-updated {
+      width: 22%;
+    }
+
+    .cell-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      border-width: 1px;
+      border-style: solid;
+      font-size: 0.7rem;
+    }
+
+    .status-ok {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--success-text);
+    }
+
+    .status-warn {
+      background: var(--warn-bg);
+      border-color: var(--warn-border);
+      color: var(--warn-text);
+    }
+
+    .status-error {
+      background: var(--err-bg);
+      border-color: var(--err-border);
+      color: var(--err-text);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .link-inline {
+      color: var(--accent-700);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .link-inline:hover {
+      text-decoration: underline;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.75rem;
+    }
+
+    .pagination-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 6px;
+      font-size: 0.75rem;
+      color: var(--neutral-500);
+    }
+
+    .pagination-controls {
+      display: inline-flex;
+      gap: 6px;
+    }
+
+    .btn {
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--neutral-300);
+      background: var(--brand-surface-0);
+      padding: 4px 9px;
+      font-size: 0.75rem;
+      color: var(--neutral-700);
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      border-color: var(--accent-500);
+      background: linear-gradient(135deg, var(--accent-500), var(--accent-700));
+      color: var(--white);
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.45);
+    }
+
+    .btn-icon-only {
+      padding: 4px 7px;
+      min-width: 0;
+    }
+
+    /* Right column: Summary / context */
+
+    .sidebar-panel {
+      border-radius: var(--radius-card);
+      background: var(--brand-surface-0);
+      border: 1px solid var(--neutral-200);
+      box-shadow: var(--shadow-subtle);
+      padding: 12px 12px 10px;
+      font-size: 0.78rem;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .panel-section-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--neutral-800);
+      margin-bottom: 4px;
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+
+    .metric-label {
+      font-size: 0.76rem;
+      color: var(--neutral-500);
+    }
+
+    .metric-value {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--neutral-800);
+    }
+
+    .small-note {
+      font-size: 0.72rem;
+      color: var(--neutral-500);
+    }
+
+    .bar-track {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--neutral-200);
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 74%;
+      background: var(--accent-500);
+    }
+
+    .panel-divider {
+      margin: 6px 0;
+      border-top: 1px solid var(--neutral-200);
+    }
+
+    .hint-box {
+      border-radius: 10px;
+      border: 1px dashed var(--neutral-300);
+      padding: 7px 9px;
+      font-size: 0.72rem;
+      color: var(--neutral-600);
+      background: var(--brand-surface-50);
+    }
+
+    .hint-label {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.65rem;
+      color: var(--neutral-500);
+      margin-bottom: 3px;
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- Left sidebar -->
+  <aside class="app-sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"></div>
+      <div class="logo-text">Transcrypt</div>
+    </div>
+
+    <div class="nav-section-label">Workspace</div>
+    <div class="sidebar-nav">
+      <div class="nav-item">
+        <div class="nav-item-bullet"></div>
+        <span>Overview</span>
+      </div>
+      <div class="nav-item active">
+        <div class="nav-item-bullet"></div>
+        <span>Evidence</span>
+      </div>
+      <div class="nav-item">
+        <div class="nav-item-bullet"></div>
+        <span>Evaluation</span>
+      </div>
+      <div class="nav-item">
+        <div class="nav-item-bullet"></div>
+        <span>Reports</span>
+      </div>
+      <div class="nav-item">
+        <div class="nav-item-bullet"></div>
+        <span>Billing</span>
+      </div>
+    </div>
+
+    <div class="nav-section-label">Tenant</div>
+    <div class="sidebar-nav">
+      <div class="nav-item">
+        <div class="nav-item-bullet"></div>
+        <span>Settings</span>
+      </div>
+      <div class="nav-item">
+        <div class="nav-item-bullet"></div>
+        <span>Users & access</span>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div>Deterministic tenant</div>
+      <div class="sidebar-footer-code">
+        <span class="sidebar-footer-dot"></span>
+        <span class="mono">rulepack · CE-UK-2025.1</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="app-main">
+
+    <!-- Topbar -->
+    <div class="main-topbar">
+      <div class="main-topbar-inner">
+        <nav class="breadcrumbs">
+          <a href="#">Tenants</a>
+          <span>›</span>
+          <a href="#">Acme Manufacturing</a>
+          <span>›</span>
+          <span class="breadcrumbs-current">Evidence – Device controls</span>
+        </nav>
+        <div class="user-chip">
+          <div class="user-avatar"></div>
+          <div>
+            <div class="user-tenant">Acme Manufacturing</div>
+            <div style="font-size:0.7rem; color:var(--neutral-500);">Owner · ce-uk-2025.1</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="main-content-wrap">
+      <div class="main-content">
+
+        <!-- Left: evidence table -->
+        <section class="card">
+          <div class="card-header">
+            <div class="card-title-block">
+              <h1>Evidence – Device controls</h1>
+              <p>Endpoint, mobile, and BYOD controls for this tenant. All items map to the current rulepack.</p>
+            </div>
+            <div>
+              <div class="status-pill">
+                <span class="status-pill-dot"></span>
+                12 / 16 evidence items complete
+              </div>
+            </div>
+          </div>
+
+          <div class="card-submeta">
+            <div>
+              <span class="meta-label">Control family:</span>
+              <span class="meta-value">Devices & endpoints</span>
+            </div>
+            <div>
+              <span class="meta-label">Context:</span>
+              <span class="meta-value">Cyber Essentials 2025 (UK)</span>
+            </div>
+            <div>
+              <span class="meta-label">Last evaluator run:</span>
+              <span class="meta-value">Not yet executed</span>
+            </div>
+          </div>
+
+          <div class="filters-row">
+            <div class="filter-chips">
+              <span class="filter-pill">
+                <span class="filter-pill-dot"></span>
+                Required only
+              </span>
+              <span class="filter-pill">
+                <span class="filter-pill-dot" style="background:var(--success-text);"></span>
+                With evidence
+              </span>
+              <span class="filter-pill">
+                <span class="filter-pill-dot" style="background:var(--warn-text);"></span>
+                Exceptions
+              </span>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-icon-only" title="Refresh">⟲</button>
+              <button class="btn">Export list</button>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+              <tr>
+                <th class="col-control">Control</th>
+                <th class="col-status">Status</th>
+                <th class="col-evidence">Evidence</th>
+                <th class="col-updated">Last update</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td class="col-control">
+                  Device inventory
+                  <div style="font-size:0.72rem; color:var(--neutral-500);">Maintain a list of all devices accessing the network.</div>
+                </td>
+                <td class="col-status">
+                  <span class="cell-status-pill status-ok">
+                    <span class="status-dot"></span>
+                    Complete
+                  </span>
+                </td>
+                <td class="col-evidence">
+                  <a href="#" class="link-inline">Inventory export · Q1-2025.xlsx</a>
+                </td>
+                <td class="col-updated">
+                  04 Mar 2025<br/>
+                  <span style="font-size:0.7rem; color:var(--neutral-500);">by P. Livingstone</span>
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  Device encryption
+                  <div style="font-size:0.72rem; color:var(--neutral-500);">All company devices must use full-disk encryption.</div>
+                </td>
+                <td>
+                  <span class="cell-status-pill status-warn">
+                    <span class="status-dot"></span>
+                    Partial
+                  </span>
+                </td>
+                <td>
+                  <a href="#" class="link-inline">MDM policy · encryption.json</a>
+                  <div style="font-size:0.7rem; color:var(--neutral-500);">2 devices pending migration.</div>
+                </td>
+                <td>
+                  01 Mar 2025<br/>
+                  <span style="font-size:0.7rem; color:var(--neutral-500);">by B. McNeill</span>
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  BYOD policy
+                  <div style="font-size:0.72rem; color:var(--neutral-500);">Rules for personally owned devices accessing corporate assets.</div>
+                </td>
+                <td>
+                  <span class="cell-status-pill status-error">
+                    <span class="status-dot"></span>
+                    Missing
+                  </span>
+                </td>
+                <td>
+                  <span style="font-size:0.7rem; color:var(--neutral-500);">No evidence attached.</span>
+                </td>
+                <td>
+                  <span style="font-size:0.7rem; color:var(--neutral-400);">—</span>
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  Mobile device management
+                  <div style="font-size:0.72rem; color:var(--neutral-500);">Mobile devices must be enrolled in MDM before accessing services.</div>
+                </td>
+                <td>
+                  <span class="cell-status-pill status-ok">
+                    <span class="status-dot"></span>
+                    Complete
+                  </span>
+                </td>
+                <td>
+                  <a href="#" class="link-inline">MDM enrolment report · Feb</a>
+                </td>
+                <td>
+                  26 Feb 2025<br/>
+                  <span style="font-size:0.7rem; color:var(--neutral-500);">by J. Patel</span>
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  Device build standard
+                  <div style="font-size:0.72rem; color:var(--neutral-500);">Baseline build for laptops and desktops, including security controls.</div>
+                </td>
+                <td>
+                  <span class="cell-status-pill status-warn">
+                    <span class="status-dot"></span>
+                    Exception
+                  </span>
+                </td>
+                <td>
+                  <a href="#" class="link-inline">Standard build · v3.2</a>
+                  <div style="font-size:0.7rem; color:var(--neutral-500);">1 temporary deviation approved.</div>
+                </td>
+                <td>
+                  19 Feb 2025<br/>
+                  <span style="font-size:0.7rem; color:var(--neutral-500);">by Assessor</span>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination-row">
+            <div>Showing 5 of 16 controls in this family.</div>
+            <div class="pagination-controls">
+              <button class="btn btn-icon-only">‹ Prev</button>
+              <button class="btn btn-icon-only">Next ›</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right: summary / progress -->
+        <aside class="sidebar-panel">
+          <div>
+            <div class="panel-section-title">Device controls – readiness</div>
+            <div class="metric-row">
+              <div class="metric-label">Evidence coverage</div>
+              <div class="metric-value">75%</div>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill"></div>
+            </div>
+            <div class="small-note">12 of 16 required evidence items are present and locked.</div>
+          </div>
+
+          <div class="panel-divider"></div>
+
+          <div>
+            <div class="panel-section-title">Next deterministic action</div>
+            <div class="hint-box">
+              <div class="hint-label">Step</div>
+              <div>Attach BYOD policy and re-run preflight before first full evaluation.</div>
+              <div style="margin-top:6px; display:flex; justify-content:flex-end;">
+                <button class="btn btn-primary">Attach evidence</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-divider"></div>
+
+          <div>
+            <div class="panel-section-title">Rulepack context</div>
+            <div class="metric-row">
+              <div class="metric-label">Current rulepack</div>
+              <div class="mono">CE-UK-2025.1</div>
+            </div>
+            <div class="metric-row">
+              <div class="metric-label">Effective</div>
+              <div class="metric-value">01 Jan 2025</div>
+            </div>
+            <div class="small-note">All controls in this view are bound to this rulepack. Changing rulepack will regenerate the evidence matrix.</div>
+          </div>
+
+        </aside>
+
+      </div>
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

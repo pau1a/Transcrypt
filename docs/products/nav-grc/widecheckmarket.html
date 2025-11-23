@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Transcrypt – Marketing Mockup (Wide Container)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      /* All tokens copied exactly from your previous file */
+
+      --brand-base-900: #020617;
+      --brand-base-800: #0f172a;
+
+      --brand-surface-0: #ffffff;
+      --brand-surface-50: #f9fafb;
+      --brand-surface-100: #f3f4f6;
+
+      --accent-500: #3b82f6;
+      --accent-300: #93c5fd;
+      --accent-700: #1d4ed8;
+
+      --black: #000000;
+      --white: #ffffff;
+
+      --filigree-violet-50:  #f5f3ff;
+      --filigree-violet-100: #e4ddff;
+      --filigree-violet-200: #c4b5fd;
+      --filigree-violet-300: #8b5cf6;
+
+      --success-bg: #ecfdf5;
+      --success-border: #bbf7d0;
+      --success-text: #166534;
+
+      --warn-bg: #fffbeb;
+      --warn-border: #fed7aa;
+      --warn-text: #92400e;
+
+      --err-bg: #fef2f2;
+      --err-border: #fecaca;
+      --err-text: #b91c1c;
+
+      --neutral-900: #111827;
+      --neutral-800: #1f2937;
+      --neutral-700: #374151;
+      --neutral-600: #4b5563;
+      --neutral-500: #6b7280;
+      --neutral-400: #9ca3af;
+      --neutral-300: #d1d5db;
+      --neutral-200: #e5e7eb;
+      --neutral-100: #f3f4f6;
+      --neutral-50: #f9fafb;
+
+      --export-accent-safe: #2563eb;
+      --export-neutral-safe: #111827;
+      --export-text-primary: #111827;
+      --export-text-secondary: #4b5563;
+
+      --radius-card: 12px;
+      --radius-pill: 999px;
+
+      --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.18);
+      --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.12);
+
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      color: var(--neutral-900);
+      background: var(--neutral-50);
+    }
+
+    /* Header */
+
+    .site-header {
+      padding: 18px 24px;
+      background: var(--brand-surface-0);
+      border-bottom: 1px solid var(--neutral-200);
+    }
+
+    .header-inner {
+      max-width: 1320px;  /* WIDE container */
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+      color: var(--neutral-800);
+    }
+
+    .logo-mark {
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      background: radial-gradient(circle at 20% 0%, var(--accent-300), var(--accent-700));
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.12);
+    }
+
+    .header-nav {
+      display: flex;
+      gap: 20px;
+      font-size: 0.9rem;
+    }
+
+    .header-nav a {
+      color: var(--neutral-700);
+      text-decoration: none;
+    }
+
+    .header-nav a:hover {
+      color: var(--neutral-900);
+    }
+
+    .cta-btn {
+      border-radius: var(--radius-pill);
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      border: 1px solid var(--accent-500);
+      background: linear-gradient(135deg, var(--accent-500), var(--accent-700));
+      color: var(--white);
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+      text-decoration: none;
+    }
+
+    /* Hero */
+
+    .hero {
+      padding: 70px 24px 90px;
+      background: linear-gradient(
+        135deg,
+        var(--brand-base-800) 0%,
+        var(--brand-base-900) 70%
+      );
+      color: var(--neutral-50);
+    }
+
+    .hero-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 26px;
+    }
+
+    .hero-eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.75rem;
+      color: var(--neutral-400);
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      line-height: 1.14;
+      max-width: 840px;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .hero p {
+      font-size: 1.18rem;
+      max-width: 720px;
+      color: var(--neutral-300);
+      margin: 0;
+    }
+
+    .hero-cta-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 6px;
+    }
+
+    .hero-btn {
+      border-radius: var(--radius-pill);
+      padding: 12px 22px;
+      font-size: 1rem;
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .hero-btn-primary {
+      background: linear-gradient(135deg, var(--accent-500), var(--accent-700));
+      color: var(--white);
+      border-color: rgba(37,99,235,0.6);
+      box-shadow: 0 12px 32px rgba(37,99,235,0.5);
+    }
+
+    .hero-btn-ghost {
+      color: var(--neutral-200);
+      border-color: var(--neutral-500);
+      background: transparent;
+    }
+
+    /* Wide marketing blocks */
+
+    .section {
+      padding: 80px 24px;
+      background: var(--brand-surface-0);
+      border-top: 1px solid var(--neutral-200);
+    }
+
+    .section-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+
+    .section h2 {
+      margin: 0 0 12px;
+      font-size: 2.1rem;
+      font-weight: 600;
+      color: var(--neutral-900);
+    }
+
+    .section-lead {
+      margin: 0 0 32px;
+      font-size: 1.1rem;
+      color: var(--neutral-600);
+      max-width: 760px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 28px;
+    }
+
+    @media (min-width: 960px) {
+      .grid.cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .feature-card {
+      border-radius: var(--radius-card);
+      padding: 24px 24px 30px;
+      background: var(--brand-surface-50);
+      border: 1px solid var(--neutral-200);
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .feature-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--neutral-800);
+    }
+
+    .feature-body {
+      font-size: 0.95rem;
+      color: var(--neutral-600);
+      line-height: 1.5;
+    }
+
+    /* Footer */
+
+    .site-footer {
+      padding: 40px 24px;
+      background: var(--brand-surface-100);
+      border-top: 1px solid var(--neutral-300);
+      color: var(--neutral-600);
+      font-size: 0.85rem;
+    }
+
+    .footer-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark"></div>
+      Transcrypt
+    </div>
+
+    <nav class="header-nav">
+      <a href="#">Platform</a>
+      <a href="#">Method</a>
+      <a href="#">Pricing</a>
+      <a href="#">Guides</a>
+      <a href="#">Blog</a>
+    </nav>
+
+    <a href="#" class="cta-btn">Start Essentials</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Cyber Essentials · UK regulated</div>
+    <h1>Compliance that behaves like engineering, not guesswork.</h1>
+    <p>
+      Transcrypt turns SME compliance into a deterministic, auditable, sealed
+      workflow. No fluff. No ambiguity. Just clear readiness, locked evidence, and
+      predictable progression.
+    </p>
+
+    <div class="hero-cta-row">
+      <a href="#" class="hero-btn hero-btn-primary">Get started</a>
+      <a href="#" class="hero-btn hero-btn-ghost">Explore the method</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-inner">
+    <h2>What makes Transcrypt different</h2>
+    <p class="section-lead">
+      A platform built on architecture, not promises. Every part of our evaluation
+      and evidence system is deterministic, reversible, inspectable, and bound to
+      the rulepack version in effect.
+    </p>
+
+    <div class="grid cols-3">
+      <div class="feature-card">
+        <div class="feature-title">Deterministic workflows</div>
+        <div class="feature-body">
+          Essentials does not wander. Every screen, every field, every transition
+          is governed by the PDS and SAIS, ensuring predictable, auditable flow.
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-title">Zero ambiguity evidence model</div>
+        <div class="feature-body">
+          Evidence is locked, typed, versioned, and tamper-resistant. Nothing is
+          “interpretive”. The rulepack defines it; you provide it.
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-title">Designed for auditors and SMEs</div>
+        <div class="feature-body">
+          Outputs are formatted for clarity and auditability. No more narrative fluff
+          or manually assembled PDFs.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    All content on this page is placeholder. This mock exists to test geometry,
+    typography behaviour, and the wide marketing container.
+  </div>
+</footer>
+
+</body>
+</html>

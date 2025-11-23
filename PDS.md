@@ -567,6 +567,10 @@ Marketing reflows with the same logic — the only difference is breathing room.
 
 ### **4.4.4 Constraints and Prohibitions**
 
+### **4.4.5 Content Width and Container Boundaries**
+
+
+
 To maintain system integrity:
 
 1. Essentials may not override grid rules. Marketing may use expanded or editorial container layouts as long as tokens and breakpoint logic remain intact.

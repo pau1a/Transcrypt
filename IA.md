@@ -166,9 +166,25 @@ The platform may expose internal-only surfaces related to monitoring, verificati
 
 # **3. Navigation Model**
 
-This section establishes how users move between surfaces: global navigation, secondary navigation, inline navigation, and conditional navigation states. It ensures movement through the product is predictable, reversible, and free of ambiguity.
+This section defines how users move between surfaces within and across the Marketing and Essentials runtimes. It establishes the global, sectional, workflow, and conditional navigation patterns that govern the entire platform. Navigation must always be predictable, reversible, and free of ambiguity. The rules in this section ensure that movement respects hierarchical structure (§4), deterministic workflow boundaries (PDS, SAIS), and the runtime separation model defined in §2. Lateral, non-hierarchical cross-links—such as contextual discovery surfaces—are implemented only through governed partials defined in Appendix D and must never interfere with core navigation behaviour.
 
 ## **3.1 Primary Navigation**
+
+Primary navigation defines the top-level frame through which users access major sections of the platform. It is runtime-specific, non-ambiguous, and stable across all Marketing surfaces. Essentials surfaces use their own constrained primary frame that exposes only authorised, task-driven areas. The two runtimes never share a unified navigation bar, preventing expressive Marketing affordances from leaking into deterministic workflows.
+
+Primary navigation must:
+
+* reflect the structural hierarchy defined in §4 without implying pages outside the user’s current runtime
+* expose only surfaces whose access conditions, state requirements, and transitions are valid for the user’s context
+* maintain full reversibility—users must always be able to return to any previously accessed top-level section without relying on browser behaviours
+* remain visually consistent and predictable across all Marketing surfaces, and strictly minimal and state-bound in Essentials
+* avoid decorative or suggestive elements; affordances must indicate genuine navigability
+* never embed lateral discovery patterns (e.g., “Related Stories,” “For Your Industry”); these are governed exclusively by the partials catalogue in Appendix D and must not appear in primary nav
+* degrade predictably on narrow viewports without hiding or reinterpreting structural truth
+
+Primary navigation establishes a clear, trustworthy frame for movement across the platform, ensuring that users can reliably orient themselves regardless of content depth, workflow state, or device.
+
+---
 
 ## **3.2 Secondary Navigation**
 
