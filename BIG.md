@@ -1030,6 +1030,7 @@ Only the sanctioned square or circular avatar containers are allowed.
 # 4. Colour Palette
 
 Colour in Transcrypt’s identity is not an expressive layer. It is a functional system that supports clarity, hierarchy, and reliability across every surface — from the marketing site to the Essentials app to PDF exports and architectural documentation. The palette exists to reinforce Transcrypt’s role as *boring, safe infrastructure*: predictable, legible, and free from aesthetic noise.
+Numeric definitions for every colour in this system are held in Appendix A — Colour Tokens and Specifications, and must only be used via those tokens (never as raw hex values).
 
 The product is built on determinism, sealed data boundaries, and unambiguous truth. The colour system mirrors that behaviour. It uses a restrained set of tones, chosen not for personality but for their ability to organise information and maintain consistency across light and dark environments.
 
@@ -1039,15 +1040,17 @@ The palette has three structural layers:
 2. **Secondary colours** — functional tones for semantic states, diagrams, and supporting UI, never competing with the primary accent.
 3. **Neutral foundations** — a greyscale that provides depth, spacing, and hierarchy without drawing attention to itself.
 
+These layers map directly to the implementation tokens in Appendix A: primary colours to §A.1 Primary Palette Tokens, secondary semantic colours to §A.2 Secondary Semantic Tokens, and neutral foundations to §A.3 Neutral Greyscale Tokens.
+
 Colour is applied sparingly, with strict contrast rules, minimal decorative usage, and a bias toward monochrome forms wherever clarity would benefit. The logo’s silhouette and the system’s typography remain the anchors; colour supports them, never leads.
 
-This section defines the palette, its hierarchy, and the constraints governing its use, so Transcrypt’s identity remains stable, serious, and unmistakably technical — whatever surface it appears on.
+This section defines the palette, its hierarchy, and the constraints governing its use, so Transcrypt’s identity remains stable, serious, and unmistakably technical — whatever surface it appears on. All examples and rules in this section are normative only when expressed through the tokens defined in Appendix A; any colour that is not represented there is considered out of system.
 
 ---
 
 ## 4.1 Primary Brand Palette
 
-The primary palette defines the core colours that carry Transcrypt’s identity across all surfaces. These colours set the tonal temperature of the brand: cold, precise, and deliberately restrained. They form the visual spine from which every other colour decision derives.
+The primary palette defines the core colours that carry Transcrypt’s identity across all surfaces. These colours set the tonal temperature of the brand: cold, precise, and deliberately restrained. They form the visual spine from which every other colour decision derives. In implementation, the primary palette is realised through the A.1 Primary Palette Tokens (e.g. --brand-base-900, --brand-surface-0, --accent-500), which form the non-negotiable set of brand colours.
 
 Transcrypt uses a minimal primary set: a deep engineered base, clean light surfaces for clarity, and a single cerulean accent that acts as the system’s point of focus. Each colour has a clearly defined role. The base establishes authority and stability; the light surfaces handle legibility and layout structure; the accent provides directional emphasis without introducing emotion or stylistic noise.
 
@@ -1057,11 +1060,11 @@ The primary palette is intentionally narrow. It ensures that the brand remains c
 
 ### 4.1.1 Core Colours
 
-The core colours define the minimal set of tones that represent Transcrypt in every context where the brand must be unmistakable. Each colour has a defined, non-negotiable purpose. Nothing outside this set carries brand identity.
+The core colours define the minimal set of tones that represent Transcrypt in every context where the brand must be unmistakable. Each colour has a defined, non-negotiable purpose. Nothing outside this set carries brand identity. In practice, this means that only tokens in §A.1 may be used to represent the Transcrypt brand; secondary, neutral, or filigree tokens are always subordinate and may not substitute for these cores.
 
 #### **Engineered Base**
 
-A deep, near-black blue forms the base of the identity.
+A deep, near-black blue forms the base of the identity. It is implemented through the tokens defined in §A.1.1 Engineered Base (for example --brand-base-900 and --brand-base-800).
 It is the backdrop for hero surfaces, product chrome, and structural components where authority and clarity matter.
 This tone anchors the entire system and ensures that the brand reads as a stable piece of infrastructure rather than a decorative interface.
 
@@ -1069,7 +1072,7 @@ The engineered base is never used as an accent, never softened, and never tinted
 
 #### **Light Surfaces**
 
-White and near-white surfaces provide the clarity layer of the brand.
+White and near-white surfaces provide the clarity layer of the brand. These map to the tokens in §A.1.2 Light Surfaces (--brand-surface-0, --brand-surface-50, --brand-surface-100), which must be used for all content-bearing light backgrounds.
 These values control content-heavy environments — documentation, data tables, PDF exports, dashboards, and any space where reading comfort outranks atmosphere.
 
 They exist purely for legibility and spatial structure.
@@ -1077,7 +1080,7 @@ They do not function as accents and they do not attempt to carry emotion.
 
 #### **Cerulean Accent**
 
-The single point of colour in the primary palette is a controlled cerulean — a mid-spectrum blue chosen for its engineered neutrality.
+The single point of colour in the primary palette is a controlled cerulean — a mid-spectrum blue chosen for its engineered neutrality. In the token set this is represented by §A.1.3 Cerulean Accent (--accent-500 as the primary value, with --accent-300 and --accent-700 as its only permitted variants).
 It carries no emotional overtones and does not behave like a marketing highlight.
 Its purpose is functional:
 
@@ -1093,7 +1096,7 @@ Its variants (soft, deep) support accessibility and hierarchy but remain within 
 #### **Black and White Extremes**
 
 Pure black and pure white are retained as functional extremes for typography, diagrams, and high-contrast environments.
-They are not brand colours but operational tools, ensuring that text, icons, and schematics remain razor-clear across all surfaces.
+They are not brand colours but operational tools, ensuring that text, icons, and schematics remain razor-clear across all surfaces. These are implemented as the tokens defined in §A.1.4 Black/White Extremes (--black, --white) and must not be aliased or redefined elsewhere.
 
 ---
 
@@ -1136,7 +1139,7 @@ In documentation and technical materials, these colours reinforce the determinis
 
 ## 4.2 Secondary Palette
 
-The secondary palette supports the product’s functional needs without ever competing with the primary colours. These tones are not part of Transcrypt’s identity; they are part of its interface logic. Their job is to communicate state, hierarchy, and system meaning in environments where monochrome alone is insufficient.
+The secondary palette supports the product’s functional needs without ever competing with the primary colours. These tones are not part of Transcrypt’s identity; they are part of its interface logic. Their job is to communicate state, hierarchy, and system meaning in environments where monochrome alone is insufficient. All secondary colours are bound to the semantic token set in §A.2 Secondary Semantic Tokens (success, warning, and error); no additional state colours may be introduced outside that appendix.
 
 Secondary colours exist only to improve comprehension. They never introduce personality, and they never dilute the authority of the primary palette.
 
@@ -1149,6 +1152,8 @@ The supporting colours are a tightly constrained set of functional tones used fo
 1. **Functional, not expressive** — every tone corresponds to a precise meaning.
 2. **Subordinate to the accent** — nothing in this set may resemble or compete with cerulean.
 3. **Neutral until required** — these colours appear only when they serve a clear informational purpose.
+
+Concretely, success, warning, and error states are implemented using the --success-*, --warn-*, and --err-* token groups defined in §A.2.1–A.2.3. UI elements must reference these tokens directly rather than introducing new hex values or ad hoc shades.
 
 The typical categories include:
 
@@ -1169,7 +1174,7 @@ No gradient, no glow, no emotional theatrics — just clear, immediate signallin
 
 #### **Diagrammatic Neutrals**
 
-A narrow set of greys or muted blues used in architecture diagrams, flowcharts, and PDS/SAIS illustrations.
+A narrow set of greys or muted blues used in architecture diagrams, flowcharts, and PDS/SAIS illustrations. These are drawn from the neutral ladder in §A.3 Neutral Greyscale Tokens (e.g. --neutral-300 to --neutral-900) and may not introduce new hues.
 Their purpose is structural clarity, not identity.
 
 These tones sit behind the brand; they never define it.
@@ -1225,11 +1230,15 @@ In PDFs, reports, and printed material, secondary colours remain muted to ensure
 * compatibility with grayscale printing
 * no drift into marketing-style colour storytelling
 
+Export and print implementations must use the specialised tokens in §A.4 Print and Export Safe Tokens (for example --export-accent-safe, --export-text-primary) to guarantee consistent reproduction.
+
 Supporting colours never appear as backgrounds or large surfaces.
 
 ---
 
 ## 4.3 Neutral Foundations
+
+
 ### 4.3.1 Greyscale System
 ### 4.3.2 Background Layering Rules
 
