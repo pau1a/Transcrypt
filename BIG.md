@@ -6003,3 +6003,173 @@ Used for: spacing between labels and inputs, list items, chip stacks, micro-elem
 3. Tailwind / CSS implementations must consume these tokens, not redefine new spacing scales.
 4. Any change to these values is a versioned change and must be recorded under §10.4.
 
+---
+
+# **Document Governance**
+
+This section defines the governance, control, and compliance obligations that apply to this document. It exists to ensure alignment across the quadrumvirate (PRD, SAIS, PDS, BIG) and to record all governance outcomes arising from the multi-document compliance audit.
+
+## **1. Governance Purpose**
+
+This document operates under the same structural discipline as the PRD, SAIS, and PDS. Its purpose is to preserve consistency, prevent drift, and ensure the brand identity system remains aligned with:
+
+* strategic intent defined in the PRD
+* architectural invariants defined in the SAIS
+* behavioural and interface constraints defined in the PDS
+
+No part of this document may override or contradict higher-order requirements.
+
+---
+
+## **2. Mandatory Compliance Outcomes**
+
+The following governance outcomes were identified during the cross-document audit. They are now formal constraints:
+
+### **2.1 Colour System Governance**
+
+* Brand colours must be explicitly divided into:
+
+  * **Marketing-only colours**
+  * **Mapped colours** that correspond to PDS semantic tokens
+* No brand colour may implicitly enter the product surface without a PDS token.
+
+### **2.2 Typography Boundary Governance**
+
+* BIG typography rules govern **marketing surfaces only**.
+* Product typography is governed exclusively by the PDS.
+* No font, weight, or style introduced here may leak into application runtimes.
+
+### **2.3 Logo Geometry & Spacing Governance**
+
+* Logo clearspace rules must not conflict with the PDS spacing system.
+* BIG spacing values must be interpreted as *brand-layer* rules only.
+* Application spacing and layout remain the domain of PDS tokens.
+
+### **2.4 Motion Governance**
+
+* Motion guidance in BIG is restricted to **marketing-only** surfaces.
+* All in-product motion is governed by the prohibitions and constraints of the PDS.
+* No motion defined here may be applied to authenticated surfaces.
+
+### **2.5 Imagery Governance**
+
+* Brand imagery must comply with PDS accessibility, contrast, and clarity principles.
+* Metaphorical, abstract, or low-contrast photography may not appear inside the product unless explicitly authorised by the PDS.
+* BIG must define constrained imagery rules to prevent aesthetic drift.
+
+---
+
+## **3. Structural Omissions Requiring Inclusion**
+
+The following required sections must be added to this document to achieve full governance compliance:
+
+### **3.1 Brand Asset Delivery & CDN Rules**
+
+Must specify:
+
+* filename hashing
+* versioned asset paths
+* immutability guarantees
+* CDN caching and invalidation
+* staging ↔ prod alignment
+* SSR/ISR propagation rules
+
+### **3.2 SEO & Editorial Identity Layer**
+
+Must specify:
+
+* canonical structure
+* metadata and authorship rules
+* keyword strategy constraints
+* structured data usage
+* ALT text taxonomy
+* content integrity and editorial discipline
+
+### **3.3 Brand Protection & Legal Usage**
+
+Must specify:
+
+* trademark usage
+* co-branding rules
+* prohibited distortions
+* unacceptable recolours
+* asset misuse boundaries
+
+### **3.4 High-Contrast & Failure-Mode Brand Behaviour**
+
+Must specify fallback behaviour for:
+
+* logo
+* typography
+* colour
+* imagery
+* offline operation
+
+### **3.5 Marketing Typography Declaration**
+
+Must specify:
+
+* marketing font families
+* weights
+* usage hierarchy
+* explicit prohibition on crossing into product runtime
+
+### **3.6 Marketing-Only Motion Identity**
+
+Must specify:
+
+* permissible motion
+* velocity, easing, and rhythm
+* forbidden transitions
+* strict separation from in-product motion constraints
+
+---
+
+## **4. Overreach Controls**
+
+The following constraints ensure that BIG does not encroach into SAIS/PDS territory:
+
+* No layout rules for authenticated surfaces may appear in this document.
+* No product-level component behaviour may be implied or described.
+* No architecture, asset-bundling logic, or responsive breakpoints may be defined here unless strictly branding-layer.
+* Any technical statement that alters runtime behaviour must be moved to SAIS.
+
+---
+
+## **5. Traceability Requirements**
+
+This document must include explicit cross-references to:
+
+* PRD §§1–3 for purpose, audience, identity principles
+* PDS §§6–7 for spacing, geometry, elevation, tokens
+* SAIS §§2–3 for runtime delivery, asset integrity, caching
+* PRD §11 for acceptance and operational discipline
+
+Every brand rule must trace either:
+
+* upward into PRD intent, or
+* laterally into PDS/SAIS constraints, depending on domain.
+
+---
+
+## **6. Acceptance Criteria**
+
+This document is considered compliant only if:
+
+1. All required sections listed in §3 are implemented.
+2. All conflicts identified in §2 are resolved.
+3. All overreach items in §4 are removed or rewritten.
+4. Cross-reference anchors in §5 are added.
+5. This document expresses **marketing identity only** and introduces zero product-behaviour or runtime-governance content.
+6. The document can be version-pinned and used within deterministic build pipelines.
+
+---
+
+## **7. Revision Cadence**
+
+* Major: upon any substantive change to PRD, SAIS, or PDS
+* Minor: upon addition of brand assets, new marketing templates, or SEO rules
+* Quarterly: standard governance review
+* Every version must be Git-tagged and cross-referenced to corresponding PRD/PDS/SAIS versions
+
+---
