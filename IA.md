@@ -182,7 +182,7 @@ This section establishes how users move between surfaces: global navigation, sec
 
 # **4. Page Hierarchy**
 
-This hierarchy defines how all surfaces relate to one another, assigning structural weight and ordering pages into clear parent–child relationships. It prevents unnecessary flattening, avoids deep or confusing nesting, and ensures users always understand where they are in the system. Hierarchical groupings in this section correspond to the structural templates illustrated in Appendix A.
+This hierarchy defines how all surfaces relate to one another, assigning structural weight and ordering pages into clear parent–child relationships. It prevents unnecessary flattening, avoids deep or confusing nesting, and ensures users always understand where they are in the system. Hierarchical groupings in this section correspond to the structural templates illustrated in Appendix A. Non-hierarchical, lateral connections between surfaces—such as contextual recommendations, industry pivots, or cross-content meshes—are not represented in the hierarchy and are instead governed by the partial mechanisms defined in Appendix D.
 
 ## **4.1 Structural Tiers**
 
@@ -212,7 +212,7 @@ This section defines the primary and secondary keyword targets for organic searc
 
 # **6. Content Types**
 
-This section defines the distinct classes of content used across the platform, from marketing pages and long-form articles to intake forms, evaluation steps, reports, and legal surfaces. Each type carries its own structural requirements and behavioural expectations. The foundational templates for these content types are represented in Appendix A, ensuring consistency, predictability, and long-term maintainability.
+This section defines the distinct classes of content used across the platform, from marketing pages and long-form articles to intake forms, evaluation steps, reports, and legal surfaces. Each type carries its own structural requirements and behavioural expectations. The foundational templates for these content types are represented in Appendix A, ensuring consistency, predictability, and long-term maintainability. Certain content types may embed governed cross-page partials for lateral discovery (e.g., related content, industry pivots, workflow guidance), and these partials are defined and constrained in Appendix D.
 
 ## **6.1 Marketing Types**
 
@@ -224,7 +224,7 @@ This section defines the distinct classes of content used across the platform, f
 
 # **7. Taxonomy**
 
-The taxonomy defines the classification system used across content, including tags, categories, and thematic groupings. It ensures consistent organisation, improves discoverability, and supports internal search behaviours.
+The taxonomy defines the classification system used across content, including tags, categories, and thematic groupings. It ensures consistent organisation, improves discoverability, and supports internal search behaviours. Taxonomy also powers several cross-referential partials—such as Related Stories, For Your Industry, and Research Highlight—whose behaviour and placement rules are governed in Appendix D. Any taxonomy-driven partial must reflect the authoritative taxonomy structures defined in this section.
 
 ## **7.1 Core Categories**
 
@@ -258,7 +258,7 @@ This section defines the canonical URL patterns that determine how pages are add
 
 # **9. Cross-Linking Strategy**
 
-This establishes when and how surfaces should link to each other to reinforce navigation, improve SEO, and reduce isolating “dead-end” pages. It ensures crosslinks are purposeful, not decorative, and always contextually appropriate.
+This establishes when and how surfaces should link to each other to reinforce navigation, improve SEO, and reduce isolating “dead-end” pages. It ensures crosslinks are purposeful, not decorative, and always contextually appropriate. All lateral cross-links—including contextual recommendations, thematic pivots, industry-based suggestions, and SEO-driven surfacing—must be implemented exclusively through the governed partial mechanisms defined in Appendix D. No page may introduce an unmanaged or ad-hoc cross-link.
 
 ## **9.1 Mandatory Internal Links**
 
