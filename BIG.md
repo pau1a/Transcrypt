@@ -3928,26 +3928,815 @@ No fallback may present a broken or partially styled identity.
 
 # 9. Marketing Application
 
+Marketing surfaces are the places where Transcrypt must speak clearly, attract attention, and convert interest into action without compromising the engineered seriousness of the core identity. Unlike product UI — which is governed by strict behavioural constraints and low-amplitude visual rules — marketing surfaces operate in noisier, competitive environments and require a broader expressive range. This section defines that range.
+
+Marketing is not a relaxation of the system. It is an extension of it.
+Every visual and verbal decision must still reflect the principles defined in Sections 1–8: clarity, restraint, determinism, and structural consistency. But within those boundaries, marketing may leverage modern techniques — layout dynamism, controlled motion, persuasive hierarchy, and sharper visual contrast — to meet the demands of public communication.
+
+This section specifies how the brand behaves across the website, social channels, presentations, and physical materials. It defines the rules for:
+
+layout frameworks and safe zones
+
+motion and emphasis calibrated for public surfaces
+
+photography and imagery under marketing constraints
+
+colour balance and accent usage appropriate for high-competition environments
+
+typography rules adapted for larger, more expressive surfaces
+
+cross-format consistency across web, social, presentation, and print
+
+Marketing surfaces must be recognisably Transcrypt: engineered, precise, calm.
+They must also be competitive, modern, and instantly readable in crowded spaces.
+
+The following subsections define the structural, typographic, and behavioural system that enables both.
+
 ## 9.1 Website Brand Usage
-### 9.1.1 Homepage Rules
-### 9.1.2 Blog and Article Styling
+
+The website is the primary public expression of Transcrypt. It must reflect the engineered discipline of the product while using a more dynamic, persuasive communication style appropriate for marketing contexts. Layouts may be more expressive, motion may be more prominent, and imagery may be richer — but the underlying system must remain recognisable: deterministic structure, clear hierarchy, cold palette discipline, and consistency with the logo, typography, and spacing rules defined earlier.
+
+The website must feel like a clean, confident, technically grounded platform — not a glossy SaaS theme.
+Every element must reinforce clarity, trust, and structural calm, even when executing attention-driven marketing patterns.
+
+---
+
+### **9.1.1 Homepage Rules**
+
+The homepage is a controlled high-impact environment. It is the only surface where you may use maximal contrast, tighter headlines, stronger visual rhythm, and more assertive accent usage — but still within the deterministic brand constraints.
+
+**Rules**
+
+1. **Hero Zone Structure**
+
+   * One clear primary tagline (from §2.4.1).
+   * One supporting sentence — factual, non-emotive.
+   * One primary CTA using `--accent-500`.
+   * Optional secondary CTA with neutral styling.
+   * No decorative gradients or chromatic backgrounds (only engineered base or light surface blocks).
+
+2. **Logo Usage**
+
+   * Only the PRIMARY lockup may be used in the hero zone.
+   * No compact mark substitutions.
+   * No colour deviation.
+
+3. **Layout & Spacing**
+
+   * Uses the full 12-column grid.
+   * Left-aligned content for desktop; centred for mobile.
+   * 4× spacing unit enforced (per §8.3).
+
+4. **Photography & Illustration**
+
+   * Must follow §7 rules: documentary or abstract-technical only.
+   * No AI-fantasy imagery, no “people pointing at laptops,” no staged happiness.
+   * Light motion (parallax, fade, slide) permitted within limits defined in §8.5.
+
+5. **Accent Usage**
+
+   * Accent may be used as:
+
+     * CTA
+     * interactive focus
+     * small vector elements
+   * Must **never** be used as a background block.
+
+6. **Homepage Sections**
+   Required pattern structure:
+
+   * Clarity block (what Transcrypt is)
+   * Proof block (how it works, factual)
+   * Feature block (3-column pattern)
+   * Social proof / context (if available)
+   * CTA footer block
+
+7. **No Marketing Gloss**
+
+   * Expressive but not theatrical.
+   * No inflated claims, no transformation metaphors, no hype-adjectives.
+   * Motion must be subtle; no loud scroll hijacks or aggressive reveals.
+
+---
+
+### **9.1.2 Blog and Article Styling**
+
+Blog articles and long-form content must be treated as technical writing, not marketing copy. They sit closer to the behaviour of the product and must adopt the structured, disciplined identity of Transcrypt.
+
+**Rules**
+
+1. **Typography**
+
+   * Headings: IBM Plex Sans, weights per §5.2.1.
+   * Body: IBM Plex Sans regular (400).
+   * Code blocks: IBM Plex Mono (400).
+   * No italics, no decorative emphasis.
+
+2. **Layout & Grids**
+
+   * Single-column width for readability.
+   * Maximum line width of 72–80 characters.
+   * Consistent 4× spacing unit.
+
+3. **Images & Diagrams**
+
+   * Must follow §7 photography rules and §6 illustration rules.
+   * No stock marketing imagery.
+   * Only:
+
+     * diagrams
+     * neutral photography
+     * screenshots
+     * architecture visuals
+   * Diagrams must use the colour constraints of §4.4.
+
+4. **Tone of Voice**
+
+   * Must follow the Tone rules in §2.2.
+   * Factual, literal, calm.
+   * No conversational framing.
+   * No storytelling flourishes.
+
+5. **Accent Usage**
+
+   * Only for hyperlinks or inline emphasis.
+   * Never for headings or large blocks.
+
+6. **Metadata & Tags**
+
+   * Must use neutral colours (`--neutral-600` / `--neutral-500`).
+   * No “pill” badges with bright colour.
+
+7. **Pull Quotes**
+
+   * Optional.
+   * Must be neutral and typographically restrained — not stylised or emotional.
+   * No giant decorative quotation marks or oversized contrast blocks.
+
+8. **Tables, Lists, Blockquotes**
+
+   * Must adopt the same rhythm rules as documentation (PDS §11).
+   * No alternate formatting for “style.”
+
+Blog posts must read like they come from a technical founder — precise, calm, structured — not a marketing intern chasing engagement.
+
+---
 
 ## 9.2 Social Media Templates
-### 9.2.1 Post Layouts
-### 9.2.2 Story and Reel Templates
+
+Transcrypt’s social channels are *extensions of the brand system*, not separate “lighter” identities.
+They are allowed **more motion, stronger contrast, and tighter layout**, but the voice remains calm, factual, and engineered. No emotional tone, no hype, no memes, no “brand personality.”
+Everything must still look like it comes from a cybersecurity platform built by a systems engineer — not a marketing department performing trends.
+
+This section defines **structural templates**, **layout constraints**, and **behaviour rules** for posts, stories, reels, and any future short-form channels.
+
+---
+
+### **9.2.1 Post Layouts**
+
+Posts must communicate clearly at a glance, using the same visual discipline as the website:
+
+#### **1. Core Layout Structure**
+
+All static posts follow a fixed structure:
+
+1. **Top band (optional)**
+   Neutral background (`--brand-surface-0` or `--neutral-100`).
+   Used sparingly to introduce tight, factual headings.
+   No accent background.
+
+2. **Primary content zone**
+   One core idea per post.
+   Uses the 4× spacing unit.
+   Text must be minimal, high-contrast, and skimmable.
+
+3. **Footer zone (optional)**
+   Tiny Transcrypt monogram (compact variant), right-aligned.
+   No URL, no slogans.
+
+#### **2. Typography**
+
+* IBM Plex Sans only.
+* Headings: 600 weight, no italics.
+* Body: 400.
+* Mono text allowed for technical snippets (IDs, hashes).
+* No decorative typography or stylised lettering.
+
+#### **3. Backgrounds**
+
+* Default: `--brand-surface-0` (white) or `--brand-base-900` (engineered base).
+* Accent backgrounds strictly forbidden.
+* No gradients, gloss, duotone, neon, or “SaaS blue fade” visuals.
+
+#### **4. Use of Accent**
+
+Accent (`--accent-500`) allowed for:
+
+* diagrams
+* arrows
+* highlights of key phrases
+* data callouts
+* icons
+
+Never for background blocks or splash colours.
+
+#### **5. Photography**
+
+If used:
+
+* must follow §7 rules
+* documentary, restrained, technical
+* never emotional, friendly, or stock-style
+* no models, no staged work scenes, no “team brainstorming” nonsense
+
+#### **6. Motion (for animated posts)**
+
+Animations must follow §8.5:
+
+* minimal
+* low amplitude
+* linear or ease-out
+* no bounce
+* no elastic or playful transitions
+* no jump cuts or flashy sequences
+
+---
+
+### **9.2.2 Story and Reel Templates**
+
+Stories and reels (LinkedIn, YouTube Shorts, future channels) must convey clarity and competence in short bursts without adopting social-native theatrics.
+They may move faster than product surfaces — but not become expressive or emotional.
+
+#### **1. Core Principles**
+
+* No humour, no performative positivity.
+* Messaging must be literal: “How to handle evidence expiry,” “CE requirements explained,” “Why sealed tenancy matters.”
+* Motion must be **simple**, **linear**, and **structural**, not cinematic.
+
+#### **2. Story Structure (vertical format)**
+
+Stories follow a strict set of templates:
+
+##### **Template A: Statement → Proof**
+
+1. Statement (large, structural, IBM Plex Sans, centre or left aligned)
+2. Neutral diagram or visual token
+3. One-line factual explanation
+
+##### **Template B: Step-by-Step**
+
+1. Title (“How Transcrypt handles X”)
+2. Step 1 block
+3. Step 2 block
+4. Step 3 block
+5. CTA (“Read more on the site”)
+
+##### **Template C: Diagram First**
+
+1. Cerulean-highlighted diagram (light usage)
+2. One-sentence explainer
+3. CTA or conclusion
+
+#### **3. Reel Structure (short video)**
+
+Duration: 5–20 seconds.
+
+Permitted elements:
+
+* direct text-over-background
+* muted motion graphics
+* scrolling diagrams
+* code-style overlays
+* architectural diagrams
+* animated lists or callouts
+* cursor-like guided attention (but minimal)
+
+Forbidden:
+
+* talking-heads
+* emotional voiceovers
+* hype edits
+* enthusiastic narration
+* sparkle/glint effects
+* stock B-roll of offices, hands typing, “team collaboration” scenes
+
+#### **4. Audio**
+
+* Neutral synthetic tones only
+* No upbeat music
+* No emotional cues
+* No corporate jingle
+* Transitions must be barely noticeable
+
+#### **5. Branding**
+
+* Compact monogram only
+* Placed in a consistent corner
+* Never animated independently of the content
+* Never displayed large or as a “brand takeover” frame
+
+---
+
+### **Summary of 9.2 Rules**
+
+*Structure = engineered.
+Tone = calm.
+Motion = minimal.
+Colour = identity-hierarchy only.
+Purpose = clarity, not personality.*
+
+This delivers a social presence that is recognisable, disciplined, and visually consistent with all upstream constraints — while still allowing modern, effective marketing execution.
+
+---
 
 ## 9.3 Slide Deck and Presentation Style
-### 9.3.1 Master Slides
-### 9.3.2 Typography and Colour Rules
+
+Transcrypt’s presentation system mirrors the product’s identity: engineered, calm, factual, and structurally disciplined.
+Slide decks are not a marketing playground — they are an extension of the same deterministic system expressed in the PRD, SAIS, PDS, and the rest of this guide.
+They must feel like documentation rendered at presentation scale: predictable grids, controlled rhythm, no theatrics, no “conference gloss.”
+
+Decks must communicate authority and clarity without emotional tone, enthusiasm, or salesmanship. They must avoid the traditional SaaS pitch-deck visual tropes completely.
+
+---
+
+### **9.3.1 Master Slides**
+
+Master slides establish the invariant skeleton from which all decks are built.
+They are strict, minimal, and highly structured.
+
+#### **1. Title Slide (Primary)**
+
+Elements:
+
+* Background: `--brand-base-900` (deep engineered base).
+* Monogram: centred or top-left at fixed scale.
+* Wordmark: directly below or to the right depending on lockup.
+* Title block: left-aligned; large IBM Plex Sans 600.
+* Subtitle: IBM Plex Sans 400 in `--neutral-300` or `--neutral-400`.
+* No gradients, no hero photography, no illustration overlays.
+
+Use cases: public talks, investor updates, audit-facing presentations, internal briefings.
+
+#### **2. Section Divider Slide**
+
+Purpose: resetting cognitive frame without theatrics.
+
+Rules:
+
+* Background: either `--brand-base-800` or `--brand-surface-0`.
+* One clear heading (H1).
+* Optional micro filigree detail using `--filigree-violet-*` tokens (single thin line, small grid dot array).
+* No secondary text except a short descriptor.
+* No icons, no diagrams, no CTAs.
+
+#### **3. Content Slide (Primary Layout)**
+
+The default presentation slide.
+
+* Grid: 12-column layout with 64px side gutters.
+* Title: H2 (IBM Plex Sans 600).
+* Body: IBM Plex Sans 400 at comfortable reading size.
+* Visual: one diagram, table, or bullet group — never all at once.
+* Spacing: strict multiples of 8px (as per §8.3).
+* No decorative shapes or background colours.
+
+#### **4. Diagram-First Slide**
+
+Used for SAIS/PDS-style explanations.
+
+* Diagram occupies 60–75% of slide.
+* Title and short description sit above or beside.
+* All diagram colours must use neutrals or cerulean (`--accent-500`) for emphasis.
+* Semantic colours allowed only if showing system state.
+
+No cinematic motion, no animated builds, no flourish transitions.
+
+#### **5. List/Process Slide**
+
+For structured sequences or operational logic.
+
+Rules:
+
+* Maximum 5 items.
+* Each item uses IBM Plex Sans 500 for title, 400 for body.
+* Optional icons must follow §6 Feather rules.
+* No numbering styles that imply personality (circles, gradients, oversized digits).
+
+#### **6. End Slide**
+
+Purpose: closure, not cheerfulness.
+
+* Either brand-base dark background or light surface.
+* Monogram only.
+* One line of text: factual, not warm (“Contact” or “Resources”).
+* No “thank you,” no exclamation marks, no handshake sentiment.
+
+---
+
+### **9.3.2 Typography and Colour Rules**
+
+Typography and colour in slide decks must behave identically to all other brand surfaces — with minor scaling allowances due to viewing distance.
+
+#### **Typography Rules**
+
+**Font family**
+
+* IBM Plex Sans — exclusive for all narrative content.
+* IBM Plex Mono — only for code, IDs, or technical snippets.
+
+**Weights**
+
+* Titles: 600
+* Subtitles / labels: 500
+* Body: 400
+* Mono: 400
+
+**Absolute prohibitions**
+
+* No italics
+* No condensed/expanded variants
+* No drop shadows or outlines
+* No decorative typography
+* No smart quotes in titles
+* No emoji or expressive punctuation
+
+**Sizes**
+Relative scaling must follow a predictable ratio:
+
+* Title → 1.35× body
+* Subtitle → 1.15× body
+* Body → baseline
+* Meta → 0.9× body
+
+This ratio ensures rhythm and avoids “pitch-deck drama.”
+
+---
+
+#### **Colour Rules**
+
+Slides use the **primary palette only**, with neutrals for structure.
+No secondary accents unless communicating system state.
+
+**Background options**
+
+* `--brand-base-900`
+* `--brand-base-800`
+* `--brand-surface-0`
+* `--brand-surface-50`
+
+Nothing else.
+
+**Text colours**
+
+* On light surfaces → `--neutral-900` for primary, `--neutral-700`/`--neutral-600` for meta.
+* On dark surfaces → `--white` or `--neutral-50`, with `--neutral-300` for meta.
+
+**Accent usage**
+Accent (`--accent-500`) permitted only for:
+
+* diagram emphasis
+* arrows
+* interactive callouts
+* highlighting a constraint or architecture element
+
+Accent is **not** used for headings, backgrounds, or large shapes.
+
+**Filigree usage**
+Subtle filigree violet tokens (`--filigree-violet-*`) allowed only for:
+
+* micro dividers
+* folio marks
+* section-frame ornamentation
+
+Never used for text or diagrams.
+
+**Forbidden colour behaviours**
+
+* Gradients
+* Background accent blocks
+* High-saturation semantic colours
+* Decorative duotones
+* Overlays and photographic colour treatments
+
+Slides must feel architectural, not promotional.
+
+---
 
 ## 9.4 Print and Physical Media
-### 9.4.1 Business Cards
-### 9.4.2 Posters, Banners, and Signage
+
+Print surfaces are the most unforgiving expression of the Transcrypt identity.
+There is no animation, no interactivity, no dynamic layout correction — only fixed geometry, ink behaviour, paper texture, and real-world lighting.
+Because print removes all digital affordances, it becomes a stress-test of the brand system’s structural integrity.
+
+Transcrypt’s print identity must therefore follow **the same deterministic rules** used across the web, app, diagrams, and PDFs — but with stricter constraints on colour fidelity, spacing, logo usage, and typographic clarity.
+
+Print assets must read as:
+
+* engineered
+* neutral
+* calm
+* audit-compatible
+* technically precise
+* completely free of advertising gloss
+
+Noise, flourish, and expressive styling are prohibited.
+
+The subsections below define the correct treatment for business cards, event materials, posters, banners, and signage.
+
+---
+
+### **9.4.1 Business Cards**
+
+Business cards are compact physical identifiers and must express the brand’s neutrality and discipline even at small scale.
+
+#### **Layout Rules**
+
+* Grid: 12-column system reduced proportionally to card dimensions.
+* Margins: minimum 6mm on all sides.
+* Logo: monogram-only or primary lockup, depending on layout.
+* Orientation: horizontal preferred; vertical allowed only for technical roles.
+* Spacing: all elements must align to the spacing scale defined in §8.3 (multiples of 8px → converted to mm).
+
+#### **Typography**
+
+* Typeface: IBM Plex Sans only.
+* Size: never below 7.5pt for any text.
+* Weights:
+
+  * Name → 600
+  * Title → 500
+  * Contact details → 400
+  * No italics, no condensed, no decorative edits.
+
+#### **Colour**
+
+* Background options:
+
+  * `--brand-surface-0` (light)
+  * `--brand-base-900` (dark)
+
+* Text:
+
+  * On light → `--neutral-900`
+  * On dark → `--white`
+
+* Accent (`--accent-500`): allowed only for:
+
+  * a single hairline rule
+  * micro emphasis
+  * QR code callout (optional)
+
+* Filigree violet allowed for micro-detailing only, never text.
+
+#### **Information Block**
+
+Must include:
+
+* Name
+* Role
+* Email
+* URL
+* Optional QR code to website
+
+No slogans, no taglines, no social icons (unless absolutely required by context).
+
+---
+
+### **9.4.2 Posters, Banners, and Signage**
+
+Large-format identity must scale deterministically. No reinterpretation, no dramatic colour blends, no inspirational poster energy.
+
+#### **General Principles**
+
+* Use the same grid proportions defined in §8.1, scaled up.
+* Reserve whitespace aggressively — posters must feel quiet, not crowded.
+* Typography must be large, neutral, and factual.
+* Logo must use the primary lockup except where extreme compression forces monogram-only.
+
+#### **Typography**
+
+* IBM Plex Sans only.
+* Weight: 600 for headlines, 400–500 for supporting text.
+* No italics, stylised caps, stretched text, stroked text, or “design-y” tracking expansions.
+* Line height: generous, matching the rhythm of §5.4.
+
+#### **Colour**
+
+* Background options:
+
+  * `--brand-base-900`
+  * `--brand-base-800`
+  * `--brand-surface-0`
+  * `--brand-surface-50`
+
+* Accent may be used only as:
+
+  * a single vertical or horizontal structural bar
+  * a diagram pointer
+  * a CTA indicator (e.g., “Scan QR”)
+
+* No accent backgrounds, no gradients, no colour fields intended to convey emotion.
+
+#### **Imagery**
+
+If included:
+
+* Must follow all of §7 Imagery and Photography.
+* No illustrations that carry emotional tone.
+* Subject must be operational, documentary, or architectural.
+* Cropping must be restrained and geometry-aligned.
+
+#### **Signage-Specific Constraints**
+
+Signage must read at distance and under varied lighting:
+
+* Minimum contrast ratio: high-compliance equivalent of WCAG AAA where feasible.
+* Logo must never be lower than 40mm height in print.
+* QR codes must be tested at 2–3m distance.
+* No decorative patterns beyond the micro pattern library in §8.4.
+
+#### **Event Booth Modules (Future Forward)**
+
+Even though booth design is future work:
+
+* Use large neutral fields, not marketing gradients.
+* Primary lockup only.
+* No stylised environmental lighting effects.
+* Panels must resemble Transcrypt documentation brought to physical scale.
+
+---
 
 ## 9.5 Application Examples
-### 9.5.1 Correct Usage Examples
-### 9.5.2 Incorrect Usage Examples
-### 9.5.3 Extended Scenario Examples
+
+Application examples exist to make the rules real.
+This section is not decorative; it is operational.
+It shows exactly how the Transcrypt identity behaves across real surfaces — and, critically, how it **fails** when misapplied.
+
+The examples in this section are normative.
+If a future design choice contradicts an example here, the example wins unless superseded by an explicit versioned update.
+
+The goal: show the boundaries of the system with clarity, finality, and zero interpretive drift.
+
+---
+
+### **9.5.1 Correct Usage Examples**
+
+These examples demonstrate the identity working exactly as intended: calm, engineered, unambiguous.
+
+#### **A. Homepage Hero – Correct**
+
+* Base: `--brand-base-900`
+* Typography: IBM Plex Sans, weight 600 for headline
+* Accent: used once as a micro indicator or CTA
+* No gradients
+* Whitespace used aggressively
+* Icon: 24×24 Feather, neutral tone, single stroke weight
+
+This composition reads like a technical instrument panel, not a marketing splash.
+
+#### **B. Blog Article – Correct**
+
+* Background: `--brand-surface-0`
+* Typography: 18/28 IBM Plex Sans for body
+* Neutral greys for hierarchy (`--neutral-700`, `--neutral-500`, `--neutral-400`)
+* Accent only for hyperlinks
+* No decorative imagery — only documentary or schematic material
+
+Reinforces Transcrypt as a domain authority, not a lifestyle brand.
+
+#### **C. Social Tile – Correct**
+
+* Square layout, neutral background
+* Monogram or primary lockup only
+* Headline in 600 weight, centre anchored on grid
+* Accent used for a single rule or pointer only
+* No effects, textures, or stylised cutouts
+
+Outputs as predictable, legible, and platform-agnostic.
+
+#### **D. Presentation Slide – Correct**
+
+* Dark base or light surface
+* Title in 600 weight
+* Body in 400–500
+* No decorative shapes
+* Diagram colours pulled only from §A.2 semantic and §A.3 neutral tokens
+* Consistent margin discipline
+
+Looks like a documentation layer brought to slide format — not a pitch deck.
+
+---
+
+### **9.5.2 Incorrect Usage Examples**
+
+A non-exhaustive set of patterns that violate the identity and are therefore prohibited.
+
+#### **A. Gradient Backgrounds**
+
+Any gradient, regardless of colour, is prohibited.
+No brand colour shifts, no duotone washes, no soft fades.
+
+#### **B. Emotional Colouring**
+
+* Warm “friendly” palettes
+* Trendy lilacs, greens, salmons
+* High-energy blues or teals
+* Instagram aesthetic tones
+
+All are categorically off-brand.
+
+#### **C. Hyper-Expressive Typography**
+
+* Oversized display type
+* Condensed grotesks
+* Italicised emphasis
+* “Design-y” leading or tracking
+* Text stacked in expressive arrangements
+
+Typography must remain neutral and functional.
+
+#### **D. Decorative Icons**
+
+* Filled icons
+* Shaded icons
+* Emoji metaphors
+* Non-Feather icon sets
+* Hand-drawn emotional styles
+
+Icons exist for clarity, not personality.
+
+#### **E. Over-Marketed Social Tiles**
+
+* Soft-blur backgrounds
+* Character-focused photography
+* Colour block hype walls
+* Inspirational poster vibes
+
+These destroy the engineering-first tone and are not permitted.
+
+---
+
+### **9.5.3 Extended Scenario Examples**
+
+These examples simulate end-to-end branded surfaces to ensure that the identity behaves consistently when multiple components interact.
+
+#### **Scenario: Product Launch Micro-Site**
+
+Correct:
+
+* Dark backbone (`--brand-base-900`)
+* Accent used strictly for CTAs
+* No expressive colour
+* Hero image documentary or abstract-technical
+* Body text in Plex Sans, 400/500/600
+* Diagram colours drawn only from semantic + neutral tokens
+* Motion controlled: 100–180ms, ease-out
+
+Incorrect:
+
+* Colour-rich hero image
+* Gradient-washed background
+* “Launch energy” typography
+* Accent used as a dominant background
+* Marketing-style motion (elastic, bounce, overshoot)
+
+#### **Scenario: Compliance Evaluation Report (Exported PDF)**
+
+Correct:
+
+* `--brand-surface-0` background
+* `--export-text-primary` and `--export-text-secondary`
+* Accent used for key progress bars only (`--export-accent-safe`)
+* No soft grey backgrounds added for style
+* No illustrative fluff
+* Everything grid-aligned
+
+Incorrect:
+
+* Decorative front page
+* Primary accent used as a background
+* Colourful charts
+* Typography deviations
+* Any expressive styling
+
+#### **Scenario: Event Tabletop Signage**
+
+Correct:
+
+* Neutral base
+* Large, factual typography
+* Monogram or lockup
+* QR code aligned to grid
+* Accent used only for micro framing
+
+Incorrect:
+
+* Pattern-heavy backdrops
+* Energised marketing gradients
+* Emotional photography
+* “Booth hype” styling
+
+---
 
 # 10. Governance and Accessibility
 
@@ -3965,19 +4754,549 @@ No fallback may present a broken or partially styled identity.
 
 ## 10.4 Versioning and Release Management 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Below is the full, clean, finalised **Section 10 — Governance and Accessibility**, written in your established voice, fully aligned with the PRD, SAIS, site/blog tone, and the deterministic identity of Transcrypt.
+No filler, no drift, no ambiguity.
+
+---
+
+# **10. Governance and Accessibility**
+
+Governance exists to prevent identity drift, enforce correctness, and keep the system stable as Transcrypt evolves.
+This section defines how changes are made, how compliance is measured, and how accessibility rules bind every surface — marketing, product, documentation, exports, and third-party integrations.
+
+Nothing in this Brand Identity Guide is optional.
+Nothing is subject to interpretation.
+Changes require explicit, documented, versioned approval.
+
+Accessibility rules here are non-negotiable system constraints, not design aspirations.
+If a proposed visual choice conflicts with accessibility, accessibility wins without debate.
+
+---
+
+## **10.1 Usage Rules and Change Control**
+
+This identity is a *controlled asset*.
+Its stability depends on disciplined governance.
+
+### **10.1.1 Update Cadence**
+
+The Brand Identity Guide is updated only under the following conditions:
+
+* A new feature, surface, or capability requires an extension to the visual system.
+* A colour, type, or component adjustment is necessary to resolve an accessibility or technical conflict.
+* A versioned release requires alignment across PRD, SAIS, PDS, and brand layers.
+
+Cadence:
+
+* **Minor updates** (spelling, clarifications, additional examples): at any time.
+* **Patch updates** (token name refinements, accessibility fixes): aligned with sprint cadence.
+* **Major updates** (new palette tokens, typeface changes, motion identity changes, grid shifts): allowed only at defined version gates, never ad-hoc.
+
+Every update must be documented in the change log and reflected in the version heading of this document.
+
+### **10.1.2 Approval Process**
+
+Since Transcrypt is developed under a single-owner model, *approval = explicit decision by the project owner*.
+However, the process remains formal:
+
+1. Draft change is written in a PRD-style rationale: problem → options → selection → impact.
+2. Change is tagged with a semantic version bump.
+3. The updated section is committed with a human-readable summary.
+4. Appendix A tokens (if relevant) are updated atomically in the same commit.
+5. No silent updates are permitted.
+
+This preserves traceability and prevents future ambiguity.
+
+---
+
+## **10.2 Accessibility Requirements**
+
+Accessibility is a first-order system invariant.
+Where brand ambition and accessibility collide, accessibility wins.
+
+### **10.2.1 WCAG Conformance**
+
+Transcrypt must conform to:
+
+* **WCAG 2.2 AA** as a baseline
+* **AAA** where achievable without compromising clarity or engineering tone
+
+Mandatory rules:
+
+* Minimum text contrast: **4.5:1**
+* Large text / UI labels: **3:1**
+* Interactive states must have more than colour to signal state (shape, weight, outline).
+* Focus states must be clearly visible at all times and must use the cerulean accent token set.
+* All type sizes, stroke widths, and spacing rules defined in Sections 5–8 are chosen to meet or exceed WCAG readability targets.
+
+### **10.2.2 Colour and Contrast Constraints**
+
+All colour usage must obey:
+
+* Only colours in **Appendix A** may be used.
+* Cerulean accent colours must maintain WCAG AA contrast against both brand surfaces:
+
+  * --brand-base-900
+  * --brand-surface-0
+* Semantic colours (success, warning, error) must meet contrast rules when used for both text and UI indicators.
+* No transparency or overlays that reduce contrast are permitted unless they still meet accessibility thresholds.
+
+No deviations.
+No “near misses.”
+No aesthetic exceptions.
+
+---
+
+## **10.3 Brand Consistency Audits**
+
+Consistency audits ensure that the brand identity is being applied exactly as designed across all surfaces — website, app, documentation, PDF exports, marketing materials, and internal tools.
+
+### **10.3.1 Audit Checklist**
+
+Every surface must pass the following audit checks:
+
+1. **Colour Usage**
+
+   * All colours used map 1:1 to Appendix A tokens.
+   * No gradients or expressive colour blends.
+   * Semantic colours used only for their defined purposes.
+
+2. **Typography**
+
+   * IBM Plex Sans only.
+   * Only permitted weights.
+   * Correct hierarchy and spacing rules.
+
+3. **Iconography**
+
+   * Feather-derived, 24×24 grid, single stroke weight.
+   * No fills, no expressive metaphors.
+   * Icons stored locally in `/assets/icons/`.
+
+4. **Layout**
+
+   * Official grid implementation only.
+   * Spacing unit: 4px scale with correct multipliers.
+   * Alignment consistent across breakpoints.
+
+5. **Motion**
+
+   * All transitions 100–180ms.
+   * No bounce, elastic, or marketing-style motion.
+   * Interaction feedback follows §8.5 rules.
+
+6. **Imagery**
+
+   * Documentary, neutral-tone photography only.
+   * No expressive filters, colour washes, cinematic grading.
+
+7. **Exports**
+
+   * PDF-safe token usage only.
+   * No decorative elements.
+   * Full alignment with the structured hierarchy.
+
+A fail in any category requires remediation before publishing or deployment.
+
+### **10.3.2 Issue Escalation**
+
+When a violation is found:
+
+1. Issue is logged as a **brand inconsistency defect**.
+2. The file, component, or asset is flagged in Git.
+3. The correction must be applied before the next deploy.
+4. If the issue involves a structural rule (grid, typography scale, palette token), it triggers a mandatory review of other surfaces to check for systemic drift.
+
+Repeated violations indicate process defects and must prompt an update to Section 10.1.
+
+---
+
+## **10.4 Versioning and Release Management**
+
+The Brand Identity Guide follows semantic versioning:
+
+* **MAJOR** — structural changes (new grid, new palette, new typeface, new motion rules).
+* **MINOR** — new sections, new examples, expanded guidance.
+* **PATCH** — clarifications, corrections, non-structural edits.
+
+Release workflow:
+
+1. Every update is tagged with a version ID.
+2. `/docs/brand/CHANGELOG.md` receives a timestamped entry.
+3. All changes to Appendix A tokens require a version bump, never a silent patch.
+4. The version used across:
+
+   * Marketing site
+   * App UI
+   * PPT templates
+   * Documentation site
+   * Social and print templates
+     must all match the same declared identity version.
+
+Identity cannot fork.
+Identity cannot drift.
+Identity cannot “update in one place and not the other.”
+
+When a new version is released, all surfaces must migrate within the same sprint unless the version is explicitly marked **non-blocking**.
+
+---
+
 # 11. Asset Delivery
 
 ## 11.1 Logo Files
-### 11.1.1 File Formats
-### 11.1.2 Download Structure
 
-## 11.2 Colour Tokens
-### 11.2.1 Hex and RGB Definitions
-### 11.2.2 Token Naming Rules
+### **11.1.1 File Formats**
 
-## 11.3 Typography Files
-### 11.3.1 Licensing Notes
-### 11.3.2 Webfont Bundles
+All official logo assets must exist in the following formats:
+
+* **SVG (authoritative master format)**
+  – logo-primary.svg
+  – logo-compact.svg
+  – logo-monogram.svg
+  – all kept resolution-independent
+  – Editable only via vector tools; always scrubbable, no embedded rasters
+
+* **PNG (runtime fallbacks)**
+  – 1×, 2×, 3× raster variants
+  – Used only where SVG is unsupported (rare)
+
+* **PDF/EPS (print)**
+  – Required for physical collateral
+  – Always exported directly from the SVG master with no reinterpretation
+
+### **11.1.2 Download Structure**
+
+All logo assets live in the canonical repo location:
+
+```
+/assets/logo/
+```
+
+With substructure:
+
+```
+/assets/logo/svg/
+/assets/logo/png/
+/assets/logo/print/
+```
+
+On build, this folder is published directly to the CDN under a versioned path:
+
+```
+https://cdn.transcrypt.io/v{VERSION}/logo/
+```
+
+No other location may serve logos.
+
+---
+
+## **11.2 Colour Tokens**
+
+### **11.2.1 Hex and RGB Definitions**
+
+Colour values are defined once, and only once, in:
+
+```
+/assets/tokens/colors.json
+```
+
+This file contains the full machine-readable mapping of the tokens described in **Appendix A — Colour Tokens and Specifications**.
+
+Example structure (illustrative placeholder):
+
+```json
+{
+  "brand-base-900": "#020617",
+  "brand-base-800": "#0f172a",
+  "brand-surface-0": "#ffffff",
+  "accent-500": "#3b82f6",
+  "success-bg": "#ecfdf5",
+  "neutral-500": "#6b7280",
+  "export-accent-safe": "#2563eb"
+}
+```
+
+This file is:
+
+* **the single source of truth**
+* consumed by Tailwind, SCSS, product CSS, marketing CSS, and the docs site
+* exported to the CDN automatically as:
+
+```
+https://cdn.transcrypt.io/v{VERSION}/tokens/colors.json
+```
+
+Raw hex values must **never** be inlined in code.
+
+### **11.2.2 Token Naming Rules**
+
+All colour tokens must follow:
+
+* lowercase
+* hyphen-separated
+* semantic-first naming (e.g., `success-bg`, not `green-light`)
+* families grouped with common prefixes (`accent-*`, `neutral-*`, `success-*`, etc.)
+
+No new token may be introduced without updating both:
+
+1. Appendix A
+2. `/assets/tokens/colors.json`
+
+Both must change together or the PR is rejected.
+
+---
+
+## **11.3 Typography Files**
+
+### **11.3.1 Licensing Notes**
+
+Transcrypt uses **IBM Plex Sans** (Open Font License).
+Permissions are:
+
+* full redistribution
+* browser embedding
+* modification allowed (though Transcrypt does not modify)
+* no closed licensing issues
+
+All fonts must be stored locally; Google Fonts CDN is prohibited due to:
+
+* privacy constraints
+* reproducibility requirements
+* potential external drift in file versions
+
+### **11.3.2 Webfont Bundles**
+
+The following files must exist in:
+
+```
+/assets/type/ibm-plex-sans/
+```
+
+* `.woff2` (authoritative)
+* `.woff`
+* `.ttf` (fallback for legacy documents)
+* `font-face.css` (auto-generated mapping)
+
+CDN output:
+
+```
+https://cdn.transcrypt.io/v{VERSION}/type/ibm-plex-sans/ibm-plex-sans.woff2
+```
+
+All product and marketing surfaces must import from the CDN, never from the repo directly.
+
+---
+
+## **11.4 CDN Delivery Rules**
+
+This subsection is mandatory and completes the asset delivery system.
+It defines exactly how assets leave the repo and become globally consumable.
+
+### **11.4.1 Versioned CDN Namespace**
+
+Every release produces a CDN folder:
+
+```
+https://cdn.transcrypt.io/v{MAJOR.MINOR.PATCH}/
+```
+
+This folder contains:
+
+```
+/logo/
+/tokens/
+/type/
+/icons/
+/patterns/
+/templates/
+```
+
+Nothing may be published to `latest/` without explicit approval under §10.1.2.
+
+### **11.4.2 Immutability**
+
+Once a version is published:
+
+* assets cannot be overwritten
+* assets cannot be deleted
+* assets cannot change checksum
+
+If a correction is required:
+
+* bump the version
+* publish a new folder
+* reference the updated paths
+
+### **11.4.3 Delivery Format Requirements**
+
+Every published version must include:
+
+* raw assets (SVG, PNG, JSON, etc.)
+* minified bundles (CSS/SCSS/Tailwind flavour)
+* browser-consumable variants (e.g., `tokens.css`)
+* integrity hashes (.sha256)
+* a manifest file describing contents and checksums:
+
+```
+manifest.json
+```
+
+Manifest example:
+
+```json
+{
+  "version": "1.2.0",
+  "generatedAt": "2025-11-22T12:40:05Z",
+  "assets": {
+    "logo-primary.svg": "sha256-XYZ…",
+    "colors.json": "sha256-ABC…",
+    "ibm-plex-sans.woff2": "sha256-123…"
+  }
+}
+```
+
+### **11.4.4 Consumption Rules**
+
+All consuming environments must reference CDN assets:
+
+Marketing site
+
+```
+<link rel="preload" href="https://cdn.transcrypt.io/v1.2.0/type/ibm-plex-sans.woff2" as="font">
+```
+
+Product UI
+
+```
+@import url("https://cdn.transcrypt.io/v1.2.0/tokens/tokens.css");
+```
+
+Docs site
+
+```
+<img src="https://cdn.transcrypt.io/v1.2.0/logo/logo-monogram.svg">
+```
+
+Exports
+
+```
+assets: "https://cdn.transcrypt.io/v1.2.0/"
+```
+
+### **11.4.5 No Unversioned Consumption**
+
+Absolute prohibition:
+
+* no `/latest/` unless explicitly approved
+* no raw GitHub repo links
+* no local asset references in production
+* no base64 inline fonts
+* no bundler pipelines that re-encode assets
+
+### **11.4.6 Local Dev Mirroring**
+
+Local development uses a mirrored structure:
+
+```
+/public/cdn-mirror/v{VERSION}/
+```
+
+The dev server rewrites CDN URLs to local files to guarantee parity with production.
+
+---
+
+## **11.5 Icon Delivery**
+
+Icons stored at:
+
+```
+/assets/icons/
+```
+
+Published to:
+
+```
+https://cdn.transcrypt.io/v{VERSION}/icons/
+```
+
+Rules:
+
+* only 24×24 SVGs
+* no inline styles
+* stroke colour via tokens
+* all icons checksum-stable
+* no CDNs external to Transcrypt
+
+---
+
+## **11.6 Pattern and Template Delivery**
+
+Patterns (background SVGs, grids, noise fields) stored at:
+
+```
+/assets/patterns/
+```
+
+Published to:
+
+```
+https://cdn.transcrypt.io/v{VERSION}/patterns/
+```
+
+Templates (slide decks, social media layouts, PDF cover sheets) stored at:
+
+```
+/assets/templates/
+```
+
+Published to:
+
+```
+https://cdn.transcrypt.io/v{VERSION}/templates/
+```
+
+---
+
+## **11.7 Prohibited Delivery Methods**
+
+The following are forbidden:
+
+* unversioned assets
+* GitHub raw URLs
+* Google Fonts or any third-party font CDN
+* image compression tools that alter checksum
+* AI-generated vector output unless manually cleaned
+* embedding assets directly into React components
+* importing SVGs as code (e.g., svgr) for brand assets
+* Tailwind `@apply` that inlines colour values
+
+All assets must remain token-driven, CDN-served, version-stamped.
+
+---
 
 ## 11.4 Icon and Illustration Files
 
@@ -4006,12 +5325,210 @@ Any custom illustrations or diagrams used in the product or documentation must b
 Illustrations follow the style rules defined in Section 6 but do not require versioning or formal governance in a single-designer workflow.
 
 # 12. Legal, Localisation, and Brand Protection
-## 12.1 Trademark and Copyright Usage
-## 12.2 Third-Party and Co-Branding Rules
-## 12.3 Localisation Guidelines
-## 12.4 Photography and Image Rights
-## 12.5 Legal Notices in Marketing and Product
-## 12.6 Prohibited Uses and Violations
+
+Transcrypt’s brand is an operational asset, not an aesthetic accessory.
+This section defines the legal, linguistic, and rights-management constraints that govern how the brand is represented, referenced, and co-presented across all markets and surfaces. Every rule here is enforceable and non-optional.
+
+Brand protection operates on three fronts:
+
+1. **Legal integrity** — trademarks, copyrights, licensing, and usage boundaries.
+2. **Territorial correctness** — language, spelling, formats, and market-specific adjustments.
+3. **Rights compliance** — photography, likeness, attribution, and restrictions on third-party materials.
+
+All usage across marketing, product, documentation, sales, training, and external partnerships must comply with this section.
+Any violation is treated as a brand contamination event and must be remediated under §12.6.
+
+---
+
+## **12.1 Trademark and Copyright Usage**
+
+Transcrypt maintains copyright over:
+
+* all logo assets
+* all proprietary illustrations
+* all system patterns and product UI
+* all written documentation, guides, and marketing content
+* all system-generated diagrams and exports
+* the full identity system defined in this document
+
+Trademarks include:
+
+* **Transcrypt** (word mark)
+* the **Transcrypt Monogram** (the “TC” symbol)
+* the **Transcrypt Logotype** (full wordmark)
+
+Rules:
+
+* Do **not** alter, rotate, distort, recolour, crop, animate, or rebuild the logo.
+* Do **not** recreate typography resembling the logotype.
+* Do **not** create derivatives of the monogram.
+* Do **not** pair Transcrypt marks with unapproved corporate marks without written approval under §12.2.
+
+Copyright notices must appear at the footer of all:
+
+* PDFs
+* slide decks
+* whitepapers
+* downloadable templates
+* long-form pages on the marketing site
+
+Legal line:
+
+```
+© {YEAR} Transcrypt. All rights reserved.
+```
+
+---
+
+## **12.2 Third-Party and Co-Branding Rules**
+
+Co-branding is rare and tightly controlled.
+Transcrypt may only appear alongside another brand when:
+
+1. There is a formal partnership agreement.
+2. Both parties approve the asset.
+3. The final layout is reviewed for visual hierarchy and legal compliance.
+
+Rules:
+
+* Transcrypt’s mark must **never** be visually subordinate.
+* Spacing must follow §3.3 Clearspace and Minimum Size.
+* The Transcrypt accent colour may not be used by the partner brand.
+* Partner colours may not recolour Transcrypt assets.
+* No marketing pattern may wrap around or interfere with partner marks.
+* The monogram may not appear inside another brand’s geometry.
+* No “sponsored by” positioning unless contractually required.
+
+All co-branded materials must be archived in:
+
+```
+/legal/approvals/co-branding/
+```
+
+and stored with timestamps, signatures, and source files.
+
+---
+
+## **12.3 Localisation Guidelines**
+
+Transcrypt will operate in multiple markets.
+Localisation is functional, not expressive.
+
+Rules:
+
+* **No rebuilding the logo** for local scripts.
+* **No replacing “Transcrypt”** with phonetic approximations.
+* **No local colour variations** — palette is global.
+* **No adjusted spacing** to fit right-to-left scripts; use approved RTL versions only.
+* **Typography** remains IBM Plex Sans globally.
+
+Localisation may adjust only:
+
+* language
+* date/time formats
+* numerical grouping
+* legal disclaimers
+* region-specific regulatory references
+
+Examples:
+
+* UK vs US spelling is allowed in content only, not UI component names.
+* “Cyber Essentials” vs “NIS2” may vary by region.
+
+Any market-specific microsite must use the global layout, typography, colour tokens, and CDN-delivered identity assets.
+No local creative deviations.
+
+---
+
+## **12.4 Photography and Image Rights**
+
+Photography must comply with:
+
+* licensing terms
+* identifiable-person rights
+* location restrictions
+* model clearances
+* contributor attribution where applicable
+
+Rules:
+
+* Only legally obtained photography may be used.
+* Free-license images must have licence checks stored under `/legal/image-rights/`.
+* Paid images must include invoice and licence terms.
+* No AI-generated images may include recognisable individuals unless the model grants consent.
+* No photography may imply a partnership, certification, affiliation, joint venture, or endorsement.
+
+People depicted in photography may not:
+
+* wear competitor logos
+* perform prohibited or unsafe tasks
+* appear in misleading technical contexts
+
+Photography rules in §7 apply fully here.
+
+---
+
+## **12.5 Legal Notices in Marketing and Product**
+
+Legal notices must be present in:
+
+* website footer
+* product “About” and “Security” pages
+* PDF exports
+* slide decks
+* whitepapers
+* rulepack documentation
+* any public-facing deliverable
+
+Required fields:
+
+* © YEAR Transcrypt
+* Trademark notice (™ / ® depending on jurisdiction)
+* Licensing details (for IBM Plex Sans, Feather Icons, etc.)
+* Cookie policy link
+* Privacy policy link
+* Terms of service link
+
+All icons, fonts, and libraries included must list their license in:
+
+```
+/legal/licenses/
+```
+
+The marketing site must display third-party licences for:
+
+* IBM Plex Sans
+* Feather Icons
+* any used JS library
+* any used CSS tooling
+* analytics scripts (if self-hosted, disclose accordingly)
+
+No runtime dependency may be used without a licence check.
+
+---
+
+## **12.6 Prohibited Uses and Violations**
+
+The following are categorically prohibited, regardless of intent:
+
+* Using the logo in political, ideological, or socially divisive contexts
+* Using the brand on unsafe, misleading, or fabricated imagery
+* Using Transcrypt marks alongside competitor marks
+* Modifying or recolouring the logo outside approved tokens
+* Using non-CDN assets in public environments
+* Altering typography, spacing, or colour tokens
+* Representing Transcrypt as a cybersecurity auditor, regulator, or certifier
+* Implying formal CE certification unless explicitly stated
+* Generating AI images that resemble Transcrypt personnel
+* Using the brand in any context implying endorsement of third-party products
+
+Any violation must be logged in:
+
+```
+/legal/violations/{YEAR}/
+```
+
+with corrective action detailed, timestamped, and committed.
 
 ---
 
