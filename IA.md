@@ -2732,14 +2732,142 @@ Outlines dependencies on categories, tags, industries, or other taxonomy structu
 
 ## **Appendix E — Taxonomy Catalogue**
 
-Once the taxonomy grows, a catalogue of all categories, tags, synonyms, and deprecated tags is required.
-Initially optional, but it becomes essential as content volume increases.
+This appendix defines the authoritative taxonomy used across all editorial and marketing content in the Marketing runtime. It is the lookup table for:
 
+* category and tag IDs used in `taxonomy_categories` and `taxonomy_tags` (Appendix C)
+* industry and audience taxonomies for verticalised content
+* synonyms and deprecated terms that must be normalised to canonical IDs
 
+No new category, tag, industry, or synonym set may be introduced in content, the CMS, or Tailwind/CSS utility layers unless it is first added here.
 
+---
 
+### **E.1 Category Catalogue (Core vs Extended)**
 
+Core categories describe the primary thematic buckets for content. Extended categories are optional refinements used when the corpus grows.
 
+| Category ID           | Label                       | Type     | Scope              | Description                                                         | Status |
+| --------------------- | --------------------------- | -------- | ------------------ | ------------------------------------------------------------------- | ------ |
+| `foundations`         | Foundations                 | Core     | Blog, Guides       | Basics of SME security, concepts, terminology, and starting points. | Active |
+| `controls`            | Controls & Practices        | Core     | Blog, Guides       | Concrete security and compliance controls, mapped to schemes.       | Active |
+| `people-process`      | People & Process            | Core     | Blog, Guides       | Culture, training, roles, and process design for SMEs.              | Active |
+| `incidents-response`  | Incidents & Response        | Core     | Blog, Guides       | Preparation, detection, and response to incidents or near-misses.   | Active |
+| `vendor-supply-chain` | Vendor & Supply Chain       | Core     | Blog, Guides       | Third-party risk, MSPs, SaaS dependencies, and supplier posture.    | Active |
+| `regulation-schemes`  | Regulation & Schemes        | Core     | Blog, Guides       | Cyber Essentials, NIS/NIS2, UK GDPR, ICO expectations, etc.         | Active |
+| `strategy-risk`       | Strategy, Risk & Governance | Core     | Blog, Guides       | Risk framing, board communication, prioritisation, and strategy.    | Active |
+| `stories-case`        | Stories & Case Studies      | Core     | Blog, Case Studies | Narrative content and case studies, including anonymised examples.  | Active |
+| `product-platform`    | Product & Platform          | Extended | Blog               | Product updates, roadmap commentary, and platform deep dives.       | Active |
+| `opinion-commentary`  | Opinion & Commentary        | Extended | Blog               | Opinionated takes, commentary on the wider ecosystem.               | Active |
+| `how-to-guides`       | How-To Guides               | Extended | Guides             | Task-driven guides with step-by-step structure.                     | Active |
+| `templates-toolkits`  | Templates & Toolkits        | Extended | Guides, Resources  | Checklists, templates, and bundles (e.g. Starter Kit content).      | Active |
+
+**Rules**
+
+* Every editorial item (blog, guide, case study, report) must have **exactly one** Core category and may have **zero or one** Extended category.
+* New Core categories require an IA update in §7 before being added here.
+* Extended categories can be added here but must not overlap semantically with an existing Core.
+
+---
+
+### **E.2 Tag Catalogue (Topic / Technique / Risk / Scheme)**
+
+Tags provide finer-grained classification within categories. Tags are typed so that cross-referential partials (Appendix D) can reason about them.
+
+| Tag ID                 | Label                            | Tag Type  | Suggested Usage                                             | Status |
+| ---------------------- | -------------------------------- | --------- | ----------------------------------------------------------- | ------ |
+| `ce-basics`            | Cyber Essentials Basics          | Scheme    | Intro content on CE scope, levels, and expectations.        | Active |
+| `ce-self-assessment`   | Cyber Essentials Self-Assessment | Scheme    | Content about DIY/self-assessment paths.                    | Active |
+| `ce-plus`              | Cyber Essentials Plus            | Scheme    | Content on audited/Plus journeys.                           | Active |
+| `backup-recovery`      | Backup & Recovery                | Technique | Controls and practices for backups, restoration, testing.   | Active |
+| `mfa-authentication`   | Multi-Factor Authentication      | Technique | Anything focused on MFA setup, policy, and rollout.         | Active |
+| `password-policy`      | Password Policy                  | Technique | Password standards, rotation policies, and UX trade-offs.   | Active |
+| `patching-updates`     | Patching & Updates               | Technique | OS, application, and firmware patching.                     | Active |
+| `endpoint-security`    | Endpoint Security                | Topic     | AV/EDR, hardening, and device management topics.            | Active |
+| `network-segmentation` | Network Segmentation             | Topic     | Segmentation, VLANs, zoning, and blast radius.              | Active |
+| `phishing-awareness`   | Phishing & Awareness             | Topic     | Human-centric training and simulated phishing.              | Active |
+| `incident-playbooks`   | Incident Playbooks               | Topic     | Concrete playbooks and runbooks.                            | Active |
+| `board-reporting`      | Board & Leadership Reporting     | Topic     | Communicating risk and posture to non-technical leaders.    | Active |
+| `sme-finance`          | SME Finance & Insurance          | Topic     | Insurance, premiums, and financial consequences of posture. | Active |
+| `ops-automation`       | Operations & Automation          | Topic     | Automated checks, pipelines, and continuous verification.   | Active |
+| `uk-regulation`        | UK Regulation                    | Region    | UK-specific regulatory discussions.                         | Active |
+
+**Rules**
+
+* Maximum tag count per item: **5**, unless explicitly waived in §7.3.
+* Tags must be chosen from this catalogue; no ad-hoc tag strings in the CMS.
+* New tags must specify `Tag Type` and justify how they avoid duplicating existing tags.
+
+---
+
+### **E.3 Industry and Audience Taxonomy**
+
+Industry and audience taxonomies drive verticalised content (`/industries/{slug}`) and “For Your Industry” partials (Appendix D).
+
+| Industry ID       | Label                       | Description                                              | Status |
+| ----------------- | --------------------------- | -------------------------------------------------------- | ------ |
+| `healthcare`      | Healthcare                  | Clinics, practices, care providers, small health orgs.   | Active |
+| `professional`    | Professional Services       | Legal, accounting, consulting, boutique agencies.        | Active |
+| `retail-ecom`     | Retail & eCommerce          | Shops, online stores, multi-channel retailers.           | Active |
+| `manufacturing`   | Manufacturing & Engineering | Light manufacturing, fabrication, industrial SMEs.       | Active |
+| `charity-third`   | Charity & Third Sector      | Charities, non-profits, community organisations.         | Active |
+| `education`       | Education                   | Independent schools, training providers, small colleges. | Active |
+| `public-adjacent` | Public-Adjacent SMEs        | Private providers serving public sector / gov contracts. | Active |
+
+Optional **Audience** facets:
+
+| Audience ID     | Label              | Description                                   | Status |
+| --------------- | ------------------ | --------------------------------------------- | ------ |
+| `owner-founder` | Owner / Founder    | Owner-operators, MDs, founders.               | Active |
+| `it-lead`       | IT / Tech Lead     | In-house tech responsible, even if part-time. | Active |
+| `ops-manager`   | Operations Manager | Ops/office managers responsible for delivery. | Active |
+| `compliance`    | Compliance / Risk  | People tasked with policy, risk, governance.  | Active |
+
+**Rules**
+
+* Industry assignment is optional but recommended for:
+
+  * case studies,
+  * industry pages,
+  * any content invoked by “For Your Industry” partials.
+* Audience facets are used only if they materially shape the advice; otherwise they are omitted.
+
+---
+
+### **E.4 Synonyms and Canonical Mapping**
+
+To avoid fragmented taxonomy caused by near-duplicates or jargon variations, synonyms are explicitly mapped onto canonical terms.
+
+| Synonym / Variant             | Canonical Term ID    | Notes                                           |
+| ----------------------------- | -------------------- | ----------------------------------------------- |
+| `2fa`                         | `mfa-authentication` | Treat 2FA as a sub-case of MFA.                 |
+| `multi factor authentication` | `mfa-authentication` | Normalised to standard spelling.                |
+| `cyber essentials plus`       | `ce-plus`            | Case and spacing normalised.                    |
+| `incident runbooks`           | `incident-playbooks` | Same conceptual space; use single canonical tag |
+| `board reporting`             | `board-reporting`    | Spacing/wording normalised.                     |
+| `uk regs`                     | `uk-regulation`      | Informal phrasing mapped to canonical term.     |
+
+**Rules**
+
+* CMS/editor UIs should present only canonical IDs; synonyms are for ingestion/migration and search indexing.
+* If content is imported from another system with free-text tags, synonyms must be mapped here before being accepted.
+
+---
+
+### **E.5 Deprecated or Merged Taxonomy Entries**
+
+When taxonomy changes, old IDs must not simply disappear; they are recorded and redirected here.
+
+| Old ID / Label     | Replacement Canonical ID | Reason                        | Effective From | Notes                      |
+| ------------------ | ------------------------ | ----------------------------- | -------------- | -------------------------- |
+| `general-security` | `foundations`            | Too vague; folded into core.  | TBC            | Existing content remapped. |
+| `misc`             | *none*                   | Junk bucket; content cleaned. | TBC            | Must not be reused.        |
+
+**Rules**
+
+* Deprecated IDs must not be used for new content.
+* Any change here must be accompanied by a content migration plan (search/replace or manual curation).
+
+---
 
 # **Appendices That Are PROBABLY Needed (but optional until content expands)**
 
