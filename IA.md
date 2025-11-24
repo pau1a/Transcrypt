@@ -1622,54 +1622,7 @@ Partials will be assigned later once Appendix D is fully populated.
 | User Profile                 | User-level settings (name, email, locale)           | Essentials | APP.Settings.Profile       | From settings; limited onward transitions within settings                      | `/app/settings/profile`          | Type: Settings; Entity=User          | Required to keep contact details & preferences accurate                       | none                              | None                                              |
 | Security Settings            | Password, MFA, security options                     | Essentials | APP.Settings.Security      | From settings; onward → auth flows (MFA) or login                              | `/app/settings/security`         | Type: Settings; Domain=Security      | Critical for security posture and regulatory expectations                     | none                              | None; internal only                               |
 | Notification Preferences     | Choose what emails/alerts are sent                  | Essentials | APP.Settings.Notifications | From settings; saves preferences; back to settings                             | `/app/settings/notifications`    | Type: Settings; Domain=Notifications | Reduces noise, improves satisfaction; future-proofs rule-based alerts         | none                              | None                                              |
-| Organisation Profile         | Org-wide settings: legal name, addresses, contact   | Essentials | APP.Settings.Org           | From settings; interacts with billing, report headers                          | `/app/settings/org`              | Type: Settings; Entity=Organisation  | Keeps identity details coherent across billing, reports, and evidence         | none                              | None                                              |
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Right, let’s nail this properly.
-
-### Nav tiers I’m going to use
-
-For this new table, I’ll use **exactly three navigation tiers**, matching your locked definitions:
-
-* **Primary** – Global header navigation and its immediate drop-downs. This is the main IA spine that sits in §3.1 Primary Navigation and top tier in §4 Page Hierarchy.
-* **Section** – This is **your “secondary navigation”**: section-level rails, left-hand spines, tabs, and local menus inside a major area (Blog, Guides, Essentials app, Settings, Evidence, Billing, etc.). It maps to §3.2 Secondary Navigation and child groupings in §4.
-* **Utility/Footer** – Footer and header-utility links: legal, trust, status, newsletter, etc. These are **never** called “secondary navigation”; they’re explicitly “utility/footer” per your rule and live alongside Primary/Section in the nav model.
-
-In addition, I’ll use a **behaviour flag** that is *not* a nav tier:
-
-* **Flow-only (no dedicated nav)** – Pages that are only reachable via a flow (reset tokens, confirmation/thanks surfaces, some pagination endpoints). This is just a descriptor so we don’t pretend they are part of any nav tier.
-
-Now the table.
+| Organisation Profile         | Org-wide settings: legal name, addresses, contact   | Essentials | APP.Settings.Org           | From settings; interacts with billing, report headers                          | `/app/settings/org`              | Type: Settings; Entity=Organisation  | Keeps identity details coherent across billing, reports, and evidence         | none                              | None     
 
 ---
 
