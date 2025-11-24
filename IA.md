@@ -227,11 +227,369 @@ Secondary navigation exists solely to make **sectional structure legible**. It m
 
 ## **3.3 Workflow Navigation**
 
+Workflow navigation controls movement through deterministic, stateful journeys such as signup, intake, evidence submission, evaluation, reporting, and selected billing flows. Unlike primary and secondary navigation, which expose structural surfaces, workflow navigation advances or reverses a user’s position within a defined sequence of steps governed by the SAIS and the Transition Matrix in §12. It is not a separate navigation tier; it is an interaction layer that operates inside the structural framework defined by this IA.
+
+Workflow navigation must:
+
+* exist only where this IA and the PDS define an explicit workflow (for example signup, intake, evidence, evaluation, billing adjustments)
+* follow the allowed transitions defined in §12 and the SAIS; it must not introduce new paths that bypass or contradict the Transition Matrix
+* respect page roles and hierarchy in §4 and Appendix B (for example step surfaces vs overview surfaces vs completion surfaces)
+* present step ordering, current position, and completion state in a way that is unambiguous and reversible
+* preserve data integrity when moving forward or backward, with clear rules for draft, save, and discard behaviour (detailed in the PDS)
+* honour suppressed navigation rules in §3.4 where critical steps require temporary reduction of escape routes
+* be entitlements-aware: only offer forward or backward transitions that the current tenant state and user permissions allow
+* remain logically separate from partials in Appendix D; partials may never act as “Next”, “Back”, or “Skip” controls, nor alter workflow state
+
+### **3.3.1 Workflow Navigation in the Marketing Runtime**
+
+In the Marketing runtime, workflow navigation is deliberately minimal. It is limited to short, low-risk flows such as:
+
+* contact and enquiry submissions
+* newsletter or other communication opt-ins
+* gated resource downloads
+* waitlist-style registration flows (where present)
+
+These flows:
+
+* must be linear or near-linear, with a small, finite number of steps
+* must not alter tenant-level state; they operate at prospect or lead level only
+* may hand off to Essentials via the controlled junctions defined in §2.4 (for example from a “Start Now” or “Sign Up” CTA), but they must not embed Essentials steps or assumptions directly into Marketing pages
+* must not rely on primary or secondary navigation to complete the flow; workflow controls are explicit within the surfaces themselves
+
+Where Marketing flows appear to mirror Essentials flows (for example a “guided tour” or “How It Works” walk-through), they must be clearly non-operational demonstrations and must not share state or URLs with the real Essentials workflows.
+
+### **3.3.2 Workflow Navigation in the Essentials Runtime**
+
+In the Essentials runtime, workflow navigation is a core part of the product. It governs:
+
+* signup and onboarding sequences
+* intake and organisation setup
+* evidence collection and review
+* evaluation progression
+* report generation and confirmation
+* selected billing and subscription changes where multi-step confirmation is required
+
+For these workflows:
+
+* every step surface must be listed in Appendix B (Phase 2 – Essentials) and classified appropriately in §4 (for example parent overview, step surface, completion surface)
+* allowed transitions between steps, overviews, and completion surfaces must be explicitly represented in the Transition Matrix in §12; workflow navigation may not create ad hoc shortcuts
+* “Next”, “Back”, “Skip”, and similar controls must map one-to-one to valid transitions; any disabled control must correspond to a forbidden or not-yet-available transition
+* primary and secondary navigation may be present but must not allow users to bypass mandatory steps, confirmations, or gating conditions; where necessary, §3.4 suppression rules apply
+* recovery behaviour (for example resuming a partially completed evaluation) must route the user to a stable, well-defined step or overview surface, as described in §3.6
+
+Workflow navigation in Essentials is deterministic by design: given the same tenant state, role, and step, the set of available transitions and their effects must be identical every time. Any change to the order of steps, available transitions, or completion criteria requires an update to this IA, the Transition Matrix in §12, and the corresponding implementation detail in the PDS and SAIS.
+
+---
+
 ## **3.4 Suppressed Navigation States**
+
+Suppressed navigation states are deliberate, temporary reductions of the normal navigation frame. They remove or limit access to Primary, Section (secondary), and/or Utility/Footer navigation on specific surfaces to prevent unsafe escape routes during high-risk, stateful operations. Suppression is never cosmetic; it is a control measure used to protect data integrity, financial actions, or irreversible workflow steps.
+
+Suppressed navigation is **not** a fourth nav tier. It is a conditional mode applied to existing tiers under tightly defined conditions.
+
+### **3.4.1 What Counts as Suppression**
+
+A surface is considered to be in a suppressed navigation state if, compared to its normal template in Appendix A:
+
+* the primary navigation is removed, disabled, or replaced by a reduced shell
+* sectional (secondary) navigation is removed or materially reduced
+* utility/footer links are removed or materially reduced beyond normal responsive/mobile behaviour
+* escape routes that would normally move the user out of the current workflow or structural parent are intentionally withheld
+
+Normal responsive behaviour (collapsing a header into a burger, moving footer items into a drawer) is defined in §3.5 and the PDS and does **not** count as suppression on its own. Suppression is a structural choice, not a viewport side-effect.
+
+### **3.4.2 When Suppression Is Allowed**
+
+Navigation suppression is allowed only for high-risk operations where a full frame of navigation would materially increase the chance of:
+
+* incomplete, inconsistent, or corrupted state
+* financial or subscription changes being applied incorrectly
+* irreversible workflow actions being taken unintentionally
+* security posture being weakened (for example mid-auth flows)
+
+Typical allowed scenarios include:
+
+* **Identity and authentication flows**
+  Login, password reset, and multi-factor enrolment/verification where exposing full app navigation would be misleading or unsafe.
+
+* **Critical billing and subscription steps**
+  Final confirmation of plan changes, payment method updates that affect future billing, or cancellation flows where escape routes could leave the user in an ambiguous state.
+
+* **Irreversible evaluation or reporting actions**
+  Operations that lock evaluation results, freeze evidence for a specific audit cycle, or issue a final readiness report.
+
+* **Evidence operations with destructive potential**
+  Limited suppression during destructive edits or deletions where accidental navigation away could lose uncommitted changes.
+
+Suppression must **never** be used simply to “force attention” on marketing copy, to hide alternative navigation for stylistic reasons, or to create dark-pattern traps.
+
+### **3.4.3 Structural Rules for Suppression**
+
+When suppression is applied, the following rules hold:
+
+* **Scope is minimal**
+  Suppression is applied to the smallest viable set of surfaces (typically a single step or a short run of steps), not to entire sections or runtimes.
+
+* **Primary vs Section linkage**
+  If primary navigation is suppressed for a given surface, secondary navigation that depends on it must not remain as a quasi-primary stand-in. Either:
+
+  * both primary and secondary are suppressed, and workflow controls handle movement; or
+  * a reduced shell is present that makes the limited scope obvious.
+
+* **Utility/Footer links**
+  Legal and trust obligations must still be met. If footer links are suppressed for regulatory reasons (for example an auth frame controlled by an identity provider), equivalent access to required legal content must exist elsewhere in the journey (for example links on the login page itself or in the hosting Marketing runtime).
+
+* **Clear replacement controls**
+  Where suppression removes global escape routes, explicit inline controls must exist: “Cancel”, “Back”, “Return to dashboard”, or equivalent. These controls must map to valid transitions in §12, not ad-hoc redirects.
+
+* **State integrity first**
+  Any action that would normally be navigable via primary or secondary nav must either:
+
+  * be temporarily unavailable during the suppressed state; or
+  * be reached only by completing or explicitly abandoning the current operation.
+
+Implementation details (for example how suppressed headers render, how modals behave) are defined in the PDS. This IA defines **when** suppression is permitted and what it may and may not remove.
+
+### **3.4.4 Marketing vs Essentials Usage**
+
+In the **Marketing runtime**, suppressed navigation is exceptional. It is limited to:
+
+* short, low-risk forms where primary nav would be visually or cognitively misleading (for example an inline contact overlay), and
+* frames controlled by third-party identity or consent tooling, where Transcrypt cannot safely render the full navigation shell.
+
+Marketing suppression must not hide access to core informational, legal, or trust surfaces and must never create pseudo-“app-like” flows that mimic Essentials.
+
+In the **Essentials runtime**, suppression is more common but must still be tightly scoped:
+
+* identity, password, and MFA flows may run with reduced navigation
+* critical billing, evaluation, and evidence operations may temporarily narrow escape routes
+* complex workflows may suppress primary and secondary nav while a confirmation or irreversible action is in progress
+
+In all cases, suppressed navigation states must:
+
+* correspond to specific surfaces listed in Appendix B (Phase 2)
+* have their allowed entry and exit paths explicitly described in the Transition Matrix in §12
+* be mirrored in the PDS as specific templates or states, not as ad-hoc component tweaks
+
+Any new proposal to suppress navigation on additional surfaces must update this section, Appendix B, the Transition Matrix in §12, and the PDS.
+
+---
 
 ## **3.5 Mobile Navigation Behaviour**
 
+Mobile navigation adapts the presentation of existing navigation tiers to constrained viewports without altering their underlying structure, hierarchy, or meaning. Collapsing, drawers, accordions, or stacked layouts are **responsive treatments**, not new navigation tiers. Mobile patterns must never be used to re-interpret primary navigation as secondary, or to hide the existence of structural sections defined elsewhere in this IA.
+
+Any mobile-specific behaviour is an implementation detail of the PDS. This IA defines what must remain structurally true when screen size changes.
+
+### **3.5.1 Core Principles**
+
+On mobile and other narrow viewports:
+
+* **Structure is invariant**
+  All sections exposed in desktop primary navigation must remain reachable on mobile, even if they are presented via different controls (for example a drawer or “More” menu). Responsive hiding of specific components is allowed; removing an entire section from mobile is not.
+
+* **Tiers remain distinct**
+  Primary, Section (secondary), and Utility/Footer navigation retain their roles. A burger menu, drawer, or sheet is a container for primary or secondary items, not a new tier.
+
+* **No structural lies**
+  Mobile cannot present a different hierarchy to desktop (for example, treating a Section item as if it were a primary peer, or burying a primary item inside a random submenu).
+
+* **Responsive ≠ Suppressed**
+  Responsive behaviour (collapsing into a menu) is governed here and in the PDS. Structural suppression is governed by §3.4 and must not be triggered purely by viewport size.
+
+### **3.5.2 Primary Navigation on Mobile**
+
+Primary navigation on mobile:
+
+* may collapse into a header menu control (burger, “Menu” button, or equivalent)
+* must expose the same primary destinations as desktop, subject only to role-based or state-based access rules, not viewport
+* must keep the distinction between runtimes clear; Marketing and Essentials must not appear to share a single unified “mega-menu”
+* must make it obvious when the user is opening the **main site/app navigation** versus interacting with local or workflow controls
+
+Where space is tight:
+
+* prioritisation of primary items is allowed (for example a “More” grouping), but **only** if:
+
+  * all primary sections remain reachable within one interaction from the main menu, and
+  * their labels are not changed to ambiguous or generic alternatives.
+
+Any mobile-specific animation, gestures, or transitions for primary navigation are defined in the PDS but must not alter which items are considered primary.
+
+### **3.5.3 Secondary (Section) Navigation on Mobile**
+
+Secondary navigation (Section tier):
+
+* may render as:
+
+  * a horizontal chip/tabs strip
+  * a vertical rail that becomes an in-page accordion
+  * a secondary drawer or nested list inside the main nav shell
+* must always be visually and interactionally subordinate to primary navigation, even when both are in drawers or stacked menus
+* must continue to expose only the siblings/descendants of its structural parent as defined in §4 and Appendix B
+
+On mobile:
+
+* secondary navigation may be collapsed by default to preserve screen space, but:
+
+  * the user must have a clear way to reveal the section spine, and
+  * current location within that spine must remain visible (for example active state, label, or breadcrumb).
+
+Section navigation must not be silently dropped on mobile for structurally complex areas (Blog, Guides, Evidence, Billing, Settings). If the section exists, its local spine must remain discoverable; only the visual pattern may change.
+
+### **3.5.4 Utility and Footer Navigation on Mobile**
+
+Utility/Footer navigation:
+
+* may be:
+
+  * rendered as a stacked list at the bottom of the page
+  * folded into a “Legal & Trust” collapsible block
+  * partially exposed in a compact footer with a “More” expansion
+* must still provide access to all required legal and trust surfaces (Privacy, Terms, Cookies, Accessibility, Subprocessors, DPA, Status, etc.)
+
+On mobile:
+
+* it is acceptable to reduce visual weight (smaller text, collapsible sections), but not to remove mandatory items
+* utility/footer links must not be promoted into apparent primary or secondary nav items purely to “fill space” in the header; if a page is utility/footer, its role remains that, regardless of viewport
+* any integrations with third-party frames (for example hosted auth or consent views) must ensure that legal obligations remain met even where the standard footer cannot render identically
+
+### **3.5.5 Interaction and State Considerations**
+
+For all runtimes and tiers on mobile:
+
+* **State indicators**
+  Current location (active page) must remain clear, even when items live inside drawers or accordions. Users must be able to tell where they are in both the global structure and the section.
+
+* **Workflow vs nav controls**
+  Workflow controls (“Next”, “Back”, “Save and exit”) must remain visually distinct from navigation controls, especially when both appear in constrained headers or sticky bars. Mobile layout must not blur the distinction between progressing a workflow and changing section.
+
+* **Consistency across devices**
+  A user switching between desktop and mobile should see the same structural options, expressed differently, not a different IA. Differences must be explainable as presentation only.
+
+Any mobile-specific changes that would alter which surfaces are reachable, how tiers are perceived, or how workflow and navigation interact must be reflected here first and then implemented in the PDS.
+
+---
+
 ## **3.6 Navigation Fail-Safes**
+
+Navigation fail-safes define how the system behaves when navigation goes wrong: invalid URLs, expired or forbidden transitions, broken links, or users re-entering workflows from bookmarks or history. Fail-safes are the last line of defence to keep users oriented and data safe when the normal Primary, Section, Utility/Footer, and workflow patterns cannot complete as intended.
+
+Fail-safes are **structural guarantees**, not visual flourishes. They constrain where users may be redirected, which surfaces may act as recovery points, and how much context can be preserved without re-creating unsafe states.
+
+### **3.6.1 Core Principles**
+
+All navigation fail-safes obey these principles:
+
+* **No dead ends**
+  Users must never be left on a surface from which no valid navigation action is possible. Every user-facing error or recovery surface must provide at least one clear, valid exit.
+
+* **Scope-constrained recovery**
+  Recovery should return the user to the closest stable structural parent (section entry, overview, or dashboard) rather than a random “global home”.
+
+* **Runtime integrity**
+  Recovery must not silently cross runtimes in ways that violate §2.
+
+  * Marketing errors recover to Marketing entry points.
+  * Essentials errors recover to Essentials entry points or dashboards, subject to auth/state.
+
+* **State safety over convenience**
+  Where there is a choice between preserving a dubious state and resetting to a safe baseline, the system must choose the safe baseline. Partial state preservation is allowed only when it cannot create contradictions in the Transition Matrix (§12).
+
+* **Predictable patterns**
+  The same type of failure must recover in the same way, regardless of entry path (direct URL, bookmark, internal link, or expired session).
+
+### **3.6.2 Invalid or Unknown Routes**
+
+Invalid or unknown routes (for example mistyped URLs, stale bookmarks after IA changes) must resolve to:
+
+* a **runtime-appropriate error surface** (Marketing or Essentials), not a generic “404” that ignores context
+* a surface explicitly listed in Appendix B as a recovery page, not an ad-hoc template
+
+For Marketing:
+
+* invalid Marketing URLs route to a Marketing-scoped “Not Found” or “No Longer Available” surface, which:
+
+  * states clearly that the page does not exist
+  * offers safe links back to Home, key sections (Blog, Guides, Resources, Pricing), and any relevant category or index pages
+  * does not pretend the missing page is still part of the structure
+
+For Essentials:
+
+* invalid Essentials URLs route to an Essentials-scoped recovery surface, which:
+
+  * checks authentication and, if necessary, re-routes via login
+  * then returns the user to a stable dashboard or section overview (for example Evidence Dashboard, Evaluation Overview, or App Home)
+  * never reconstructs an arbitrary workflow step from an invalid URL
+
+These recovery surfaces must not invent new hierarchy; they are simple, clearly labelled structural exits.
+
+### **3.6.3 Forbidden or Expired Transitions**
+
+Some transitions are structurally valid in the IA but forbidden in specific circumstances (for example lack of entitlement, expired evaluation window, revoked subscription, or partially completed prerequisites). In these cases:
+
+* the system must **not** present broken pages or vague errors
+* the user must be redirected to a **stable, allowed surface** that explains the condition in context
+
+Examples:
+
+* Attempt to open `/app/evaluation/{step}` without completing required intake:
+  → redirect to Evaluation Overview or Intake surface with a clear statement that prerequisites must be completed.
+
+* Attempt to access billing pages with an inactive or cancelled subscription:
+  → redirect to Billing Dashboard or a dedicated subscription recovery surface, not an empty or broken page.
+
+* Attempt to access Essentials surfaces with an expired session:
+  → redirect to login, then after auth return to a stable Essentials entry (not to an arbitrary deep link unless that link is still valid under §12).
+
+These behaviours must be aligned with the Transition Matrix in §12; any forbidden state must have a defined recovery mapping.
+
+### **3.6.4 Recovery from Suppressed and Workflow States**
+
+Suppressed navigation states (§3.4) and workflow navigation (§3.3) require tighter guarantees:
+
+* **From suppressed states:**
+
+  * Every suppressed surface must expose explicit recovery controls (for example “Cancel and return to dashboard”, “Back to settings”).
+  * If a suppressed surface cannot safely return to the immediate previous state, it must return to a higher-level parent (for example Settings Overview, Evidence Dashboard).
+
+* **From workflow steps:**
+
+  * If a user re-enters a step via bookmark or history and the step is no longer valid (state changed, step removed, prerequisites altered), the system must route them to:
+
+    * the nearest valid step in the same workflow, or
+    * the workflow overview or completion surface, with an explanation where necessary.
+  * “Save and exit” patterns must always provide a predictable return point (for example Evaluation Overview), which becomes the default recovery destination.
+
+Workflow and suppressed-state recovery surfaces must be explicitly listed in Appendix B and their entry/exit paths captured in the Transition Matrix (§12). They are not generic error pages.
+
+### **3.6.5 Marketing vs Essentials Fail-Safe Patterns**
+
+In the **Marketing runtime**:
+
+* Fail-safes prioritise **orientation and discovery**.
+* Recovery surfaces push users toward safe, high-value structural parents: Home, Blog/Guides indexes, Resources, Pricing, or Why Transcrypt.
+* No Marketing fail-safe may imply that the user is logged in, changing tenant state, or part-way through a compliance workflow.
+
+In the **Essentials runtime**:
+
+* Fail-safes prioritise **state integrity and auditability**.
+* Recovery surfaces favour dashboards and overviews (Evidence, Evaluation, Reports, Billing, Settings) and must maintain clear separation from Marketing.
+* Any recovery path that might affect evaluation, evidence, or billing must be reflected in state machine definitions and SAIS runtime rules.
+
+### **3.6.6 User-Level Guarantees**
+
+Across both runtimes, navigation fail-safes must guarantee that:
+
+* Users can always reach:
+
+  * a clear runtime entry (public Home or Essentials entry)
+  * a relevant overview/dashboard in Essentials, if authenticated and entitled
+* No link, bookmark, or expired state can strand the user indefinitely on a dead surface with no valid exits.
+* Any change to IA (new sections, removed pages, updated workflows) is accompanied by updated fail-safe mappings in this section, Appendix B, and §12.
+
+The PDS defines the visual and interaction treatment of fail-safe surfaces (copy, components, tone). This IA defines **which structural exits must exist and when they must be invoked**.
+
+---
 
 ## **3.7 Utility and Footer Navigation**
 
@@ -270,17 +628,540 @@ Utility/footer navigation is never considered **secondary navigation** in this I
 
 # **4. Page Hierarchy**
 
-This hierarchy defines how all surfaces relate to one another, assigning structural weight and ordering pages into clear parent–child relationships. It prevents unnecessary flattening, avoids deep or confusing nesting, and ensures users always understand where they are in the system. Hierarchical groupings in this section correspond to the structural templates illustrated in Appendix A. Non-hierarchical, lateral connections between surfaces—such as contextual recommendations, industry pivots, or cross-content meshes—are not represented in the hierarchy and are instead governed by the partial mechanisms defined in Appendix D.
+This section defines the structural hierarchy of Transcrypt: how surfaces are grouped, which pages act as parents, and how structural weight is assigned. It prevents unnecessary flattening, avoids deep or confusing nesting, and ensures users always understand where they are in the system. Hierarchical groupings here map directly to the templates in Appendix A and the page inventory in Appendix B. Non-hierarchical, lateral connections between surfaces—such as contextual recommendations, industry pivots, or cross-content meshes—are outside the hierarchy and are governed exclusively by the partial mechanisms defined in Appendix D.
 
 ## **4.1 Structural Tiers**
 
+Transcrypt’s IA uses a small, fixed set of structural tiers. Every user-facing surface in Appendix B must be assigned to exactly one tier. These tiers describe **where a surface sits in the hierarchy**, not how it is styled or which navigation tier exposes it. Navigation tiers in §3 (Primary, Section, Utility/Footer) are implementations of these structural tiers, not additional levels.
+
+### **4.1.1 Runtime Tier**
+
+The **Runtime Tier** is the top of the hierarchy and divides the platform into:
+
+* the **Marketing runtime** (public, content-led surfaces), and
+* the **Essentials runtime** (authenticated, task-driven surfaces).
+
+Every surface belongs to exactly one runtime. No page may exist “between” runtimes, and no navigation pattern may imply a shared blended runtime. All hierarchical diagrams and sitemap views must root at a runtime node before introducing sections or pages.
+
+### **4.1.2 Section Parent Tier**
+
+The **Section Parent Tier** contains the primary structural anchors under each runtime. These are the surfaces that:
+
+* act as the entry point to a coherent area (for example `/blog`, `/guides`, `/resources`, `/compare`, `/industries`, `/case-studies`, `/pricing`, `/why` in Marketing; `/app/evidence`, `/app/evaluation`, `/app/report`, `/app/billing`, `/app/settings`, `/app/intake` in Essentials)
+* are eligible to host **secondary (Section) navigation** as defined in §3.2
+* commonly appear as the second segment in breadcrumbs after the runtime-level entry.
+
+Section parents define the **main branches of the tree** inside each runtime. The authoritative list of Section Parent surfaces is maintained in Appendix B and cross-labelled in Appendix B3.
+
+### **4.1.3 Cluster / Index Tier**
+
+The **Cluster / Index Tier** groups related content or tasks under a Section Parent without introducing a new top-level branch. Typical examples are:
+
+* indices and listing pages (for example `/blog`, `/blog/categories`, `/guides/categories`, `/resources`, `/case-studies`, `/industries`)
+* taxonomy or archive views (for example `/blog/category/{slug}`, `/blog/tag/{slug}`, `/blog/{yyyy}`, `/blog/{yyyy}/{mm}`)
+* overview pages inside Essentials (for example Evidence Dashboard, Evaluation Overview, Billing Dashboard).
+
+Cluster/Index surfaces:
+
+* sit directly under a Section Parent in the hierarchy
+* provide **structured access** to many child pages or tasks
+* do not change the underlying hierarchy; they reflect and expose it.
+
+They may be exposed by primary or secondary navigation depending on their role, but structurally they always remain children of a Section Parent.
+
+### **4.1.4 Content / Task Page Tier**
+
+The **Content / Task Page Tier** contains the main working surfaces of the system:
+
+* individual content pages (blog posts, guides, case studies, industry pages, report hubs, glossary A–Z)
+* individual task pages in Essentials (evidence entry for a control, evaluation steps, report view, settings pages, billing detail screens).
+
+These surfaces:
+
+* sit under a Cluster/Index or Section Parent
+* are typically the target of search results, internal links, and most external deep links
+* carry the primary informational or operational payload for the user.
+
+Content/Task pages may participate in lateral meshes via partials (Appendix D), but those lateral connections do not change their position in the hierarchy.
+
+### **4.1.5 State / Ephemeral Tier**
+
+The **State / Ephemeral Tier** contains short-lived or highly contextual surfaces that exist only as part of a flow:
+
+* confirmations and “thanks” pages (`/resources/{slug}/thanks`, waitlist or newsletter thanks)
+* password reset completion, email verification confirmation, signup complete
+* download endpoints and other single-purpose state confirmations
+* narrow, non-indexed operational views where the URL is incidental to the action.
+
+State/Ephemeral surfaces:
+
+* always sit **under** a Content/Task or Cluster/Index surface in the hierarchy
+* are never treated as Section Parents
+* must not appear as primary navigation destinations or in generic structural diagrams, even if they have stable URLs.
+
+They may be used as recovery or completion points in the Transition Matrix (§12) but do not introduce new branches into the tree.
+
+---
+
 ## **4.2 Sectional Parents**
+
+Sectional Parents are the **Tier-1 anchors** under each runtime. They define the primary structural branches of the system and act as the entry point into coherent areas of content or application behaviour. Every Sectional Parent is a concrete surface listed in Appendix B and is cross-labelled there as a Section Parent; no other surface may claim that role.
+
+Sectional Parents serve three main purposes:
+
+* they are the **first-level children** of a runtime in the hierarchy
+* they provide the **attachment point** for Section (secondary) navigation defined in §3.2
+* they act as **default structural recovery points** for navigation fail-safes in §3.6
+
+### **4.2.1 Role of Sectional Parents**
+
+A surface qualifies as a Sectional Parent only if it:
+
+* acts as the canonical entry into a logical area (for example Blog, Guides, Resources, Comparisons, Industries in Marketing; Evidence, Evaluation, Reports, Billing, Settings, Intake in Essentials)
+* owns a subtree of Cluster/Index and Content/Task pages that inherit its structural context
+* is eligible to appear as the second segment in breadcrumbs after the runtime-level entry
+* can safely act as a recovery destination for related child pages and workflows (for example returning to Evidence Dashboard from any evidence item)
+
+Sectional Parents do **not** have to be exposed directly in primary navigation, but most will be. Some Sectional Parents may be reached via other anchors (for example an Industries landing discovered from Features), yet structurally they remain Tier-1 nodes under their runtime.
+
+### **4.2.2 Relationship to Appendix B (Page Inventory)**
+
+Appendix B is the authoritative list of all user-facing surfaces. Within that inventory:
+
+* every Sectional Parent is explicitly marked as **Structural Tier: Section Parent**
+* each child page references its Sectional Parent as part of its recorded hierarchy
+* any change to the set of Sectional Parents (addition, removal, re-scoping) must be reflected in Appendix B before being implemented in navigation or templates
+
+Appendix B3 (Navigation Exposure) further records, for each Sectional Parent:
+
+* whether it is exposed in Primary navigation, Section navigation, Utility/Footer, or only via contextual links
+* which Cluster/Index and Content/Task pages sit directly under it in the hierarchy
+
+No page may be treated as a Sectional Parent in navigation, breadcrumbs, or diagrams unless it is recorded as such in Appendix B and Appendix B3.
+
+### **4.2.3 Sectional Parents and Navigation**
+
+Sectional Parents directly constrain how navigation may behave:
+
+* **Primary Navigation (§3.1)**
+
+  * may expose Sectional Parents as top-level items (for example `/blog`, `/guides`, `/resources`, `/app/evidence`, `/app/billing`)
+  * must not expose child pages as if they were peers of Sectional Parents, unless an explicit Edge-Case Elevation Rule in §4.5 allows it
+
+* **Secondary (Section) Navigation (§3.2)**
+
+  * may only be mounted within the subtree of a Sectional Parent
+  * must treat the Sectional Parent as its root; all items in a given secondary nav spine must be descendants of the same Sectional Parent
+
+* **Utility/Footer Navigation (§3.7)**
+
+  * may link to Sectional Parents (for example `/status`, `/privacy`, `/terms`) but does not change their structural tier
+  * must not introduce new Sectional Parents not already defined in this section and Appendix B
+
+* **Fail-Safes and Recovery (§3.6)**
+
+  * when a child page cannot be restored, the preferred recovery destination is its Sectional Parent or a designated Cluster/Index page directly under that parent
+  * cross-runtime recovery must never promote a child page to act as a Sectional Parent
+
+Any proposal to create a new major area of the platform (for example a new Guides-like section, a new Essentials module) is, structurally, a proposal to add or rename a Sectional Parent. Such changes must be:
+
+1. recorded in this section;
+2. added to Appendix B and Appendix B3; and
+3. only then implemented in navigation and templates via the PDS and SAIS.
+
+---
 
 ## **4.3 Page-Level Weighting**
 
+Page-level weighting classifies surfaces by **structural importance**, independent of their tier. Two pages may sit at the same structural tier but carry very different weight in terms of navigation exposure, fallback behaviour, and change impact. Every surface in Appendix B must be assigned a single weight class from the set below.
+
+Weight is not a styling hint; it is a structural property that influences how navigation, fail-safes, and future changes are handled.
+
+### **4.3.1 Anchor Pages**
+
+**Anchor** pages are the highest-weight surfaces below the runtime. They:
+
+* act as primary entry or orientation points (for example Home, key Sectional Parents, core dashboards)
+* commonly appear in Primary navigation or as canonical “start here” surfaces
+* are preferred recovery targets in fail-safe scenarios (§3.6)
+* require explicit IA consideration and redirect planning if renamed, relocated, or removed
+
+Typical examples include:
+
+* Marketing: `/` (Home), `/features`, `/pricing`, `/blog` (if treated as the main content anchor), `/guides`, `/resources`, `/industries`, `/case-studies`, `/why`, `/security`
+* Essentials: `/app/evidence`, `/app/evaluation`, `/app/report`, `/app/billing`, `/app/settings`, `/app/intake`
+
+Anchor pages usually coincide with Sectional Parents (§4.2), but some high-value Cluster/Index pages may also be classed as Anchor when they function as de facto starting points for journeys.
+
+### **4.3.2 Hub Pages**
+
+**Hub** pages sit one level down from Anchors in importance. They:
+
+* aggregate or organise a meaningful subset of content or tasks under an Anchor or Sectional Parent
+* provide structured access to multiple Content/Task pages (for example indices, category lists, dashboards)
+* are strong candidates for secondary navigation roots or prominent in-page link blocks
+* are common targets for internal links and SEO focus but are not the primary brand or product anchors
+
+Typical examples include:
+
+* Marketing: `/blog/overview`, `/blog/categories`, `/blog/tags`, `/guides/categories`, `/resources`, `/case-studies`, `/industries`, `/compare`, `/reports/state-of-sme-cybersecurity`
+* Essentials: Evidence Dashboard, Evaluation Overview, Billing Dashboard, Settings Overview (if implemented as a distinct surface)
+
+When a Hub page changes, the IA, Appendix B, and cross-link mesh in Appendix D must be updated to prevent orphaning large content/task clusters.
+
+### **4.3.3 Standard Pages**
+
+**Standard** pages are the main working surfaces of the system:
+
+* individual articles, guides, case studies, industry pages, resource downloads, glossary A–Z, and similar content surfaces
+* individual task pages in Essentials such as evidence entry for a specific control, evaluation steps, report view, and settings subpages
+
+Standard pages:
+
+* sit under Anchors or Hubs within the hierarchy
+* are common targets for organic search, internal linking, and user bookmarks
+* may be promoted in cross-links or partials, but such promotion does not change their structural tier or weight
+
+Standard pages can be added, evolved, or deprecated with less structural upheaval than Anchors or Hubs, but:
+
+* removals still require redirects and updates to Appendix B
+* any Standard page that becomes a persistent navigation or recovery destination may need to be reclassified as Hub or Anchor in a future IA revision.
+
+### **4.3.4 Ephemeral and Utility Pages**
+
+**Ephemeral/Utility** pages are structurally light-weight surfaces that exist to confirm, complete, or support actions rather than to anchor journeys:
+
+* confirmations and “thanks” pages (for example waitlist or newsletter confirmations, `/resources/{slug}/thanks`)
+* password reset confirmation, email verification confirmation, signup complete
+* narrow operational views such as certain download endpoints or consent confirmations
+
+These pages:
+
+* always sit under a Standard or Hub parent in the hierarchy
+* are never exposed in Primary navigation and should not normally appear in breadcrumbs
+* may be used as explicit end-points in workflow navigation (§3.3) or the Transition Matrix (§12) but must not act as general-purpose recovery targets for unrelated flows
+
+Ephemeral/Utility pages can be added or removed with minimal IA impact, provided:
+
+* related workflows and transitions are updated in §3.3 and §12
+* Appendix B remains accurate and any public URLs are covered by redirects where appropriate.
+
+### **4.3.5 How Weight Interacts with Navigation and Change**
+
+Page weight has direct consequences for navigation and change management:
+
+* **Primary navigation**
+
+  * should favour Anchors, with selected Hubs where justified
+  * must not expose Ephemeral/Utility pages as primary items
+
+* **Secondary (Section) navigation**
+
+  * typically roots at a Sectional Parent (often Anchor-weight) and lists Hubs and Standard pages beneath it
+  * must not list Ephemeral/Utility pages as peers of Hubs or Standard pages
+
+* **Fail-safes and recovery (§3.6)**
+
+  * when in doubt, recovery should prefer Anchors first, then Hubs, then Standard pages
+  * Ephemeral/Utility pages should not be used as recovery destinations except for the specific flows they complete
+
+* **IA changes**
+
+  * changes to Anchors or Hubs require explicit IA, Appendix B, and navigation review
+  * Standard and Ephemeral/Utility changes can be handled more locally but still require inventory updates and redirect hygiene
+
+Every page in Appendix B must carry both:
+
+* a **Structural Tier** (from §4.1), and
+* a **Weight Class** (Anchor, Hub, Standard, Ephemeral/Utility) from this subsection.
+
+Any proposal to introduce a new weight class must update this section first and then be propagated into Appendix B, navigation rules in §3, and the PDS.
+
+---
+
 ## **4.4 Hierarchical Exceptions**
 
+Hierarchical exceptions are surfaces that must exist for the platform to function but do not fit neatly into the standard parent–child patterns described in §4.1–§4.3. They are exceptions **to presentation**, not to structure: every exception is still assigned a Runtime, a Structural Tier, and a Weight Class in Appendix B. This section defines how these pages behave so they cannot be misinterpreted as new branches of the tree or as hidden navigation tiers.
+
+Exceptions fall into a small set of classes: authentication and signup surfaces, search and archive views, glossary anchors and similar pseudo-structure, and legacy/redirect-only URLs.
+
+### **4.4.1 Authentication and Signup Surfaces**
+
+Authentication and signup flows (for example `/auth/login`, `/auth/reset`, `/auth/reset/{token}`, `/signup/...`) are structurally part of the **Essentials runtime**, but they do not behave like normal Sectional Parents, Hubs, or Standard pages.
+
+Rules:
+
+* **Runtime and tier**
+
+  * Always belong to the Essentials runtime.
+  * Typically live in the **Cluster/Index** or **State/Ephemeral** tiers, depending on whether they act as a reusable hub (for example login) or a single-use confirmation step (for example `/signup/complete`).
+
+* **Hierarchy and breadcrumbs**
+
+  * Must not appear as Sectional Parents.
+  * Normally do **not** appear in breadcrumbs; if breadcrumbs are shown at all in these flows, they should be minimal and non-structural (for example “Sign in → Confirm”).
+
+* **Navigation exposure**
+
+  * May be linked from primary navigation (for example a “Log in” button) but are never treated as peer sections to Evidence, Evaluation, etc.
+  * Never host secondary (Section) navigation.
+  * Utility/Footer links may appear in a reduced form where required by regulation, but this does not change their structural tier.
+
+* **Appendix B recording**
+
+  * Each auth/signup surface must be explicitly recorded in Appendix B as:
+
+    * Runtime: Essentials
+    * Structural Tier: Cluster/Index or State/Ephemeral
+    * Weight Class: Hub (for login) or Ephemeral/Utility (for confirmations)
+  * Any special navigation suppression behaviours are cross-referenced to §3.4.
+
+Authentication and signup screens are **transit surfaces**, not new IA branches.
+
+### **4.4.2 Search, Archive, and Result Surfaces**
+
+Search and archive views (for example `/blog/search`, `/blog/search/page/{n}`, `/blog/{yyyy}`, `/blog/{yyyy}/{mm}`) expose content that already exists elsewhere in the hierarchy. They provide alternative entry paths but do not create new parents.
+
+Rules:
+
+* **Hierarchy**
+
+  * Belong to the same Runtime and Sectional Parent as the content they expose (for example Blog in Marketing).
+  * Sit in the **Cluster/Index** tier and carry **Hub** or **Standard** weight depending on their role.
+
+* **Breadcrumbs**
+
+  * Breadcrumbs, where used, must show them as children of their Sectional Parent (for example `Home → Blog → Search results`) and never as new parents.
+
+* **Navigation exposure**
+
+  * May be reachable from primary or secondary nav as a **mode** (for example a search entry within Blog), but:
+
+    * they must not appear as separate sections; and
+    * they must not become the sole route to underlying content.
+
+* **Appendix B recording**
+
+  * All search and archive surfaces are recorded under the relevant Sectional Parent, with clear indication that they are alternative access modes, not new IA branches.
+
+Archives and search views are **derivative lenses** over existing content, not new nodes in the tree.
+
+### **4.4.3 Glossary Anchors and In-Page Structures**
+
+The Glossary (`/glossary`) and similar in-page anchor structures (for example A–Z sections, intra-page TOCs) behave like many small “subpages” from the user’s perspective, but structurally they are part of a single page.
+
+Rules:
+
+* **Hierarchy**
+
+  * The Glossary A–Z anchors (`/glossary#a`, `/glossary#b`, etc.) are **not** separate pages in the IA.
+  * The glossary as a whole is a single **Content/Task** page under its Sectional Parent (the Marketing runtime, typically grouped with Resources/Guides).
+
+* **Navigation exposure**
+
+  * Primary or secondary nav may link to `/glossary` and, if needed, to specific anchors, but those anchors do not become Sectional Parents or Hubs.
+
+* **Appendix B recording**
+
+  * Appendix B records only `/glossary` as a page; anchors are treated as internal structure, not as separate rows.
+  * Any internal nav widgets (A–Z strips, in-page TOCs) are governed by the PDS; they do not change the hierarchy.
+
+Glossary anchors and in-page jumps are **local structure**, not hierarchical tiers.
+
+### **4.4.4 Legacy, Redirect, and Shadow URLs**
+
+Over time, URLs may change while external links and bookmarks remain. To avoid breaking flows and SEO, some legacy or shadow URLs may be retained as redirects.
+
+Rules:
+
+* **Hierarchy**
+
+  * Redirect-only URLs are **not** considered active nodes in the hierarchy.
+  * Structurally, they resolve to the target surface and inherit its Runtime, Tier, and Weight.
+
+* **Navigation exposure**
+
+  * Legacy/shadow URLs must never appear in navigation, breadcrumbs, or IA diagrams.
+  * They exist solely for compatibility and must always redirect (301/308) to the canonical surface defined in Appendix B.
+
+* **Appendix B recording**
+
+  * Canonical surfaces are listed as normal rows.
+  * If legacy URLs are significant, they may be recorded as metadata on the canonical row (for example “Former URLs”), not as separate pages.
+
+Redirect and shadow URLs are **compatibility artefacts**, not part of the live IA.
+
+### **4.4.5 Multi-Role or Hybrid Surfaces**
+
+Some surfaces legitimately play more than one conceptual role—for example:
+
+* the **State of SME Cybersecurity** hub, which acts as both a report anchor and a research hub;
+* a **Settings Overview** that both orients and routes to detailed settings pages.
+
+Rules:
+
+* **Single structural identity**
+
+  * Each hybrid surface must still have a **single Structural Tier and Weight Class** in Appendix B (for example Content/Task + Hub), even if the narrative role is mixed.
+
+* **Navigation and mesh**
+
+  * Additional roles (for example being a research hub) must be expressed via:
+
+    * secondary navigation scoped to its Sectional Parent; and/or
+    * partials and cross-links governed in Appendix D.
+  * Hybrid behaviour must not be implemented by silently treating the surface as a second Sectional Parent.
+
+* **Documentation**
+
+  * Any hybrid surface must be explicitly called out in Appendix B as such (for example “Role: Hybrid – Report anchor + Research hub”) to prevent future misclassification.
+
+Hybrid surfaces are **single nodes with multiple jobs**, not secret branches.
+
+---
+
+Only these exception classes are permitted. Any new pattern that appears to fall “outside” the normal hierarchy must either be mapped into one of the classes above or trigger an explicit update to this section, Appendix B, and any affected navigation rules in §3.
+
+---
+
 ## **4.5 Edge-Case Elevation Rules**
+
+Edge-case elevation rules define when a surface may be given **extra visibility** (for example, promoted into primary navigation or Home-page prominence) without changing its underlying structural tier or role in the IA. Elevation is always a **presentation decision**, not a structural edit: the tree defined in §4.1–§4.4 remains unchanged unless this document and Appendix B are explicitly updated.
+
+Elevation exists to support campaigns, key assets, or operational priorities while preventing “one-off hacks” from silently creating new sections or navigation tiers.
+
+### **4.5.1 What Elevation Is (and Is Not)**
+
+For the purposes of this IA:
+
+* **Elevation** means:
+
+  * surfacing an existing page (recorded in Appendix B) more prominently than usual, for example:
+
+    * adding it temporarily to primary nav
+    * pinning it in the Home hero
+    * giving it a persistent slot in Section navigation
+  * without altering:
+
+    * its Runtime
+    * its Structural Tier (§4.1)
+    * its Sectional Parent (§4.2)
+    * its canonical URL (Appendix B)
+
+* **Elevation is not**:
+
+  * creating a new Sectional Parent or runtime
+  * introducing a new navigation tier
+  * forking a page into “campaign” and “structural” variants with separate URLs
+
+If an elevation requires any of the above, it is not an edge case; it is a structural change and must go through a full IA revision.
+
+### **4.5.2 Eligible Surfaces and Constraints**
+
+The following surfaces may be elevated:
+
+* **Anchor and Hub pages** (§4.3)
+
+  * typical candidates: `/guides`, `/resources`, `/compare`, `/industries`, `/reports/state-of-sme-cybersecurity`, Evidence Dashboard, Evaluation Overview, Billing Dashboard
+  * may be given additional prominence in primary nav, Home, or section rails
+
+* **High-value Standard pages**
+
+  * exemplary guides, cornerstone articles, or flagship reports
+  * may be given fixed slots in section-level nav or featured positions on parent Hubs
+
+**Constraints:**
+
+* The elevated surface **must already exist** in Appendix B with a canonical URL.
+* Elevation must **not**:
+
+  * re-label the page in a way that suggests a new section (for example calling a single guide “Guides” in nav)
+  * place Ephemeral/Utility pages (§4.3.4) into primary or section nav
+  * change breadcrumb structure; crumbs must still reflect the true hierarchy
+
+If repeated or permanent elevation effectively turns a Standard page into a de facto Hub or Anchor, the IA and Appendix B must be updated to reclassify it rather than treating the elevation as permanent “exception”.
+
+### **4.5.3 Temporary or Campaign Elevations**
+
+Temporary elevations are used for campaigns, launches, or time-bounded initiatives (for example a major report or promo guide).
+
+Rules:
+
+* **Time-bounded by design**
+
+  * Start and end conditions must be defined (for example “Q3 campaign” or “until N+1 report is published”).
+  * When the window closes, navigation and Home-page treatments revert to the non-elevated state.
+
+* **No structural promises**
+
+  * Campaign labels must not imply permanent sections (for example “New Module” in nav pointing to a guide).
+  * Deep links always use the canonical URL; campaign wrappers (UTM, tracking) do not create alternative structures.
+
+* **Recording**
+
+  * Campaign elevations are recorded outside the IA (for example in marketing ops), but:
+
+    * any temporary use of primary or Section navigation must still respect the constraints of §3 and §4
+    * Appendix B must not be altered to represent campaign-only prominence.
+
+Temporary elevations are front-end concerns implemented via the PDS. The IA’s role is to define what is *allowed* to be temporarily lifted, and what must remain structurally untouched.
+
+### **4.5.4 Persistent Elevations Without Tier Change**
+
+Some elevations are intended to be long-lived but still **must not** alter the underlying hierarchy. Typical examples:
+
+* a “hero” guide from `/guides/{slug}` that is always pinned under `/guides`
+* a particular comparison page (`/compare/consultancy`) always listed under `/compare`
+* a Settings subpage surfaced as a quick-link from a dashboard
+
+Rules:
+
+* The elevated page remains a **child** of its Sectional Parent in all structural representations.
+
+* Primary navigation may link to the page **by its real label** if justified, but:
+
+  * it must be clear which Sectional Parent it belongs to; and
+  * it must not displace the Sectional Parent entirely unless the IA is formally revised.
+
+* If a persistent elevation:
+
+  * is expected to last across major releases, and
+  * materially changes how users understand the shape of the product,
+    then the IA should be updated to reflect that reality (for example, promote a Hub to Anchor, or an existing Anchor to explicit Sectional Parent) rather than treating it as a permanent exception.
+
+Persistent elevation is acceptable as long as **structure and documentation are kept honest**.
+
+### **4.5.5 Documentation and Governance**
+
+All elevations must respect the following governance rules:
+
+* **Source of truth**
+
+  * Appendix B remains the canonical list of surfaces, their Structural Tier, Weight Class, and Sectional Parent.
+  * Elevations must reference these existing entries; they do not create new rows.
+
+* **Navigation mapping**
+
+  * Appendix B3 (Navigation Exposure) records, for each page:
+
+    * its baseline nav exposure (Primary, Section, Utility/Footer, or contextual only)
+    * any documented elevation patterns (for example “may appear in Primary during campaigns”, “pinned under Guides as featured guide”).
+
+* **Change control**
+
+  * Any change that:
+
+    * promotes a new Surface into primary nav on a permanent basis, or
+    * demotes an existing Anchor/HUB so that it no longer functions as a structural entry
+      must trigger an IA review:
+
+      * update §4.1–§4.3 if tiers or weight are affected
+      * update §4.2 if Sectional Parents change
+      * update Appendix B/B3 and any affected navigation rules in §3.
+
+Elevation rules allow the product and marketing layers to spotlight important surfaces **without corrupting the underlying IA**. When those spotlights become the new normal, the IA must be updated explicitly rather than letting exceptions accumulate.
+
+---
 
 # **5. SEO Keyword Mapping**
 
