@@ -1165,19 +1165,124 @@ Elevation rules allow the product and marketing layers to spotlight important su
 
 # **5. SEO Keyword Mapping**
 
-This section defines the primary and secondary keyword targets for organic search and assigns them to specific surfaces within the platform. Its purpose is to ensure that each page carries a distinct search intent, preventing overlap and internal competition. Keyword assignments must align with the metadata fields and constraints defined in Appendix C, which governs how these targets are expressed through canonical tags, descriptive fields, and other SEO-relevant metadata.
+This section defines how search intent is mapped onto the IA so that each indexable surface has a clear, non-competing role in organic discovery. It ties together content types (§6), taxonomy (§7), URL structure (§8), and cross-linking (§9). The goal is to avoid keyword cannibalisation, keep topic ownership explicit, and ensure that SEO decisions never distort the underlying IA.
 
-## **5.1 Pillar Keyword Targets**
+All SEO intent assignments and canonical keyword sets must be reflected in Appendix C (Metadata Schema) and Appendix E (Taxonomy Catalogue). No new SEO-driven surface, category, or tag may be introduced without first being modelled here and recorded in those appendices.
 
-## **5.2 Page-Level Intent Targets**
+## **5.1 Pillar Topics and Anchor Ownership**
 
-## **5.3 Semantic Neighbourhoods**
+Pillar topics are the highest-level themes the platform wants to rank for. Each pillar topic must be owned by a specific **Anchor or Hub** page defined in §4.3 and Appendix B. No other page is allowed to compete directly for the same primary query family.
 
-## **5.4 Cannibalisation Boundaries**
+Principles:
 
-## **5.5 Long-Tail Capture Plan**
+* Each pillar topic is mapped to **exactly one** primary surface (for example Home, Features, Guides Index, Blog Landing, Compare Hub, Industries Index, State-of Report Hub).
+* Pillar owners carry broad, high-level queries (for example “Cyber Essentials readiness platform”, “SME cyber compliance guides”).
+* Supporting pages (guides, blog posts, case studies) target *subsets* or *long-tail variants* of the pillar’s topic, not the same head terms.
 
-## **5.6 Deprioritised Keywords**
+Appendix E must list the pillar topics, their owning pages (by Appendix B ID), and their permitted semantic neighbourhoods.
+
+## **5.2 Page-Level Intent Assignment**
+
+Every indexable page must have a single, explicit **primary search intent** and, where needed, one or two **secondary intents**. These intents determine:
+
+* which queries the page is designed to answer
+* which taxonomy categories/tags are appropriate
+* how internal links and partials should reference it
+
+Rules:
+
+* One page → one primary intent.
+* Secondary intents must be strictly compatible with the primary; no “two different pages in one” behaviour.
+* Pages with no organic discovery role (for example login, evidence steps, billing) are explicitly marked **Non-SEO** in Appendix B and must not be optimised or exposed for search.
+
+Appendix B and Appendix C together form the authoritative mapping from page → primary intent → meta title/description → canonical URL.
+
+## **5.3 Semantic Neighbourhoods and Clusters**
+
+Each pillar topic defines a **semantic neighbourhood**: a cluster of related queries and subtopics that can be handled by the pillar surface and its supporting content.
+
+For each pillar:
+
+* The **Anchor/Hub** page owns the broad, generic queries.
+* **Guides and case studies** sit directly under the pillar, targeting deeper, how-to, or verticalised queries.
+* **Blog posts** explore narrower, time-bound, or opinionated angles within the same neighbourhood.
+* **Resources and templates** capture highly action-oriented queries (for example “checklist”, “template”, “download”).
+
+Semantic clusters must be:
+
+* reflected in taxonomy (categories and tags in Appendix E)
+* supported by internal link structures defined in §9 and Appendix D
+* designed to avoid multiple pages competing for the same head term
+
+Where clusters become too large or diffuse, the IA (not just SEO) must be revisited to consider creating additional Hubs or restructuring categories.
+
+## **5.4 Cannibalisation and Conflict Boundaries**
+
+To prevent keyword cannibalisation and confusing SERP behaviour:
+
+* No two pages may share **identical** primary search intent.
+* If two pages appear to target the same query family:
+
+  * one becomes the canonical owner (typically a Guide or Hub),
+  * the other is reframed as supportive, retargeted to a narrower intent, or folded/redirected.
+
+Specific rules:
+
+* **Guides vs Blog**
+
+  * Guides own evergreen, authoritative “how to” and “what is” topics.
+  * Blog posts on the same subject must either:
+
+    * take a news/tactical angle, or
+    * address a distinct sub-problem.
+
+* **Marketing Pages vs Guides/Blog**
+
+  * Marketing Landings (Home, Features, Why, How It Works) own high-intent commercial queries.
+  * Editorial surfaces (guides/blog) own informational queries.
+  * If overlap occurs, the marketing page keeps the commercial angle; the editorial page is adjusted toward education.
+
+Any cannibalisation decision must be reflected by:
+
+* updating Appendix B’s SEO Intent column,
+* updating Appendix E if categories or tags are changed, and
+* adjusting internal links in line with §9.
+
+## **5.5 Long-Tail Capture Strategy**
+
+Long-tail queries are captured primarily through:
+
+* blog posts
+* guides with specific scopes
+* case studies with clear industry and problem framing
+* resource pages tied to concrete artefacts (templates, checklists, etc.)
+
+Rules:
+
+* Long-tail pages must still map back to a semantic cluster; they are not allowed to become orphaned fragments.
+* Each long-tail page must:
+
+  * reference its owning pillar (via internal links and taxonomy),
+  * have tightly scoped intent reflected in title, heading, and metadata,
+  * avoid generic titles that collide with pillar-level or other long-tail pages.
+
+Partial-driven listings (for example “Related Stories”, “For Your Industry”) are allowed to surface long-tail material more prominently, but they must not violate the underlying intent or cluster assignments.
+
+## **5.6 Deprioritised and Excluded Keywords**
+
+Not every plausible keyword is worth targeting. To prevent IA and content bloat:
+
+* Some keywords and themes are explicitly **deprioritised** (for example overly broad “cyber security” with no SME/compliance focus, or regimes the product does not support).
+* Other keywords are explicitly **excluded** because they misrepresent the product (for example “free Cyber Essentials certification”, if that is not offered).
+
+Appendix E must maintain:
+
+* a list of **deprioritised themes** – allowed to appear incidentally, but not used to drive page creation or optimisation;
+* a list of **excluded themes** – avoided in titles, headings, core copy, and metadata.
+
+Content creators must not create new pages or rewrite existing ones to chase deprioritised or excluded terms. If business strategy changes, this section and Appendix E must be updated before content or navigation is altered.
+
+---
 
 # **6. Content Types**
 
@@ -1185,27 +1290,642 @@ This section defines the distinct classes of content used across the platform, f
 
 ## **6.1 Marketing Types**
 
+Marketing types cover all public, unauthenticated content surfaces across the site/blog/guides/resources layer. They exist to attract, educate, convert, and reassure prospects, not to execute deterministic workflows.
+
+### **6.1.1 Landing and Explainer Surfaces**
+
+These are high-level entry and framing pages:
+
+* Home
+* Features
+* Pricing
+* Why Transcrypt
+* How It Works
+* Industries Overview and Industry Detail pages
+* Comparison hub and individual comparison pages
+
+Characteristics:
+
+* Own broad, high-intent topics and narrative framing.
+* Eligible for Primary navigation exposure (§3.1) and Anchor/Hub weighting (§4.3).
+* May host partials such as “Next Best Step”, “For Your Industry”, and “Starter Kit Promo” within the constraints of Appendix D.
+* Must not expose authenticated or tenant-specific state.
+
+### **6.1.2 Narrative and Editorial Content Surfaces**
+
+These carry ongoing, editorialised content:
+
+* Blog landing and index views
+* Blog articles
+* Guides index and guide articles
+* Case study index and case study detail pages
+* State of SME Cybersecurity report hub and similar research hubs
+
+Characteristics:
+
+* Typically Standard or Hub weight (§4.3).
+* Indexed for organic search, with clear primary topics defined in §5 and Appendix B.
+* Heavy consumers of taxonomy (§7) and partials (Appendix D) for discovery and clustering.
+* Must maintain stable, canonical URLs as defined in §8.
+
+### **6.1.3 Resource and Conversion Surfaces**
+
+These are focused on value exchange and commitment:
+
+* Resource library and individual resource downloads
+* Resource download confirmations
+* Starter kit page
+* Waitlist and newsletter signup flows
+* Conversion “thanks” pages
+
+Characteristics:
+
+* Primary intent is conversion, not exploration.
+* Messaging must be tightly scoped; cross-links are permitted but must not distract from the primary call to action.
+* Conversion forms and their confirmations are generally Ephemeral/Utility weight (§4.3.4), with strict rules about partial usage to avoid clutter.
+* URL patterns and form states must be stable enough to support campaigns and tracking without fragmenting IA (§8).
+
+### **6.1.4 Legal, Trust, and Operational Surfaces**
+
+These provide assurance, legal clarity, and operational transparency:
+
+* Privacy, Terms, Cookies, Accessibility, AUP, DPA, Subprocessors
+* Security overview and Responsible Disclosure
+* Public Status page
+
+Characteristics:
+
+* Primarily Trust / Due Diligence intent (§5).
+* Typically accessed via Utility/Footer navigation (§3.7), occasionally from high-level trust hubs (e.g., Security).
+* Indexable and linkable, but not part of core marketing funnels.
+* Must maintain long-term URL stability; changes require careful redirect planning (§4.4.4, §8.5).
+
+---
+
 ## **6.2 Application Types**
+
+Application types cover authenticated, task-driven surfaces within the Essentials runtime. They are deterministic, state-bound, and must respect workflow and suppression rules (§3.3, §3.4, §12).
+
+### **6.2.1 Identity and Onboarding Types**
+
+These surfaces control entry into the Essentials runtime:
+
+* Login
+* Password reset request and confirm
+* Signup start, verification, verified, checkout, and signup complete
+
+Characteristics:
+
+* IdentityFlow or Onboarding types in Appendix B.
+* Structurally part of Essentials, but with special hierarchy and breadcrumb rules (§4.4.1).
+* No marketing partials; any contextual help is deterministic and specified in the PDS.
+* Frequently subject to navigation suppression (e.g., stripped headers/footers) as per §3.4.
+
+### **6.2.2 Intake and Organisation Context Types**
+
+These initialise and maintain core organisational data:
+
+* Organisation setup / initial intake
+* Organisation details / ongoing org profile
+
+Characteristics:
+
+* Intake types in Appendix B.
+* Must capture and present tenant context in a reversible, auditable way.
+* Accessible from early workflow stages and from appropriate settings surfaces.
+* Never indexable, and never exposed via Marketing navigation.
+
+### **6.2.3 Evidence and Evaluation Workflow Types**
+
+These drive the core readiness workflow:
+
+* Evidence dashboard
+* Evidence submission and review surfaces
+* Evaluation overview
+* Evaluation step pages
+* Evaluation complete / milestone confirmations
+
+Characteristics:
+
+* Evidence* and Evaluation* types in Appendix B.
+* Governed by workflow navigation rules (§3.3) and Transition Matrix constraints (§12).
+* Navigation is strictly deterministic: no arbitrary jumping beyond what state allows.
+* Cross-runtime or marketing-style partials are prohibited; contextual guidance must be defined in the PDS as workflow-specific components.
+
+### **6.2.4 Reporting, Billing, and Settings Types**
+
+These supply outputs, commercial control, and configuration:
+
+* Report views and downloads
+* Billing dashboard, subscription management, payment methods, billing history
+* User profile, security settings, notification preferences, organisation profile
+
+Characteristics:
+
+* Report, Billing*, and Settings* types in Appendix B.
+* Must expose a consistent, minimal primary frame within Essentials (§3.1).
+* Some may be reachable from multiple workflow points (for example billing from error or grace states) but remain structurally under their Sectional Parents (§4.2).
+* No marketing cross-links; only deterministic, role-appropriate navigation.
+
+---
 
 ## **6.3 Evidence & Report Types**
 
+Evidence and report types are a special subset of application types that directly support certification readiness, auditor interactions, and business decision-making. They have stricter rules for structure, state, and change.
+
+### **6.3.1 Evidence Item Types**
+
+Evidence items are per-control artefacts and attestations:
+
+* Document uploads and file-based artefacts
+* Textual attestations and policy statements
+* Configuration snapshots or screenshots
+* External references (for example links to ticket systems or repositories)
+
+Characteristics:
+
+* Always tenant-scoped and control-scoped (Control ID in Appendix B / SAIS).
+* Must be versioned and time-stamped according to SAIS and audit requirements.
+* May be grouped in Evidence dashboard views but retain individual identity for reporting.
+* Never exposed in Marketing; any references are high-level summaries only.
+
+### **6.3.2 Evidence View and Summary Types**
+
+These are structured, read-oriented views over evidence state:
+
+* Evidence dashboard
+* Per-control evidence summaries
+* Gap/deficiency views
+
+Characteristics:
+
+* Present aggregated states without altering canonical evidence content.
+* May be used as hubs for navigation into individual evidence items.
+* Strongly linked to Evaluation overview and steps, but must not silently mutate evaluation state.
+
+### **6.3.3 Report Output Types**
+
+Reports are structured outputs derived from evidence and evaluation:
+
+* Tenant readiness summary views (on-screen)
+* Detailed, sectioned reports (on-screen)
+* Exported reports (PDF/other formats)
+
+Characteristics:
+
+* On-screen report surfaces are normal application pages (ReportView types) and obey normal IA rules for hierarchy, breadcrumbs, and navigation.
+* Exported artefacts are **not** separate IA pages; they are downloads bound to a report surface and described in Appendix B as download endpoints, not as parents.
+* Content must be stable enough that auditors and stakeholders can rely on repeatability and traceability over time.
+
+### **6.3.4 Auditor and Third-Party Facing Variants (Future)**
+
+Future work may introduce additional report variants or auditor-oriented views:
+
+* Auditor-friendly report subsets or portals
+* Insurance-oriented summaries
+* Export formats tuned for specific regimes
+
+Characteristics:
+
+* These are explicitly out-of-scope for the MVP IA but are acknowledged as future extensions.
+* When introduced, they must be modelled as derived views or exports of existing report types, not as independent hierarchies.
+* Any new surfaces must be added to Appendix B and integrated into §12 Transition Matrix.
+
+---
+
 ## **6.4 Structural Requirements Per Type**
+
+This subsection defines the structural properties that apply to each content type family. It ties types to runtime, navigation tiers, indexability, and partial usage so that no component or template in the PDS can invent its own rules.
+
+### **6.4.1 Shared Structural Properties**
+
+Every type defined in §6.1–§6.3 must be assigned, in Appendix B, the following structural properties:
+
+* **Runtime**
+
+  * Marketing or Essentials, as defined in §2.
+
+* **Structural Tier**
+
+  * Runtime Root, Sectional Parent, Cluster/Index, Content/Task, or State/Ephemeral (§4.1).
+
+* **Weight Class**
+
+  * Anchor, Hub, Standard, or Ephemeral/Utility (§4.3).
+
+* **Nav Tier Eligibility**
+
+  * Primary, Section, Utility/Footer, or Flow-only, as captured in Appendix B3 and governed by §3.
+
+* **Indexability**
+
+  * Indexable (intended for public search), Non-Indexable (operational), or Noindex but discoverable (for example certain trust pages in special circumstances).
+
+* **Partial Eligibility**
+
+  * Which governed partials (Appendix D) may appear on that type of surface, if any.
+
+These properties must be treated as authoritative for UI and routing decisions. The PDS may refine presentation, but it may not contradict these assignments.
+
+### **6.4.2 Marketing Type Requirements**
+
+For Marketing types (§6.1):
+
+* **Landing and Explainer Surfaces**
+
+  * Runtime: Marketing
+  * Structural Tier: Sectional Parent or Cluster/Index
+  * Weight: Anchor or Hub
+  * Nav Tier: Eligible for Primary and Section navigation; may also appear in Utility/Footer where appropriate.
+  * Indexability: Indexable
+  * Partials: Broadest allowance, but must respect intent and avoid overloading pages with unrelated topics.
+
+* **Narrative and Editorial Content Surfaces**
+
+  * Runtime: Marketing
+  * Structural Tier: Cluster/Index (hubs) or Content/Task (articles)
+  * Weight: Hub (indices/hubs) or Standard (articles/guides/case studies)
+  * Nav Tier: Typically Section; rarely Primary.
+  * Indexability: Indexable
+  * Partials: Allowed, but must follow the contextual rules in Appendix D and the topic boundaries in §5 and §7.
+
+* **Resource and Conversion Surfaces**
+
+  * Runtime: Marketing
+  * Structural Tier: Content/Task or State/Ephemeral (for confirmation pages)
+  * Weight: Standard or Ephemeral/Utility
+  * Nav Tier: Usually Section or contextual links; may be surfaced in Primary only when justified and documented as an elevation (§4.5).
+  * Indexability: Case-by-case; some may be indexable (starter kit), others operational only.
+  * Partials: Strictly constrained; conversion surfaces should only host partials that reinforce the intended action.
+
+* **Legal, Trust, and Operational Surfaces**
+
+  * Runtime: Marketing
+  * Structural Tier: Content/Task
+  * Weight: Standard
+  * Nav Tier: Utility/Footer by default; rarely in Primary.
+  * Indexability: Indexable, with conservative SEO targets.
+  * Partials: Normally none; emphasis is on clarity and stability.
+
+### **6.4.3 Application Type Requirements**
+
+For Application types (§6.2–§6.3):
+
+* **Identity and Onboarding Types**
+
+  * Runtime: Essentials
+  * Structural Tier: Cluster/Index (login) or State/Ephemeral (reset, verify, complete)
+  * Weight: Hub (login) or Ephemeral/Utility (one-shot steps)
+  * Nav Tier: Flow-only; may be linked from Marketing via explicit “Log in” calls to action, but not treated as sections.
+  * Indexability: Non-indexable.
+  * Partials: None; only deterministic help components.
+
+* **Intake and Organisation Context Types**
+
+  * Runtime: Essentials
+  * Structural Tier: Content/Task
+  * Weight: Standard
+  * Nav Tier: Section-level within Essentials; never Primary; no Utility/Footer treatment.
+  * Indexability: Non-indexable.
+  * Partials: None; guidance is local and workflow-specific.
+
+* **Evidence and Evaluation Workflow Types**
+
+  * Runtime: Essentials
+  * Structural Tier: Cluster/Index (dashboards/overviews) or Content/Task (steps, per-control views)
+  * Weight: Hub (dashboards/overviews) or Standard (steps, per-control)
+  * Nav Tier: Section and Flow-only, tightly bound to workflow navigation (§3.3, §12).
+  * Indexability: Non-indexable.
+  * Partials: Prohibited; only deterministic inline hints or help patterns as defined in the PDS.
+
+* **Reporting, Billing, and Settings Types**
+
+  * Runtime: Essentials
+  * Structural Tier: Content/Task
+  * Weight: Standard or Hub depending on scope (for example Billing dashboard as Hub)
+  * Nav Tier: Section; may include local secondary navigation where allowed by §3.2.
+  * Indexability: Non-indexable.
+  * Partials: None; any cross-links are explicit, deterministic navigation to other Essentials surfaces.
+
+### **6.4.4 Evidence and Report Specific Requirements**
+
+Because evidence and reports underpin auditability, they have additional structural rules:
+
+* **Evidence Items and Views**
+
+  * Must always resolve to a single canonical surface per tenant and control; no parallel variants with different URLs.
+  * May be referenced from multiple dashboards or evaluation views, but those references must not create apparent “duplicate” pages in navigation or breadcrumbs.
+  * Changes to evidence URL patterns require explicit IA and SAIS review and updates to §8 URL Structure.
+
+* **Report Views and Downloads**
+
+  * Report views are standard application pages and must sit cleanly within the hierarchy under their Sectional Parents.
+  * Download endpoints are secondary and must be modelled as derivatives of the report views, not as separate branches.
+  * Any new report type (for example a different audience or regime) must be added to Appendix B with explicitly documented relationships to existing evidence and evaluation types.
+
+No content type may be introduced in the PDS, CMS, or implementation without first being mapped into one of the families above and assigned full structural properties in Appendix B. If a genuinely new type is required, this section must be updated first, then reflected in Appendix A, Appendix B, and any affected rules in §3–§5, §7–§9.
+
+---
 
 # **7. Taxonomy**
 
-The taxonomy defines the classification system used across content, including tags, categories, and thematic groupings. It ensures consistent organisation, improves discoverability, and supports internal search behaviours. Taxonomy also powers several cross-referential partials—such as Related Stories, For Your Industry, and Research Highlight—whose behaviour and placement rules are governed in Appendix D. Any taxonomy-driven partial must reflect the authoritative taxonomy structures defined in this section.
+The taxonomy defines the classification system used across content, including categories, tags, and other controlled groupings. It ensures consistent organisation, improves discoverability, and supports internal search behaviours. Taxonomy also powers several cross-referential partials—such as Related Stories, For Your Industry, and Research Highlight—whose behaviour and placement rules are governed in Appendix D. Any taxonomy-driven partial must reflect the authoritative taxonomy structures defined in this section and catalogued in Appendix E (Taxonomy Catalogue).
+
+No category or tag may be used in the CMS, content, or partials layer unless it is defined and in an active state in Appendix E.
 
 ## **7.1 Core Categories**
 
+Core categories are the small, governed set of top-level themes that describe what a piece of content is fundamentally about. They are the primary way long-form content is organised for humans and for search.
+
+Core categories:
+
+* are few in number and stable over time
+* apply primarily to editorial and explanatory content (blog, guides, case studies, research hubs)
+* may be used as the basis for navigation groupings in Blog and Guides sections
+* are always defined and maintained in Appendix E
+
+### **7.1.1 Definition and Scope**
+
+A core category:
+
+* represents a major conceptual area, not a specific keyword or campaign
+* must be understandable to an SME decision-maker without jargon
+* must be broad enough to host multiple pieces of content, but narrow enough to be meaningful
+
+Examples of core category families (for illustration; actual values are enumerated in Appendix E):
+
+* Foundations and posture
+* Controls and practices
+* People and process
+* Incidents and resilience
+* Vendors and supply chains
+* Regulatory and assurance
+
+### **7.1.2 Assignment Rules**
+
+Rules for assigning core categories:
+
+* Each eligible content item (for example guide, blog article, case study, research hub) must have **exactly one** primary core category.
+* A small number of secondary categories may be permitted for genuinely cross-cutting pieces, but the primary category is authoritative for hierarchy, navigation, and SEO mapping.
+* Legal, trust, conversion, and purely operational surfaces normally do **not** carry core categories unless explicitly justified.
+
+Core category assignments for each surface are recorded in Appendix E and referenced from Appendix B for key pages.
+
+### **7.1.3 Runtime Usage**
+
+Core categories:
+
+* drive category views for Blog and Guides (for example `/blog/category/{slug}`, `/guides/category/{slug}`)
+* may inform section-level navigation, filters, and partials such as Related Stories
+* must not be used to imply cross-runtime movement; they are a content classification, not a navigation tier
+
+Any change to the core category set (addition, rename, removal) must follow the governance rules in §7.5 and be reflected in Appendix E before being used.
+
+---
+
 ## **7.2 Extended Categories**
+
+Extended categories provide additional, orthogonal dimensions for classification. They supplement core categories and are used sparingly to keep the taxonomy understandable and maintainable.
+
+Extended categories include, but are not limited to:
+
+* Industry and sector
+* Framework or regime
+* Journey stage
+* Persona or audience type
+
+All extended categories and their allowed values are listed in Appendix E.
+
+### **7.2.1 Industry and Sector**
+
+Industry categories describe the sectoral context for a piece of content or a page:
+
+* Examples: healthcare, retail, professional services, manufacturing, education
+* Primarily used for:
+
+  * Industry landing pages
+  * Case studies
+  * Guides and articles with strong sector focus
+  * For Your Industry partials (Appendix D)
+
+Rules:
+
+* Each piece of content may have zero or more industries, but most should have **at most one or two**.
+* Industry tags must match the values defined in Appendix E; new industries cannot be ad hoc.
+
+### **7.2.2 Framework and Regime**
+
+Framework categories capture the regulatory or standard context:
+
+* Examples: Cyber Essentials, NIS2, ISO 27001, UK GDPR
+* Framework categories are used to:
+
+  * group content by regime
+  * power filters or specialised hubs
+  * support partials or navigation that pivot by regime
+
+Rules:
+
+* A piece of content may reference multiple regimes, but should have a **single dominant** regime category where possible.
+* Framework categories must align with the product’s actual coverage; speculative regimes are not permitted.
+
+### **7.2.3 Journey Stage and Persona**
+
+Optional extended categories may capture:
+
+* **Journey stage** (for example learn, plan, implement, prove)
+* **Persona** (for example owner, operations lead, IT contact, managed service provider)
+
+These are used primarily for:
+
+* internal analytics and editorial planning
+* powering more precise partials or recommendations in future phases
+
+They must remain controlled lists in Appendix E and must not explode into dozens of overlapping terms.
+
+---
 
 ## **7.3 Tag Architecture**
 
+Tags provide more granular, flexible descriptors than categories. They are used to capture specific topics, techniques, tools, and issues that cut across categories and industries. Tags are more numerous than categories, but still governed; the taxonomy must not degrade into unstructured tag sprawl.
+
+### **7.3.1 Tag Types**
+
+Tags are divided into clear types, each with a specific purpose. Examples:
+
+* **Topic tags** – concrete subjects (for example password policy, backup, incident response).
+* **Technique tags** – methods, patterns, or approaches (for example automation, checklists, playbooks).
+* **Risk and issue tags** – specific risks or issues (for example phishing, ransomware, insider risk).
+* **Audience or context tags** – small, controlled sets only where extended categories are insufficient.
+
+Each tag in Appendix E must be assigned a type. Tag type determines where it may appear (for example Topic tags on blog and guides; Risk tags on certain reports, etc.).
+
+### **7.3.2 Assignment Limits**
+
+To prevent dilution:
+
+* Each piece of content should have:
+
+  * one core category (§7.1)
+  * zero or a small number of extended categories (§7.2)
+  * a **limited set of tags**, typically no more than five to seven
+
+Rules:
+
+* Tags must be chosen from Appendix E; new tags require governance (§7.5).
+* Tags must be relevant to the primary topic of the content; they are not for tangential mentions.
+* The CMS must not allow arbitrary free-text tags in production.
+
+### **7.3.3 Namespacing and Hygiene**
+
+To avoid duplication and ambiguity:
+
+* Tags must be unique by canonical form; ambiguous or overlapping tags (for example “MFA” vs “multi-factor authentication”) are handled through synonyms (§7.4).
+* “Miscellaneous”, “other”, and similar junk tags are prohibited.
+* Plural versus singular, abbreviations, and localised spellings are normalised through canonical forms and synonyms in Appendix E.
+
+---
+
 ## **7.4 Synonym Rules**
+
+Synonyms allow the system to recognise different human labels for the same underlying concept without fragmenting the taxonomy.
+
+### **7.4.1 Canonical Terms**
+
+For each category and tag that requires it, Appendix E designates:
+
+* a single **canonical term**, used:
+
+  * in navigation
+  * in UI labels
+  * in metadata fields (titles, descriptions where applicable)
+
+Only canonical terms may appear in visible navigation and taxonomy UI.
+
+### **7.4.2 Synonym Mapping**
+
+Synonyms are alternative strings that map to the canonical term. They are used for:
+
+* internal search and query expansion
+* import or migration from other systems
+* editorial guidance
+
+Rules:
+
+* Synonyms must never create new taxonomic rows; they are always mapped to an existing canonical entry.
+* Synonyms should capture:
+
+  * common abbreviations (for example MFA → Multi-factor authentication)
+  * common misspellings or regional variants where appropriate
+* Synonym relationships are recorded in Appendix E and must be one-to-one or many-to-one into a canonical term; many-to-many is prohibited.
+
+### **7.4.3 Forbidden or Discouraged Terms**
+
+Certain terms may be marked in Appendix E as:
+
+* **Forbidden** – must not be used in content or UI (for example vague or misleading jargon).
+* **Discouraged** – allowed rarely, with editorial justification.
+
+Forbidden or discouraged terms guide content authors and help keep taxonomy clean and consistent.
+
+---
 
 ## **7.5 Taxonomy Governance Lifecycle**
 
+Taxonomy is not static; it evolves as the product and content evolve. That evolution must be controlled so IA, SEO, and partials do not drift into inconsistency.
+
+### **7.5.1 Creation and Proposal**
+
+New categories or tags may be proposed when:
+
+* existing categories and tags cannot accurately describe new, strategically important content
+* a repeated pattern emerges across content that is not adequately captured
+
+Proposals must:
+
+* specify type (core category, extended category, or tag type)
+* state the rationale and expected usage
+* include suggested canonical label and any obvious synonyms
+
+No new term may be used in production content until it has been admitted into Appendix E.
+
+### **7.5.2 Review and Approval**
+
+Proposed taxonomy changes are reviewed for:
+
+* overlap with existing terms
+* impact on navigation, IA, and SEO mapping (§5, §9)
+* impact on existing partials (Appendix D)
+
+Outcomes:
+
+* **Accepted** – added to Appendix E with canonical form, type, and rules.
+* **Rejected** – documented as rejected to avoid repeated proposals.
+* **Merged** – handled via synonym mapping into an existing term.
+
+Significant changes to core categories or extended categories may require corresponding IA updates in §2, §4, and Appendix B.
+
+### **7.5.3 Monitoring and Pruning**
+
+Periodically, taxonomy should be reviewed to:
+
+* identify unused or rarely used tags and categories
+* detect near-duplicates or drift in naming
+* confirm that category and tag distributions remain understandable
+
+Outputs may include:
+
+* deprecation of unused entries (§7.6)
+* consolidation of overlapping tags into a single canonical term
+* updates to synonym lists in Appendix E
+
+---
+
 ## **7.6 Deprecated or Merged Taxonomies**
+
+Over time, some taxonomy entries will be retired or merged. This must be done without breaking IA, navigation, or search.
+
+### **7.6.1 Deprecation Criteria**
+
+A taxonomy entry may be deprecated when:
+
+* it is no longer aligned with the product or content strategy
+* it has been effectively replaced by another, more accurate term
+* it has become unused across live content for a defined period
+
+Deprecated entries are not deleted; they are marked as **deprecated** in Appendix E with:
+
+* deprecation date
+* reason
+* replacement term (if any)
+
+### **7.6.2 Merge and Remapping Strategy**
+
+When two or more terms are merged:
+
+* one canonical term is chosen as the survivor
+* all affected content is updated to use the canonical term
+* the superseded terms are marked as deprecated and recorded as synonyms pointing to the canonical term
+
+If URL structures or dedicated views depend on a merged category (for example a category page being retired), corresponding changes must be reflected in:
+
+* §4 hierarchy rules
+* §8 URL Structure and redirect rules
+* Appendix B page inventory and, if needed, §9 cross-linking
+
+### **7.6.3 Historical Record and Analytics**
+
+Appendix E must retain a historical record of:
+
+* when entries were created
+* when they were deprecated or merged
+* what they were merged into
+
+Analytics and reporting may continue to use historical tags for trend analysis, but new content must stop using deprecated entries. Search and partials must treat deprecated terms as synonyms into their replacement canonical terms.
+
+No taxonomy entry may be removed from Appendix E without a clear deprecation or merge trail.
+
+---
 
 # **8. URL Structure**
 
