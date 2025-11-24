@@ -167,6 +167,7 @@ The platform may expose internal-only surfaces related to monitoring, verificati
 # **3. Navigation Model**
 
 This section defines how users move between surfaces within and across the Marketing and Essentials runtimes. It establishes the global, sectional, workflow, and conditional navigation patterns that govern the entire platform. Navigation must always be predictable, reversible, and free of ambiguity. The rules in this section ensure that movement respects hierarchical structure (§4), deterministic workflow boundaries (PDS, SAIS), and the runtime separation model defined in §2. Lateral, non-hierarchical cross-links—such as contextual discovery surfaces—are implemented only through governed partials defined in Appendix D and must never interfere with core navigation behaviour.
+In addition to primary and secondary navigation, the platform exposes a third tier: utility/footer navigation. This tier provides access to legal, trust, operational, and subscription-adjacent surfaces (for example privacy, terms, cookies, subprocessors, status, newsletter) without altering hierarchy or workflow. Utility/footer links are defined by the Utility/Footer tier in Appendix B3 and their layout is specified in Appendix A. They must never be treated as secondary navigation and must not participate in workflow or runtime transitions beyond simple, stateless page loads.
 
 ## **3.1 Primary Navigation**
 
@@ -182,32 +183,35 @@ Primary navigation must:
 * never embed lateral discovery patterns (e.g., “Related Stories,” “For Your Industry”); these are governed exclusively by the partials catalogue in Appendix D and must not appear in primary nav
 * degrade predictably on narrow viewports without hiding or reinterpreting structural truth
 
+Some surfaces appear both in primary navigation and in utility/footer regions (for example Contact, selected legal pages, or Status). In these cases, the primary navigation entry is the structural anchor described in §4, and the utility/footer entry is a convenience duplicate only. Utility/footer links must never introduce new primary items, must not circumvent runtime boundaries, and must not present themselves as part of the primary navigation frame.
+
 Primary navigation establishes a clear, trustworthy frame for movement across the platform, ensuring that users can reliably orient themselves regardless of content depth, workflow state, or device.
 
 ---
 
 ## **3.2 Secondary Navigation**
 
-Secondary navigation provides intra-section movement within a defined structural parent. It operates *under* primary navigation and never competes with it. Where primary navigation exposes the major sections of each runtime, secondary navigation exposes the local spine of a given section (e.g., within Guides, within Evidence, within Settings) without altering runtime boundaries or implying new hierarchies.
+Secondary navigation (Nav Tier: **Section** in Appendix B3) provides intra-section movement within a defined structural parent. It operates under primary navigation and never competes with it. Where primary navigation exposes the major sections of each runtime, secondary navigation exposes the local spine of a given section (for example within Guides, Blog, Evidence, Billing, or Settings) without altering runtime boundaries or implying new hierarchies. Utility/footer links are not secondary navigation and are governed separately via the Utility/Footer tier in Appendix B3.
 
 Secondary navigation must:
 
-* be scoped to a single structural parent as defined in §4 (e.g., `/guides`, `/blog`, `/app/evidence`)
-* expose only siblings or direct descendants of that parent; it must not introduce cross-section links or cross-runtime links
+* be scoped to a single structural parent as defined in §4 and Appendix B3 (for example `/guides`, `/blog`, `/app/evidence`, `/app/billing`)
+* expose only siblings or direct descendants of that parent whose Nav Tier in Appendix B3 is **Section**
+* never include cross-section or cross-runtime links; those are handled by primary navigation, contextual links, or governed partials
 * visually read as subordinate to primary navigation in every layout defined in Appendix A and the PDS
-* preserve reversibility within the section (users can always move back to the sectional entry surface without relying on browser controls)
+* preserve reversibility within the section so users can always return to the sectional entry surface without relying on browser controls
 * avoid acting as a workflow controller—deterministic progress is owned by workflow navigation in §3.3, not by secondary menus
 
-In the **Marketing runtime**, secondary navigation is used to reveal the structure within content-heavy sections such as Blog, Guides, Resources, and Industries. It may appear as horizontal tabs, vertical side-rails, or in-page sectional menus, provided that:
+In the **Marketing runtime**, secondary navigation is used to reveal structure within content-heavy sections such as Blog, Guides, Resources, Industries, and Comparisons. It may appear as horizontal tabs, vertical side-rails, or in-page sectional menus, provided that:
 
-* the surfaces it exposes remain within the same Marketing section
-* any contextual discovery beyond the section (e.g., “Related Stories,” “For Your Industry”) is implemented using partials governed by Appendix D and is visually distinct from secondary nav items
+* the surfaces it exposes remain within the same Marketing section and share the same parent grouping in Appendix B3
+* any contextual discovery beyond the section (for example “Related Stories”, “For Your Industry”) is implemented using partials governed by Appendix D and is visually distinct from secondary nav items
 * it never suggests access to Essentials, evaluation, or tenant-specific state
 
-In the **Essentials runtime**, secondary navigation is stricter and more constrained. It may appear within Evidence, Evaluation, Reports, or Settings, but:
+In the **Essentials runtime**, secondary navigation is stricter and more constrained. It may appear within Intake, Evidence, Evaluation, Reports, Billing, or Settings, but:
 
-* it can only expose surfaces that the current user is entitled to access under the state rules in §12
-* it must not provide “shortcuts” that bypass mandatory workflow steps or required confirmations
+* it can only expose surfaces that are marked as **Section** under the same app cluster in Appendix B3 and that the current user is entitled to access under the state rules in §12
+* it must not provide shortcuts that bypass mandatory workflow steps, confirmations, or state transitions defined in §3.3 and §12
 * it must not embed Marketing-oriented partials or content-led cross-links; any contextual help in Essentials is deterministic and defined in the PDS, not through Appendix D
 
 Secondary navigation exists solely to make **sectional structure legible**. It may never:
@@ -215,7 +219,8 @@ Secondary navigation exists solely to make **sectional structure legible**. It m
 * redefine hierarchy
 * cross runtime boundaries
 * act as a proxy for workflow progression
-* or act as a carrier for the lateral mesh that is explicitly governed by the partials in Appendix D.
+* act as a carrier for the lateral mesh that is explicitly governed by the partials in Appendix D
+* be conflated with footer or utility navigation, which is handled exclusively through the Utility/Footer tier in Appendix B3.
 
 ---
 
@@ -226,6 +231,33 @@ Secondary navigation exists solely to make **sectional structure legible**. It m
 ## **3.5 Mobile Navigation Behaviour**
 
 ## **3.6 Navigation Fail-Safes**
+
+## **3.7 Utility and Footer Navigation**
+
+Utility and footer navigation expose a constrained set of links that sit outside the primary and secondary navigation tiers. Their purpose is to provide predictable access to legal, trust, operational, and subscription-adjacent surfaces without altering hierarchy or workflow.
+
+Utility/footer navigation:
+
+* is limited to pages marked as **Utility/Footer** in Appendix B3
+* may duplicate certain primary navigation destinations (for example Contact, About, Security, Status) as convenience links, but may not introduce new primary sections
+* must not be used to expose section-level spines, workflows, or authenticated-only surfaces
+* must not cross runtime boundaries in ways that primary navigation does not already permit
+* must render as visually subordinate to both primary and secondary navigation in all layouts defined in Appendix A and the PDS
+
+In the **Marketing runtime**, utility/footer navigation is the canonical location for:
+
+* legal pages (Privacy, Terms, Cookies, Accessibility, Acceptable Use, Data Protection Addendum)
+* trust surfaces (Security Overview, Responsible Disclosure, Subprocessors, Status)
+* low-friction subscription/communication entry points (Newsletter, non-critical resource links)
+
+In the **Essentials runtime**, utility/footer navigation is minimal. It may expose only:
+
+* required legal and trust links, where jurisdiction or certification demands in-app access
+* non-stateful informational surfaces that do not interfere with workflows or tenant context
+
+Utility/footer navigation is never considered **secondary navigation** in this IA. It does not participate in section-level spines, does not express hierarchy, and must not be used to control or represent workflow progression. Its sole role is to provide a stable, low-noise access path to legal, trust, and operational information.
+
+---
 
 # **4. Page Hierarchy**
 
