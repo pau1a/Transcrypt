@@ -1938,17 +1938,153 @@ This section defines the canonical URL patterns that determine how pages are add
 
 ## **8.1 Canonical Paths**
 
+### Principle
+
+A single canonical URL must exist for every indexable surface. Canonicalisation is authoritative: sitemaps, Open Graph, link-rel=canonical and internal cross-links must point to the canonical form defined in Appendix B.
+
+### Rules
+
+* Canonical path = protocol + host + canonicalised path (no tracking/query fragments). e.g. `https://transcrypt.xyz/guides/secure-setup`.
+* All canonical paths must be lower-case, hyphenated, and human-readable. Use `-` to separate words; never use underscores or camelCase.
+* Trailing slash policy: marketing canonical pages MUST NOT use a trailing slash (canonical form: `/guides/secure-setup`). App shell / runtime root pages (for example `/app/`) may keep a trailing slash only if the platform router treats them as directory roots, but canonical references must be consistent across all metadata.
+* Enforce canonical via server redirects (see §8.5).
+
+### Examples
+
+* Good: `/blog/how-to-prepare-evidence`
+* Bad: `/Blog/How_to_prepare_evidence/` or `/blog?id=345`
+
 ## **8.2 Slug Construction**
+
+### Allowed characters
+
+* `[a-z0-9\-]` only. No spaces, punctuation (except hyphen), or non-ASCII characters in canonical slugs.
+* Internationalised content: use ASCII transliteration for canonical URLs and place native-language representations in metadata (hreflang + content body).
+
+### Length & structure
+
+* Max slug length (path segment): 80 characters. Longer titles must be shortened to a readable, SEO-friendly slug.
+* Multi-segment rules: do not include category names within the slug unless they are meaningful (use `/guides/{slug}` rather than `/guides/{category}/{slug}` unless category is a persistent structural requirement and recorded in Appendix B).
+
+### Slug generation
+
+* Source of truth for slug = page title cleaned by the canonicalisation function:
+
+  1. Normalize Unicode → NFKD
+  2. Lowercase
+  3. Remove punctuation
+  4. Replace whitespace with single hyphen
+  5. Collapse multiple hyphens to single hyphen
+  6. Trim hyphens from ends
+* If slug collision occurs, append a numeric suffix (`-2`, `-3`) and record the original mapping in Appendix B metadata.
+
+### Example regex (implementation)
+
+* Validate slugs against: `^[a-z0-9]+(?:-[a-z0-9]+)*$`
 
 ## **8.3 Parameter Rules**
 
+### Query parameters & canonicalisation
+
+* Canonical URLs must NOT include transient tracking parameters (utm_*), session tokens, or ephemeral state. Those belong in analytics events or in non-canonical shareable links.
+* When query parameters are meaningful (filtering, sorting, pagination), the canonical form must define the canonical ordering and parameter whitelist.
+* Canonical query parameter order: alphabetical order (`?page=2&sort=recent`). Implementation should canonicalise and redirect non-canonical orders to the canonical order.
+* Permitted canonical query parameters (examples):
+
+  * `page` (integer ≥ 1)
+  * `per_page` (bounded list: 10, 25, 50, 100; default 25)
+  * `sort` (enum of allowed fields; default defined in Appendix C)
+  * `filter_x` (explicitly enumerated filters; undocumented filters must be rejected)
+* Parameters that reveal PII, tenant secrets, or authentication tokens MUST NEVER be in URLs. Use POST bodies or server-side session state for sensitive operations.
+
+### Security & caching
+
+* Any parameter that materially changes cache or index behaviour must be declared in Appendix C metadata to ensure correct HTTP cache headers and indexing directives.
+* Use `Vary` headers only where necessary and documented.
+
 ## **8.4 Pagination Rules**
+
+### Path vs query pagination
+
+* Prefer path-based pagination for public content index pages: `/blog/page/2` for readability and consistent canonical forms.
+* Where filters or search are present, use query params for pagination only when necessary: `/guides/category/security?page=2`.
+
+### Parameter names & bounds
+
+* Canonical pagination param name: `page`. `per_page` optional and must be part of canonical parameter whitelist.
+* `page` must be a positive integer; invalid values must return a safe 400 or redirect to `?page=1`.
+
+### Robots & indexing behaviour
+
+* First page of a sequence is canonicalised to the base resource (`/blog`), subsequent pages are `/blog/page/{n}` and SHOULD be allowed for index if content is meaningfully distinct. If paginated fragments are not intended for indexing, add `noindex, follow` on paginated pages >1.
+
+### Rel links
+
+* Provide `<link rel="prev">`, `<link rel="next">` where appropriate, and ensure `link rel=canonical` points to the appropriate canonical page for the sequence.
 
 ## **8.5 Redirect Behaviour**
 
+### Redirect types
+
+* Permanent redirects for rehomed pages: 301 (SEO-preserving).
+* Permanent redirects for canonicalisation (case, trailing slash, query order): 301.
+* Temporary redirects for staged migrations or feature flags: 302 or 307 as appropriate.
+* Use 308 where method-preserving permanent redirect is necessary for POST/PUT semantics.
+
+### Redirect rules
+
+* Every redirect must have a documented reason and an owner and be recorded in Appendix B metadata (“Former URLs”).
+* Redirects must not create redirect loops; routing layer must detect cycles and reject change requests that introduce cycles.
+* Shadow/legacy URLs must always 301 to canonical target. Never expose legacy paths in UI or sitemap.
+* For external deep links (partners, affiliates), provide programmatic mapping + audit log and prefer to normalise to canonical paths in incoming processing.
+
+### SEO preservation
+
+* Preserve query parameters used for legitimate filtering by translating them into canonical allowed parameters or dropping them if transient.
+* Ensure header responses include proper cache-control and canonical headers after redirects.
+
 ## **8.6 Legacy URL Handling**
 
+### Legacy policy
+
+* Legacy URLs are compatibility artefacts only. They MUST NOT appear in navigation, breadcrumbs, or IA diagrams; they must 301 to canonical entries. See §4.4.4 for behaviour. 
+
+### Documentation & analytics
+
+* For each legacy path record:
+
+  * original path
+  * canonical target
+  * reason for legacy (migration, renaming)
+  * date introduced and date deprecated (if applicable)
+  * owner for review
+* Maintain a “legacy index” in Appendix B metadata (not as separate IA nodes).
+
+### Versioned APIs / data endpoints
+
+* API endpoints used by services or third-party integrators must be versioned in the path (`/api/v1/...`) and maintained under semantic versioning; deprecation windows and migration guides must be published for any breaking changes.
+
 ## **8.7 Reserved Paths**
+
+### Reserved namespace
+
+* The platform reserves the following top-level paths. They are not to be used for content pages; they are reserved for system use:
+
+  * `/app` — application shell / authenticated runtime
+  * `/api` — programmatic endpoints
+  * `/admin` — administrative UIs (internal only; not indexable)
+  * `/static` — static assets (served from CDN)
+  * `/_next`, `/_static`, `/.well-known` — framework and standard locations
+  * `/auth`, `/signup`, `/reset` — authentication flows (structurally part of Essentials; not section parents)
+  * `/privacy`, `/terms`, `/security` — legal/trust utilities (utility/footer)
+* Any request to use a reserved path for content must be accompanied by a documented exception approved by IA and Appendix B update.
+
+### Robots & CDN
+
+* System maintenance endpoints (`/admin`, `/internal`) must be blocked from indexing via `robots.txt` and not linked from public surfaces.
+* Assets under `/static` must be served from the CDN with cache headers defined in Appendix C.
+
+---
 
 # **9. Cross-Linking Strategy**
 
@@ -2702,36 +2838,129 @@ Any extension to metadata behaviour (for example new social graph fields, additi
 
 ---
 
-## **Appendix D — Cross-Referential Partials (Skeletal)**
+## **Appendix D — Cross-Referential Partials**
 
-This appendix records the cross-page partials used to create a governed mesh between Marketing, Blog, Guides, and Resource surfaces. It defines what the partials are, why they exist, and where they may appear. Entries will expand once Appendix B (Page Inventory) is finalised.
+This appendix records the governed partials used to produce all cross-page linking and related recommendations. Each partial is a single reusable component implemented in the CMS. Editors and developers must use these exact partial names. Any new partial must be added via a PR to this appendix and signed off by IA.
 
-### **D.1 Partial Definitions**
+### **D.1 Partial Definitions (canonical list)**
 
-The following partials have been defined so far:
+Each entry: `name — purpose — allowed_runtimes — default_placement — max_items — inputs — outputs — notes`
 
-* Next Best Step
-* Related Stories / Articles
-* For Your Industry
-* Glossary Inline / Key Terms
-* Starter Kit Promo
-* Roadmap Teaser
-* Research Highlight (State-of SME)
+1. `next-best-step` — short, action-oriented suggestion that moves the user forward (example: “Start checklist”, “See guide”). — Marketing; Essentials (read-only variants only) — article end, hub hero, resource confirmation — max_items: 1 — inputs: page_id, taxonomy_ids, seo_primary_intent — outputs: single canonical target link, label, intro — notes: CTA only; Marketing variant allowed to link to conversion pages; Essentials variant must be deterministic and permission-checked.
+2. `related-stories` — editorial or algorithmic list of directly relevant articles/guides/case studies. — Marketing only — article end, sidebar, hub — max_items: 3–5 — inputs: page_id, taxonomy_ids, author_id, recency_window — outputs: ordered list (id, title, excerpt, canonical_url) — notes: must prefer editorially curated items when present; otherwise algorithmic.
+3. `for-your-industry` — industry-targeted links (e.g., “For construction firms”). — Marketing only — hub, guide index, article sidebar — max_items: 4 — inputs: page_industry_id, taxonomy_ids — outputs: list of industry landing links — notes: show only when page_industry_id present or high confidence match.
+4. `glossary-inline` — single-term explanation with optional link to glossary entry. — Marketing, Guides — inline/tooltip or endnote — max_items: 1 per inline usage — inputs: term_key — outputs: short definition, link to glossary canonical_url — notes: never used inside Essentials workflow flows unless PDS allows read-only help panel.
+5. `starter-kit-promo` — downloadable starter checklist or starter asset link block. — Marketing only — guide end, hub — max_items: 1 asset — inputs: taxonomy_ids, page_id — outputs: asset link, summary, CTA — notes: track download events; suppressed on non-indexable pages.
+6. `roadmap-teaser` — micro module linking to product roadmap or feature detail. — Marketing only — features page, hub — max_items: 1 — inputs: feature_flags, release_state — outputs: link to roadmap or release note — notes: must be noindex if roadmap is in draft/embargo.
+7. `research-highlight` — data snippet with link to full report. — Marketing only — hub, report pages, landing pages — max_items: 1 snippet + link — inputs: report_id, taxonomy_ids — outputs: summary + canonical_url to report — notes: suppressed if report embargoed.
+8. `author-profile` — author bio with links to other works. — Marketing only — article end — max_items: 1 — inputs: author_id — outputs: author page link, list of top 3 works — notes: optional on short news pieces.
+9. `pagination` — prev/next + numbered pagination link control (also emits rel=prev/next). — Marketing, Docs — index pages, docs lists — max_items: N pages (rendered) — inputs: current_page, total_pages — outputs: pagination links, rel tags — notes: page 1 canonicalises to base path.
+10. `conversion-cta` — clear conversion CTA (signup, pricing, waitlist). — Marketing only — header, hero, article end — max_items: 1 — inputs: target_route, campaign_id — outputs: CTA button (label, url) — notes: must not appear on irreversible or payment flows (suppressed).
+11. `resource-download` — link + metadata for downloadable assets (PDF, template). — Marketing; Essentials (if asset tenant-scoped) — resource page, confirmation page — max_items: 1 per asset — inputs: asset_id, access_scope — outputs: asset link, file size, license, canonical asset id — notes: if asset restricted to logged-in users, show gated CTA not direct link.
+12. `legal-footer-cluster` — footer links for Privacy, Terms, Cookies, Accessibility, Responsible Disclosure. — Marketing, Essentials — site footer — max_items: full cluster — inputs: none — outputs: standard legal links — notes: always present; never suppressed in transactional flows.
+13. `product-next-step` — deterministic workflow guidance inside product flows (one step only). — Essentials only — product task header, task completion screens — max_items: 1 — inputs: workflow_state, user_permissions — outputs: next_task_link, label — notes: permission-checked, audit-logged for clicks.
+14. `related-evidence-jump` — links from an overview to a specific evidence item (anchor jump). — Essentials only — evidence overview pages — max_items: 6 — inputs: evidence_list, user_permissions — outputs: direct evidence anchors/links — notes: must enforce tenant isolation and audit trail.
+15. `internal-support-rail` — support links for product users (help, docs, contact). — Essentials only — right rail or header — max_items: 6 — inputs: user_role, tenancy — outputs: support links, chat link — notes: always include “contact support” where available.
+16. `doc-related-guides` — recommended API docs / how-tos for documentation pages. — Docs — doc page end, sidebar — max_items: 4 — inputs: doc_id, version, taxonomy_ids — outputs: ordered list of guides — notes: suppress deprecated versions.
+17. `version-selector` — doc version switcher with links to other versions. — Docs — docs header — max_items: N versions — inputs: doc_slug, available_versions — outputs: version list — notes: required on multi-version docs.
+18. `empty-state-try` — suggestions when a query or filter returns no results. — Marketing, Docs, Essentials — empty results panels — max_items: 4 suggestions — inputs: query, taxonomy_hint — outputs: suggested pages or actions — notes: prefer actions over passive links (e.g., “Start a checklist”).
+19. `error-help-links` — helpful links on 4xx/5xx pages. — Marketing, Essentials — error screens — max_items: 4 — inputs: error_code — outputs: helpful links (status page, contact, docs) — notes: must include support contact when 5xx.
+20. `affiliate-block` — partner or affiliate promotional tile (labelled). — Marketing only — allowed zones only (hub, resource pages) — max_items: 1 tile — inputs: partner_id — outputs: partner link, disclosure — notes: must be labelled and governed.
+21. `metric-sparkline` — small inline metric with link to full report. — Marketing, Essentials — dashboards, reports — max_items: 1 per metric — inputs: metric_id, timeframe — outputs: sparkline + report link — notes: data permissions apply.
+22. `subscribe-widget` — newsletter signup. — Marketing only — sidebar, article end — max_items: 1 — inputs: campaign_id — outputs: signup form — notes: GDPR consent flow required.
+23. `share-widget` — social share buttons with canonical URL. — Marketing only — article header/footer — max_items: single cluster — inputs: canonical_url — outputs: share links — notes: should not affect link equity; use canonical_url.
+24. `support-quicklink` — single link to an FAQ or KB article relevant to the page. — Marketing, Essentials — inline help — max_items: 1 — inputs: page_id, taxonomy_ids — outputs: KB link — notes: prefer content with direct resolution value.
+
+---
 
 ### **D.2 Placement Rules**
 
-Defines where each partial is permitted or prohibited.
-(To be populated once the final sitemap is fixed.)
+Use the following table to enforce where each partial may appear. Editors may not place partials outside allowed placements. The CMS must enforce this.
+
+* `next-best-step` — Allowed: article end, hub hero, resource confirmation. Prohibited: payment pages, evidence edit modals. Essentials allowed only for read-only guidance.
+* `related-stories` — Allowed: article end, article sidebar, hub. Prohibited: Essentials product pages, login, checkout.
+* `for-your-industry` — Allowed: hub, guide index, curated landing pages. Prohibited: Essentials flows, admin pages.
+* `glossary-inline` — Allowed: article body, guides. Prohibited: compact product UI where space is critical (unless PDS permits).
+* `starter-kit-promo` — Allowed: guide end, resource pages, hub. Prohibited: suppressed shell states, payment confirmation.
+* `roadmap-teaser` — Allowed: features hub, product marketing pages. Prohibited: transactional payment screens, private docs.
+* `research-highlight` — Allowed: hub pages, report landing pages. Prohibited: article sidebars unless editorially approved.
+* `author-profile` — Allowed: article end. Prohibited: product flows, errors.
+* `pagination` — Allowed: index pages, docs lists, hub lists. Prohibited: single-page views.
+* `conversion-cta` — Allowed: header, hero, article end, hub. Prohibited: evidence edit, checkout payment confirmation (avoid duplicate CTAs).
+* `resource-download` — Allowed: resource pages, confirmation pages. Prohibited: public home hero unless asset intended.
+* `legal-footer-cluster` — Allowed: site footer; also inline on transactional pages. Never suppressed where transaction occurs.
+* `product-next-step` — Allowed: product flow UIs only. Prohibited: Marketing pages.
+* `related-evidence-jump` — Allowed: evidence overview within Essentials. Prohibited: Marketing.
+* `internal-support-rail` — Allowed: Essentials UI, dashboard. Prohibited: Marketing pages (unless a public help page).
+* `doc-related-guides` — Allowed: docs pages. Prohibited: deprecated doc versions.
+* `version-selector` — Allowed: docs header only. Prohibited: article pages.
+* `empty-state-try` — Allowed: any empty result or zero-hit UI. Prohibited: UIs with required blocking states (e.g., forced privacy consent).
+* `error-help-links` — Allowed: all error pages. Never prohibited.
+* `affiliate-block` — Allowed: hubs, resource pages, designated marketing zones. Prohibited: Essentials, legal pages, checkout.
+* `metric-sparkline` — Allowed: dashboards, report cards. Prohibited: static article content (unless contextual).
+* `subscribe-widget` — Allowed: article end, sidebar. Prohibited: product flows.
+* `share-widget` — Allowed: article header/footer. Prohibited: Essentials flows, checkout.
+* `support-quicklink` — Allowed: article pages, product pages. Prohibited: admin-only pages.
+
+**Enforcement:** CMS must reject page publishes where required partials (per page type) are missing and must block placement of prohibited partials. Required partials for page types will be recorded in Appendix B (Page Inventory) and enforced by CMS validators.
+
+---
 
 ### **D.3 Linking Behaviour**
 
-Describes link destinations, priority rules, and fallback logic.
-(To be completed after Appendix B stabilises.)
+#### Destination selection rules
+
+1. **Primary owner preference:** For any topic cluster there is a single canonical owner page (owner_id). Partials that recommend content (e.g., `related-stories`, `related-evidence-jump`) must prefer the canonical owner when the owner matches taxonomy/intent. Do not override owner_id with lower-authority pages.
+2. **Taxonomy first:** Use `taxonomy_ids` to filter candidates. A candidate must share at least one taxonomy_id with the source page; prefer candidates that share 2+ taxonomy_ids.
+3. **Intent compatibility:** Compare `seo_primary_intent` of source and target. If intents differ (conflicting commercial intent vs informational intent), demote or exclude the candidate.
+4. **Editorial override:** Editorial picks (explicitly curated links attached to the page) always override algorithmic choices. Curated lists are allowed where present.
+5. **Recency & authority weighting:** When multiple candidates are eligible, score candidates with: `score = (taxonomy_match_weight * taxonomy_score) + (authority_weight * content_authority) + (recency_weight * recency_score)`. Default weights: taxonomy 0.6, authority 0.25, recency 0.15. Editors may tune per partial but not below taxonomy 0.4 minimum.
+6. **Fallbacks:** If no candidate meets minimum score threshold, the partial must: (a) if editorial fallback provided, show that; (b) otherwise hide the partial. Never surface low-confidence links.
+
+#### Link attributes
+
+* Internal links generated by these partials must include canonical URLs as recorded in Appendix B.
+* Unless explicitly set to `nofollow` in the partial definition (e.g., affiliate links), internal cross-links should be `follow`. Affiliate or paid partner links must be `nofollow` and labelled.
+* Pagination partials must output `rel="prev"` / `rel="next"` link headers and update sitemaps appropriately.
+* For conversion CTAs linking to Essentials entry points, include `data-partial-id` and `data-campaign-id` attributes for analytics and traceability.
+
+#### Security, privacy, tenancy
+
+* Partials that expose tenant-scoped content (`related-evidence-jump`, `resource-download` for tenant assets) must check user permissions and tenancy before rendering links. If the user lacks permission, partial must either render a gated CTA or hide links.
+* Partials must never include tokens, PII, or ephemeral session identifiers in URLs.
+
+#### Audit & traceability
+
+* Every partial render event must log: `partial-id`, `page_id`, `user_role` (if available), `render_timestamp`. Click events must log `partial-id`, `target_id`, `click_timestamp`. Logs must be retained per retention policy in Appendix C.
+
+---
 
 ### **D.4 Taxonomy Dependencies**
 
-Outlines dependencies on categories, tags, industries, or other taxonomy structures.
-(To be finalised after taxonomy is locked.)
+All partials that choose targets rely on the taxonomy model. The following fields are required on page metadata to support partials:
+
+* `page_id` (canonical) — unique identifier for the page.
+* `taxonomy_ids` — list of canonical taxonomy IDs (category, topic, industry, audience). At least one required for any content page.
+* `seo_primary_intent` — enum { informational, navigational, transactional, commercial-research }. Required for candidate filtering.
+* `page_industry_id` — optional. Required for `for-your-industry`.
+* `indexable` — boolean. If false, partials that surface indexable content must suppress or convert to gated links.
+* `owner_id` — canonical owner of the topic cluster (where applicable).
+
+#### Taxonomy change rules
+
+* When a taxonomy_id is deprecated, content with that tag must be remapped before the deprecation date. Partials must suppress links that reference deprecated IDs until remapping is complete. Editors must trigger a revalidation CI job after remap.
+* When owner_id changes for a cluster, update Appendix B owner mapping and run the partial reindex job to ensure all `related-stories` now prefer the new owner.
+
+---
+
+## D.5 Implementation checklist (short)
+
+1. Implement each partial as a single component in the CMS with the exact `partial-id` name used above.
+2. Partial contract: each must accept defined inputs and return the defined outputs; no free-text URL lists.
+3. CMS validation: page templates must declare required partial slots; CMS must block placement of prohibited partials.
+4. CI checks: pre-publish job to validate partial inputs (taxonomy_ids present, owner_id present where required).
+5. Analytics: standard event names and attributes must be emitted for renders and clicks.
+6. Audit: partial click logs stored and accessible to product and compliance teams.
 
 ---
 
