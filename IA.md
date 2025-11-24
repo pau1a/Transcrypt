@@ -1,6 +1,6 @@
 # **1. Introduction**
 
-This Information Architecture defines the structural model of Transcrypt across the Marketing runtime and the Essentials application. It establishes how the system’s surfaces are organised, how users move between them, and how meaning, hierarchy, and navigability are maintained. The IA sits beneath the behavioural rules in the PDS and the architectural constraints in the SAIS, ensuring every page, path, and transition reflects the product intent described in the PRD. This document provides the skeletal framework that governs structure, discoverability, and user flow, forming the basis for coherent design, consistent routing, and predictable interaction across the entire platform.
+This Information Architecture defines the structural model of Transcrypt across the Marketing runtime and the Essentials application. It establishes how the system’s surfaces are organised, how users move between them, and how meaning, hierarchy, and navigability are maintained. The IA sits beneath the behavioural rules in the PDS and the architectural constraints in the SAIS, ensuring every page, path, and transition reflects the product intent described in the PRD. The PDS must treat this IA as authoritative for all navigation tiers, page roles, and structural relationships. No component pattern in the PDS may introduce new navigation categories, alter hierarchy, or reinterpret footer or utility links without this IA being updated first. This document provides the skeletal framework that governs structure, discoverability, and user flow, forming the basis for coherent design, consistent routing, and predictable interaction across the entire platform.
 
 # **2. Full Sitemap**
 
@@ -167,6 +167,7 @@ The platform may expose internal-only surfaces related to monitoring, verificati
 # **3. Navigation Model**
 
 This section defines how users move between surfaces within and across the Marketing and Essentials runtimes. It establishes the global, sectional, workflow, and conditional navigation patterns that govern the entire platform. Navigation must always be predictable, reversible, and free of ambiguity. The rules in this section ensure that movement respects hierarchical structure (§4), deterministic workflow boundaries (PDS, SAIS), and the runtime separation model defined in §2. Lateral, non-hierarchical cross-links—such as contextual discovery surfaces—are implemented only through governed partials defined in Appendix D and must never interfere with core navigation behaviour.
+The PDS is responsible for implementing the visual and interaction patterns for these navigation tiers, but it may not redefine them. Any header, rail, tab set, or footer construct described in the PDS must be traceable to a Primary, Section, or Utility/Footer tier defined in this IA, and to the page roles and hierarchy described in §2 and §4. If a new navigation behaviour is required, this IA must be updated first and then reflected in the PDS.
 In addition to primary and secondary navigation, the platform exposes a third tier: utility/footer navigation. This tier provides access to legal, trust, operational, and subscription-adjacent surfaces (for example privacy, terms, cookies, subprocessors, status, newsletter) without altering hierarchy or workflow. Utility/footer links are defined by the Utility/Footer tier in Appendix B3 and their layout is specified in Appendix A. They must never be treated as secondary navigation and must not participate in workflow or runtime transitions beyond simple, stateless page loads.
 
 ## **3.1 Primary Navigation**
@@ -256,6 +257,14 @@ In the **Essentials runtime**, utility/footer navigation is minimal. It may expo
 * non-stateful informational surfaces that do not interfere with workflows or tenant context
 
 Utility/footer navigation is never considered **secondary navigation** in this IA. It does not participate in section-level spines, does not express hierarchy, and must not be used to control or represent workflow progression. Its sole role is to provide a stable, low-noise access path to legal, trust, and operational information.
+
+> All footer and utility components described in the PDS must implement these rules rather than reinterpret them. In particular, PDS footer layouts must not:
+>
+> * present Utility/Footer items as if they were Section (secondary) navigation
+> * introduce authenticated or workflow surfaces that do not already appear in this IA
+> * create additional navigation tiers beyond Primary, Section, and Utility/Footer
+>
+> Any requirement to expand footer behaviour or introduce new utility destinations must be reflected in this IA first and then propagated into the PDS.
 
 ---
 
