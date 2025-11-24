@@ -2777,6 +2777,81 @@ Recording:
 
 ---
 
+# **13. Templates**
+
+## Template inventory (canonical list)
+
+- `tpl:home-v1` — Home — site root (B.1.1).
+- `tpl:static-page-v1` — Static content — About, Why, Security, How it Works (B.1.2, B.1.6, B.1.7, B.1.49).
+- `tpl:hub-topic-v1` — Hub / topic index — Features hub, Industries, Reports hub (B.1.3, B.1.50, B.1.55).
+- `tpl:feature-detail-v1` — Feature / product detail — Feature pages (B.1.3 → `/features` and feature detail variants).
+- `tpl:pricing-v1` — Pricing / comparison — Pricing and Compare hub (B.1.4, B.1.46).
+- `tpl:contact-v1` — Contact / support — Contact page (B.1.5).
+- `tpl:case-study-index-v1` — Case studies index — `/case-studies` (B.1.8).
+- `tpl:case-study-article-v1` — Case study article — `/case-studies/{slug}` (B.1.9).
+
+- `tpl:content-list-v1` — Content index / listing — Blog/Guides/Resources index pages (B.1.10, B.1.25, B.1.29).
+- `tpl:content-article-v1` — Content article (blog / guide) — `/blog/{slug}`, `/guides/{slug}` (B.1.12, B.1.26).
+- `tpl:category-list-v1` — Category / tag listing — Blog category / tag / author pages (B.1.13–B.1.17, B.1.27–B.1.28).
+- `tpl:search-results-v1` — Search / search pagination — Blog search and paginated results (B.1.18, B.1.22).
+- `tpl:archive-v1` — Date archive — Blog year/month archives (B.1.23–B.1.24).
+
+- `tpl:resource-download-v1` — Resource download — resource landing and download page (B.1.30).
+- `tpl:resource-thanks-v1` — Resource confirmation / thanks — `/resources/{slug}/thanks` (B.1.31).
+
+- `tpl:conversion-waitlist-v1` — Waitlist / newsletter — waitlist, newsletter flows and confirmations (B.1.32–B.1.36).
+- `tpl:confirmation-generic-v1` — Generic confirmation — generic thank-you/confirm pages.
+
+- `tpl:legal-cluster-v1` — Legal & trust cluster — Privacy, Terms, Cookies, Accessibility, DPA (B.1.37–B.1.44).
+- `tpl:status-v1` — Status page — `/status` (B.1.45).
+
+- `tpl:compare-hub-v1` — Comparison hub — `/compare` and compare detail pages (B.1.46–B.1.49).
+- `tpl:industry-landing-v1` — Industry landing — `/industries/{slug}` (B.1.51).
+- `tpl:glossary-v1` — Glossary — `/glossary` (B.1.52).
+- `tpl:starter-kit-v1` — Starter kit / downloads — `/starter-kit` (B.1.53).
+- `tpl:roadmap-v1` — Roadmap / teaser — `/roadmap` (B.1.54).
+- `tpl:reports-hub-v1` — Reports hub / report detail — `/reports/*` (B.1.55).
+
+- `tpl:auth-login-v1` — Authentication: login / reset — `/auth/*` (B.2.1–B.2.3).
+- `tpl:signup-start-v1` — Signup start / verify / verified — `/signup*` (B.2.4–B.2.6).
+- `tpl:signup-checkout-v1` — Subscription checkout — `/signup/checkout` (B.2.7).
+- `tpl:onboarding-complete-v1` — Onboarding complete / intake redirect — `/signup/complete` (B.2.8).
+
+- `tpl:intake-org-setup-v1` — Organisation setup / intake — `/app/intake`, `/app/org` (B.2.9–B.2.10).
+
+- `tpl:app-shell-v1` — App shell / dashboard layout — base chrome for Essentials runtime (used by all `/app/*` pages).
+- `tpl:evidence-dashboard-v1` — Evidence dashboard — `/app/evidence` (B.2.11).
+- `tpl:evidence-submission-v1` — Evidence submission form — `/app/evidence/{control}` (B.2.12).
+- `tpl:evidence-review-v1` — Evidence review / anchors — `/app/evidence/{control}/review` (B.2.13).
+
+- `tpl:evaluation-overview-v1` — Evaluation overview — `/app/evaluation` (B.2.14).
+- `tpl:evaluation-step-v1` — Evaluation step (multi-step UI) — `/app/evaluation/{step}` (B.2.15).
+- `tpl:evaluation-complete-v1` — Evaluation complete / result — `/app/evaluation/complete` (B.2.16).
+
+- `tpl:report-view-v1` — Report view / download — `/app/report` and `/app/report/download` (B.2.17–B.2.18).
+
+- `tpl:billing-dashboard-v1` — Billing dashboard — `/app/billing` (B.2.19).
+- `tpl:billing-subscription-v1` — Subscription management — `/app/billing/subscription` (B.2.20).
+- `tpl:billing-payment-methods-v1` — Payment methods — `/app/billing/payment-methods` (B.2.21).
+- `tpl:billing-history-v1` — Billing history — `/app/billing/history` (B.2.22).
+
+- `tpl:user-profile-v1` — User profile — `/app/settings/profile` (B.2.23).
+- `tpl:security-settings-v1` — Security settings — `/app/settings/security` (B.2.24).
+- `tpl:notification-prefs-v1` — Notification preferences — `/app/settings/notifications` (B.2.25).
+- `tpl:org-profile-v1` — Organisation profile — `/app/settings/org` (B.2.26).
+
+- `tpl:docs-list-v1` — Docs list / index — docs home and lists (if separate from marketing content).
+- `tpl:docs-article-v1` — Docs article / API reference — (docs article template; includes version selector and side-nav).
+- `tpl:versioned-docs-v1` — Versioned docs layout — variant for multi-version docs.
+
+- `tpl:error-empty-v1` — Error & empty state — 4xx/5xx and no-results screens (includes `error-help-links` partial).
+
+- `tpl:embed-widget-v1` — Minimal embed / micro-landing — for campaign microsites or embedded widgets (suppressed chrome).
+
+- `tpl:admin-tooling-v1` — Internal admin views (editor previews, CMS admin pages) — separate runtime; not for public use.
+
+---
+
 # **Appendix A — Wireframes**
 
 ## **A.1 Page Templates**
