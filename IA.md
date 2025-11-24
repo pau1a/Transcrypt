@@ -1871,20 +1871,26 @@ Outlines dependencies on categories, tags, industries, or other taxonomy structu
 
 ---
 
-# **Appendices That Are PROBABLY Needed (but optional until content expands)**
-
-## **Appendix D — Taxonomy Catalogue**
+## **Appendix E — Taxonomy Catalogue**
 
 Once the taxonomy grows, a catalogue of all categories, tags, synonyms, and deprecated tags is required.
 Initially optional, but it becomes essential as content volume increases.
 
-## **Appendix E — Linkage Map (Cross-Link Diagram Set)**
+
+
+
+
+
+
+# **Appendices That Are PROBABLY Needed (but optional until content expands)**
+
+## **Appendix F — Linkage Map (Cross-Link Diagram Set)**
 
 Internal cross-links, especially SEO-driven or journey-critical ones, often need diagrammatic representation.
 
 This appendix is optional until the system has 20+ pages or linked clusters that must be visualised.
 
-## **Appendix F — Search Configuration (If Search Exists in MVP)**
+## **Appendix G — Search Configuration (If Search Exists in MVP)**
 
 If you add site or blog search (even basic), you will need:
 
