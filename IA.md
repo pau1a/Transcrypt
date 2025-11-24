@@ -188,6 +188,37 @@ Primary navigation establishes a clear, trustworthy frame for movement across th
 
 ## **3.2 Secondary Navigation**
 
+Secondary navigation provides intra-section movement within a defined structural parent. It operates *under* primary navigation and never competes with it. Where primary navigation exposes the major sections of each runtime, secondary navigation exposes the local spine of a given section (e.g., within Guides, within Evidence, within Settings) without altering runtime boundaries or implying new hierarchies.
+
+Secondary navigation must:
+
+* be scoped to a single structural parent as defined in §4 (e.g., `/guides`, `/blog`, `/app/evidence`)
+* expose only siblings or direct descendants of that parent; it must not introduce cross-section links or cross-runtime links
+* visually read as subordinate to primary navigation in every layout defined in Appendix A and the PDS
+* preserve reversibility within the section (users can always move back to the sectional entry surface without relying on browser controls)
+* avoid acting as a workflow controller—deterministic progress is owned by workflow navigation in §3.3, not by secondary menus
+
+In the **Marketing runtime**, secondary navigation is used to reveal the structure within content-heavy sections such as Blog, Guides, Resources, and Industries. It may appear as horizontal tabs, vertical side-rails, or in-page sectional menus, provided that:
+
+* the surfaces it exposes remain within the same Marketing section
+* any contextual discovery beyond the section (e.g., “Related Stories,” “For Your Industry”) is implemented using partials governed by Appendix D and is visually distinct from secondary nav items
+* it never suggests access to Essentials, evaluation, or tenant-specific state
+
+In the **Essentials runtime**, secondary navigation is stricter and more constrained. It may appear within Evidence, Evaluation, Reports, or Settings, but:
+
+* it can only expose surfaces that the current user is entitled to access under the state rules in §12
+* it must not provide “shortcuts” that bypass mandatory workflow steps or required confirmations
+* it must not embed Marketing-oriented partials or content-led cross-links; any contextual help in Essentials is deterministic and defined in the PDS, not through Appendix D
+
+Secondary navigation exists solely to make **sectional structure legible**. It may never:
+
+* redefine hierarchy
+* cross runtime boundaries
+* act as a proxy for workflow progression
+* or act as a carrier for the lateral mesh that is explicitly governed by the partials in Appendix D.
+
+---
+
 ## **3.3 Workflow Navigation**
 
 ## **3.4 Suppressed Navigation States**
@@ -333,22 +364,6 @@ This section defines all valid transitions between surfaces, specifying the prec
 ## **A.4 Component Sketches**
 
 ## **A.5 Interaction States**
-
----
-
-## **Appendix B — Page Inventory Tables**
-
-A fully tabulated representation of:
-
-* page name
-* purpose
-* runtime (Marketing / Essentials)
-* template reference
-* allowed transitions (summary)
-* URL pattern
-* taxonomy assignment
-
-This is too large for the main IA but essential for implementation, QA, and cross-referencing.
 
 ---
 
@@ -688,6 +703,201 @@ Partials will be assigned later once Appendix D is fully populated.
 | Organisation Profile         | Org-wide settings: legal name, addresses, contact   | Essentials | APP.Settings.Org           | From settings; interacts with billing, report headers                          | `/app/settings/org`              | Type: Settings; Entity=Organisation  | Keeps identity details coherent across billing, reports, and evidence         | none                              | None                                              |
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Right, let’s nail this properly.
+
+### Nav tiers I’m going to use
+
+For this new table, I’ll use **exactly three navigation tiers**, matching your locked definitions:
+
+* **Primary** – Global header navigation and its immediate drop-downs. This is the main IA spine that sits in §3.1 Primary Navigation and top tier in §4 Page Hierarchy.
+* **Section** – This is **your “secondary navigation”**: section-level rails, left-hand spines, tabs, and local menus inside a major area (Blog, Guides, Essentials app, Settings, Evidence, Billing, etc.). It maps to §3.2 Secondary Navigation and child groupings in §4.
+* **Utility/Footer** – Footer and header-utility links: legal, trust, status, newsletter, etc. These are **never** called “secondary navigation”; they’re explicitly “utility/footer” per your rule and live alongside Primary/Section in the nav model.
+
+In addition, I’ll use a **behaviour flag** that is *not* a nav tier:
+
+* **Flow-only (no dedicated nav)** – Pages that are only reachable via a flow (reset tokens, confirmation/thanks surfaces, some pagination endpoints). This is just a descriptor so we don’t pretend they are part of any nav tier.
+
+Now the table.
+
+---
+
+### Appendix B3 — Navigation Exposure Map
+
+This appendix defines how each page in the inventory is exposed in navigation. It does not introduce new pages or new structures; it normalises, in one place, how the existing surfaces from Appendix B appear (or do not appear) in the global header, in section-level navigation, and in utility/footer areas.
+
+The purpose is threefold:
+
+1. **Remove ambiguity about “what goes in the menus”.**
+   The main IA body (§2 Sitemap, §3 Navigation Model, §4 Page Hierarchy) defines structure and behaviour, but does not enumerate menu entries. This appendix is the authoritative mapping from pages to navigation exposure.
+
+2. **Preserve the meaning of “secondary navigation”.**
+   In this IA, “secondary navigation” always means **section-level navigation** (rails, spines, tabs, local menus) and never footer or utility links. This appendix keeps that distinction explicit so terminology cannot drift.
+
+3. **Support consistent implementation across runtimes.**
+   Both the Marketing runtime and the Essentials runtime use this map to decide which pages are eligible for primary navigation, which belong to sectional/rail navigation, and which remain flow-only or footer-only.
+
+Each row in the table links a page to one of the following **navigation tiers**:
+
+* **Primary**
+  Surfaces that appear in the **global primary navigation** of a runtime (e.g. top header in Marketing, main app shell in Essentials). These correspond to the top-level structural anchors in §4 Page Hierarchy and the primary patterns in §3.1 Primary Navigation.
+
+* **Section**
+  Surfaces that participate in **section-level navigation** only. This is what the IA calls *secondary navigation*: local rails, left-hand spines, tabs, or in-section menus inside a parent area (e.g. within Blog, Guides, Evidence, Billing, Settings). Section-level items never appear as standalone primary nav entries and never cross runtimes.
+
+* **Utility/Footer**
+  Surfaces exposed via **utility or footer areas** (e.g. legal, trust, status, newsletter). These links are navigable but are explicitly **not** “secondary navigation” in IA terms. They sit outside the primary/sectional hierarchy and are treated as utility access.
+
+* **Flow-only (no nav)**
+  Surfaces that are only reachable as part of a linear flow (e.g. password reset tokens, thanks/confirmation pages, some pagination endpoints). They do not appear in any navigation control and should not be linked to directly from menus.
+
+The **Nav Tier** column records which of these tiers (if any) applies to the page. The **Nav Placement / Notes** column explains how and where the page is intended to be exposed in practice (e.g. “header item”, “within Blog rail”, “footer legal cluster”, “flow-only confirmation”).
+
+This appendix does **not** define:
+
+* visual layout or geometry of navigation (handled by **Appendix A — Structural Templates**)
+* component-level interaction behaviour (hover, focus, suppression, mobile treatment — defined in the **PDS**)
+* routing, permission checks, or state guards (defined in the **SAIS** and §12 Transition Matrix)
+
+Any change to which pages appear in primary navigation, which pages gain or lose section-level entries, or which pages are relegated to utility/footer must be made by updating this Navigation Exposure Map and then aligning Appendix A, the PDS, and implementation accordingly.
+
+---
+
+**Columns**
+
+* **Page Name**
+* **URL Pattern**
+* **Runtime**
+* **Nav Tier** (Primary / Section / Utility/Footer / Flow-only)
+* **Nav Placement / Notes**
+
+---
+
+#### B3.1 Phase 1 — Marketing / Blog / Guides / Resources / Waitlist
+
+| Page Name                             | URL Pattern                           | Runtime   | Nav Tier           | Nav Placement / Notes                                                                           |
+| ------------------------------------- | ------------------------------------- | --------- | ------------------ | ----------------------------------------------------------------------------------------------- |
+| Home                                  | `/`                                   | Marketing | Primary            | Global entry; logo and/or “Home” in primary header.                                             |
+| About                                 | `/about`                              | Marketing | Primary            | Primary header item or under “Company” style drop-down.                                         |
+| Features                              | `/features`                           | Marketing | Primary            | Primary header item.                                                                            |
+| Pricing                               | `/pricing`                            | Marketing | Primary            | Primary header item; key commercial entry.                                                      |
+| Contact / Support                     | `/contact`                            | Marketing | Primary            | Header item and repeated in utility/footer for trust.                                           |
+| Why Transcrypt                        | `/why`                                | Marketing | Primary            | Primary header item or surfaced via prominent CTAs (“Why Transcrypt?”).                         |
+| Security Overview                     | `/security`                           | Marketing | Utility/Footer     | Linked from footer “Security”/“Trust” cluster and from key proof blocks.                        |
+| Case Studies (Index)                  | `/case-studies`                       | Marketing | Section            | Linked from primary (e.g. under “Resources/Proof”) and local rails inside marketing surfaces.   |
+| Case Study (Template)                 | `/case-studies/{slug}`                | Marketing | Section            | Reached from Case Studies index, related-links partials, not listed directly in global nav.     |
+| Blog Landing / Overview               | `/blog/overview`                      | Marketing | Primary            | Treated as main “Blog” entry in header; `/blog` redirects or coexists.                          |
+| Blog Index                            | `/blog`                               | Marketing | Section            | Within Blog section-level nav (tabs/filters) rather than separate header item.                  |
+| Blog Article Template                 | `/blog/{slug}`                        | Marketing | Section            | Reached via Blog index, categories, tags, related-links partials.                               |
+| Blog Categories Overview              | `/blog/categories`                    | Marketing | Section            | Section-level taxonomy control inside Blog (rail/tab item).                                     |
+| Blog Category Page                    | `/blog/category/{slug}`               | Marketing | Section            | Within Blog section nav; navigated via category lists and chips.                                |
+| Blog Tags Overview                    | `/blog/tags`                          | Marketing | Section            | Section-level taxonomy management surface; likely in a subtle blog-utility rail.                |
+| Blog Tag Page                         | `/blog/tag/{slug}`                    | Marketing | Section            | Reached via tag chips and tag overview; not a primary header item.                              |
+| Blog Author Page                      | `/blog/author/{slug}`                 | Marketing | Section            | Section-level surface; reached from author bylines and internal blog nav.                       |
+| Blog Search                           | `/blog/search`                        | Marketing | Section            | Accessed via blog search widget; treated as part of Blog section nav, not a global header item. |
+| Blog Pagination                       | `/blog/page/{n}`                      | Marketing | Flow-only (no nav) | Pagination mechanics; controlled by in-page controls, no separate nav exposure.                 |
+| Blog Category Pagination              | `/blog/category/{slug}/page/{n}`      | Marketing | Flow-only (no nav) | Same as above, scoped to category pages.                                                        |
+| Blog Tag Pagination                   | `/blog/tag/{slug}/page/{n}`           | Marketing | Flow-only (no nav) | Same pattern for tag views.                                                                     |
+| Blog Search Pagination                | `/blog/search/page/{n}`               | Marketing | Flow-only (no nav) | Pagination of search results only.                                                              |
+| Blog Date Archive (Year)              | `/blog/{yyyy}`                        | Marketing | Section            | Exposed via archive controls within Blog section.                                               |
+| Blog Date Archive (Month)             | `/blog/{yyyy}/{mm}`                   | Marketing | Section            | Same, one level deeper; reachable only via Blog’s archive UI.                                   |
+| Guides Index                          | `/guides`                             | Marketing | Primary            | Header item (“Guides”/“How-to”) as a main content pillar.                                       |
+| Guide Article Template                | `/guides/{slug}`                      | Marketing | Section            | Within the Guides section; reached from index and related-links partials.                       |
+| Guides Categories Overview            | `/guides/categories`                  | Marketing | Section            | Section-level taxonomy entry for guides.                                                        |
+| Guide Category Page                   | `/guides/category/{slug}`             | Marketing | Section            | Within Guides section; category rails/filters.                                                  |
+| Resource Library                      | `/resources`                          | Marketing | Primary            | Header item (“Resources”) and frequent CTAs from content.                                       |
+| Resource Download                     | `/resources/{slug}`                   | Marketing | Section            | Reached from Resource Library tiles and in-content CTAs.                                        |
+| Resource Download Confirmation        | `/resources/{slug}/thanks`            | Marketing | Flow-only (no nav) | Post-download confirmation; reached only via resource flow.                                     |
+| Waitlist                              | `/waitlist`                           | Marketing | Primary            | Primary CTA target across site; treated as high-priority header or persistent CTA.              |
+| Waitlist Confirmation                 | `/waitlist/thanks`                    | Marketing | Flow-only (no nav) | Confirmation-only; no direct nav entry.                                                         |
+| Newsletter Signup                     | `/newsletter`                         | Marketing | Utility/Footer     | Located in footer and as CTA from blog/guides; not a primary tab.                               |
+| Newsletter Confirmation               | `/newsletter/confirm`                 | Marketing | Flow-only (no nav) | Double opt-in endpoint; email-only entry.                                                       |
+| Newsletter Thanks                     | `/newsletter/thanks`                  | Marketing | Flow-only (no nav) | Post-confirmation; purely flow-based.                                                           |
+| Privacy Policy                        | `/privacy`                            | Marketing | Utility/Footer     | Footer “Legal” cluster and referenced from forms.                                               |
+| Terms of Service                      | `/terms`                              | Marketing | Utility/Footer     | Footer “Legal” cluster; not in primary header.                                                  |
+| Cookie Policy                         | `/cookies`                            | Marketing | Utility/Footer     | Footer “Legal” cluster; linked from cookie banner.                                              |
+| Accessibility Statement               | `/accessibility`                      | Marketing | Utility/Footer     | Footer utility; sometimes linked from alt-text/ARIA help.                                       |
+| Responsible Disclosure                | `/security/disclosure`                | Marketing | Utility/Footer     | Linked from `/security` and footer “Security” cluster.                                          |
+| Acceptable Use Policy                 | `/aup`                                | Marketing | Utility/Footer     | Footer “Legal” cluster; sometimes linked from signup.                                           |
+| Subprocessors List                    | `/subprocessors`                      | Marketing | Utility/Footer     | Footer “Legal/Trust” cluster; linked from privacy/DPA.                                          |
+| Data Protection Addendum              | `/dpa`                                | Marketing | Utility/Footer     | Footer “Legal/Trust” cluster; linked from pricing/security/privacy.                             |
+| Status Page                           | `/status`                             | Marketing | Utility/Footer     | Footer “Status” link and from `/security`.                                                      |
+| Comparison Hub                        | `/compare`                            | Marketing | Primary            | Either header item or strong sub-item under “Why/Compare”; root of comparison cluster.          |
+| Compare vs Traditional Consultancy    | `/compare/consultancy`                | Marketing | Section            | Within comparison section; reached from Compare hub and proof CTAs.                             |
+| Compare vs Self-Assessment            | `/compare/self-assessment`            | Marketing | Section            | Same pattern; not in global header.                                                             |
+| How It Works                          | `/how-it-works`                       | Marketing | Primary            | Primary header item or always-present CTA target from hero blocks.                              |
+| Industries Overview                   | `/industries`                         | Marketing | Primary            | Primary or mega-menu entry for verticalised content.                                            |
+| Industry Landing Template             | `/industries/{slug}`                  | Marketing | Section            | Within Industries section; reached from industries index and campaign CTAs.                     |
+| Glossary                              | `/glossary`                           | Marketing | Utility/Footer     | Linked from inline glossary partials and footer; not a full primary tab.                        |
+| Starter Kit                           | `/starter-kit`                        | Marketing | Section            | Prominent CTA target from compare/guides but not a global header anchor in its own right.       |
+| Roadmap                               | `/roadmap`                            | Marketing | Utility/Footer     | Typically footer “Product”/“Roadmap” link rather than top-level header item.                    |
+| State of SME Cybersecurity Report Hub | `/reports/state-of-sme-cybersecurity` | Marketing | Section            | Within “Reports/Research” cluster; linked from blog/guides/CTAs, not global header on MVP.      |
+
+---
+
+#### B3.2 Phase 2 — Essentials (Product Runtime)
+
+Here Primary navigation is the **main authenticated app header/sidebar**, Section is **within-area rails/tabs**, Utility/Footer is minimal but can include “Status”/“Legal” links exposed inside the app frame. Flow-only pages are accessed only via linear flows or email links.
+
+| Page Name                    | URL Pattern                      | Runtime    | Nav Tier           | Nav Placement / Notes                                                                      |
+| ---------------------------- | -------------------------------- | ---------- | ------------------ | ------------------------------------------------------------------------------------------ |
+| Log In                       | `/auth/login`                    | Essentials | Utility/Footer     | Exposed from marketing header/footer (“Log in”); outside authenticated primary app nav.    |
+| Password Reset Request       | `/auth/reset`                    | Essentials | Flow-only (no nav) | Accessed from “Forgot password?” link on login only.                                       |
+| Password Reset Confirm       | `/auth/reset/{token}`            | Essentials | Flow-only (no nav) | Email-token endpoint only; no nav exposure.                                                |
+| Signup Start                 | `/signup`                        | Essentials | Primary            | Primary CTA target (from `/pricing`, `/how-it-works`); treated as root of signup spine.    |
+| Signup Email Verification    | `/signup/verify`                 | Essentials | Flow-only (no nav) | Intermediate step in signup flow; no persistent nav entry.                                 |
+| Signup Email Verified        | `/signup/verified`               | Essentials | Flow-only (no nav) | Landing after email verification; forwarded into checkout.                                 |
+| Subscription Checkout        | `/signup/checkout`               | Essentials | Flow-only (no nav) | Billing step in flow; not exposed in nav.                                                  |
+| Onboarding Complete          | `/signup/complete`               | Essentials | Flow-only (no nav) | One-time transitional surface; then routes into app primary nav.                           |
+| Organisation Setup (Initial) | `/app/intake`                    | Essentials | Primary            | First primary nav destination after signup; appears in main app nav as “Intake”/“Setup”.   |
+| Organisation Details (Edit)  | `/app/org`                       | Essentials | Section            | Section-level surface under Intake/Settings; reachable via local tabs/links from Intake.   |
+| Evidence Dashboard           | `/app/evidence`                  | Essentials | Primary            | Core primary nav item (“Evidence”); hub for per-control flows.                             |
+| Evidence Submission          | `/app/evidence/{control}`        | Essentials | Section            | Section-level within Evidence; navigated via dashboard list/rail, not direct primary item. |
+| Evidence Review              | `/app/evidence/{control}/review` | Essentials | Section            | Same section as above; review tab/rail from specific control context.                      |
+| Evaluation Overview          | `/app/evaluation`                | Essentials | Primary            | Primary nav item (“Evaluation” or “Readiness Check”).                                      |
+| Evaluation Step              | `/app/evaluation/{step}`         | Essentials | Section            | Section-level within Evaluation; reached via stepper/rail, not separate primary entry.     |
+| Evaluation Complete          | `/app/evaluation/complete`       | Essentials | Flow-only (no nav) | Terminal step of evaluation flow; no independent nav anchor.                               |
+| Report View                  | `/app/report`                    | Essentials | Primary            | Primary nav item (“Report”); central value surface.                                        |
+| Report Download              | `/app/report/download`           | Essentials | Flow-only (no nav) | Action endpoint only; invoked from Report View.                                            |
+| Billing Dashboard            | `/app/billing`                   | Essentials | Primary            | Primary nav item (“Billing”), usually in a lower cluster of the main app nav.              |
+| Subscription Management      | `/app/billing/subscription`      | Essentials | Section            | Section-level inside Billing; tab/rail item below Billing Dashboard.                       |
+| Payment Methods              | `/app/billing/payment-methods`   | Essentials | Section            | Section-level inside Billing; switched via local tabs.                                     |
+| Billing History              | `/app/billing/history`           | Essentials | Section            | Section-level inside Billing; invoice list tab.                                            |
+| User Profile                 | `/app/settings/profile`          | Essentials | Section            | Section-level under Settings; accessed from Settings primary entry or avatar menu.         |
+| Security Settings            | `/app/settings/security`         | Essentials | Section            | Section-level under Settings (Security tab/rail).                                          |
+| Notification Preferences     | `/app/settings/notifications`    | Essentials | Section            | Section-level under Settings (Notifications tab/rail).                                     |
+| Organisation Profile         | `/app/settings/org`              | Essentials | Section            | Section-level under Settings (Organisation tab/rail).                                      |
+
+---
 
 ## **Appendix C — Metadata Schema**
 
