@@ -2496,18 +2496,204 @@ Here Primary navigation is the **main authenticated app header/sidebar**, Sectio
 
 ## **Appendix C — Metadata Schema**
 
-Because metadata touches SEO, discoverability, canonical structure, and CMS fields, the schema needs a clear, stable reference outside the IA body.
+This appendix defines the concrete metadata fields used across Marketing and Essentials surfaces. It is the binding contract between:
 
-Includes:
+* the IA (structure, roles, and hierarchy)
+* SEO keyword mapping (§5)
+* content types (§6)
+* taxonomy (§7)
+* URL structure (§8)
+* and the CMS / Next.js implementation.
 
-* required fields
-* optional fields
-* field types
-* rules for canonical/OG/meta
-* default values
-* validation rules
+No page may invent its own titles, descriptions, canonical URLs, or Open Graph fields outside this schema. All metadata must be derived from:
 
-This appendix becomes the binding spec for the CMS and Next.js metadata layer.
+* the **page’s role and weight** (§4, Appendix B)
+* its **SEO role and intent** (§5)
+* its **content type** (§6)
+* and the **taxonomy entries** defined in Appendix E.
+
+---
+
+### **C.1 Field Inventory**
+
+The following fields define the minimum metadata model for all surfaces.
+
+| Field Name              | Type               | Required | Applies To                           | Source of Truth / Constraints                                                               |
+| ----------------------- | ------------------ | -------- | ------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `runtime`               | enum               | Yes      | All pages                            | `marketing` or `essentials`, must match §2 and Appendix B                                   |
+| `structural_tier`       | enum               | Yes      | All pages                            | One of §4.1: `runtime_root`, `section_parent`, `cluster`, `content`, `state_ephemeral`      |
+| `weight_class`          | enum               | Yes      | All pages                            | One of §4.3: `anchor`, `hub`, `standard`, `ephemeral_utility`                               |
+| `nav_tier`              | enum               | Yes      | All pages                            | One of: `primary`, `section`, `utility_footer`, `flow_only` per §3 and Appendix B3          |
+| `indexable`             | boolean            | Yes      | All pages                            | `true` for search-targeted Marketing surfaces; `false` for Essentials and operational pages |
+| `seo_role`              | enum               | Yes*     | All indexable pages                  | One of: `pillar`, `supporting`, `long_tail`, `non_seo` per §5.1–5.5                         |
+| `seo_primary_intent`    | string / intent ID | Yes*     | All indexable pages                  | Must reference a defined intent in §5 and Appendix E                                        |
+| `seo_secondary_intents` | array<intent ID>   | No       | Indexable pages                      | Max 2; must be in same semantic neighbourhood as primary (§5.3)                             |
+| `canonical_url`         | path string        | Yes      | All pages                            | Must match the IA pattern in §8 and the URL in Appendix B                                   |
+| `meta_title`            | string             | Yes*     | All indexable pages                  | Patterned off `seo_primary_intent`; length and pattern rules below                          |
+| `meta_description`      | string             | Yes*     | All indexable pages                  | Must reflect primary intent, no keyword stuffing                                            |
+| `robots_directives`     | enum / string      | No       | Selected pages                       | e.g. `index,follow`, `noindex,nofollow`; must align with `indexable`                        |
+| `og_title`              | string             | No       | Key marketing surfaces               | Derived from `meta_title` with optional brand suffix adjustments                            |
+| `og_description`        | string             | No       | Key marketing surfaces               | Derived from `meta_description`                                                             |
+| `og_type`               | enum               | No       | Key marketing surfaces               | Typically `website` or `article` based on content type (§6)                                 |
+| `og_image_key`          | enum / asset key   | No       | Key marketing surfaces               | Must reference an approved asset from the brand system (BIG)                                |
+| `taxonomy_categories`   | array<category ID> | Yes*     | Editorial content (blog/guides/etc.) | Must reference Appendix E; one core category required (§7.1)                                |
+| `taxonomy_tags`         | array<tag ID>      | No       | Editorial content                    | Must reference Appendix E; limited set per §7.3.2                                           |
+| `taxonomy_industries`   | array<industry ID> | No       | Industry-scoped content              | From Appendix E; constrained set (§7.2.1)                                                   |
+
+* Required only when `indexable = true`. When `indexable = false`, `seo_role` must be `non_seo` and `seo_*` fields may be empty.
+
+---
+
+### **C.2 Runtime Metadata Profiles**
+
+Different runtimes and page roles use different subsets of the schema.
+
+#### **C.2.1 Marketing Runtime Profile**
+
+For **Marketing** pages (`runtime = marketing`):
+
+* `indexable = true` **except** for:
+
+  * pure operational surfaces (for example `/resources/{slug}/thanks`),
+  * any page explicitly marked Non-SEO in Appendix B.
+
+* Minimum required fields:
+
+  * `runtime`, `structural_tier`, `weight_class`, `nav_tier`
+  * `indexable`
+  * `seo_role`, `seo_primary_intent` (if indexable)
+  * `canonical_url`, `meta_title`, `meta_description` (if indexable)
+
+* Editorial content (blog, guides, case studies, research hubs) must also include:
+
+  * `taxonomy_categories` (1 core category)
+  * `taxonomy_tags` (controlled list)
+
+* High-value surfaces (Home, Features, Pricing, Why, How It Works, Industries, Compare hub, State-of hub) should also set:
+
+  * `og_title`, `og_description`, `og_type`, `og_image_key`.
+
+#### **C.2.2 Essentials Runtime Profile**
+
+For **Essentials** pages (`runtime = essentials`):
+
+* `indexable = false` for all pages.
+* `seo_role = non_seo`.
+* `seo_primary_intent`, `seo_secondary_intents`, `taxonomy_*` fields are normally empty.
+
+Required:
+
+* `runtime`, `structural_tier`, `weight_class`, `nav_tier`
+* `indexable` (must be `false`)
+* `canonical_url`
+* Minimal `meta_title` / `meta_description` for UX, not SEO.
+
+Identity and onboarding surfaces (login, signup, reset) may additionally specify `robots_directives = "noindex,nofollow"` explicitly.
+
+---
+
+### **C.3 Field-Level Rules and Validation**
+
+This subsection ties the fields directly back to IA rules.
+
+#### **C.3.1 Structural and Navigation Consistency**
+
+* `runtime`, `structural_tier`, `weight_class`, and `nav_tier` must match the values in Appendix B for the corresponding page.
+* A page marked as:
+
+  * `nav_tier = primary` must be a **Runtime Root** or **Sectional Parent** (`structural_tier` in §4.1).
+  * `nav_tier = utility_footer` must be a **Standard** or **Ephemeral/Utility** weight page and typically legal/trust/operational surfaces.
+  * `nav_tier = flow_only` must not appear in any visible navigation and is usually State/Ephemeral (for example reset tokens, confirmations).
+
+Validation rule:
+
+> No change to `nav_tier` is permitted without a corresponding IA change in §3 and Appendix B.
+
+#### **C.3.2 SEO Role and Intent Alignment**
+
+For `indexable = true`:
+
+* `seo_role` must be consistent with `weight_class`:
+
+  * `anchor` or `hub` ⇒ usually `pillar` or `supporting`
+  * `standard` ⇒ usually `supporting` or `long_tail`
+  * `ephemeral_utility` ⇒ usually `non_seo` or not indexable.
+
+* `seo_primary_intent`:
+
+  * must reference a valid intent ID defined in §5 and Appendix E;
+  * must be unique per page; no page may declare more than one primary intent.
+
+* `seo_secondary_intents`:
+
+  * max 2;
+  * must belong to the same semantic neighbourhood as the primary intent (§5.3).
+
+Validation rule:
+
+> Any change to `seo_role` or `seo_primary_intent` must be reflected in §5 and Appendix E before being deployed.
+
+#### **C.3.3 Canonical URL and Indexability**
+
+* `canonical_url` must:
+
+  * match the pattern in §8 for the page’s type;
+  * match the URL declared for that page in Appendix B.
+
+* For `indexable = true`:
+
+  * `robots_directives` must not contain `noindex`.
+
+* For `indexable = false`:
+
+  * `robots_directives` **may** explicitly include `noindex,nofollow`, especially for Essentials and tokenised flows.
+
+Validation rule:
+
+> No page may have `indexable = true` and `robots_directives` including `noindex`.
+
+#### **C.3.4 Title and Description Patterns**
+
+For indexable Marketing pages:
+
+* `meta_title`:
+
+  * must clearly express the page’s primary intent;
+  * must contain either the canonical phrase for `seo_primary_intent` or an approved synonym from Appendix E;
+  * may include a brand suffix (for example `" | Transcrypt"`) for pillars and key hubs.
+
+* `meta_description`:
+
+  * must summarise the primary intent in natural language;
+  * must not be used as a keyword dump;
+  * should be unique per page.
+
+For Essentials pages:
+
+* `meta_title` and `meta_description` are UX labels, not SEO assets; they must describe purpose clearly, but there is no keyword targeting.
+
+---
+
+### **C.4 Implementation Notes for CMS and Next.js**
+
+To prevent drift between IA and implementation:
+
+* The CMS and/or content model must:
+
+  * use enumerated lists for `runtime`, `structural_tier`, `weight_class`, `nav_tier`, `seo_role`;
+  * restrict `seo_primary_intent`, `seo_secondary_intents`, `taxonomy_*` fields to IDs defined in Appendix E;
+  * automatically set `indexable = false` and `seo_role = non_seo` for Essentials templates.
+
+* The Next.js metadata layer must:
+
+  * derive `<title>`, `<meta name="description">`, `<link rel="canonical">`, and Open Graph tags directly from these fields;
+  * refuse to emit canonical URLs that do not match the IA patterns.
+
+Any extension to metadata behaviour (for example new social graph fields, additional SEO special cases) must:
+
+1. be defined here (Appendix C),
+2. be wired into §5/§7/§8 as needed, and
+3. then be implemented in the CMS / Next.js layer.
 
 ---
 
