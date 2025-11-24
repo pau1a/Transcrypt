@@ -1629,9 +1629,9 @@ No content type may be introduced in the PDS, CMS, or implementation without fir
 
 # **7. Taxonomy**
 
-The taxonomy defines the classification system used across content, including categories, tags, and other controlled groupings. It ensures consistent organisation, improves discoverability, and supports internal search behaviours. Taxonomy also powers several cross-referential partials—such as Related Stories, For Your Industry, and Research Highlight—whose behaviour and placement rules are governed in Appendix D. Any taxonomy-driven partial must reflect the authoritative taxonomy structures defined in this section and catalogued in Appendix E (Taxonomy Catalogue).
+The taxonomy defines the classification system used across content, including categories, tags, industries, audience facets, frameworks, and other controlled groupings. It ensures consistent organisation, improves discoverability, and supports internal search behaviours. Taxonomy also powers several cross-referential partials—such as Related Stories, For Your Industry, and Research Highlight—whose behaviour and placement rules are governed in Appendix D. Any taxonomy-driven partial must reflect the authoritative taxonomy structures defined in this section and be backed by canonical entries in Appendix E (Taxonomy Catalogue).
 
-No category or tag may be used in the CMS, content, or partials layer unless it is defined and in an active state in Appendix E.
+No category, tag, industry, audience facet, or framework label may be used in the CMS, content, or partials layer unless it is defined and in an active state in Appendix E.
 
 ## **7.1 Core Categories**
 
@@ -1689,10 +1689,9 @@ Extended categories provide additional, orthogonal dimensions for classification
 
 Extended categories include, but are not limited to:
 
-* Industry and sector
-* Framework or regime
-* Journey stage
-* Persona or audience type
+* **Industry and sector** in Appendix E.3 (Industry and Audience Taxonomy)
+* **Persona or audience type** in Appendix E.3 (Audience facets)
+* **Framework or regime, journey stage, and other extended dimensions** in the relevant Category/Tag entries (Appendix E.1–E.2).
 
 All extended categories and their allowed values are listed in Appendix E.
 
@@ -1760,6 +1759,8 @@ Tags are divided into clear types, each with a specific purpose. Examples:
 
 Each tag in Appendix E must be assigned a type. Tag type determines where it may appear (for example Topic tags on blog and guides; Risk tags on certain reports, etc.).
 
+All tags and their assigned Tag Types are enumerated in Appendix E.2. No tag type may be invented ad hoc in code, search configuration, or partial logic; if a new type is required, Appendix E.2 and this section must be updated first.
+
 ### **7.3.2 Assignment Limits**
 
 To prevent dilution:
@@ -1818,6 +1819,8 @@ Rules:
   * common abbreviations (for example MFA → Multi-factor authentication)
   * common misspellings or regional variants where appropriate
 * Synonym relationships are recorded in Appendix E and must be one-to-one or many-to-one into a canonical term; many-to-many is prohibited.
+
+All synonym → canonical mappings are maintained in Appendix E.4 and must be treated as authoritative by search, ingestion, and any import/migration processes.
 
 ### **7.4.3 Forbidden or Discouraged Terms**
 
@@ -1898,6 +1901,8 @@ Deprecated entries are not deleted; they are marked as **deprecated** in Appendi
 * deprecation date
 * reason
 * replacement term (if any)
+
+Deprecated entries and their replacements are recorded in Appendix E.5, which acts as the historical ledger for taxonomy evolution.
 
 ### **7.6.2 Merge and Remapping Strategy**
 
