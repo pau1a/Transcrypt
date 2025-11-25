@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Transcrypt – Homepage Wireframe</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="tc.css">
+
+  <style>
+    /* ==================================================
+       HOMEPAGE WIREFRAME ADDITIONS
+       New classes only. No overrides of tc.css allowed.
+       ================================================== */
+
+    /* HEADER */
+    .site-header {
+      border-bottom: 1px solid var(--neutral-200);
+      background: var(--brand-surface-0);
+    }
+    .site-header-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-logo-box {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--accent-500);
+    }
+    .brand-name {
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      color: var(--neutral-900);
+    }
+    .primary-nav {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.9rem;
+    }
+    .primary-nav a {
+      text-decoration: none;
+      color: var(--neutral-700);
+    }
+    .primary-nav a:hover {
+      color: var(--neutral-900);
+    }
+
+    /* HERO */
+    .hero-eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.75rem;
+      color: var(--accent-300);
+      margin-bottom: 0.75rem;
+    }
+    .hero-cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin: 1.25rem 0 1rem;
+    }
+    .hero-meta {
+      font-size: 0.85rem;
+      color: var(--neutral-300);
+      max-width: 42ch;
+    }
+    .hero-visual .placeholder {
+      width: 100%;
+      min-height: 180px;
+    }
+
+    /* PANELS */
+    .panel {
+      background: var(--brand-surface-0);
+      border: 2px dashed var(--neutral-400);
+      border-radius: var(--radius-card);
+      padding: 1.5rem;
+      min-height: 220px;
+    }
+    .panel h3 {
+      margin-bottom: 0.5rem;
+    }
+
+    /* PERSONAS */
+    .persona {
+      background: var(--brand-surface-0);
+      border-radius: var(--radius-card);
+      border: 2px dashed var(--neutral-400);
+      padding: 1.5rem;
+      min-height: 200px;
+    }
+
+    /* TWO-COLUMN CALLOUTS */
+    .callout {
+      background: var(--brand-surface-0);
+      border-radius: var(--radius-card);
+      border: 2px dashed var(--neutral-400);
+      padding: 1.5rem;
+      min-height: 260px;
+    }
+
+    /* STEPS */
+    .step {
+      background: var(--brand-surface-0);
+      border-radius: var(--radius-card);
+      border: 2px dashed var(--neutral-400);
+      padding: 1.25rem;
+      min-height: 160px;
+    }
+    .step-number {
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* TRUST BOX */
+    .trust-box {
+      background: var(--brand-surface-0);
+      border-radius: var(--radius-card);
+      border: 2px dashed var(--neutral-400);
+      padding: 1.5rem;
+      min-height: 180px;
+    }
+
+    /* BLOG CARDS */
+    .blog-card {
+      background: var(--brand-surface-0);
+      border-radius: var(--radius-card);
+      border: 2px dashed var(--neutral-400);
+      padding: 1.5rem;
+      min-height: 200px;
+    }
+
+    /* EMAIL CAPTURE */
+    .email-box {
+      background: var(--brand-base-800);
+      border-radius: var(--radius-card);
+      border: 2px dashed var(--neutral-300);
+      padding: 1.75rem;
+      min-height: 180px;
+      color: var(--neutral-100);
+    }
+
+    /* RESPONSIVE FIXES */
+    @media (max-width: 900px) {
+      .site-header-inner { flex-wrap: wrap; }
+      .primary-nav { flex-wrap: wrap; }
+      .hero { padding-top: 3.5rem; padding-bottom: 3.5rem; }
+    }
+
+  </style>
+
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="wrapper site-header-inner">
+      <div class="brand-mark">
+        <div class="brand-logo-box"></div>
+        <div class="brand-name">Transcrypt</div>
+      </div>
+
+      <nav class="primary-nav">
+        <a href="#">Home</a>
+        <a href="#">Why Transcrypt</a>
+        <a href="#">Product</a>
+        <a href="#">Pricing</a>
+        <a href="#">Blog</a>
+        <a href="#">Security</a>
+        <a href="#">About</a>
+        <a href="#" class="button secondary">Sign in</a>
+        <a href="#" class="button primary">Join waitlist</a>
+      </nav>
+    </div>
+  </header>
+
+
+  <!-- HERO: FULL BLEED DARK -->
+  <section class="hero dark">
+    <div class="wrapper hero-grid">
+
+      <!-- LEFT: COPY -->
+      <div class="hero-copy">
+        <div class="hero-eyebrow">Cyber Essentials, without the noise</div>
+
+        <h1>From zero to Cyber Essentials-ready, with a defensible report in one sitting.</h1>
+
+        <p>
+          Transcrypt gives UK SMEs a deterministic path to Cyber Essentials: guided intake,
+          structured evidence, and a report you can show to auditors, customers, and insurers.
+        </p>
+
+        <div class="hero-cta-row">
+          <a class="button primary" href="#">Join waitlist</a>
+          <a class="button secondary" href="#how">See how it works</a>
+        </div>
+
+        <p class="hero-meta">
+          Built for owners, office managers, and their tech helpers.
+        </p>
+      </div>
+
+      <!-- RIGHT: VISUAL -->
+      <div class="hero-visual">
+        <div class="placeholder dark">HERO VISUAL PLACEHOLDER</div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- PANELS: INTAKE / FINDINGS / REPORT -->
+  <section>
+    <div class="wrapper">
+      <h2>One clear path: intake → findings → report</h2>
+
+      <div class="grid-3 mt-2">
+        <div class="panel"><h3>Structured intake</h3></div>
+        <div class="panel"><h3>Evidence & findings</h3></div>
+        <div class="panel"><h3>Defensible report</h3></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- PERSONAS -->
+  <section>
+    <div class="wrapper">
+      <h2>Built for real SME roles</h2>
+
+      <div class="grid-3 mt-2">
+        <div class="persona"><h3>Owner / MD</h3></div>
+        <div class="persona"><h3>Tech helper</h3></div>
+        <div class="persona"><h3>Assessor / insurer</h3></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- PROBLEM → SOLUTION -->
+  <section>
+    <div class="wrapper">
+      <h2>Cyber Essentials doesn’t need to be a maze</h2>
+
+      <div class="grid-2 mt-2">
+        <div class="callout"><h3>The usual way</h3></div>
+        <div class="callout"><h3>The Transcrypt way</h3></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <div class="wrapper">
+      <h2>How Transcrypt works</h2>
+
+      <div class="grid-4 mt-2">
+        <div class="step"><div class="step-number">1</div></div>
+        <div class="step"><div class="step-number">2</div></div>
+        <div class="step"><div class="step-number">3</div></div>
+        <div class="step"><div class="step-number">4</div></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- TRUST BLOCK -->
+  <section>
+    <div class="wrapper">
+      <h2>A platform built on engineering discipline</h2>
+      <div class="trust-box mt-2"></div>
+    </div>
+  </section>
+
+
+  <!-- BLOG TEASER -->
+  <section>
+    <div class="wrapper">
+      <h2>From the blog</h2>
+
+      <div class="grid-3 mt-2">
+        <div class="blog-card"></div>
+        <div class="blog-card"></div>
+        <div class="blog-card"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- EMAIL CAPTURE -->
+  <section>
+    <div class="wrapper">
+      <h2>Join the waitlist</h2>
+      <div class="email-box mt-2"></div>
+    </div>
+  </section>
+
+</body>
+</html>

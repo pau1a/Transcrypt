@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Transcrypt – Cyber Essentials Compliance for UK SMEs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta name="description" content="Transcrypt gives UK SMEs a deterministic path to Cyber Essentials readiness: guided intake, evidence handling, and defensible reports without consultancy bloat.">
+
+  <style>
+    :root {
+      /* Brand base */
+      --brand-base-900: #050814;
+      --brand-base-800: #0b1020;
+
+      /* Surfaces */
+      --brand-surface-0: #ffffff;
+      --brand-surface-50: #f7f7fb;
+      --brand-surface-100: #eff1f7;
+
+      /* Accent (cerulean-ish) */
+      --accent-700: #004a73;
+      --accent-500: #006ba8;
+      --accent-300: #7abbe3;
+
+      /* Neutral greys */
+      --neutral-900: #111827;
+      --neutral-800: #1f2933;
+      --neutral-700: #374151;
+      --neutral-600: #4b5563;
+      --neutral-500: #6b7280;
+      --neutral-400: #9ca3af;
+      --neutral-300: #d1d5db;
+      --neutral-200: #e5e7eb;
+      --neutral-100: #f3f4f6;
+      --neutral-50:  #f9fafb;
+
+      /* Geometry / shadow */
+      --radius-card: 12px;
+      --radius-pill: 999px;
+      --shadow-soft: 0 16px 40px rgba(15, 23, 42, 0.18);
+      --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.1);
+
+      /* Typography + layout */
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --page-max-width: 1120px;
+      --page-gutter: 1.5rem;
+      --section-vertical: 4rem;
+      --section-vertical-tight: 2.5rem;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      background: var(--brand-surface-50);
+      color: var(--neutral-900);
+      line-height: 1.5;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(to bottom, var(--brand-base-900) 0, var(--brand-base-900) 340px, var(--brand-surface-50) 340px);
+    }
+
+    .shell {
+      max-width: var(--page-max-width);
+      margin: 0 auto;
+      padding: 0 var(--page-gutter);
+    }
+
+    header.site-header {
+      padding: 1.25rem 0;
+      color: var(--neutral-50);
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo-box {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-500), var(--accent-300));
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .brand-name {
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+    }
+
+    nav.primary-nav {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    nav.primary-nav a {
+      font-size: 0.9rem;
+      color: var(--neutral-200);
+      text-decoration: none;
+      padding: 0.25rem 0.5rem;
+    }
+
+    nav.primary-nav a:hover {
+      color: var(--neutral-50);
+    }
+
+    .nav-spacer {
+      width: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.45rem 0.95rem;
+      border-radius: var(--radius-pill);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent-500);
+      color: #fff;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-700);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--neutral-200);
+      border-color: rgba(249, 250, 251, 0.18);
+    }
+
+    .btn-ghost:hover {
+      border-color: rgba(249, 250, 251, 0.4);
+      color: var(--neutral-50);
+    }
+
+    main {
+      flex: 1 0 auto;
+    }
+
+    /* Hero */
+
+    section.hero {
+      padding: 3.5rem 0 3rem 0;
+      color: var(--neutral-50);
+    }
+
+    .hero-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.2fr);
+      gap: 2.5rem;
+      align-items: center;
+    }
+
+    .hero-eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.17em;
+      font-size: 0.75rem;
+      color: var(--accent-300);
+      margin-bottom: 0.75rem;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 2.7vw, 2.6rem);
+      line-height: 1.15;
+      margin: 0 0 0.9rem 0;
+    }
+
+    .hero-lede {
+      font-size: 0.98rem;
+      color: var(--neutral-200);
+      max-width: 34rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .hero-cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-meta {
+      font-size: 0.78rem;
+      color: var(--neutral-300);
+    }
+
+    .hero-visual {
+      justify-self: stretch;
+    }
+
+    .hero-visual-box {
+      background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.35), transparent 55%), var(--brand-base-800);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-soft);
+      padding: 1.25rem 1.25rem 1.5rem 1.25rem;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .hero-visual-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      font-size: 0.76rem;
+      color: var(--neutral-200);
+    }
+
+    .hero-visual-pill {
+      padding: 0.15rem 0.6rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .hero-visual-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.1fr);
+      gap: 1rem;
+      font-size: 0.78rem;
+      color: var(--neutral-100);
+    }
+
+    .hero-visual-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 0.35rem;
+    }
+
+    .hero-visual-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      border-radius: 6px;
+      padding: 0.35rem 0.5rem;
+      background: rgba(15, 23, 42, 0.6);
+    }
+
+    .hero-visual-tag {
+      font-size: 0.7rem;
+      color: var(--neutral-300);
+    }
+
+    .hero-visual-status {
+      font-weight: 500;
+      color: var(--accent-300);
+    }
+
+    /* Generic section layout */
+
+    section.section {
+      padding: var(--section-vertical) 0;
+    }
+
+    section.section.tight {
+      padding-top: var(--section-vertical-tight);
+      padding-bottom: var(--section-vertical-tight);
+    }
+
+    .section-heading {
+      font-size: 1.25rem;
+      margin: 0 0 0.35rem 0;
+      color: var(--neutral-900);
+    }
+
+    .section-subtitle {
+      font-size: 0.95rem;
+      margin: 0 0 1.75rem 0;
+      color: var(--neutral-600);
+      max-width: 34rem;
+    }
+
+    /* Panels: Intake / Findings / Report */
+
+    .panels {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .panel {
+      background: var(--brand-surface-0);
+      border-radius: var(--radius-card);
+      padding: 1.15rem 1.1rem 1.2rem 1.1rem;
+      box-shadow: var(--shadow-subtle);
+      border: 1px solid var(--neutral-200);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .panel-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--neutral-500);
+    }
+
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--neutral-900);
+    }
+
+    .panel-body {
+      font-size: 0.9rem;
+      color: var(--neutral-600);
+      flex: 1 1 auto;
+    }
+
+    .panel-list {
+      margin: 0.25rem 0 0 0;
+      padding-left: 1.1rem;
+      font-size: 0.88rem;
+      color: var(--neutral-600);
+    }
+
+    .panel-link {
+      font-size: 0.85rem;
+      margin-top: 0.6rem;
+    }
+
+    .panel-link a {
+      color: var(--accent-700);
+      text-decoration: none;
+    }
+
+    .panel-link a:hover {
+      text-decoration: underline;
+    }
+
+    /* Personas */
+
+    .personas {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .persona {
+      background: var(--brand-surface-0);
+      border-radius: var(--radius-card);
+      padding: 1rem 1rem 1.05rem;
+      border: 1px dashed var(--neutral-200);
+      font-size: 0.9rem;
+    }
+
+    .persona-title {
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+
+    .persona-role {
+      font-size: 0.8rem;
+      color: var(--neutral-500);
+      margin-bottom: 0.55rem;
+    }
+
+    .persona-link {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .persona-link a {
+      color: var(--accent-700);
+      text-decoration: none;
+    }
+
+    .persona-link a:hover {
+      text-decoration: underline;
+    }
+
+    /* Problem → Solution */
+
+    .two-column {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
+      gap: 1.75rem;
+    }
+
+    .callout {
+      background: var(--brand-surface-0);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--neutral-200);
+      padding: 1.15rem 1.2rem;
+      font-size: 0.92rem;
+      color: var(--neutral-700);
+    }
+
+    .callout-title {
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: var(--neutral-900);
+    }
+
+    .callout-list {
+      margin: 0.3rem 0 0 0;
+      padding-left: 1.1rem;
+      font-size: 0.9rem;
+    }
+
+    /* How it works */
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .step {
+      background: var(--brand-surface-0);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--neutral-200);
+      padding: 0.8rem 0.9rem 0.9rem;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-pill);
+      background: var(--accent-500);
+      color: #fff;
+      font-size: 0.78rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .step-title {
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+      color: var(--neutral-900);
+    }
+
+    .step-body {
+      font-size: 0.86rem;
+      color: var(--neutral-600);
+    }
+
+    /* Trust strip */
+
+    .trust-strip {
+      background: var(--brand-surface-100);
+      border-radius: var(--radius-card);
+      padding: 1.25rem 1.25rem;
+      border: 1px solid var(--neutral-200);
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.2fr);
+      gap: 1.5rem;
+      font-size: 0.9rem;
+      align-items: center;
+    }
+
+    .trust-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    .trust-links a {
+      color: var(--accent-700);
+      text-decoration: none;
+    }
+
+    .trust-links a:hover {
+      text-decoration: underline;
+    }
+
+    .report-preview-box {
+      height: 140px;
+      border-radius: var(--radius-card);
+      border: 1px dashed var(--neutral-300);
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--brand-surface-0),
+        var(--brand-surface-0) 8px,
+        var(--brand-surface-100) 8px,
+        var(--brand-surface-100) 16px
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      color: var(--neutral-500);
+    }
+
+    /* Blog teaser */
+
+    .articles {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .article-card {
+      background: var(--brand-surface-0);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--neutral-200);
+      padding: 1rem 1rem 0.9rem;
+    }
+
+    .article-tag {
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--neutral-500);
+      margin-bottom: 0.5rem;
+    }
+
+    .article-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      color: var(--neutral-900);
+    }
+
+    .article-body {
+      font-size: 0.86rem;
+      color: var(--neutral-600);
+      margin-bottom: 0.55rem;
+    }
+
+    .article-link a {
+      font-size: 0.85rem;
+      color: var(--accent-700);
+      text-decoration: none;
+    }
+
+    .article-link a:hover {
+      text-decoration: underline;
+    }
+
+    .articles-footer {
+      margin-top: 1rem;
+      font-size: 0.88rem;
+    }
+
+    /* Email capture */
+
+    .email-capture {
+      background: var(--brand-base-800);
+      border-radius: var(--radius-card);
+      padding: 1.25rem 1.4rem 1.3rem;
+      color: var(--neutral-50);
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.2fr);
+      gap: 1.5rem;
+      align-items: center;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .email-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .email-body {
+      font-size: 0.9rem;
+      color: var(--neutral-200);
+    }
+
+    .email-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .email-input {
+      flex: 1 1 180px;
+      min-width: 0;
+      padding: 0.5rem 0.6rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(248, 250, 252, 0.5);
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--neutral-50);
+      font-size: 0.88rem;
+    }
+
+    .email-input::placeholder {
+      color: var(--neutral-400);
+    }
+
+    .email-privacy {
+      font-size: 0.78rem;
+      color: var(--neutral-300);
+      margin-top: 0.35rem;
+    }
+
+    .email-privacy a {
+      color: var(--neutral-50);
+    }
+
+    /* Footer */
+
+    footer.site-footer {
+      margin-top: 3rem;
+      padding: 2.5rem 0 2.25rem;
+      background: var(--brand-base-900);
+      color: var(--neutral-200);
+    }
+
+    .footer-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.5fr);
+      gap: 2rem;
+      font-size: 0.85rem;
+    }
+
+    .footer-about-title {
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: var(--neutral-50);
+    }
+
+    .footer-about-body {
+      max-width: 28rem;
+      color: var(--neutral-300);
+    }
+
+    .footer-links {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .footer-links-group-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--neutral-400);
+      margin-bottom: 0.35rem;
+    }
+
+    .footer-links ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .footer-links a {
+      display: inline-block;
+      margin-bottom: 0.15rem;
+      color: var(--neutral-200);
+      text-decoration: none;
+    }
+
+    .footer-links a:hover {
+      color: var(--neutral-50);
+    }
+
+    .footer-bottom {
+      margin-top: 1.75rem;
+      font-size: 0.78rem;
+      color: var(--neutral-500);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: space-between;
+      border-top: 1px solid rgba(148, 163, 184, 0.35);
+      padding-top: 0.85rem;
+    }
+
+    /* Responsiveness */
+
+    @media (max-width: 960px) {
+      .hero-inner {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .hero-visual {
+        order: -1;
+      }
+
+      .panels,
+      .personas,
+      .steps,
+      .articles {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .trust-strip,
+      .email-capture {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .footer-inner {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      header.site-header {
+        padding-bottom: 0.5rem;
+      }
+
+      .header-inner {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      nav.primary-nav {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+
+      .nav-spacer {
+        display: none;
+      }
+
+      section.hero {
+        padding-top: 2.5rem;
+      }
+
+      .panels,
+      .personas,
+      .steps,
+      .articles,
+      .footer-links {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .section {
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      .email-capture {
+        padding: 1rem 1rem 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="site-header">
+      <div class="shell header-inner">
+        <div class="brand-mark">
+          <div class="brand-logo-box" aria-hidden="true"></div>
+          <div class="brand-name">Transcrypt</div>
+        </div>
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="#">Home</a>
+          <a href="#">Why Transcrypt</a>
+          <a href="#">Product</a>
+          <a href="#">Pricing</a>
+          <a href="#">Blog</a>
+          <a href="#">Security</a>
+          <a href="#">About</a>
+          <span class="nav-spacer"></span>
+          <a href="#" class="btn btn-ghost">Sign in</a>
+          <a href="#" class="btn btn-primary">Join waitlist</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <!-- Hero -->
+      <section class="hero" aria-labelledby="hero-heading">
+        <div class="shell hero-inner">
+          <div class="hero-copy">
+            <div class="hero-eyebrow">Cyber Essentials, without the noise</div>
+            <h1 id="hero-heading" class="hero-title">
+              From zero to Cyber Essentials-ready, with a defensible report in one sitting.
+            </h1>
+            <p class="hero-lede">
+              Transcrypt gives UK SMEs a deterministic path to Cyber Essentials: guided intake, structured evidence, and a report you can show to auditors, customers, and insurers.
+            </p>
+            <div class="hero-cta-row">
+              <a href="#" class="btn btn-primary">Join waitlist</a>
+              <a href="#how-it-works" class="btn btn-ghost">See how it works</a>
+            </div>
+            <p class="hero-meta">
+              Built for owners, office managers, and their tech helpers — not compliance departments.
+            </p>
+          </div>
+          <div class="hero-visual" aria-hidden="true">
+            <div class="hero-visual-box">
+              <div class="hero-visual-header">
+                <span>Evaluation overview · Sample tenant</span>
+                <span class="hero-visual-pill">Wireframe placeholder</span>
+              </div>
+              <div class="hero-visual-body">
+                <div>
+                  <ul class="hero-visual-list">
+                    <li>
+                      <span>Org profile</span>
+                      <span class="hero-visual-status">Complete</span>
+                    </li>
+                    <li>
+                      <span>Evidence uploaded</span>
+                      <span class="hero-visual-status">24 items</span>
+                    </li>
+                    <li>
+                      <span>Controls assessed</span>
+                      <span class="hero-visual-status">15 / 15</span>
+                    </li>
+                    <li>
+                      <span>Report generated</span>
+                      <span class="hero-visual-status">Ready</span>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <div class="hero-visual-tag">Snapshot</div>
+                  <p style="margin-top:0.35rem;">
+                    This card stands in for the actual app view: quick summary of readiness, findings, and report status. It anchors the promise visually without real UI yet.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Intake / Findings / Report strip -->
+      <section class="section tight" aria-labelledby="panels-heading">
+        <div class="shell">
+          <h2 id="panels-heading" class="section-heading">One clear path: intake → findings → report</h2>
+          <p class="section-subtitle">
+            The product is built around a simple, deterministic loop. The homepage just introduces the three core stages you’ll actually live in.
+          </p>
+          <div class="panels">
+            <article class="panel">
+              <div class="panel-label">Stage 1</div>
+              <div class="panel-title">Structured intake</div>
+              <div class="panel-body">
+                <p>Answer a guided set of questions about your organisation, network, and devices — in plain language.</p>
+                <ul class="panel-list">
+                  <li>Clear definitions and examples</li>
+                  <li>Progress you can save and return to</li>
+                  <li>No jargon, no hidden fields</li>
+                </ul>
+              </div>
+              <div class="panel-link">
+                <a href="#">See what we ask in intake</a>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-label">Stage 2</div>
+              <div class="panel-title">Evidence &amp; findings</div>
+              <div class="panel-body">
+                <p>Upload or reference the evidence that actually proves each control is met.</p>
+                <ul class="panel-list">
+                  <li>Per-control guidance and examples</li>
+                  <li>Deterministic checks, not guesswork</li>
+                  <li>Every finding linked back to evidence</li>
+                </ul>
+              </div>
+              <div class="panel-link">
+                <a href="#">How findings are generated</a>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-label">Stage 3</div>
+              <div class="panel-title">Defensible report</div>
+              <div class="panel-body">
+                <p>Export a branded report that explains your position in terms an auditor can recognise.</p>
+                <ul class="panel-list">
+                  <li>Clear pass / not-yet-ready states</li>
+                  <li>Evidence and control mapping</li>
+                  <li>Hash footer for integrity checks</li>
+                </ul>
+              </div>
+              <div class="panel-link">
+                <a href="#">View a sample report</a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Personas -->
+      <section class="section tight" aria-labelledby="personas-heading">
+        <div class="shell">
+          <h2 id="personas-heading" class="section-heading">Built for real SME roles, not compliance teams</h2>
+          <p class="section-subtitle">
+            Transcrypt assumes you’re juggling a hundred other things. The flows are designed for the people who actually end up “owning” Cyber Essentials in a small organisation.
+          </p>
+          <div class="personas">
+            <article class="persona">
+              <div class="persona-title">Owner / MD</div>
+              <div class="persona-role">“I’m responsible for the risk, but I’m not a security specialist.”</div>
+              <p>
+                You get a single place to see where you stand, what’s missing, and what “good enough” looks like for Cyber Essentials.
+              </p>
+              <div class="persona-link">
+                <a href="#">Why owners use Transcrypt</a>
+              </div>
+            </article>
+            <article class="persona">
+              <div class="persona-title">Tech helper</div>
+              <div class="persona-role">Internal IT, trusted contractor, or MSP.</div>
+              <p>
+                You get clear control definitions, concrete evidence expectations, and a way to prove the environment matches the story.
+              </p>
+              <div class="persona-link">
+                <a href="#">How tech helpers work in the tool</a>
+              </div>
+            </article>
+            <article class="persona">
+              <div class="persona-title">Assessor / insurer</div>
+              <div class="persona-role">The people who need to believe the report.</div>
+              <p>
+                You see consistent, structured output with traceable ties from control to evidence. No mystery spreadsheets, no one-off formats.
+              </p>
+              <div class="persona-link">
+                <a href="#">What a Transcrypt report looks like</a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Problem → Solution -->
+      <section class="section" aria-labelledby="problem-solution-heading">
+        <div class="shell">
+          <h2 id="problem-solution-heading" class="section-heading">Cyber Essentials doesn’t have to be a maze</h2>
+          <p class="section-subtitle">
+            Most SME journeys are improvised: forms, PDFs, email chains, and ad-hoc advice. Transcrypt replaces that with a single, deterministic workflow.
+          </p>
+          <div class="two-column">
+            <div class="callout">
+              <div class="callout-title">The usual way</div>
+              <p>
+                You collect fragments of guidance from different places, try to interpret what each control really means, and hope your evidence is “good enough”.
+              </p>
+              <ul class="callout-list">
+                <li>Spreadsheet checklists that drift out of date</li>
+                <li>Email threads and file shares nobody can reconstruct</li>
+                <li>Conflicting advice from forums, vendors, and advisors</li>
+              </ul>
+            </div>
+            <div class="callout">
+              <div class="callout-title">The Transcrypt way</div>
+              <p>
+                One guided loop that explains the control, shows you what evidence looks like in practice, and produces a report with nothing hidden.
+              </p>
+              <ul class="callout-list">
+                <li>Clear definitions for each question and control</li>
+                <li>Evidence attached directly to findings</li>
+                <li>Deterministic rules — identical inputs, identical outputs</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- How it works -->
+      <section id="how-it-works" class="section tight" aria-labelledby="how-heading">
+        <div class="shell">
+          <h2 id="how-heading" class="section-heading">How Transcrypt works, end to end</h2>
+          <p class="section-subtitle">
+            The app runtime handles the detail. The homepage just sets expectations: you’re not learning a new discipline — you’re following a single, repeatable flow.
+          </p>
+          <div class="steps">
+            <article class="step">
+              <div class="step-number">1</div>
+              <div class="step-title">Create your tenant</div>
+              <div class="step-body">
+                Sign up with your work email, confirm your organisation, and pick the Cyber Essentials pack.
+              </div>
+            </article>
+            <article class="step">
+              <div class="step-number">2</div>
+              <div class="step-title">Tell us about your setup</div>
+              <div class="step-body">
+                Answer guided questions about networks, devices, accounts, and boundaries — nothing hand-wavy.
+              </div>
+            </article>
+            <article class="step">
+              <div class="step-number">3</div>
+              <div class="step-title">Attach real evidence</div>
+              <div class="step-body">
+                Upload or reference artefacts: screenshots, exports, and policies mapped directly to controls.
+              </div>
+            </article>
+            <article class="step">
+              <div class="step-number">4</div>
+              <div class="step-title">Run checks &amp; export report</div>
+              <div class="step-body">
+                Run the deterministic evaluation, review findings, and download a report that stands up to scrutiny.
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Trust / credibility -->
+      <section class="section tight" aria-labelledby="trust-heading">
+        <div class="shell">
+          <div class="trust-strip">
+            <div>
+              <h2 id="trust-heading" class="section-heading" style="margin-bottom:0.5rem;">A platform built by an OT security engineer</h2>
+              <p class="section-subtitle" style="margin-bottom:0.75rem;">
+                Transcrypt is designed and implemented by someone who spends their working day dealing with real-world assurance, audits, and industrial systems — not by a generic SaaS factory.
+              </p>
+              <p style="font-size:0.9rem; color:var(--neutral-700); margin:0;">
+                The same instincts that keep critical infrastructure boring and predictable drive this product: clear boundaries, explainable behaviour, and no hidden cleverness that can’t be defended in front of an assessor.
+              </p>
+              <div class="trust-links">
+                <a href="#">Security &amp; architecture overview</a>
+                <a href="#">Privacy and data handling</a>
+                <a href="#">Platform status</a>
+                <a href="#">Sample report (coming soon)</a>
+              </div>
+            </div>
+            <div>
+              <div class="report-preview-box">
+                Report preview placeholder · static frame for eventual PDF/HTML report hero
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Blog / content teaser -->
+      <section class="section tight" aria-labelledby="blog-heading">
+        <div class="shell">
+          <h2 id="blog-heading" class="section-heading">Practical guidance for small organisations</h2>
+          <p class="section-subtitle">
+            Even before the app launches, the site will publish straight-talking guides about Cyber Essentials and SME security — no scare tactics, no vendor drama.
+          </p>
+          <div class="articles">
+            <article class="article-card">
+              <div class="article-tag">Cyber Essentials</div>
+              <div class="article-title">What Cyber Essentials actually checks — in plain language</div>
+              <div class="article-body">
+                A control-by-control walkthrough of what the scheme is looking for, without jargon or legalese.
+              </div>
+              <div class="article-link">
+                <a href="#">Read article</a>
+              </div>
+            </article>
+            <article class="article-card">
+              <div class="article-tag">SME Security</div>
+              <div class="article-title">The minimum viable security baseline for a 20-person company</div>
+              <div class="article-body">
+                Where to focus if you don’t have a security team: accounts, updates, backups, and sensible boundaries.
+              </div>
+              <div class="article-link">
+                <a href="#">Read article</a>
+              </div>
+            </article>
+            <article class="article-card">
+              <div class="article-tag">Reports &amp; audits</div>
+              <div class="article-title">How to give your insurer evidence they’ll actually trust</div>
+              <div class="article-body">
+                Turning raw configuration and screenshots into something an underwriter can understand and file.
+              </div>
+              <div class="article-link">
+                <a href="#">Read article</a>
+              </div>
+            </article>
+          </div>
+          <div class="articles-footer">
+            <a href="#" style="color:var(--accent-700); text-decoration:none;">View all articles</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Email capture -->
+      <section class="section tight" aria-labelledby="email-heading">
+        <div class="shell">
+          <div class="email-capture">
+            <div>
+              <h2 id="email-heading" class="email-title">Get updates as the platform comes together</h2>
+              <p class="email-body">
+                No spam, no sales pipeline. Just occasional notes about build progress, early access, and new guides for SME Cyber Essentials.
+              </p>
+            </div>
+            <div>
+              <form class="email-form">
+                <input type="email" class="email-input" placeholder="you@company.co.uk" aria-label="Email address">
+                <button type="submit" class="btn btn-primary">Join the waitlist</button>
+              </form>
+              <p class="email-privacy">
+                We’ll only use your email for Transcrypt updates. You can unsubscribe at any time. See our
+                <a href="#">privacy notice</a>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="shell">
+        <div class="footer-inner">
+          <div>
+            <div class="footer-about-title">Transcrypt</div>
+            <p class="footer-about-body">
+              Transcrypt is a deterministic Cyber Essentials compliance platform for UK SMEs. It replaces improvised spreadsheets and email chains with one guided workflow, structured evidence, and a report that stands up to auditors, customers, and insurers.
+            </p>
+          </div>
+          <div class="footer-links">
+            <div>
+              <div class="footer-links-group-title">Product</div>
+              <ul>
+                <li><a href="#">Why Transcrypt</a></li>
+                <li><a href="#">Product overview</a></li>
+                <li><a href="#">Pricing</a></li>
+                <li><a href="#">Roadmap</a></li>
+              </ul>
+            </div>
+            <div>
+              <div class="footer-links-group-title">Learn</div>
+              <ul>
+                <li><a href="#">Blog</a></li>
+                <li><a href="#">Cyber Essentials guide</a></li>
+                <li><a href="#">Sample report</a></li>
+                <li><a href="#">Newsletter</a></li>
+              </ul>
+            </div>
+            <div>
+              <div class="footer-links-group-title">Trust</div>
+              <ul>
+                <li><a href="#">Security</a></li>
+                <li><a href="#">Privacy</a></li>
+                <li><a href="#">Cookies</a></li>
+                <li><a href="#">Sub-processors</a></li>
+                <li><a href="#">Status</a></li>
+                <li><a href="#">Changelog</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <div>© Transcrypt · All rights reserved.</div>
+          <div>Registered in the UK · Built and run in the UK</div>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
